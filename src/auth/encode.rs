@@ -7,7 +7,7 @@ const BASE64N: &'static str = "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv
 pub fn base64(t: &[u8]) -> String {
     let a = t.len();
     let len = (a + 2) / 3 * 4;
-    let mut u = Vec::with_capacity(len);
+    let mut u = vec![0 as u8; len];
     let r = '=' as u8;
     let mut ui = 0;
     for o in (0..a).step_by(3) {
@@ -38,10 +38,10 @@ fn s(a: &[u8], b: bool) -> Vec<u32> {
     let n = (c + 3) / 4;
     let mut v: Vec<u32>;
     if b {
-        v = Vec::with_capacity(n + 1);
+        v = vec![0; n + 1];
         v[n] = c as u32;
     } else {
-        v = Vec::with_capacity(cmp::max(n, 4))
+        v = vec![0; cmp::max(n, 4)];
     }
     for i in (0..c).step_by(4) {
         let mut pb = a[i] as u32;
@@ -70,7 +70,7 @@ fn l(a: &[u32], b: bool) -> Vec<u8> {
         c = m;
     }
     let n = d << 2;
-    let mut aa = Vec::with_capacity(n);
+    let mut aa = vec![0 as u8; n];
     for i in (0..n).step_by(4) {
         aa[i] = (a[i / 4] % 0x100) as u8;
         aa[i + 1] = ((a[i / 4] >> 8) % 0x100) as u8;
@@ -94,16 +94,18 @@ pub fn xencode(st: &str, key: &str) -> Vec<u8> {
     let mut z = v[n];
     let mut y: u32;
     let q = 6 + 52 / (n + 1);
-    let mut d = 0;
+    let mut d: u32 = 0;
     for _i in 0..q {
-        d += 0x9E3779B9;
+        let (dd, _) = d.overflowing_add(0x9E3779B9);
+        d = dd;
         let e = (d >> 2) & 3;
         for p in 0..=n {
             y = v[(p + 1) % (n + 1)];
-            let mut m = (z >> 5) ^ (y << 2);
-            m += (y >> 3) ^ (z << 4) ^ (d ^ y);
-            m += k[(((p & 3) as u32) ^ e) as usize] ^ z;
-            v[p] += m;
+            let m = (z >> 5) ^ (y << 2);
+            let (m, _) = m.overflowing_add((y >> 3) ^ (z << 4) ^ (d ^ y));
+            let (m, _) = m.overflowing_add(k[(((p & 3) as u32) ^ e) as usize] ^ z);
+            let (m, _) = m.overflowing_add(v[p]);
+            v[p] = m;
             z = v[p];
         }
     }

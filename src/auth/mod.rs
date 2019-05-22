@@ -45,19 +45,13 @@ impl AuthConnect {
     }
 
     fn challenge(&self) -> Result<string::String> {
-        let params = [
-            ("double_stack", "1"),
-            ("ip", ""),
-            ("username", &self.credential.username),
-            ("callback", "callback"),
-        ];
         let mut res = self
             .client
             .get(&format!(
-                "https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge",
-                self.ver
+                "https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback",
+                self.ver,
+                self.credential.username
             ))
-            .form(&params)
             .send()?;
         let t = res.text()?;
         let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
@@ -65,6 +59,20 @@ impl AuthConnect {
             Value::String(s) => Ok(s.to_string()),
             _ => Ok(string::String::new()),
         }
+    }
+}
+
+fn parse_response(t: &str) -> Result<(bool, string::String)> {
+    let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
+    match &json["error"] {
+        Value::String(s) => {
+            if s == "ok" {
+                Ok((true, format!("error: {}", s)))
+            } else {
+                Ok((false, format!("error: {}", s)))
+            }
+        }
+        _ => Ok((false, string::String::new())),
     }
 }
 
@@ -112,17 +120,12 @@ impl NetHelper for AuthConnect {
                 .form(&params)
                 .send()?;
             let t = res.text()?;
-            let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
-            match &json["error"] {
-                Value::String(s) => {
-                    if s == "ok" {
-                        return Ok(json.to_string());
-                    } else {
-                        continue;
-                    }
-                }
-                _ => continue,
-            };
+            let (suc, msg) = parse_response(&t)?;
+            if suc {
+                return Ok(msg);
+            } else {
+                continue;
+            }
         }
         Err(NetHelperError::NoAcIdErr)
     }
@@ -163,17 +166,12 @@ impl NetHelper for AuthConnect {
                 .form(&params)
                 .send()?;
             let t = res.text()?;
-            let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
-            match &json["error"] {
-                Value::String(s) => {
-                    if s == "ok" {
-                        return Ok(json.to_string());
-                    } else {
-                        continue;
-                    }
-                }
-                _ => continue,
-            };
+            let (suc, msg) = parse_response(&t)?;
+            if suc {
+                return Ok(msg);
+            } else {
+                continue;
+            }
         }
         Err(NetHelperError::NoAcIdErr)
     }
@@ -181,6 +179,13 @@ impl NetHelper for AuthConnect {
 
 impl NetConnectHelper for AuthConnect {
     fn flux(&self) -> Result<NetFlux> {
-        Ok(NetFlux::new())
+        let mut res = self
+            .client
+            .get(&format!(
+                "https://auth{0}.tsinghua.edu.cn/rad_user_info.php",
+                self.ver
+            ))
+            .send()?;
+        Ok(NetFlux::from_str(&res.text()?)?)
     }
 }

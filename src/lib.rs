@@ -1,4 +1,5 @@
 use serde_json::error;
+use std::cmp;
 use std::convert;
 use std::num;
 use std::result;
@@ -75,9 +76,10 @@ impl NetFlux {
             Ok(NetFlux::from_detail(
                 vec[0].to_string(),
                 vec[6].to_string().parse::<u64>()?,
-                time::Duration::from_secs(
-                    vec[2].to_string().parse::<u64>()? - vec[1].to_string().parse::<u64>()?,
-                ),
+                time::Duration::from_secs(cmp::max(
+                    vec[2].to_string().parse::<i64>()? - vec[1].to_string().parse::<i64>()?,
+                    0,
+                ) as u64),
                 vec[11].to_string().parse::<f64>()?,
             ))
         }

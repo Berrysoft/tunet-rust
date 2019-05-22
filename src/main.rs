@@ -2,7 +2,7 @@ use tunet_rust::strfmt;
 use tunet_rust::*;
 
 fn main() -> Result<()> {
-    let c = from_state(NetState::Net).unwrap();
+    let c = from_state(NetState::Auth4).unwrap();
     let f = c.flux()?;
     println!("用户：{}", f.username);
     println!("流量：{}", strfmt::format_flux(f.flux));
