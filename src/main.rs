@@ -53,7 +53,6 @@ fn main() -> Result<()> {
         TUNet::Status { host } => {
             do_status(host)?;
         }
-        _ => {}
     };
     Ok(())
 }

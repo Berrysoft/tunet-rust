@@ -1,29 +1,20 @@
 use super::*;
-use fastping_rs::PingResult::{Idle, Receive};
-use fastping_rs::Pinger;
+use reqwest;
 
-fn can_connect(ipaddr: &str) -> bool {
-    let (pinger, results) = match Pinger::new(None, None) {
-        Ok((pinger, results)) => (pinger, results),
-        Err(e) => panic!("Error creating pinger: {}", e),
-    };
-    pinger.add_ipaddr(ipaddr);
-    pinger.ping_once();
-    match results.recv() {
-        Ok(result) => match result {
-            Idle { addr: _ } => false,
-            Receive { addr: _, rtt: _ } => true,
-        },
+fn can_connect(uri: &str) -> bool {
+    let client = reqwest::Client::new();
+    match client.get(uri).send() {
+        Ok(_) => true,
         Err(_) => false,
     }
 }
 
 pub fn suggest() -> NetState {
-    if can_connect("101.6.4.100") {
+    if can_connect("https://auth4.tsinghua.edu.cn") {
         NetState::Auth4
-    } else if can_connect("166.111.204.120") {
+    } else if can_connect("http://net.tsinghua.edu.cn") {
         NetState::Net
-    } else if can_connect("2402:f000:1:414:101:6:4:100") {
+    } else if can_connect("https://auth6.tsinghua.edu.cn") {
         NetState::Auth6
     } else {
         NetState::Unknown

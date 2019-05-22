@@ -3,8 +3,10 @@ name = "tunet-rust"
 version = "0.1.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2018"
+readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+lto = true
 
 [dependencies]
 reqwest = "0.9"
@@ -12,4 +14,3 @@ rust-crypto = "0.2"
 serde_json = "1.0"
 rustc-serialize = "0.3"
 structopt = "0.2"
-fastping-rs = "0.1"
