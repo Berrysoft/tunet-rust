@@ -7,25 +7,26 @@ use std::num;
 use std::option;
 use std::result;
 use std::str;
-use std::string;
+use std::string::String;
 use std::time;
 
 mod auth;
 mod net;
 pub mod strfmt;
 pub mod suggest;
+pub mod usereg;
 
 pub struct NetCredential {
-    username: string::String,
-    password: string::String,
+    username: String,
+    password: String,
 }
 
 impl NetCredential {
     pub fn new() -> Self {
-        NetCredential::from_cred(string::String::new(), string::String::new())
+        NetCredential::from_cred(String::new(), String::new())
     }
 
-    pub fn from_cred(u: string::String, p: string::String) -> Self {
+    pub fn from_cred(u: String, p: String) -> Self {
         NetCredential {
             username: u,
             password: p,
@@ -52,7 +53,7 @@ impl convert::From<num::ParseFloatError> for ParseNetFluxError {
 }
 
 pub struct NetFlux {
-    pub username: string::String,
+    pub username: String,
     pub flux: u64,
     pub online_time: time::Duration,
     pub balance: f64,
@@ -60,10 +61,10 @@ pub struct NetFlux {
 
 impl NetFlux {
     pub fn new() -> Self {
-        NetFlux::from_detail(string::String::new(), 0, time::Duration::new(0, 0), 0.0)
+        NetFlux::from_detail(String::new(), 0, time::Duration::new(0, 0), 0.0)
     }
 
-    pub fn from_detail(u: string::String, f: u64, t: time::Duration, b: f64) -> Self {
+    pub fn from_detail(u: String, f: u64, t: time::Duration, b: f64) -> Self {
         NetFlux {
             username: u,
             flux: f,
@@ -135,7 +136,7 @@ pub enum NetState {
 }
 
 impl str::FromStr for NetState {
-    type Err = string::String;
+    type Err = String;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         let ls = s.to_lowercase();
         if ls == "net" {
@@ -151,8 +152,8 @@ impl str::FromStr for NetState {
 }
 
 pub trait NetHelper {
-    fn login(&self) -> Result<string::String>;
-    fn logout(&self) -> Result<string::String>;
+    fn login(&self) -> Result<String>;
+    fn logout(&self) -> Result<String>;
 }
 
 pub trait NetConnectHelper: NetHelper {
@@ -170,8 +171,8 @@ pub fn from_state(s: NetState) -> Option<Box<NetConnectHelper>> {
 
 pub fn from_state_cred(
     s: NetState,
-    u: string::String,
-    p: string::String,
+    u: String,
+    p: String,
 ) -> Option<Box<NetConnectHelper>> {
     match s {
         NetState::Net => Some(Box::new(net::NetConnect::from_cred(u, p))),

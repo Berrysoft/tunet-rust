@@ -4,16 +4,16 @@ use crypto::hmac::Hmac;
 use crypto::mac::Mac;
 use crypto::md5::Md5;
 use crypto::sha1::Sha1;
-use reqwest;
+use reqwest::Client;
 use rustc_serialize::hex::ToHex;
 use serde_json::{self, Value};
-use std::string;
+use std::string::String;
 
 mod encode;
 
 pub struct AuthConnect {
     credential: NetCredential,
-    client: reqwest::Client,
+    client: Client,
     ver: i32,
 }
 
@@ -21,30 +21,30 @@ const AC_IDS: [i32; 5] = [1, 25, 33, 35, 37];
 
 impl AuthConnect {
     pub fn new() -> Self {
-        AuthConnect::from_cred(string::String::new(), string::String::new())
+        AuthConnect::from_cred(String::new(), String::new())
     }
 
     pub fn new_v6() -> Self {
-        AuthConnect::from_cred_v6(string::String::new(), string::String::new())
+        AuthConnect::from_cred_v6(String::new(), String::new())
     }
 
-    pub fn from_cred(u: string::String, p: string::String) -> Self {
+    pub fn from_cred(u: String, p: String) -> Self {
         AuthConnect::from_cred_v(u, p, 4)
     }
 
-    pub fn from_cred_v6(u: string::String, p: string::String) -> Self {
+    pub fn from_cred_v6(u: String, p: String) -> Self {
         AuthConnect::from_cred_v(u, p, 6)
     }
 
-    fn from_cred_v(u: string::String, p: string::String, v: i32) -> Self {
+    fn from_cred_v(u: String, p: String, v: i32) -> Self {
         AuthConnect {
             credential: NetCredential::from_cred(u, p),
-            client: reqwest::Client::new(),
+            client: Client::new(),
             ver: v,
         }
     }
 
-    fn challenge(&self) -> Result<string::String> {
+    fn challenge(&self) -> Result<String> {
         let mut res = self
             .client
             .get(&format!(
@@ -57,12 +57,12 @@ impl AuthConnect {
         let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
         match &json["challenge"] {
             Value::String(s) => Ok(s.to_string()),
-            _ => Ok(string::String::new()),
+            _ => Ok(String::new()),
         }
     }
 }
 
-fn parse_response(t: &str) -> Result<(bool, string::String)> {
+fn parse_response(t: &str) -> Result<(bool, String)> {
     let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
     match &json["error"] {
         Value::String(s) => {
@@ -72,12 +72,12 @@ fn parse_response(t: &str) -> Result<(bool, string::String)> {
                 Ok((false, format!("error: {}", s)))
             }
         }
-        _ => Ok((false, string::String::new())),
+        _ => Ok((false, String::new())),
     }
 }
 
 impl NetHelper for AuthConnect {
-    fn login(&self) -> Result<string::String> {
+    fn login(&self) -> Result<String> {
         for ac_id in &AC_IDS {
             let token = self.challenge()?;
             let mut md5 = Md5::new();
@@ -130,7 +130,7 @@ impl NetHelper for AuthConnect {
         Err(NetHelperError::NoAcIdErr)
     }
 
-    fn logout(&self) -> Result<string::String> {
+    fn logout(&self) -> Result<String> {
         for ac_id in &AC_IDS {
             let token = self.challenge()?;
             let encode_json = serde_json::json!({

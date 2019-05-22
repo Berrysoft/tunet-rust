@@ -1,12 +1,12 @@
 use super::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
-use reqwest;
-use std::string;
+use reqwest::Client;
+use std::string::String;
 
 pub struct NetConnect {
     credential: NetCredential,
-    client: reqwest::Client,
+    client: Client,
 }
 
 const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
@@ -14,19 +14,19 @@ const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php
 
 impl NetConnect {
     pub fn new() -> Self {
-        NetConnect::from_cred(string::String::new(), string::String::new())
+        NetConnect::from_cred(String::new(), String::new())
     }
 
-    pub fn from_cred(u: string::String, p: string::String) -> Self {
+    pub fn from_cred(u: String, p: String) -> Self {
         NetConnect {
             credential: NetCredential::from_cred(u, p),
-            client: reqwest::Client::new(),
+            client: Client::new(),
         }
     }
 }
 
 impl NetHelper for NetConnect {
-    fn login(&self) -> Result<string::String> {
+    fn login(&self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
         let password_md5 = "{MD5_HEX}".to_owned() + &cry.result_str();
@@ -39,7 +39,7 @@ impl NetHelper for NetConnect {
         let mut res = self.client.post(NET_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }
-    fn logout(&self) -> Result<string::String> {
+    fn logout(&self) -> Result<String> {
         let params = [("action", "logout")];
         let mut res = self.client.post(NET_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
