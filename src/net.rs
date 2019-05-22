@@ -13,22 +13,13 @@ const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
 const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl NetConnect {
-    pub fn new() -> NetConnect {
-        NetConnect {
-            credential: NetCredential {
-                username: string::String::new(),
-                password: string::String::new(),
-            },
-            client: reqwest::Client::new(),
-        }
+    pub fn new() -> Self {
+        NetConnect::from_cred(string::String::new(), string::String::new())
     }
 
-    pub fn from_cred(u: &str, p: &str) -> NetConnect {
+    pub fn from_cred(u: string::String, p: string::String) -> Self {
         NetConnect {
-            credential: NetCredential {
-                username: u.to_string(),
-                password: p.to_string(),
-            },
+            credential: NetCredential::from_cred(u, p),
             client: reqwest::Client::new(),
         }
     }
@@ -59,6 +50,6 @@ impl NetHelper for NetConnect {
 impl NetConnectHelper for NetConnect {
     fn flux(&self) -> Result<NetFlux> {
         let mut res = self.client.get(NET_FLUX_URI).send()?;
-        Ok(NetFlux::from(&res.text()?)?)
+        Ok(NetFlux::from_str(&res.text()?)?)
     }
 }
