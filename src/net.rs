@@ -29,8 +29,7 @@ impl NetHelper for NetConnect {
     fn login(&self) -> Result<string::String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
-        let mut password_md5 = string::String::from("{MD5_HEX}");
-        password_md5.push_str(&cry.result_str());
+        let password_md5 = "{MD5_HEX}".to_owned() + &cry.result_str();
         let params = [
             ("action", "login"),
             ("ac_id", "1"),

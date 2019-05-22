@@ -92,14 +92,14 @@ pub fn xencode(st: &str, key: &str) -> Vec<u8> {
     let k = s(key.as_bytes(), false);
     let n = v.len() - 1;
     let mut z = v[n];
-    let mut y = v[0];
+    let mut y: u32;
     let q = 6 + 52 / (n + 1);
     let mut d = 0;
-    for i in 0..q {
+    for _i in 0..q {
         d += 0x9E3779B9;
         let e = (d >> 2) & 3;
         for p in 0..=n {
-            y = v[(p + 1) % n];
+            y = v[(p + 1) % (n + 1)];
             let mut m = (z >> 5) ^ (y << 2);
             m += (y >> 3) ^ (z << 4) ^ (d ^ y);
             m += k[(((p & 3) as u32) ^ e) as usize] ^ z;
