@@ -169,11 +169,7 @@ pub fn from_state(s: NetState) -> Option<Box<NetConnectHelper>> {
     }
 }
 
-pub fn from_state_cred(
-    s: NetState,
-    u: String,
-    p: String,
-) -> Option<Box<NetConnectHelper>> {
+pub fn from_state_cred(s: NetState, u: String, p: String) -> Option<Box<NetConnectHelper>> {
     match s {
         NetState::Net => Some(Box::new(net::NetConnect::from_cred(u, p))),
         NetState::Auth4 => Some(Box::new(auth::AuthConnect::from_cred(u, p))),
