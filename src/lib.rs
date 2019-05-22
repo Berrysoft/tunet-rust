@@ -1,14 +1,19 @@
+#![feature(try_trait)]
+
 use serde_json::error;
 use std::cmp;
 use std::convert;
 use std::num;
+use std::option;
 use std::result;
+use std::str;
 use std::string;
 use std::time;
 
 mod auth;
 mod net;
 pub mod strfmt;
+pub mod suggest;
 
 pub struct NetCredential {
     username: string::String,
@@ -92,6 +97,7 @@ pub enum NetHelperError {
     NetFluxErr(ParseNetFluxError),
     JsonErr(error::Error),
     NoAcIdErr,
+    NoneErr(option::NoneError),
 }
 
 impl convert::From<reqwest::Error> for NetHelperError {
@@ -112,13 +118,36 @@ impl convert::From<error::Error> for NetHelperError {
     }
 }
 
+impl convert::From<option::NoneError> for NetHelperError {
+    fn from(e: option::NoneError) -> Self {
+        NetHelperError::NoneErr(e)
+    }
+}
+
 pub type Result<T> = result::Result<T, NetHelperError>;
 
+#[derive(Debug)]
 pub enum NetState {
     Unknown,
     Net,
     Auth4,
     Auth6,
+}
+
+impl str::FromStr for NetState {
+    type Err = string::String;
+    fn from_str(s: &str) -> result::Result<Self, Self::Err> {
+        let ls = s.to_lowercase();
+        if ls == "net" {
+            Ok(NetState::Net)
+        } else if ls == "auth4" {
+            Ok(NetState::Auth4)
+        } else if ls == "auth6" {
+            Ok(NetState::Auth6)
+        } else {
+            Ok(NetState::Unknown)
+        }
+    }
 }
 
 pub trait NetHelper {
