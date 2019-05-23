@@ -1,3 +1,5 @@
+use chrono::Datelike;
+use itertools::Itertools;
 use std::iter::FromIterator;
 use std::net::Ipv4Addr;
 use std::option::Option;
@@ -82,6 +84,9 @@ enum TUNet {
         #[structopt(long, short)]
         /// 倒序
         descending: bool,
+        #[structopt(long, short)]
+        /// 按日期分组
+        grouping: bool,
     },
 }
 
@@ -120,8 +125,13 @@ fn main() -> Result<()> {
             password,
             order,
             descending,
+            grouping,
         } => {
-            do_detail(username, password, order, descending)?;
+            if grouping {
+                do_detail_grouping(username, password, order, descending)?;
+            } else {
+                do_detail(username, password, order, descending)?;
+            }
         }
     };
     Ok(())
@@ -198,6 +208,43 @@ fn do_detail(u: String, p: String, oopt: Option<NetDetailOrder>, d: bool) -> Res
             d.login_time.format("%Y-%m-%d %H:%M:%S").to_string(),
             d.logout_time.format("%Y-%m-%d %H:%M:%S").to_string(),
             strfmt::format_flux(d.flux)
+        );
+    }
+    Ok(())
+}
+
+fn do_detail_grouping(u: String, p: String, oopt: Option<NetDetailOrder>, d: bool) -> Result<()> {
+    let o = oopt.unwrap_or(NetDetailOrder::LogoutTime);
+    let c = UseregHelper::from_cred(u, p)?;
+    c.login()?;
+    let mut details = c
+        .details(NetDetailOrder::LogoutTime, d)?
+        .into_iter()
+        .group_by(|detail| detail.logout_time.date())
+        .into_iter()
+        .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
+        .collect::<Vec<_>>();
+    match o {
+        NetDetailOrder::Flux => {
+            if d {
+                details.sort_by_key(|x| -(x.1 as i64));
+            } else {
+                details.sort_by_key(|x| x.1);
+            }
+        }
+        _ => {
+            if d {
+                details.sort_by_key(|x| -(x.0.day() as i32));
+            }
+        }
+    }
+    println!("|    日期    |    流量    |");
+    println!("{}", String::from_iter(['='; 27].iter()));
+    for d in details {
+        println!(
+            "| {:11}|{:>11} |",
+            d.0.format("%Y-%m-%d").to_string(),
+            strfmt::format_flux(d.1)
         );
     }
     Ok(())
