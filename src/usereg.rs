@@ -120,6 +120,7 @@ impl UseregHelper {
 
     pub fn details(&self, o: NetDetailOrder, des: bool) -> Result<Vec<NetDetail>> {
         let now = Local::now();
+        let off = 100;
         let mut list: Vec<NetDetail> = Vec::new();
         let mut i = 1;
         loop {
@@ -130,7 +131,7 @@ impl UseregHelper {
                     now.month(),
                     now.day(),
                     i,
-                    100,
+                    off,
                     o.get_query(des),
                 ))
                 .send()?;
@@ -153,10 +154,9 @@ impl UseregHelper {
                     }
                 })
                 .collect::<Vec<_>>();
-            if ds.len() == 0 {
+            list.append(&mut ds);
+            if ds.len() < off {
                 break;
-            } else {
-                list.append(&mut ds);
             }
             i += 1;
         }

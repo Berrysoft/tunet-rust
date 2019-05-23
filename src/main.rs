@@ -227,14 +227,14 @@ fn do_detail_grouping(u: String, p: String, oopt: Option<NetDetailOrder>, d: boo
     match o {
         NetDetailOrder::Flux => {
             if d {
-                details.sort_by_key(|x| -(x.1 as i64));
+                details.sort_unstable_by_key(|x| -(x.1 as i64));
             } else {
-                details.sort_by_key(|x| x.1);
+                details.sort_unstable_by_key(|x| x.1);
             }
         }
         _ => {
             if d {
-                details.sort_by_key(|x| -(x.0.day() as i32));
+                details.sort_unstable_by_key(|x| -(x.0.day() as i32));
             }
         }
     }
