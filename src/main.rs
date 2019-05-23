@@ -1,4 +1,5 @@
 use std::iter::FromIterator;
+use std::net::Ipv4Addr;
 use std::option::Option;
 use std::string::String;
 use structopt::StructOpt;
@@ -8,37 +9,63 @@ use tunet_rust::usereg::*;
 use tunet_rust::*;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "tunet", about = "清华大学校园网客户端")]
+#[structopt(name = "TsinghuaNet.Rust", about = "清华大学校园网客户端")]
 enum TUNet {
     #[structopt(name = "login")]
+    /// 登录
     Login {
         #[structopt(name = "username", long, short)]
+        /// 用户名
         username: String,
         #[structopt(name = "password", long, short)]
+        /// 密码
         password: String,
         #[structopt(name = "host", long, short = "s")]
+        /// 连接方式
         host: Option<NetState>,
     },
     #[structopt(name = "logout")]
+    /// 注销
     Logout {
         #[structopt(name = "username", long, short)]
+        /// 用户名，Auth连接方式必选
         username: Option<String>,
         #[structopt(name = "password", long, short)]
+        /// 密码，Auth连接方式必选
         password: Option<String>,
         #[structopt(name = "host", long, short = "s")]
+        /// 连接方式
         host: Option<NetState>,
     },
     #[structopt(name = "status")]
+    /// 查看在线状态
     Status {
         #[structopt(name = "host", long, short = "s")]
+        /// 连接方式
         host: Option<NetState>,
     },
     #[structopt(name = "online")]
+    /// 查询在线IP
     Online {
         #[structopt(name = "username", long, short)]
+        /// 用户名
         username: String,
         #[structopt(name = "password", long, short)]
+        /// 密码
         password: String,
+    },
+    #[structopt(name = "drop")]
+    /// 下线IP
+    Drop {
+        #[structopt(name = "username", long, short)]
+        /// 用户名
+        username: String,
+        #[structopt(name = "password", long, short)]
+        /// 密码
+        password: String,
+        #[structopt(name = "address", long, short)]
+        /// IP地址
+        address: Ipv4Addr,
     },
 }
 
@@ -64,6 +91,13 @@ fn main() -> Result<()> {
         }
         TUNet::Online { username, password } => {
             do_online(username, password)?;
+        }
+        TUNet::Drop {
+            username,
+            password,
+            address,
+        } => {
+            do_drop(username, password, address)?;
         }
     };
     Ok(())
@@ -116,5 +150,13 @@ fn do_online(u: String, p: String) -> Result<()> {
             u.client
         );
     }
+    Ok(())
+}
+
+fn do_drop(u: String, p: String, a: Ipv4Addr) -> Result<()> {
+    let c = UseregHelper::from_cred(u, p)?;
+    c.login()?;
+    let res = c.drop(a)?;
+    println!("{}", res);
     Ok(())
 }
