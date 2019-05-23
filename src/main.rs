@@ -78,9 +78,9 @@ enum TUNet {
         #[structopt(long, short)]
         /// 密码
         password: String,
-        #[structopt(long, short)]
+        #[structopt(long, short, default_value = "logout")]
         /// 排序方式
-        order: Option<NetDetailOrder>,
+        order: NetDetailOrder,
         #[structopt(long, short)]
         /// 倒序
         descending: bool,
@@ -195,8 +195,7 @@ fn do_drop(u: String, p: String, a: Ipv4Addr) -> Result<()> {
     Ok(())
 }
 
-fn do_detail(u: String, p: String, oopt: Option<NetDetailOrder>, d: bool) -> Result<()> {
-    let o = oopt.unwrap_or(NetDetailOrder::LogoutTime);
+fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let details = c.details(o, d)?;
@@ -213,8 +212,7 @@ fn do_detail(u: String, p: String, oopt: Option<NetDetailOrder>, d: bool) -> Res
     Ok(())
 }
 
-fn do_detail_grouping(u: String, p: String, oopt: Option<NetDetailOrder>, d: bool) -> Result<()> {
-    let o = oopt.unwrap_or(NetDetailOrder::LogoutTime);
+fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let mut details = c

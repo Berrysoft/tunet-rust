@@ -1,5 +1,7 @@
 # tunet-rust
 清华大学校园网Rust库与客户端。
+
+这一版本与[TsinghuaNet](https://github.com/Berrysoft/TsinghuaNet)中的TsinghuaNet.CLI功能相同，但前者是后者（AOT后）速度的2~3倍，而大小只有后者（AOT后）的1/3。
 ## 登录/注销
 ``` bash
 # 使用默认（自动判断）方式登录
