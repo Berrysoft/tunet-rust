@@ -14,58 +14,74 @@ enum TUNet {
     #[structopt(name = "login")]
     /// 登录
     Login {
-        #[structopt(name = "username", long, short)]
+        #[structopt(long, short)]
         /// 用户名
         username: String,
-        #[structopt(name = "password", long, short)]
+        #[structopt(long, short)]
         /// 密码
         password: String,
-        #[structopt(name = "host", long, short = "s")]
+        #[structopt(long, short = "s")]
         /// 连接方式
         host: Option<NetState>,
     },
     #[structopt(name = "logout")]
     /// 注销
     Logout {
-        #[structopt(name = "username", long, short)]
+        #[structopt(long, short)]
         /// 用户名，Auth连接方式必选
         username: Option<String>,
-        #[structopt(name = "password", long, short)]
+        #[structopt(long, short)]
         /// 密码，Auth连接方式必选
         password: Option<String>,
-        #[structopt(name = "host", long, short = "s")]
+        #[structopt(long, short = "s")]
         /// 连接方式
         host: Option<NetState>,
     },
     #[structopt(name = "status")]
     /// 查看在线状态
     Status {
-        #[structopt(name = "host", long, short = "s")]
+        #[structopt(long, short = "s")]
         /// 连接方式
         host: Option<NetState>,
     },
     #[structopt(name = "online")]
     /// 查询在线IP
     Online {
-        #[structopt(name = "username", long, short)]
+        #[structopt(long, short)]
         /// 用户名
         username: String,
-        #[structopt(name = "password", long, short)]
+        #[structopt(long, short)]
         /// 密码
         password: String,
     },
     #[structopt(name = "drop")]
     /// 下线IP
     Drop {
-        #[structopt(name = "username", long, short)]
+        #[structopt(long, short)]
         /// 用户名
         username: String,
-        #[structopt(name = "password", long, short)]
+        #[structopt(long, short)]
         /// 密码
         password: String,
-        #[structopt(name = "address", long, short)]
+        #[structopt(long, short)]
         /// IP地址
         address: Ipv4Addr,
+    },
+    #[structopt(name = "detail")]
+    /// 流量明细
+    Detail {
+        #[structopt(long, short)]
+        /// 用户名
+        username: String,
+        #[structopt(long, short)]
+        /// 密码
+        password: String,
+        #[structopt(long, short)]
+        /// 排序方式
+        order: Option<NetDetailOrder>,
+        #[structopt(long, short)]
+        /// 倒序
+        descending: bool,
     },
 }
 
@@ -98,6 +114,14 @@ fn main() -> Result<()> {
             address,
         } => {
             do_drop(username, password, address)?;
+        }
+        TUNet::Detail {
+            username,
+            password,
+            order,
+            descending,
+        } => {
+            do_detail(username, password, order, descending)?;
         }
     };
     Ok(())
@@ -158,5 +182,23 @@ fn do_drop(u: String, p: String, a: Ipv4Addr) -> Result<()> {
     c.login()?;
     let res = c.drop(a)?;
     println!("{}", res);
+    Ok(())
+}
+
+fn do_detail(u: String, p: String, oopt: Option<NetDetailOrder>, d: bool) -> Result<()> {
+    let o = oopt.unwrap_or(NetDetailOrder::LogoutTime);
+    let c = UseregHelper::from_cred(u, p)?;
+    c.login()?;
+    let details = c.details(o, d)?;
+    println!("|       登录时间       |       注销时间       |    流量    |");
+    println!("{}", String::from_iter(['='; 60].iter()));
+    for d in details {
+        println!(
+            "| {:21}| {:21}|{:>11} |",
+            d.login_time.format("%Y-%m-%d %H:%M:%S").to_string(),
+            d.logout_time.format("%Y-%m-%d %H:%M:%S").to_string(),
+            strfmt::format_flux(d.flux)
+        );
+    }
     Ok(())
 }
