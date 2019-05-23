@@ -1,4 +1,6 @@
 use std::cmp;
+use std::mem::size_of;
+use std::ptr::copy_nonoverlapping;
 use std::string::String;
 use std::vec::Vec;
 
@@ -8,8 +10,8 @@ const BASE64N: &[u8] =
 pub fn base64(t: &[u8]) -> String {
     let a = t.len();
     let len = (a + 2) / 3 * 4;
-    let mut u = vec![0 as u8; len];
-    let r = '=' as u8;
+    let mut u = vec![b'\0'; len];
+    let r = b'=';
     let mut ui = 0;
     for o in (0..a).step_by(3) {
         let mut h = (t[o] as u32) << 16;
@@ -41,18 +43,8 @@ fn s(a: &[u8], b: bool) -> Vec<u32> {
     } else {
         v = vec![0; cmp::max(n, 4)];
     }
-    for i in (0..c).step_by(4) {
-        let mut pb = a[i] as u32;
-        if i + 1 < c {
-            pb += (a[i + 1] as u32) << 8;
-            if i + 2 < c {
-                pb += (a[i + 2] as u32) << 16;
-                if i + 3 < c {
-                    pb += (a[i + 3] as u32) << 24;
-                }
-            }
-        }
-        v[i / 4] = pb;
+    unsafe {
+        copy_nonoverlapping(a.as_ptr(), v.as_mut_ptr() as *mut u8, c * size_of::<u8>());
     }
     v
 }
@@ -68,12 +60,13 @@ fn l(a: &[u32], b: bool) -> Vec<u8> {
         c = m;
     }
     let n = d << 2;
-    let mut aa = vec![0 as u8; n];
-    for i in (0..n).step_by(4) {
-        aa[i] = (a[i / 4] % 0x100) as u8;
-        aa[i + 1] = ((a[i / 4] >> 8) % 0x100) as u8;
-        aa[i + 2] = ((a[i / 4] >> 16) % 0x100) as u8;
-        aa[i + 3] = (a[i / 4] >> 24) as u8;
+    let mut aa = vec![b'\0'; n];
+    unsafe {
+        copy_nonoverlapping(
+            a.as_ptr() as *const u8,
+            aa.as_mut_ptr(),
+            n * size_of::<u8>(),
+        );
     }
     if b {
         aa[0..(c as usize)].to_vec()
