@@ -20,10 +20,10 @@ pub fn format_flux(flux: u64) -> string::String {
 
 pub fn parse_flux(s: &str) -> u64 {
     let mut flux = s[0..s.len() - 1].parse::<f64>().unwrap_or_default();
-    flux *= match s.as_bytes()[s.len() - 1] as char {
-        'G' => 1000.0 * 1000.0 * 1000.0,
-        'M' => 1000.0 * 1000.0,
-        'K' => 1000.0,
+    flux *= match s.as_bytes()[s.len() - 1] {
+        b'G' => 1000.0 * 1000.0 * 1000.0,
+        b'M' => 1000.0 * 1000.0,
+        b'K' => 1000.0,
         _ => 1.0,
     };
     flux as u64

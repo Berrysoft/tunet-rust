@@ -1,6 +1,5 @@
 use chrono::Datelike;
 use itertools::Itertools;
-use std::iter::FromIterator;
 use std::net::Ipv4Addr;
 use std::option::Option;
 use std::string::String;
@@ -162,7 +161,7 @@ fn do_status(s: NetState) -> Result<()> {
     Ok(())
 }
 
-const TUNET_DATE_TIME_FORMAT: &'static str = "%Y-%m-%d  %H:%M:%S";
+const TUNET_DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 const TUNET_DATE_FORMAT: &'static str = "%Y-%m-%d";
 
 fn do_online(u: String, p: String) -> Result<()> {
@@ -170,7 +169,7 @@ fn do_online(u: String, p: String) -> Result<()> {
     c.login()?;
     let us = c.users()?;
     println!("|       IP       |       登录时间       |   客户端   |");
-    println!("{}", String::from_iter(['='; 54].iter()));
+    println!("{}", "=".repeat(54));
     for u in us {
         println!(
             "| {:14} | {:20} | {:10} |",
@@ -195,7 +194,7 @@ fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
     c.login()?;
     let details = c.details(o, d)?;
     println!("|       登录时间       |       注销时间       |   流量   |");
-    println!("{}", String::from_iter(['='; 58].iter()));
+    println!("{}", "=".repeat(58));
     for d in details {
         println!(
             "| {:20} | {:20} | {:>8} |",
@@ -212,7 +211,7 @@ fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Resul
     c.login()?;
     let mut details = c
         .details(NetDetailOrder::LogoutTime, d)?
-        .into_iter()
+        .iter()
         .group_by(|detail| detail.logout_time.date())
         .into_iter()
         .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
@@ -232,7 +231,7 @@ fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Resul
         }
     }
     println!("|    日期    |   流量   |");
-    println!("{}", String::from_iter(['='; 25].iter()));
+    println!("{}", "=".repeat(25));
     for d in details {
         println!(
             "| {:10} | {:>8} |",
