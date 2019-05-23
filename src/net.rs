@@ -49,6 +49,6 @@ impl NetHelper for NetConnect {
 impl NetConnectHelper for NetConnect {
     fn flux(&self) -> Result<NetFlux> {
         let mut res = self.client.get(NET_FLUX_URI).send()?;
-        Ok(NetFlux::from_str(&res.text()?)?)
+        Ok(NetFlux::from_str(&res.text()?))
     }
 }

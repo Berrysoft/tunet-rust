@@ -5,19 +5,19 @@ use crypto::md5::Md5;
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::*;
-use std::net;
+use std::net::Ipv4Addr;
 use std::str::FromStr;
 use std::string::String;
 use std::vec::Vec;
 
 pub struct NetUser {
-    pub address: net::Ipv4Addr,
+    pub address: Ipv4Addr,
     pub login_time: NaiveDateTime,
     pub client: String,
 }
 
 impl NetUser {
-    pub fn from_detail(a: net::Ipv4Addr, t: NaiveDateTime, c: String) -> Self {
+    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, c: String) -> Self {
         NetUser {
             address: a,
             login_time: t,
@@ -86,6 +86,7 @@ pub struct UseregHelper {
 
 const USEREG_LOG_URI: &'static str = "https://usereg.tsinghua.edu.cn/do.php";
 const USEREG_INFO_URI: &'static str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
+const DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 
 impl UseregHelper {
     pub fn from_cred(u: String, p: String) -> Result<Self> {
@@ -95,7 +96,7 @@ impl UseregHelper {
         })
     }
 
-    pub fn drop(&self, addr: net::Ipv4Addr) -> Result<String> {
+    pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {
         let params = [("action", "drop"), ("user_ip", &addr.to_string())];
         let mut res = self.client.post(USEREG_INFO_URI).form(&params).send()?;
         Ok(res.text()?)
@@ -110,8 +111,8 @@ impl UseregHelper {
             .map(|node| {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
                 NetUser::from_detail(
-                    net::Ipv4Addr::from_str(&tds[0].text()).unwrap(),
-                    NaiveDateTime::parse_from_str(&tds[1].text(), "%Y-%m-%d %H:%M:%S").unwrap(),
+                    Ipv4Addr::from_str(&tds[0].text()).unwrap(),
+                    NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT).unwrap(),
                     tds[10].text(),
                 )
             })
@@ -145,17 +146,18 @@ impl UseregHelper {
                         None
                     } else {
                         Some(NetDetail::from_detail(
-                            NaiveDateTime::parse_from_str(&tds[1].text(), "%Y-%m-%d %H:%M:%S")
+                            NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
                                 .unwrap(),
-                            NaiveDateTime::parse_from_str(&tds[2].text(), "%Y-%m-%d %H:%M:%S")
+                            NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
                                 .unwrap(),
                             strfmt::parse_flux(&tds[4].text()),
                         ))
                     }
                 })
                 .collect::<Vec<_>>();
+            let new_len = ds.len();
             list.append(&mut ds);
-            if ds.len() < off {
+            if new_len < off {
                 break;
             }
             i += 1;

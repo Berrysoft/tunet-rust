@@ -186,6 +186,6 @@ impl NetConnectHelper for AuthConnect {
                 self.ver
             ))
             .send()?;
-        Ok(NetFlux::from_str(&res.text()?)?)
+        Ok(NetFlux::from_str(&res.text()?))
     }
 }

@@ -2,7 +2,8 @@ use std::cmp;
 use std::string::String;
 use std::vec::Vec;
 
-const BASE64N: &'static str = "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA";
+const BASE64N: &[u8] =
+    "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA".as_bytes();
 
 pub fn base64(t: &[u8]) -> String {
     let a = t.len();
@@ -22,15 +23,12 @@ pub fn base64(t: &[u8]) -> String {
             if o * 8 + i * 6 > a * 8 {
                 u[ui] = r;
             } else {
-                u[ui] = BASE64N
-                    .bytes()
-                    .nth((h >> 6 * (3 - i) & 0x3F) as usize)
-                    .unwrap();
+                u[ui] = BASE64N[(h >> 6 * (3 - i) & 0x3F) as usize];
             }
             ui += 1;
         }
     }
-    String::from_utf8(u).unwrap()
+    unsafe { String::from_utf8_unchecked(u) }
 }
 
 fn s(a: &[u8], b: bool) -> Vec<u32> {

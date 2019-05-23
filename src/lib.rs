@@ -1,9 +1,9 @@
 #![feature(try_trait)]
+#![feature(const_str_as_bytes)]
 
 use serde_json::error;
 use std::cmp;
 use std::convert;
-use std::num;
 use std::option;
 use std::result;
 use std::str;
@@ -34,24 +34,6 @@ impl NetCredential {
     }
 }
 
-#[derive(Debug)]
-pub enum ParseNetFluxError {
-    IntErr(num::ParseIntError),
-    FloatErr(num::ParseFloatError),
-}
-
-impl convert::From<num::ParseIntError> for ParseNetFluxError {
-    fn from(e: num::ParseIntError) -> Self {
-        ParseNetFluxError::IntErr(e)
-    }
-}
-
-impl convert::From<num::ParseFloatError> for ParseNetFluxError {
-    fn from(e: num::ParseFloatError) -> Self {
-        ParseNetFluxError::FloatErr(e)
-    }
-}
-
 pub struct NetFlux {
     pub username: String,
     pub flux: u64,
@@ -73,21 +55,22 @@ impl NetFlux {
         }
     }
 
-    pub fn from_str(s: &str) -> result::Result<NetFlux, ParseNetFluxError> {
+    pub fn from_str(s: &str) -> Self {
         let split = s.split(',');
-        let vec: Vec<&str> = split.collect();
+        let vec = split.collect::<Vec<_>>();
         if vec.len() <= 1 {
-            Ok(NetFlux::new())
+            NetFlux::new()
         } else {
-            Ok(NetFlux::from_detail(
+            NetFlux::from_detail(
                 vec[0].to_string(),
-                vec[6].to_string().parse::<u64>()?,
+                vec[6].to_string().parse::<u64>().unwrap_or_default(),
                 time::Duration::from_secs(cmp::max(
-                    vec[2].to_string().parse::<i64>()? - vec[1].to_string().parse::<i64>()?,
+                    vec[2].to_string().parse::<i64>().unwrap_or_default()
+                        - vec[1].to_string().parse::<i64>().unwrap_or_default(),
                     0,
                 ) as u64),
-                vec[11].to_string().parse::<f64>()?,
-            ))
+                vec[11].to_string().parse::<f64>().unwrap_or_default(),
+            )
         }
     }
 }
@@ -95,7 +78,6 @@ impl NetFlux {
 #[derive(Debug)]
 pub enum NetHelperError {
     HttpErr(reqwest::Error),
-    NetFluxErr(ParseNetFluxError),
     JsonErr(error::Error),
     NoAcIdErr,
     NoneErr(option::NoneError),
@@ -104,12 +86,6 @@ pub enum NetHelperError {
 impl convert::From<reqwest::Error> for NetHelperError {
     fn from(e: reqwest::Error) -> Self {
         NetHelperError::HttpErr(e)
-    }
-}
-
-impl convert::From<ParseNetFluxError> for NetHelperError {
-    fn from(e: ParseNetFluxError) -> Self {
-        NetHelperError::NetFluxErr(e)
     }
 }
 
@@ -145,8 +121,10 @@ impl str::FromStr for NetState {
             Ok(NetState::Auth4)
         } else if ls == "auth6" {
             Ok(NetState::Auth6)
+        } else if ls == "auto" {
+            Ok(suggest::suggest())
         } else {
-            Ok(NetState::Unknown)
+            Err("连接方式错误".to_string())
         }
     }
 }

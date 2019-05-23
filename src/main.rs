@@ -6,7 +6,6 @@ use std::option::Option;
 use std::string::String;
 use structopt::StructOpt;
 use tunet_rust::strfmt;
-use tunet_rust::suggest::suggest;
 use tunet_rust::usereg::*;
 use tunet_rust::*;
 
@@ -22,9 +21,9 @@ enum TUNet {
         #[structopt(long, short)]
         /// 密码
         password: String,
-        #[structopt(long, short = "s")]
+        #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
-        host: Option<NetState>,
+        host: NetState,
     },
     #[structopt(name = "logout")]
     /// 注销
@@ -35,16 +34,16 @@ enum TUNet {
         #[structopt(long, short)]
         /// 密码，Auth连接方式必选
         password: Option<String>,
-        #[structopt(long, short = "s")]
+        #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
-        host: Option<NetState>,
+        host: NetState,
     },
     #[structopt(name = "status")]
     /// 查看在线状态
     Status {
-        #[structopt(long, short = "s")]
+        #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
-        host: Option<NetState>,
+        host: NetState,
     },
     #[structopt(name = "online")]
     /// 查询在线IP
@@ -137,20 +136,14 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn do_login(u: String, p: String, soption: Option<NetState>) -> Result<()> {
-    let s = soption.unwrap_or(suggest());
+fn do_login(u: String, p: String, s: NetState) -> Result<()> {
     let c = from_state_cred(s, u, p)?;
     let res = c.login()?;
     println!("{}", res);
     Ok(())
 }
 
-fn do_logout(
-    uoption: Option<String>,
-    poption: Option<String>,
-    soption: Option<NetState>,
-) -> Result<()> {
-    let s = soption.unwrap_or(suggest());
+fn do_logout(uoption: Option<String>, poption: Option<String>, s: NetState) -> Result<()> {
     let u = uoption.unwrap_or(String::new());
     let p = poption.unwrap_or(String::new());
     let c = from_state_cred(s, u, p)?;
@@ -159,8 +152,7 @@ fn do_logout(
     Ok(())
 }
 
-fn do_status(soption: Option<NetState>) -> Result<()> {
-    let s = soption.unwrap_or(suggest());
+fn do_status(s: NetState) -> Result<()> {
     let c = from_state(s)?;
     let f = c.flux()?;
     println!("用户：{}", f.username);
@@ -169,6 +161,9 @@ fn do_status(soption: Option<NetState>) -> Result<()> {
     println!("余额：¥{:.2}", f.balance);
     Ok(())
 }
+
+const TUNET_DATE_TIME_FORMAT: &'static str = "%Y-%m-%d  %H:%M:%S";
+const TUNET_DATE_FORMAT: &'static str = "%Y-%m-%d";
 
 fn do_online(u: String, p: String) -> Result<()> {
     let c = UseregHelper::from_cred(u, p)?;
@@ -180,7 +175,7 @@ fn do_online(u: String, p: String) -> Result<()> {
         println!(
             "| {:14} | {:20} | {:10} |",
             u.address.to_string(),
-            u.login_time.format("%Y-%m-%d %H:%M:%S").to_string(),
+            u.login_time.format(TUNET_DATE_TIME_FORMAT).to_string(),
             u.client
         );
     }
@@ -204,8 +199,8 @@ fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
     for d in details {
         println!(
             "| {:20} | {:20} | {:>8} |",
-            d.login_time.format("%Y-%m-%d %H:%M:%S").to_string(),
-            d.logout_time.format("%Y-%m-%d %H:%M:%S").to_string(),
+            d.login_time.format(TUNET_DATE_TIME_FORMAT).to_string(),
+            d.logout_time.format(TUNET_DATE_TIME_FORMAT).to_string(),
             strfmt::format_flux(d.flux)
         );
     }
@@ -241,7 +236,7 @@ fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Resul
     for d in details {
         println!(
             "| {:10} | {:>8} |",
-            d.0.format("%Y-%m-%d").to_string(),
+            d.0.format(TUNET_DATE_FORMAT).to_string(),
             strfmt::format_flux(d.1)
         );
     }
