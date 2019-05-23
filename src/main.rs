@@ -178,7 +178,7 @@ fn do_online(u: String, p: String) -> Result<()> {
     println!("{}", String::from_iter(['='; 54].iter()));
     for u in us {
         println!(
-            "| {:15}| {:21}| {:11}|",
+            "| {:14} | {:20} | {:10} |",
             u.address.to_string(),
             u.login_time.format("%Y-%m-%d %H:%M:%S").to_string(),
             u.client
@@ -200,11 +200,11 @@ fn do_detail(u: String, p: String, oopt: Option<NetDetailOrder>, d: bool) -> Res
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let details = c.details(o, d)?;
-    println!("|       登录时间       |       注销时间       |    流量    |");
-    println!("{}", String::from_iter(['='; 60].iter()));
+    println!("|       登录时间       |       注销时间       |   流量   |");
+    println!("{}", String::from_iter(['='; 58].iter()));
     for d in details {
         println!(
-            "| {:21}| {:21}|{:>11} |",
+            "| {:20} | {:20} | {:>8} |",
             d.login_time.format("%Y-%m-%d %H:%M:%S").to_string(),
             d.logout_time.format("%Y-%m-%d %H:%M:%S").to_string(),
             strfmt::format_flux(d.flux)
@@ -238,11 +238,11 @@ fn do_detail_grouping(u: String, p: String, oopt: Option<NetDetailOrder>, d: boo
             }
         }
     }
-    println!("|    日期    |    流量    |");
-    println!("{}", String::from_iter(['='; 27].iter()));
+    println!("|    日期    |   流量   |");
+    println!("{}", String::from_iter(['='; 25].iter()));
     for d in details {
         println!(
-            "| {:11}|{:>11} |",
+            "| {:10} | {:>8} |",
             d.0.format("%Y-%m-%d").to_string(),
             strfmt::format_flux(d.1)
         );
