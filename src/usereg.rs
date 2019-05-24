@@ -50,16 +50,12 @@ pub enum NetDetailOrder {
 }
 
 impl NetDetailOrder {
-    fn get_query(&self, des: bool) -> String {
-        let mut q = String::from(match self {
+    fn get_query(&self) -> String {
+        String::from(match self {
             NetDetailOrder::LoginTime => "user_login_time",
             NetDetailOrder::LogoutTime => "user_drop_time",
             NetDetailOrder::Flux => "user_in_bytes",
-        });
-        if des {
-            q.push_str("&desc=DESC");
-        }
-        q
+        })
     }
 }
 
@@ -127,13 +123,14 @@ impl UseregHelper {
         loop {
             let mut res = self.client
                 .get(&format!(
-                    "https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
+                    "https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
                     now.year(),
                     now.month(),
                     now.day(),
                     i,
                     off,
-                    o.get_query(des),
+                    o.get_query(),
+                    if des { "DESC" } else { "" },
                 ))
                 .send()?;
             let doc = Document::from(&res.text()? as &str);

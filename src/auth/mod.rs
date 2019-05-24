@@ -64,16 +64,15 @@ impl AuthConnect {
 
 fn parse_response(t: &str) -> Result<(bool, String)> {
     let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
-    match &json["error"] {
-        Value::String(s) => {
-            if s == "ok" {
-                Ok((true, format!("error: {}", s)))
-            } else {
-                Ok((false, format!("error: {}", s)))
-            }
+    if let Value::String(error) = &json["error"] {
+        if let Value::String(error_msg) = &json["error_msg"] {
+            return Ok((
+                error == "ok",
+                format!("error: {}; error_msg: {}", error, error_msg),
+            ));
         }
-        _ => Ok((false, String::new())),
     }
+    Ok((false, String::new()))
 }
 
 impl NetHelper for AuthConnect {

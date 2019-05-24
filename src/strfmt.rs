@@ -35,5 +35,11 @@ pub fn format_duration(d: time::Duration) -> string::String {
     total_sec /= 60;
     let min = total_sec % 60;
     total_sec /= 60;
-    format!("{:02}:{:02}:{:02}", total_sec, min, sec)
+    let h = total_sec % 24;
+    total_sec /= 24;
+    if total_sec > 0 {
+        format!("{}.{:02}:{:02}:{:02}", total_sec, h, min, sec)
+    } else {
+        format!("{:02}:{:02}:{:02}", h, min, sec)
+    }
 }

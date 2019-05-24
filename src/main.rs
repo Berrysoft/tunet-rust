@@ -1,4 +1,4 @@
-use chrono::Datelike;
+use chrono::{Datelike, Duration};
 use itertools::Itertools;
 use std::net::Ipv4Addr;
 use std::option::Option;
@@ -193,6 +193,8 @@ fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let details = c.details(o, d)?;
+    let mut total_time = Duration::zero();
+    let mut total_flux = 0u64;
     println!("|       登录时间       |       注销时间       |   流量   |");
     println!("{}", "=".repeat(58));
     for d in details {
@@ -202,7 +204,14 @@ fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
             d.logout_time.format(TUNET_DATE_TIME_FORMAT).to_string(),
             strfmt::format_flux(d.flux)
         );
+        total_time = total_time + (d.logout_time - d.login_time);
+        total_flux += d.flux;
     }
+    println!(
+        "总时长：{}",
+        strfmt::format_duration(total_time.to_std().unwrap_or_default())
+    );
+    println!("总流量：{}", strfmt::format_flux(total_flux));
     Ok(())
 }
 
@@ -230,6 +239,7 @@ fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Resul
             }
         }
     }
+    let mut total_flux = 0u64;
     println!("|    日期    |   流量   |");
     println!("{}", "=".repeat(25));
     for d in details {
@@ -238,6 +248,8 @@ fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Resul
             d.0.format(TUNET_DATE_FORMAT).to_string(),
             strfmt::format_flux(d.1)
         );
+        total_flux += d.1;
     }
+    println!("总流量：{}", strfmt::format_flux(total_flux));
     Ok(())
 }
