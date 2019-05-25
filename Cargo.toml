@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2018"
 readme = "README.md"
+license = "MIT"
 
 [profile.release]
 lto = true
@@ -16,4 +17,4 @@ rustc-serialize = "0.3"
 structopt = "0.2"
 select = "0.4"
 chrono = "0.4"
-itertools = "0.8.0"
+itertools = "0.8"
