@@ -4,12 +4,51 @@ use std::net::Ipv4Addr;
 use std::option::Option;
 use std::string::String;
 use structopt::StructOpt;
-use tunet_rust::strfmt;
 use tunet_rust::usereg::*;
 use tunet_rust::*;
 
+mod strfmt {
+    use std::time;
+
+    pub fn format_flux(flux: u64) -> String {
+        let mut f = flux as f64;
+        if f < 1000.0 {
+            return format!("{} B", f);
+        }
+        f /= 1000.0;
+        if f < 1000.0 {
+            return format!("{:.2} K", f);
+        }
+        f /= 1000.0;
+        if f < 1000.0 {
+            return format!("{:.2} M", f);
+        }
+        f /= 1000.0;
+        return format!("{:.2} G", f);
+    }
+
+    pub fn format_duration(d: time::Duration) -> String {
+        let mut total_sec = d.as_secs();
+        let sec = total_sec % 60;
+        total_sec /= 60;
+        let min = total_sec % 60;
+        total_sec /= 60;
+        let h = total_sec % 24;
+        total_sec /= 24;
+        if total_sec > 0 {
+            format!("{}.{:02}:{:02}:{:02}", total_sec, h, min, sec)
+        } else {
+            format!("{:02}:{:02}:{:02}", h, min, sec)
+        }
+    }
+}
+
 #[derive(Debug, StructOpt)]
-#[structopt(name = "TsinghuaNet.Rust", about = "清华大学校园网客户端")]
+#[structopt(
+    name = "TsinghuaNet.Rust",
+    about = "清华大学校园网客户端",
+    raw(setting = "structopt::clap::AppSettings::ColorAlways")
+)]
 enum TUNet {
     #[structopt(name = "login")]
     /// 登录

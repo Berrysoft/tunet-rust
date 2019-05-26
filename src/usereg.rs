@@ -84,6 +84,17 @@ const USEREG_LOG_URI: &'static str = "https://usereg.tsinghua.edu.cn/do.php";
 const USEREG_INFO_URI: &'static str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
 const DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 
+fn parse_flux(s: &str) -> u64 {
+    let mut flux = s[0..s.len() - 1].parse::<f64>().unwrap_or_default();
+    flux *= match s.as_bytes()[s.len() - 1] {
+        b'G' => 1000.0 * 1000.0 * 1000.0,
+        b'M' => 1000.0 * 1000.0,
+        b'K' => 1000.0,
+        _ => 1.0,
+    };
+    flux as u64
+}
+
 impl UseregHelper {
     pub fn from_cred(u: String, p: String) -> Result<Self> {
         Ok(UseregHelper {
@@ -147,7 +158,7 @@ impl UseregHelper {
                                 .unwrap(),
                             NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
                                 .unwrap(),
-                            strfmt::parse_flux(&tds[4].text()),
+                            parse_flux(&tds[4].text()),
                         ))
                     }
                 })

@@ -6,6 +6,9 @@ edition = "2018"
 readme = "README.md"
 license = "MIT"
 
+[lib]
+path = "src/lib.rs"
+
 [profile.release]
 lto = true
 

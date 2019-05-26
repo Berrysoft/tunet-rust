@@ -12,7 +12,6 @@ use std::time;
 
 mod auth;
 mod net;
-pub mod strfmt;
 pub mod suggest;
 pub mod usereg;
 
