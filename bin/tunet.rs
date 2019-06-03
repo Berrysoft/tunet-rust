@@ -1,4 +1,6 @@
-use chrono::{Datelike, Duration};
+use ansi_term;
+use ansi_term::Color;
+use chrono::Datelike;
 use itertools::Itertools;
 use std::net::Ipv4Addr;
 use std::option::Option;
@@ -8,6 +10,8 @@ use tunet_rust::usereg::*;
 use tunet_rust::*;
 
 mod strfmt {
+    use ansi_term::{ANSIString, Color};
+    use chrono::{NaiveDate, NaiveDateTime};
     use std::time;
 
     pub fn format_flux(flux: u64) -> String {
@@ -27,6 +31,21 @@ mod strfmt {
         return format!("{:.2} G", f);
     }
 
+    pub fn colored_flux(flux: u64, total: bool, right_aligned: bool) -> ANSIString<'static> {
+        let f = if right_aligned {
+            format!("{:>8}", format_flux(flux))
+        } else {
+            format_flux(flux)
+        };
+        if flux == 0 {
+            Color::Blue.normal().paint(f)
+        } else if flux < if total { 20_000_000_000 } else { 2_000_000_000 } {
+            Color::Yellow.bold().paint(f)
+        } else {
+            Color::Purple.bold().paint(f)
+        }
+    }
+
     pub fn format_duration(d: time::Duration) -> String {
         let mut total_sec = d.as_secs();
         let sec = total_sec % 60;
@@ -40,6 +59,41 @@ mod strfmt {
         } else {
             format!("{:02}:{:02}:{:02}", h, min, sec)
         }
+    }
+
+    pub fn colored_duration(d: time::Duration) -> ANSIString<'static> {
+        Color::Green.normal().paint(format_duration(d))
+    }
+
+    pub fn format_currency(c: f64) -> String {
+        format!("¥{:.2}", c)
+    }
+
+    pub fn colored_currency(c: f64) -> ANSIString<'static> {
+        Color::Yellow.normal().paint(format_currency(c))
+    }
+
+    const TUNET_DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+    const TUNET_DATE_FORMAT: &'static str = "%Y-%m-%d";
+
+    pub fn format_date_time(t: NaiveDateTime) -> String {
+        t.format(TUNET_DATE_TIME_FORMAT).to_string()
+    }
+
+    pub fn colored_date_time(t: NaiveDateTime) -> ANSIString<'static> {
+        Color::Green
+            .normal()
+            .paint(format!("{:20}", format_date_time(t)))
+    }
+
+    pub fn format_date(t: NaiveDate) -> String {
+        t.format(TUNET_DATE_FORMAT).to_string()
+    }
+
+    pub fn colored_date(t: NaiveDate) -> ANSIString<'static> {
+        Color::Green
+            .normal()
+            .paint(format!("{:10}", format_date(t)))
     }
 }
 
@@ -128,6 +182,10 @@ enum TUNet {
 }
 
 fn main() -> Result<()> {
+    #[cfg(not(target_os = "windows"))]
+    let console_color_ok = true;
+    #[cfg(target_os = "windows")]
+    let console_color_ok = ansi_term::enable_ansi_support().is_ok();
     let opt = TUNet::from_args();
     match opt {
         TUNet::Login {
@@ -145,10 +203,10 @@ fn main() -> Result<()> {
             do_logout(username, password, host)?;
         }
         TUNet::Status { host } => {
-            do_status(host)?;
+            do_status(host, console_color_ok)?;
         }
         TUNet::Online { username, password } => {
-            do_online(username, password)?;
+            do_online(username, password, console_color_ok)?;
         }
         TUNet::Drop {
             username,
@@ -165,9 +223,9 @@ fn main() -> Result<()> {
             grouping,
         } => {
             if grouping {
-                do_detail_grouping(username, password, order, descending)?;
+                do_detail_grouping(username, password, order, descending, console_color_ok)?;
             } else {
-                do_detail(username, password, order, descending)?;
+                do_detail(username, password, order, descending, console_color_ok)?;
             }
         }
     };
@@ -190,32 +248,61 @@ fn do_logout(uoption: Option<String>, poption: Option<String>, s: NetState) -> R
     Ok(())
 }
 
-fn do_status(s: NetState) -> Result<()> {
+fn do_status(s: NetState, color: bool) -> Result<()> {
     let c = from_state(s)?;
     let f = c.flux()?;
-    println!("用户：{}", f.username);
-    println!("流量：{}", strfmt::format_flux(f.flux));
-    println!("时长：{}", strfmt::format_duration(f.online_time));
-    println!("余额：¥{:.2}", f.balance);
+    if color {
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("用户"),
+            Color::Yellow.normal().paint(f.username)
+        );
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("流量"),
+            strfmt::colored_flux(f.flux, true, false)
+        );
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("时长"),
+            strfmt::colored_duration(f.online_time)
+        );
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("余额"),
+            strfmt::colored_currency(f.balance)
+        );
+    } else {
+        println!("{} {}", "用户", f.username);
+        println!("{} {}", "流量", strfmt::format_flux(f.flux));
+        println!("{} {}", "时长", strfmt::format_duration(f.online_time));
+        println!("{} {}", "余额", strfmt::format_currency(f.balance));
+    }
     Ok(())
 }
 
-const TUNET_DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
-const TUNET_DATE_FORMAT: &'static str = "%Y-%m-%d";
-
-fn do_online(u: String, p: String) -> Result<()> {
+fn do_online(u: String, p: String, color: bool) -> Result<()> {
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let us = c.users()?;
-    println!("|       IP       |       登录时间       |   客户端   |");
-    println!("{}", "=".repeat(54));
     for u in us {
-        println!(
-            "| {:14} | {:20} | {:10} |",
-            u.address.to_string(),
-            u.login_time.format(TUNET_DATE_TIME_FORMAT).to_string(),
-            u.client
-        );
+        if color {
+            println!(
+                "{} {} {}",
+                Color::Yellow
+                    .normal()
+                    .paint(format!("{:15}", u.address.to_string())),
+                strfmt::colored_date_time(u.login_time),
+                Color::Blue.normal().paint(format!("{:10}", u.client))
+            );
+        } else {
+            println!(
+                "{:15} {:20} {:10}",
+                u.address.to_string(),
+                strfmt::format_date_time(u.login_time),
+                u.client
+            );
+        }
     }
     Ok(())
 }
@@ -228,33 +315,42 @@ fn do_drop(u: String, p: String, a: Ipv4Addr) -> Result<()> {
     Ok(())
 }
 
-fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
+fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let details = c.details(o, d)?;
-    let mut total_time = Duration::zero();
     let mut total_flux = 0u64;
-    println!("|       登录时间       |       注销时间       |   流量   |");
-    println!("{}", "=".repeat(58));
     for d in details {
-        println!(
-            "| {:20} | {:20} | {:>8} |",
-            d.login_time.format(TUNET_DATE_TIME_FORMAT).to_string(),
-            d.logout_time.format(TUNET_DATE_TIME_FORMAT).to_string(),
-            strfmt::format_flux(d.flux)
-        );
-        total_time = total_time + (d.logout_time - d.login_time);
+        if color {
+            println!(
+                "{} {} {}",
+                strfmt::colored_date_time(d.login_time),
+                strfmt::colored_date_time(d.logout_time),
+                strfmt::colored_flux(d.flux, false, true)
+            );
+        } else {
+            println!(
+                "{:20} {:20} {:>8}",
+                strfmt::format_date_time(d.login_time),
+                strfmt::format_date_time(d.logout_time),
+                strfmt::format_flux(d.flux)
+            );
+        }
         total_flux += d.flux;
     }
-    println!(
-        "总时长：{}",
-        strfmt::format_duration(total_time.to_std().unwrap_or_default())
-    );
-    println!("总流量：{}", strfmt::format_flux(total_flux));
+    if color {
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("总流量"),
+            strfmt::colored_flux(total_flux, true, false)
+        );
+    } else {
+        println!("{} {}", "总流量", strfmt::format_flux(total_flux));
+    }
     Ok(())
 }
 
-fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Result<()> {
+fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let mut details = c
@@ -279,16 +375,30 @@ fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool) -> Resul
         }
     }
     let mut total_flux = 0u64;
-    println!("|    日期    |   流量   |");
-    println!("{}", "=".repeat(25));
     for d in details {
-        println!(
-            "| {:10} | {:>8} |",
-            d.0.format(TUNET_DATE_FORMAT).to_string(),
-            strfmt::format_flux(d.1)
-        );
+        if color {
+            println!(
+                "{} {}",
+                strfmt::colored_date(d.0),
+                strfmt::colored_flux(d.1, false, true)
+            );
+        } else {
+            println!(
+                "{:10} {:>8}",
+                strfmt::format_date(d.0),
+                strfmt::format_flux(d.1)
+            );
+        }
         total_flux += d.1;
     }
-    println!("总流量：{}", strfmt::format_flux(total_flux));
+    if color {
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("总流量"),
+            strfmt::colored_flux(total_flux, true, false)
+        );
+    } else {
+        println!("{} {}", "总流量", strfmt::format_flux(total_flux));
+    }
     Ok(())
 }
