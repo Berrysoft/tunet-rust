@@ -2,6 +2,8 @@ use ansi_term;
 use ansi_term::Color;
 use chrono::Datelike;
 use itertools::Itertools;
+use rpassword::read_password;
+use std::io::{stdin, stdout, Write};
 use std::net::Ipv4Addr;
 use std::option::Option;
 use std::string::String;
@@ -107,12 +109,6 @@ enum TUNet {
     #[structopt(name = "login")]
     /// 登录
     Login {
-        #[structopt(long, short)]
-        /// 用户名
-        username: String,
-        #[structopt(long, short)]
-        /// 密码
-        password: String,
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
@@ -120,12 +116,6 @@ enum TUNet {
     #[structopt(name = "logout")]
     /// 注销
     Logout {
-        #[structopt(long, short)]
-        /// 用户名，Auth连接方式必选
-        username: Option<String>,
-        #[structopt(long, short)]
-        /// 密码，Auth连接方式必选
-        password: Option<String>,
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
@@ -139,23 +129,10 @@ enum TUNet {
     },
     #[structopt(name = "online")]
     /// 查询在线IP
-    Online {
-        #[structopt(long, short)]
-        /// 用户名
-        username: String,
-        #[structopt(long, short)]
-        /// 密码
-        password: String,
-    },
+    Online {},
     #[structopt(name = "drop")]
     /// 下线IP
     Drop {
-        #[structopt(long, short)]
-        /// 用户名
-        username: String,
-        #[structopt(long, short)]
-        /// 密码
-        password: String,
         #[structopt(long, short)]
         /// IP地址
         address: Ipv4Addr,
@@ -163,12 +140,6 @@ enum TUNet {
     #[structopt(name = "detail")]
     /// 流量明细
     Detail {
-        #[structopt(long, short)]
-        /// 用户名
-        username: String,
-        #[structopt(long, short)]
-        /// 密码
-        password: String,
         #[structopt(long, short, default_value = "logout")]
         /// 排序方式
         order: NetDetailOrder,
@@ -188,60 +159,57 @@ fn main() -> Result<()> {
     let console_color_ok = ansi_term::enable_ansi_support().is_ok();
     let opt = TUNet::from_args();
     match opt {
-        TUNet::Login {
-            username,
-            password,
-            host,
-        } => {
-            do_login(username, password, host)?;
+        TUNet::Login { host } => {
+            do_login(host)?;
         }
-        TUNet::Logout {
-            username,
-            password,
-            host,
-        } => {
-            do_logout(username, password, host)?;
+        TUNet::Logout { host } => {
+            do_logout(host)?;
         }
         TUNet::Status { host } => {
             do_status(host, console_color_ok)?;
         }
-        TUNet::Online { username, password } => {
-            do_online(username, password, console_color_ok)?;
+        TUNet::Online {} => {
+            do_online(console_color_ok)?;
         }
-        TUNet::Drop {
-            username,
-            password,
-            address,
-        } => {
-            do_drop(username, password, address)?;
+        TUNet::Drop { address } => {
+            do_drop(address)?;
         }
         TUNet::Detail {
-            username,
-            password,
             order,
             descending,
             grouping,
         } => {
             if grouping {
-                do_detail_grouping(username, password, order, descending, console_color_ok)?;
+                do_detail_grouping(order, descending, console_color_ok)?;
             } else {
-                do_detail(username, password, order, descending, console_color_ok)?;
+                do_detail(order, descending, console_color_ok)?;
             }
         }
     };
     Ok(())
 }
 
-fn do_login(u: String, p: String, s: NetState) -> Result<()> {
+fn read_cred() -> Result<(String, String)> {
+    print!("请输入用户名：");
+    stdout().flush()?;
+    let mut u = String::new();
+    stdin().read_line(&mut u)?;
+    print!("请输入密码：");
+    stdout().flush()?;
+    let p = read_password()?;
+    Ok((u, p))
+}
+
+fn do_login(s: NetState) -> Result<()> {
+    let (u, p) = read_cred()?;
     let c = from_state_cred(s, u, p)?;
     let res = c.login()?;
     println!("{}", res);
     Ok(())
 }
 
-fn do_logout(uoption: Option<String>, poption: Option<String>, s: NetState) -> Result<()> {
-    let u = uoption.unwrap_or(String::new());
-    let p = poption.unwrap_or(String::new());
+fn do_logout(s: NetState) -> Result<()> {
+    let (u, p) = read_cred()?;
     let c = from_state_cred(s, u, p)?;
     let res = c.logout()?;
     println!("{}", res);
@@ -281,7 +249,8 @@ fn do_status(s: NetState, color: bool) -> Result<()> {
     Ok(())
 }
 
-fn do_online(u: String, p: String, color: bool) -> Result<()> {
+fn do_online(color: bool) -> Result<()> {
+    let (u, p) = read_cred()?;
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let us = c.users()?;
@@ -307,7 +276,8 @@ fn do_online(u: String, p: String, color: bool) -> Result<()> {
     Ok(())
 }
 
-fn do_drop(u: String, p: String, a: Ipv4Addr) -> Result<()> {
+fn do_drop(a: Ipv4Addr) -> Result<()> {
+    let (u, p) = read_cred()?;
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let res = c.drop(a)?;
@@ -315,7 +285,8 @@ fn do_drop(u: String, p: String, a: Ipv4Addr) -> Result<()> {
     Ok(())
 }
 
-fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+fn do_detail(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+    let (u, p) = read_cred()?;
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let details = c.details(o, d)?;
@@ -350,7 +321,8 @@ fn do_detail(u: String, p: String, o: NetDetailOrder, d: bool, color: bool) -> R
     Ok(())
 }
 
-fn do_detail_grouping(u: String, p: String, o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+    let (u, p) = read_cred()?;
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
     let mut details = c

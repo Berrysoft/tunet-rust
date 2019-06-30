@@ -4,6 +4,7 @@
 use serde_json::error;
 use std::cmp;
 use std::convert;
+use std::io;
 use std::option;
 use std::result;
 use std::str;
@@ -79,6 +80,7 @@ pub enum NetHelperError {
     HttpErr(reqwest::Error),
     JsonErr(error::Error),
     NoAcIdErr,
+    IoErr(io::Error),
     NoneErr(option::NoneError),
 }
 
@@ -91,6 +93,12 @@ impl convert::From<reqwest::Error> for NetHelperError {
 impl convert::From<error::Error> for NetHelperError {
     fn from(e: error::Error) -> Self {
         NetHelperError::JsonErr(e)
+    }
+}
+
+impl convert::From<io::Error> for NetHelperError {
+    fn from(e: io::Error) -> Self {
+        NetHelperError::IoErr(e)
     }
 }
 
