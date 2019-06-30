@@ -1,11 +1,16 @@
 use ansi_term;
 use ansi_term::Color;
+use base64::{decode, encode};
 use chrono::Datelike;
+use dirs::home_dir;
 use itertools::Itertools;
 use rpassword::read_password;
-use std::io::{stdin, stdout, Write};
+use serde_json::{self, json};
+use std::fs::{remove_file, DirBuilder, File};
+use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::net::Ipv4Addr;
 use std::option::Option;
+use std::path::PathBuf;
 use std::string::String;
 use structopt::StructOpt;
 use tunet_rust::usereg::*;
@@ -150,6 +155,12 @@ enum TUNet {
         /// 按日期分组
         grouping: bool,
     },
+    #[structopt(name = "savecred")]
+    /// 保存用户名和密码
+    SaveCredential {},
+    #[structopt(name = "deletecred")]
+    /// 删除用户名和密码
+    DeleteCredential {},
 }
 
 fn main() -> Result<()> {
@@ -185,11 +196,17 @@ fn main() -> Result<()> {
                 do_detail(order, descending, console_color_ok)?;
             }
         }
+        TUNet::SaveCredential {} => {
+            save_cred()?;
+        }
+        TUNet::DeleteCredential {} => {
+            delete_cred()?;
+        }
     };
     Ok(())
 }
 
-fn read_cred() -> Result<(String, String)> {
+fn read_cred_from_stdio() -> Result<(String, String)> {
     print!("请输入用户名：");
     stdout().flush()?;
     let mut u = String::new();
@@ -198,6 +215,92 @@ fn read_cred() -> Result<(String, String)> {
     stdout().flush()?;
     let p = read_password()?;
     Ok((u, p))
+}
+
+fn settings_folder_path() -> Result<PathBuf> {
+    let mut path = PathBuf::new();
+    path.push(home_dir()?);
+    path.push(".config");
+    path.push("TsinghuaNet.CLI");
+    Ok(path)
+}
+
+fn settings_file_path() -> Result<PathBuf> {
+    let mut p = settings_folder_path()?;
+    p.push("settings");
+    p.set_extension("json");
+    Ok(p)
+}
+
+fn read_cred_from_file() -> Result<(String, String)> {
+    let p = settings_file_path()?;
+    let f = File::open(p)?;
+    let reader = BufReader::new(f);
+    let json: serde_json::Value = serde_json::from_reader(reader)?;
+    if let serde_json::Value::String(u) = &json["username"] {
+        if let serde_json::Value::String(p) = &json["password"] {
+            return Ok((u.to_string(), unsafe {
+                String::from_utf8_unchecked(decode(&p).unwrap())
+            }));
+        }
+    }
+    Ok((String::new(), String::new()))
+}
+
+fn settings_file_exists() -> bool {
+    match settings_file_path() {
+        Ok(p) => p.exists(),
+        Err(_) => false,
+    }
+}
+
+fn create_settings_folder() -> Result<()> {
+    if let Ok(p) = settings_folder_path() {
+        if !p.exists() {
+            let b = DirBuilder::new();
+            b.create(p)?;
+        }
+    }
+    Ok(())
+}
+
+fn read_cred() -> Result<(String, String)> {
+    if settings_file_exists() {
+        read_cred_from_file()
+    } else {
+        read_cred_from_stdio()
+    }
+}
+
+fn save_cred() -> Result<()> {
+    let (u, p) = read_cred_from_stdio()?;
+    create_settings_folder()?;
+    let json = json!({
+        "username":u,
+        "password":encode(&p)
+    });
+    let p = settings_file_path()?;
+    let f = File::create(p)?;
+    let writer = BufWriter::new(f);
+    serde_json::to_writer(writer, &json)?;
+    Ok(())
+}
+
+fn delete_cred() -> Result<()> {
+    if settings_file_exists() {
+        print!("是否删除设置文件？[y/N]");
+        stdout().flush()?;
+        let mut s = String::new();
+        stdin().read_line(&mut s)?;
+        let mut c = s.as_bytes()[0];
+        c.make_ascii_lowercase();
+        if c == b'y' {
+            let p = settings_file_path()?;
+            remove_file(p)?;
+            println!("已删除");
+        }
+    }
+    Ok(())
 }
 
 fn do_login(s: NetState) -> Result<()> {
