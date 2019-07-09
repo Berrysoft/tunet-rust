@@ -2,7 +2,7 @@ use ansi_term;
 use ansi_term::Color;
 use base64::{decode, encode};
 use chrono::Datelike;
-use dirs::home_dir;
+use dirs::config_dir;
 use itertools::Itertools;
 use rpassword::read_password;
 use serde_json::{self, json};
@@ -219,8 +219,7 @@ fn read_cred_from_stdio() -> Result<(String, String)> {
 
 fn settings_folder_path() -> Result<PathBuf> {
     let mut path = PathBuf::new();
-    path.push(home_dir()?);
-    path.push(".config");
+    path.push(config_dir()?);
     path.push("TsinghuaNet.CLI");
     Ok(path)
 }
