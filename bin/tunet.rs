@@ -107,8 +107,7 @@ mod strfmt {
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "TsinghuaNet.Rust",
-    about = "清华大学校园网客户端",
-    raw(setting = "structopt::clap::AppSettings::ColoredHelp")
+    about = "清华大学校园网客户端"
 )]
 enum TUNet {
     #[structopt(name = "login")]
