@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "authtea",
     "tunet-rust",
     "tunet"
 ]

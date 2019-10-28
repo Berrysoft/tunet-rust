@@ -10,6 +10,7 @@ license = "MIT"
 path = "src/lib.rs"
 
 [dependencies]
+authtea = { path="../authtea" }
 reqwest = "0.9"
 rust-crypto = "0.2"
 serde_json = "1.0"

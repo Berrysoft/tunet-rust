@@ -1,4 +1,5 @@
 use super::*;
+use authtea::AuthTea;
 use crypto::digest::Digest;
 use crypto::hmac::Hmac;
 use crypto::mac::Mac;
@@ -9,7 +10,29 @@ use rustc_serialize::hex::ToHex;
 use serde_json::{self, Value};
 use std::string::String;
 
-mod encode;
+const BASE64N: &[u8] = b"LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA";
+const BASE64PAD: u8 = b'=';
+
+fn base64(t: &[u8]) -> String {
+    let a = t.len();
+    let len = (a + 2) / 3 * 4;
+    let mut u = vec![b'\0'; len];
+    let mut ui = 0;
+    for o in (0..a).step_by(3) {
+        let h = ((t[o] as u32) << 16)
+            + (if o + 1 < a { (t[o + 1] as u32) << 8 } else { 0 })
+            + (if o + 2 < a { t[o + 2] as u32 } else { 0 });
+        for i in 0..4 {
+            if o * 8 + i * 6 > a * 8 {
+                u[ui] = BASE64PAD;
+            } else {
+                u[ui] = BASE64N[(h >> (6 * (3 - i)) & 0x3F) as usize];
+            }
+            ui += 1;
+        }
+    }
+    unsafe { String::from_utf8_unchecked(u) }
+}
 
 pub struct AuthConnect {
     credential: NetCredential,
@@ -91,8 +114,8 @@ impl NetHelper for AuthConnect {
                 "acid":ac_id,
                 "enc_ver":"srun_bx1"
             });
-            let info = "{SRBX1}".to_owned()
-                + &encode::base64(&encode::authtea(&encode_json.to_string(), &token));
+            let tea = AuthTea::new(token.as_bytes());
+            let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
             sha1.input_str(&format!(
                 "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
@@ -138,8 +161,8 @@ impl NetHelper for AuthConnect {
                 "acid":ac_id,
                 "enc_ver":"srun_bx1"
             });
-            let info = "{SRBX1}".to_owned()
-                + &encode::base64(&encode::authtea(&encode_json.to_string(), &token));
+            let tea = AuthTea::new(token.as_bytes());
+            let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
             sha1.input_str(&format!(
                 "{0}{1}{0}{3}{0}{0}200{0}1{0}{2}",
