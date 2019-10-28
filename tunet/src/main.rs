@@ -19,7 +19,7 @@ use tunet_rust::*;
 mod strfmt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "TsinghuaNet.Rust", about = "清华大学校园网客户端")]
+#[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
 enum TUNet {
     #[structopt(name = "login")]
     /// 登录
