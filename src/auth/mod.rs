@@ -92,7 +92,7 @@ impl NetHelper for AuthConnect {
                 "enc_ver":"srun_bx1"
             });
             let info = "{SRBX1}".to_owned()
-                + &encode::base64(&encode::xencode(&encode_json.to_string(), &token));
+                + &encode::base64(&encode::authtea(&encode_json.to_string(), &token));
             let mut sha1 = Sha1::new();
             sha1.input_str(&format!(
                 "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
@@ -139,7 +139,7 @@ impl NetHelper for AuthConnect {
                 "enc_ver":"srun_bx1"
             });
             let info = "{SRBX1}".to_owned()
-                + &encode::base64(&encode::xencode(&encode_json.to_string(), &token));
+                + &encode::base64(&encode::authtea(&encode_json.to_string(), &token));
             let mut sha1 = Sha1::new();
             sha1.input_str(&format!(
                 "{0}{1}{0}{3}{0}{0}200{0}1{0}{2}",

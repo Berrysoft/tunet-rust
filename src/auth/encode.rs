@@ -61,7 +61,7 @@ fn l(a: &[u32], b: bool) -> Vec<u8> {
     aa
 }
 
-pub fn xencode(st: &str, key: &str) -> Vec<u8> {
+pub fn authtea(st: &str, key: &str) -> Vec<u8> {
     if st.len() == 0 {
         return Vec::new();
     }

@@ -1,5 +1,4 @@
 #![feature(try_trait)]
-#![feature(const_str_as_bytes)]
 
 use serde_json::error;
 use std::cmp;
