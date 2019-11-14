@@ -23,11 +23,7 @@ impl AuthTea {
         let mut tea = AuthTea { k: [0; 4] };
         if key.len() > 0 {
             unsafe {
-                copy_nonoverlapping(
-                    key.as_ptr(),
-                    tea.k.as_mut_ptr() as *mut u8,
-                    cmp::min(key.len(), 16),
-                );
+                copy_nonoverlapping(key.as_ptr(), tea.k.as_mut_ptr() as *mut u8, cmp::min(key.len(), 16));
             }
         }
         tea

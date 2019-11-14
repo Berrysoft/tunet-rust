@@ -18,10 +18,7 @@ impl NetConnect {
     }
 
     pub fn from_cred(u: String, p: String) -> Self {
-        NetConnect {
-            credential: NetCredential::from_cred(u, p),
-            client: Client::new(),
-        }
+        NetConnect { credential: NetCredential::from_cred(u, p), client: Client::new() }
     }
 }
 
@@ -30,12 +27,7 @@ impl NetHelper for NetConnect {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
         let password_md5 = "{MD5_HEX}".to_owned() + &cry.result_str();
-        let params = [
-            ("action", "login"),
-            ("ac_id", "1"),
-            ("username", &self.credential.username),
-            ("password", &password_md5),
-        ];
+        let params = [("action", "login"), ("ac_id", "1"), ("username", &self.credential.username), ("password", &password_md5)];
         let mut res = self.client.post(NET_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }

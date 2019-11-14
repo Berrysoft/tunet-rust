@@ -18,11 +18,7 @@ pub struct NetUser {
 
 impl NetUser {
     pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, c: String) -> Self {
-        NetUser {
-            address: a,
-            login_time: t,
-            client: c,
-        }
+        NetUser { address: a, login_time: t, client: c }
     }
 }
 
@@ -34,11 +30,7 @@ pub struct NetDetail {
 
 impl NetDetail {
     pub fn from_detail(i: NaiveDateTime, o: NaiveDateTime, f: u64) -> Self {
-        NetDetail {
-            login_time: i,
-            logout_time: o,
-            flux: f,
-        }
+        NetDetail { login_time: i, logout_time: o, flux: f }
     }
 }
 
@@ -97,10 +89,7 @@ fn parse_flux(s: &str) -> u64 {
 
 impl UseregHelper {
     pub fn from_cred(u: String, p: String) -> Result<Self> {
-        Ok(UseregHelper {
-            credential: NetCredential::from_cred(u, p),
-            client: Client::builder().cookie_store(true).build()?,
-        })
+        Ok(UseregHelper { credential: NetCredential::from_cred(u, p), client: Client::builder().cookie_store(true).build()? })
     }
 
     pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {
@@ -117,11 +106,7 @@ impl UseregHelper {
             .skip(1)
             .map(|node| {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                NetUser::from_detail(
-                    Ipv4Addr::from_str(&tds[0].text()).unwrap(),
-                    NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT).unwrap(),
-                    tds[10].text(),
-                )
+                NetUser::from_detail(Ipv4Addr::from_str(&tds[0].text()).unwrap(), NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT).unwrap(), tds[10].text())
             })
             .collect::<Vec<_>>())
     }
@@ -132,18 +117,7 @@ impl UseregHelper {
         let mut list: Vec<NetDetail> = Vec::new();
         let mut i = 1;
         loop {
-            let mut res = self.client
-                .get(&format!(
-                    "https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
-                    now.year(),
-                    now.month(),
-                    now.day(),
-                    i,
-                    off,
-                    o.get_query(),
-                    if des { "DESC" } else { "" },
-                ))
-                .send()?;
+            let mut res = self.client.get(&format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}", now.year(), now.month(), now.day(), i, off, o.get_query(), if des { "DESC" } else { "" },)).send()?;
             let doc = Document::from(&res.text()? as &str);
             let mut ds = doc
                 .find(Name("tr").descendant(Attr("align", "center")))
@@ -153,13 +127,7 @@ impl UseregHelper {
                     if tds.len() == 0 {
                         None
                     } else {
-                        Some(NetDetail::from_detail(
-                            NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                                .unwrap(),
-                            NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
-                                .unwrap(),
-                            parse_flux(&tds[4].text()),
-                        ))
+                        Some(NetDetail::from_detail(NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT).unwrap(), NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT).unwrap(), parse_flux(&tds[4].text())))
                     }
                 })
                 .collect::<Vec<_>>();
@@ -178,11 +146,7 @@ impl NetHelper for UseregHelper {
     fn login(&self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
-        let params = [
-            ("action", "login"),
-            ("user_login_name", &self.credential.username),
-            ("user_password", &cry.result_str()),
-        ];
+        let params = [("action", "login"), ("user_login_name", &self.credential.username), ("user_password", &cry.result_str())];
         let mut res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }

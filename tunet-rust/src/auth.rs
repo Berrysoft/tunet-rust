@@ -19,9 +19,7 @@ fn base64(t: &[u8]) -> String {
     let mut u = vec![b'\0'; len];
     let mut ui = 0;
     for o in (0..a).step_by(3) {
-        let h = ((t[o] as u32) << 16)
-            + (if o + 1 < a { (t[o + 1] as u32) << 8 } else { 0 })
-            + (if o + 2 < a { t[o + 2] as u32 } else { 0 });
+        let h = ((t[o] as u32) << 16) + (if o + 1 < a { (t[o + 1] as u32) << 8 } else { 0 }) + (if o + 2 < a { t[o + 2] as u32 } else { 0 });
         for i in 0..4 {
             if o * 8 + i * 6 > a * 8 {
                 u[ui] = BASE64PAD;
@@ -60,22 +58,11 @@ impl AuthConnect {
     }
 
     fn from_cred_v(u: String, p: String, v: i32) -> Self {
-        AuthConnect {
-            credential: NetCredential::from_cred(u, p),
-            client: Client::new(),
-            ver: v,
-        }
+        AuthConnect { credential: NetCredential::from_cred(u, p), client: Client::new(), ver: v }
     }
 
     fn challenge(&self) -> Result<String> {
-        let mut res = self
-            .client
-            .get(&format!(
-                "https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback",
-                self.ver,
-                self.credential.username
-            ))
-            .send()?;
+        let mut res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback", self.ver, self.credential.username)).send()?;
         let t = res.text()?;
         let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
         match &json["challenge"] {
@@ -89,10 +76,7 @@ fn parse_response(t: &str) -> Result<(bool, String)> {
     let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
     if let Value::String(error) = &json["error"] {
         if let Value::String(error_msg) = &json["error_msg"] {
-            return Ok((
-                error == "ok",
-                format!("error: {}; error_msg: {}", error, error_msg),
-            ));
+            return Ok((error == "ok", format!("error: {}; error_msg: {}", error, error_msg)));
         }
     }
     Ok((false, String::new()))
@@ -117,30 +101,9 @@ impl NetHelper for AuthConnect {
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
-            sha1.input_str(&format!(
-                "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                token, self.credential.username, password_md5, info, ac_id
-            ));
-            let params = [
-                ("action", "login"),
-                ("ac_id", &ac_id.to_string()),
-                ("double_stack", "1"),
-                ("n", "200"),
-                ("type", "1"),
-                ("username", &self.credential.username),
-                ("password", &p_mmd5),
-                ("info", &info),
-                ("chksum", &sha1.result_str()),
-                ("callback", "callback"),
-            ];
-            let mut res = self
-                .client
-                .post(&format!(
-                    "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
-                    self.ver
-                ))
-                .form(&params)
-                .send()?;
+            sha1.input_str(&format!("{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}", token, self.credential.username, password_md5, info, ac_id));
+            let params = [("action", "login"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &self.credential.username), ("password", &p_mmd5), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
+            let mut res = self.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", self.ver)).form(&params).send()?;
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
@@ -164,29 +127,9 @@ impl NetHelper for AuthConnect {
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
-            sha1.input_str(&format!(
-                "{0}{1}{0}{3}{0}{0}200{0}1{0}{2}",
-                token, self.credential.username, info, ac_id
-            ));
-            let params = [
-                ("action", "logout"),
-                ("ac_id", &ac_id.to_string()),
-                ("double_stack", "1"),
-                ("n", "200"),
-                ("type", "1"),
-                ("username", &self.credential.username),
-                ("info", &info),
-                ("chksum", &sha1.result_str()),
-                ("callback", "callback"),
-            ];
-            let mut res = self
-                .client
-                .post(&format!(
-                    "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
-                    self.ver
-                ))
-                .form(&params)
-                .send()?;
+            sha1.input_str(&format!("{0}{1}{0}{3}{0}{0}200{0}1{0}{2}", token, self.credential.username, info, ac_id));
+            let params = [("action", "logout"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &self.credential.username), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
+            let mut res = self.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", self.ver)).form(&params).send()?;
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
@@ -201,13 +144,7 @@ impl NetHelper for AuthConnect {
 
 impl NetConnectHelper for AuthConnect {
     fn flux(&self) -> Result<NetFlux> {
-        let mut res = self
-            .client
-            .get(&format!(
-                "https://auth{0}.tsinghua.edu.cn/rad_user_info.php",
-                self.ver
-            ))
-            .send()?;
+        let mut res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/rad_user_info.php", self.ver)).send()?;
         Ok(NetFlux::from_str(&res.text()?))
     }
 }

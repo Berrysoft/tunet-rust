@@ -95,11 +95,7 @@ fn main() -> Result<()> {
         TUNet::Drop { address } => {
             do_drop(address)?;
         }
-        TUNet::Detail {
-            order,
-            descending,
-            grouping,
-        } => {
+        TUNet::Detail { order, descending, grouping } => {
             if grouping {
                 do_detail_grouping(order, descending, console_color_ok)?;
             } else {
@@ -148,9 +144,7 @@ fn read_cred_from_file() -> Result<(String, String)> {
     let json: serde_json::Value = serde_json::from_reader(reader)?;
     if let serde_json::Value::String(u) = &json["username"] {
         if let serde_json::Value::String(p) = &json["password"] {
-            return Ok((u.to_string(), unsafe {
-                String::from_utf8_unchecked(decode(&p).unwrap())
-            }));
+            return Ok((u.to_string(), unsafe { String::from_utf8_unchecked(decode(&p).unwrap()) }));
         }
     }
     Ok((String::new(), String::new()))
@@ -232,26 +226,10 @@ fn do_status(s: NetState, color: bool) -> Result<()> {
     let c = from_state(s)?;
     let f = c.flux()?;
     if color {
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("用户"),
-            Color::Yellow.normal().paint(f.username)
-        );
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("流量"),
-            strfmt::colored_flux(f.flux, true, false)
-        );
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("时长"),
-            strfmt::colored_duration(f.online_time)
-        );
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("余额"),
-            strfmt::colored_currency(f.balance)
-        );
+        println!("{} {}", Color::Cyan.normal().paint("用户"), Color::Yellow.normal().paint(f.username));
+        println!("{} {}", Color::Cyan.normal().paint("流量"), strfmt::colored_flux(f.flux, true, false));
+        println!("{} {}", Color::Cyan.normal().paint("时长"), strfmt::colored_duration(f.online_time));
+        println!("{} {}", Color::Cyan.normal().paint("余额"), strfmt::colored_currency(f.balance));
     } else {
         println!("{} {}", "用户", f.username);
         println!("{} {}", "流量", strfmt::format_flux(f.flux));
@@ -268,21 +246,9 @@ fn do_online(color: bool) -> Result<()> {
     let us = c.users()?;
     for u in us {
         if color {
-            println!(
-                "{} {} {}",
-                Color::Yellow
-                    .normal()
-                    .paint(format!("{:15}", u.address.to_string())),
-                strfmt::colored_date_time(u.login_time),
-                Color::Blue.normal().paint(format!("{:10}", u.client))
-            );
+            println!("{} {} {}", Color::Yellow.normal().paint(format!("{:15}", u.address.to_string())), strfmt::colored_date_time(u.login_time), Color::Blue.normal().paint(format!("{:10}", u.client)));
         } else {
-            println!(
-                "{:15} {:20} {:10}",
-                u.address.to_string(),
-                strfmt::format_date_time(u.login_time),
-                u.client
-            );
+            println!("{:15} {:20} {:10}", u.address.to_string(), strfmt::format_date_time(u.login_time), u.client);
         }
     }
     Ok(())
@@ -305,28 +271,14 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
     let mut total_flux = 0u64;
     for d in details {
         if color {
-            println!(
-                "{} {} {}",
-                strfmt::colored_date_time(d.login_time),
-                strfmt::colored_date_time(d.logout_time),
-                strfmt::colored_flux(d.flux, false, true)
-            );
+            println!("{} {} {}", strfmt::colored_date_time(d.login_time), strfmt::colored_date_time(d.logout_time), strfmt::colored_flux(d.flux, false, true));
         } else {
-            println!(
-                "{:20} {:20} {:>8}",
-                strfmt::format_date_time(d.login_time),
-                strfmt::format_date_time(d.logout_time),
-                strfmt::format_flux(d.flux)
-            );
+            println!("{:20} {:20} {:>8}", strfmt::format_date_time(d.login_time), strfmt::format_date_time(d.logout_time), strfmt::format_flux(d.flux));
         }
         total_flux += d.flux;
     }
     if color {
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("总流量"),
-            strfmt::colored_flux(total_flux, true, false)
-        );
+        println!("{} {}", Color::Cyan.normal().paint("总流量"), strfmt::colored_flux(total_flux, true, false));
     } else {
         println!("{} {}", "总流量", strfmt::format_flux(total_flux));
     }
@@ -337,13 +289,7 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
     let (u, p) = read_cred()?;
     let c = UseregHelper::from_cred(u, p)?;
     c.login()?;
-    let mut details = c
-        .details(NetDetailOrder::LogoutTime, d)?
-        .iter()
-        .group_by(|detail| detail.logout_time.date())
-        .into_iter()
-        .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
-        .collect::<Vec<_>>();
+    let mut details = c.details(NetDetailOrder::LogoutTime, d)?.iter().group_by(|detail| detail.logout_time.date()).into_iter().map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>())).collect::<Vec<_>>();
     match o {
         NetDetailOrder::Flux => {
             if d {
@@ -361,26 +307,14 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
     let mut total_flux = 0u64;
     for d in details {
         if color {
-            println!(
-                "{} {}",
-                strfmt::colored_date(d.0),
-                strfmt::colored_flux(d.1, false, true)
-            );
+            println!("{} {}", strfmt::colored_date(d.0), strfmt::colored_flux(d.1, false, true));
         } else {
-            println!(
-                "{:10} {:>8}",
-                strfmt::format_date(d.0),
-                strfmt::format_flux(d.1)
-            );
+            println!("{:10} {:>8}", strfmt::format_date(d.0), strfmt::format_flux(d.1));
         }
         total_flux += d.1;
     }
     if color {
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("总流量"),
-            strfmt::colored_flux(total_flux, true, false)
-        );
+        println!("{} {}", Color::Cyan.normal().paint("总流量"), strfmt::colored_flux(total_flux, true, false));
     } else {
         println!("{} {}", "总流量", strfmt::format_flux(total_flux));
     }

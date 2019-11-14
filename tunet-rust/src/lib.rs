@@ -26,10 +26,7 @@ impl NetCredential {
     }
 
     pub fn from_cred(u: String, p: String) -> Self {
-        NetCredential {
-            username: u,
-            password: p,
-        }
+        NetCredential { username: u, password: p }
     }
 }
 
@@ -46,12 +43,7 @@ impl NetFlux {
     }
 
     pub fn from_detail(u: String, f: u64, t: time::Duration, b: f64) -> Self {
-        NetFlux {
-            username: u,
-            flux: f,
-            online_time: t,
-            balance: b,
-        }
+        NetFlux { username: u, flux: f, online_time: t, balance: b }
     }
 
     pub fn from_str(s: &str) -> Self {
@@ -60,16 +52,7 @@ impl NetFlux {
         if vec.len() <= 1 {
             NetFlux::new()
         } else {
-            NetFlux::from_detail(
-                vec[0].to_string(),
-                vec[6].to_string().parse::<u64>().unwrap_or_default(),
-                time::Duration::from_secs(cmp::max(
-                    vec[2].to_string().parse::<i64>().unwrap_or_default()
-                        - vec[1].to_string().parse::<i64>().unwrap_or_default(),
-                    0,
-                ) as u64),
-                vec[11].to_string().parse::<f64>().unwrap_or_default(),
-            )
+            NetFlux::from_detail(vec[0].to_string(), vec[6].to_string().parse::<u64>().unwrap_or_default(), time::Duration::from_secs(cmp::max(vec[2].to_string().parse::<i64>().unwrap_or_default() - vec[1].to_string().parse::<i64>().unwrap_or_default(), 0) as u64), vec[11].to_string().parse::<f64>().unwrap_or_default())
         }
     }
 }
