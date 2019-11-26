@@ -127,20 +127,44 @@ pub trait NetConnectHelper: NetHelper {
     fn flux(&self) -> Result<NetFlux>;
 }
 
-pub fn from_state(s: NetState) -> Option<Box<dyn NetConnectHelper>> {
-    match s {
-        NetState::Net => Some(Box::new(net::NetConnect::new())),
-        NetState::Auth4 => Some(Box::new(auth::AuthConnect::new())),
-        NetState::Auth6 => Some(Box::new(auth::AuthConnect::new_v6())),
-        _ => None,
+pub enum TUNetConnect {
+    Net(net::NetConnect),
+    Auth(auth::AuthConnect),
+}
+
+impl NetHelper for TUNetConnect {
+    fn login(&self) -> Result<String> {
+        match self {
+            Self::Net(c) => c.login(),
+            Self::Auth(c) => c.login(),
+        }
+    }
+    fn logout(&self) -> Result<String> {
+        match self {
+            Self::Net(c) => c.logout(),
+            Self::Auth(c) => c.logout(),
+        }
     }
 }
 
-pub fn from_state_cred(s: NetState, u: String, p: String) -> Option<Box<dyn NetConnectHelper>> {
+impl NetConnectHelper for TUNetConnect {
+    fn flux(&self) -> Result<NetFlux> {
+        match self {
+            Self::Net(c) => c.flux(),
+            Self::Auth(c) => c.flux(),
+        }
+    }
+}
+
+pub fn from_state(s: NetState, proxy: bool) -> Result<TUNetConnect> {
+    from_state_cred(s, String::new(), String::new(), proxy)
+}
+
+pub fn from_state_cred(s: NetState, u: String, p: String, proxy: bool) -> Result<TUNetConnect> {
     match s {
-        NetState::Net => Some(Box::new(net::NetConnect::from_cred(u, p))),
-        NetState::Auth4 => Some(Box::new(auth::AuthConnect::from_cred(u, p))),
-        NetState::Auth6 => Some(Box::new(auth::AuthConnect::from_cred_v6(u, p))),
-        _ => None,
+        NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred(u, p, proxy)?)),
+        NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred(u, p, proxy)?)),
+        NetState::Auth6 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_v6(u, p, proxy)?)),
+        _ => Err(NetHelperError::NoneErr(option::NoneError {})),
     }
 }

@@ -88,8 +88,9 @@ fn parse_flux(s: &str) -> u64 {
 }
 
 impl UseregHelper {
-    pub fn from_cred(u: String, p: String) -> Result<Self> {
-        Ok(UseregHelper { credential: NetCredential::from_cred(u, p), client: Client::builder().cookie_store(true).build()? })
+    pub fn from_cred(u: String, p: String, proxy: bool) -> Result<Self> {
+        let client = if proxy { Client::builder().cookie_store(true).build()? } else { Client::builder().cookie_store(true).no_proxy().build()? };
+        Ok(UseregHelper { credential: NetCredential::from_cred(u, p), client })
     }
 
     pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {

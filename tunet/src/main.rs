@@ -27,6 +27,9 @@ enum TUNet {
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
+        #[structopt(long = "use-proxy", short = "p")]
+        /// 使用系统代理
+        proxy: bool,
     },
     #[structopt(name = "logout")]
     /// 注销
@@ -34,6 +37,9 @@ enum TUNet {
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
+        #[structopt(long = "use-proxy", short = "p")]
+        /// 使用系统代理
+        proxy: bool,
     },
     #[structopt(name = "status")]
     /// 查看在线状态
@@ -41,16 +47,26 @@ enum TUNet {
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
+        #[structopt(long = "use-proxy", short = "p")]
+        /// 使用系统代理
+        proxy: bool,
     },
     #[structopt(name = "online")]
     /// 查询在线IP
-    Online {},
+    Online {
+        #[structopt(long = "use-proxy", short = "p")]
+        /// 使用系统代理
+        proxy: bool,
+    },
     #[structopt(name = "drop")]
     /// 下线IP
     Drop {
         #[structopt(long, short)]
         /// IP地址
         address: Ipv4Addr,
+        #[structopt(long = "use-proxy", short = "p")]
+        /// 使用系统代理
+        proxy: bool,
     },
     #[structopt(name = "detail")]
     /// 流量明细
@@ -64,6 +80,9 @@ enum TUNet {
         #[structopt(long, short)]
         /// 按日期分组
         grouping: bool,
+        #[structopt(long = "use-proxy", short = "p")]
+        /// 使用系统代理
+        proxy: bool,
     },
     #[structopt(name = "savecred")]
     /// 保存用户名和密码
@@ -80,26 +99,26 @@ fn main() -> Result<()> {
     let console_color_ok = ansi_term::enable_ansi_support().is_ok();
     let opt = TUNet::from_args();
     match opt {
-        TUNet::Login { host } => {
-            do_login(host)?;
+        TUNet::Login { host, proxy } => {
+            do_login(host, proxy)?;
         }
-        TUNet::Logout { host } => {
-            do_logout(host)?;
+        TUNet::Logout { host, proxy } => {
+            do_logout(host, proxy)?;
         }
-        TUNet::Status { host } => {
-            do_status(host, console_color_ok)?;
+        TUNet::Status { host, proxy } => {
+            do_status(host, console_color_ok, proxy)?;
         }
-        TUNet::Online {} => {
-            do_online(console_color_ok)?;
+        TUNet::Online { proxy } => {
+            do_online(console_color_ok, proxy)?;
         }
-        TUNet::Drop { address } => {
-            do_drop(address)?;
+        TUNet::Drop { address, proxy } => {
+            do_drop(address, proxy)?;
         }
-        TUNet::Detail { order, descending, grouping } => {
+        TUNet::Detail { order, descending, grouping, proxy } => {
             if grouping {
-                do_detail_grouping(order, descending, console_color_ok)?;
+                do_detail_grouping(order, descending, console_color_ok, proxy)?;
             } else {
-                do_detail(order, descending, console_color_ok)?;
+                do_detail(order, descending, console_color_ok, proxy)?;
             }
         }
         TUNet::SaveCredential {} => {
@@ -206,24 +225,24 @@ fn delete_cred() -> Result<()> {
     Ok(())
 }
 
-fn do_login(s: NetState) -> Result<()> {
+fn do_login(s: NetState, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = from_state_cred(s, u, p)?;
+    let c = from_state_cred(s, u, p, proxy)?;
     let res = c.login()?;
     println!("{}", res);
     Ok(())
 }
 
-fn do_logout(s: NetState) -> Result<()> {
+fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = from_state_cred(s, u, p)?;
+    let c = from_state_cred(s, u, p, proxy)?;
     let res = c.logout()?;
     println!("{}", res);
     Ok(())
 }
 
-fn do_status(s: NetState, color: bool) -> Result<()> {
-    let c = from_state(s)?;
+fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
+    let c = from_state(s, proxy)?;
     let f = c.flux()?;
     if color {
         println!("{} {}", Color::Cyan.normal().paint("用户"), Color::Yellow.normal().paint(f.username));
@@ -239,9 +258,9 @@ fn do_status(s: NetState, color: bool) -> Result<()> {
     Ok(())
 }
 
-fn do_online(color: bool) -> Result<()> {
+fn do_online(color: bool, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p)?;
+    let c = UseregHelper::from_cred(u, p, proxy)?;
     c.login()?;
     let us = c.users()?;
     for u in us {
@@ -254,18 +273,18 @@ fn do_online(color: bool) -> Result<()> {
     Ok(())
 }
 
-fn do_drop(a: Ipv4Addr) -> Result<()> {
+fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p)?;
+    let c = UseregHelper::from_cred(u, p, proxy)?;
     c.login()?;
     let res = c.drop(a)?;
     println!("{}", res);
     Ok(())
 }
 
-fn do_detail(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p)?;
+    let c = UseregHelper::from_cred(u, p, proxy)?;
     c.login()?;
     let details = c.details(o, d)?;
     let mut total_flux = 0u64;
@@ -285,9 +304,9 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
     Ok(())
 }
 
-fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p)?;
+    let c = UseregHelper::from_cred(u, p, proxy)?;
     c.login()?;
     let mut details = c.details(NetDetailOrder::LogoutTime, d)?.iter().group_by(|detail| detail.logout_time.date()).into_iter().map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>())).collect::<Vec<_>>();
     match o {

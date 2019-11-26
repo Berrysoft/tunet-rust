@@ -41,24 +41,17 @@ pub struct AuthConnect {
 const AC_IDS: [i32; 5] = [1, 25, 33, 35, 37];
 
 impl AuthConnect {
-    pub fn new() -> Self {
-        AuthConnect::from_cred(String::new(), String::new())
+    pub fn from_cred(u: String, p: String, proxy: bool) -> Result<Self> {
+        AuthConnect::from_cred_v(u, p, proxy, 4)
     }
 
-    pub fn new_v6() -> Self {
-        AuthConnect::from_cred_v6(String::new(), String::new())
+    pub fn from_cred_v6(u: String, p: String, proxy: bool) -> Result<Self> {
+        AuthConnect::from_cred_v(u, p, proxy, 6)
     }
 
-    pub fn from_cred(u: String, p: String) -> Self {
-        AuthConnect::from_cred_v(u, p, 4)
-    }
-
-    pub fn from_cred_v6(u: String, p: String) -> Self {
-        AuthConnect::from_cred_v(u, p, 6)
-    }
-
-    fn from_cred_v(u: String, p: String, v: i32) -> Self {
-        AuthConnect { credential: NetCredential::from_cred(u, p), client: Client::new(), ver: v }
+    fn from_cred_v(u: String, p: String, proxy: bool, v: i32) -> Result<Self> {
+        let client = if proxy { Client::new() } else { Client::builder().no_proxy().build()? };
+        Ok(AuthConnect { credential: NetCredential::from_cred(u, p), client, ver: v })
     }
 
     fn challenge(&self) -> Result<String> {

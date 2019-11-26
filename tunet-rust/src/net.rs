@@ -13,12 +13,9 @@ const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
 const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl NetConnect {
-    pub fn new() -> Self {
-        NetConnect::from_cred(String::new(), String::new())
-    }
-
-    pub fn from_cred(u: String, p: String) -> Self {
-        NetConnect { credential: NetCredential::from_cred(u, p), client: Client::new() }
+    pub fn from_cred(u: String, p: String, proxy: bool) -> Result<Self> {
+        let client = if proxy { Client::new() } else { Client::builder().no_proxy().build()? };
+        Ok(NetConnect { credential: NetCredential::from_cred(u, p), client })
     }
 }
 
