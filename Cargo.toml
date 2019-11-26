@@ -2,7 +2,8 @@
 members = [
     "authtea",
     "tunet-rust",
-    "tunet"
+    "tunet",
+    "tunet-native"
 ]
 
 [profile.release]

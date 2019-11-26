@@ -1,5 +1,5 @@
 [package]
-name = "tunet-rust"
+name = "tunet-native"
 version = "0.1.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2018"
@@ -8,12 +8,9 @@ license = "MIT"
 
 [lib]
 path = "src/lib.rs"
+crate-type = ["cdylib"]
 
 [dependencies]
-authtea = { path = "../authtea" }
+tunet-rust = { path = "../tunet-rust" }
+lazy_static = "1.4"
 reqwest = "0.9"
-rust-crypto = "0.2"
-serde_json = "1.0"
-rustc-serialize = "0.3"
-select = "0.4"
-chrono = "0.4"

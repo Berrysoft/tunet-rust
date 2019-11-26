@@ -4,6 +4,8 @@ use base64::{decode, encode};
 use chrono::Datelike;
 use dirs::config_dir;
 use itertools::Itertools;
+use lazy_static::*;
+use reqwest::Client;
 use rpassword::read_password;
 use serde_json::{self, json};
 use std::fs::{remove_file, DirBuilder, File};
@@ -225,9 +227,22 @@ fn delete_cred() -> Result<()> {
     Ok(())
 }
 
+lazy_static! {
+    static ref CLIENT: Client = Client::builder().cookie_store(true).build().unwrap();
+    static ref NO_PROXY_CLIENT: Client = Client::builder().cookie_store(true).no_proxy().build().unwrap();
+}
+
+fn get_client(proxy: bool) -> &'static Client {
+    if proxy {
+        &*CLIENT
+    } else {
+        &*NO_PROXY_CLIENT
+    }
+}
+
 fn do_login(s: NetState, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = from_state_cred(s, u, p, proxy)?;
+    let c = from_state_cred_client(s, u, p, get_client(proxy))?;
     let res = c.login()?;
     println!("{}", res);
     Ok(())
@@ -235,14 +250,14 @@ fn do_login(s: NetState, proxy: bool) -> Result<()> {
 
 fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = from_state_cred(s, u, p, proxy)?;
+    let c = from_state_cred_client(s, u, p, get_client(proxy))?;
     let res = c.logout()?;
     println!("{}", res);
     Ok(())
 }
 
 fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
-    let c = from_state(s, proxy)?;
+    let c = from_state_cred_client(s, String::new(), String::new(), get_client(proxy))?;
     let f = c.flux()?;
     if color {
         println!("{} {}", Color::Cyan.normal().paint("用户"), Color::Yellow.normal().paint(f.username));
@@ -260,7 +275,7 @@ fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
 
 fn do_online(color: bool, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p, proxy)?;
+    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let us = c.users()?;
     for u in us {
@@ -275,7 +290,7 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
 
 fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p, proxy)?;
+    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let res = c.drop(a)?;
     println!("{}", res);
@@ -284,7 +299,7 @@ fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
 
 fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p, proxy)?;
+    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let details = c.details(o, d)?;
     let mut total_flux = 0u64;
@@ -306,7 +321,7 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
 
 fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let (u, p) = read_cred()?;
-    let c = UseregHelper::from_cred(u, p, proxy)?;
+    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let mut details = c.details(NetDetailOrder::LogoutTime, d)?.iter().group_by(|detail| detail.logout_time.date()).into_iter().map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>())).collect::<Vec<_>>();
     match o {

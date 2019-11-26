@@ -67,9 +67,9 @@ impl str::FromStr for NetDetailOrder {
     }
 }
 
-pub struct UseregHelper {
+pub struct UseregHelper<'a> {
     credential: NetCredential,
-    client: Client,
+    client: &'a Client,
 }
 
 const USEREG_LOG_URI: &'static str = "https://usereg.tsinghua.edu.cn/do.php";
@@ -87,10 +87,9 @@ fn parse_flux(s: &str) -> u64 {
     flux as u64
 }
 
-impl UseregHelper {
-    pub fn from_cred(u: String, p: String, proxy: bool) -> Result<Self> {
-        let client = if proxy { Client::builder().cookie_store(true).build()? } else { Client::builder().cookie_store(true).no_proxy().build()? };
-        Ok(UseregHelper { credential: NetCredential::from_cred(u, p), client })
+impl<'a> UseregHelper<'a> {
+    pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
+        UseregHelper { credential: NetCredential::from_cred(u, p), client }
     }
 
     pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {
@@ -143,7 +142,7 @@ impl UseregHelper {
     }
 }
 
-impl NetHelper for UseregHelper {
+impl<'a> NetHelper for UseregHelper<'a> {
     fn login(&self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);

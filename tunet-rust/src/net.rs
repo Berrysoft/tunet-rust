@@ -4,22 +4,21 @@ use crypto::md5::Md5;
 use reqwest::Client;
 use std::string::String;
 
-pub struct NetConnect {
+pub struct NetConnect<'a> {
     credential: NetCredential,
-    client: Client,
+    client: &'a Client,
 }
 
 const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
 const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
-impl NetConnect {
-    pub fn from_cred(u: String, p: String, proxy: bool) -> Result<Self> {
-        let client = if proxy { Client::new() } else { Client::builder().no_proxy().build()? };
-        Ok(NetConnect { credential: NetCredential::from_cred(u, p), client })
+impl<'a> NetConnect<'a> {
+    pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
+        NetConnect { credential: NetCredential::from_cred(u, p), client }
     }
 }
 
-impl NetHelper for NetConnect {
+impl<'a> NetHelper for NetConnect<'a> {
     fn login(&self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
@@ -35,7 +34,7 @@ impl NetHelper for NetConnect {
     }
 }
 
-impl NetConnectHelper for NetConnect {
+impl<'a> NetConnectHelper for NetConnect<'a> {
     fn flux(&self) -> Result<NetFlux> {
         let mut res = self.client.get(NET_FLUX_URI).send()?;
         Ok(NetFlux::from_str(&res.text()?))

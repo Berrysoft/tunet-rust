@@ -64,6 +64,7 @@ pub enum NetHelperError {
     NoAcIdErr,
     IoErr(io::Error),
     NoneErr(option::NoneError),
+    InvalidOrderErr,
 }
 
 impl convert::From<reqwest::Error> for NetHelperError {
@@ -127,12 +128,12 @@ pub trait NetConnectHelper: NetHelper {
     fn flux(&self) -> Result<NetFlux>;
 }
 
-pub enum TUNetConnect {
-    Net(net::NetConnect),
-    Auth(auth::AuthConnect),
+pub enum TUNetConnect<'a> {
+    Net(net::NetConnect<'a>),
+    Auth(auth::AuthConnect<'a>),
 }
 
-impl NetHelper for TUNetConnect {
+impl<'a> NetHelper for TUNetConnect<'a> {
     fn login(&self) -> Result<String> {
         match self {
             Self::Net(c) => c.login(),
@@ -147,7 +148,7 @@ impl NetHelper for TUNetConnect {
     }
 }
 
-impl NetConnectHelper for TUNetConnect {
+impl<'a> NetConnectHelper for TUNetConnect<'a> {
     fn flux(&self) -> Result<NetFlux> {
         match self {
             Self::Net(c) => c.flux(),
@@ -156,15 +157,11 @@ impl NetConnectHelper for TUNetConnect {
     }
 }
 
-pub fn from_state(s: NetState, proxy: bool) -> Result<TUNetConnect> {
-    from_state_cred(s, String::new(), String::new(), proxy)
-}
-
-pub fn from_state_cred(s: NetState, u: String, p: String, proxy: bool) -> Result<TUNetConnect> {
+pub fn from_state_cred_client<'a>(s: NetState, u: String, p: String, client: &'a reqwest::Client) -> Result<TUNetConnect> {
     match s {
-        NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred(u, p, proxy)?)),
-        NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred(u, p, proxy)?)),
-        NetState::Auth6 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_v6(u, p, proxy)?)),
+        NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(u, p, client))),
+        NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client(u, p, client))),
+        NetState::Auth6 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client_v6(u, p, client))),
         _ => Err(NetHelperError::NoneErr(option::NoneError {})),
     }
 }

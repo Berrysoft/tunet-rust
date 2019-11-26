@@ -32,26 +32,25 @@ fn base64(t: &[u8]) -> String {
     unsafe { String::from_utf8_unchecked(u) }
 }
 
-pub struct AuthConnect {
+pub struct AuthConnect<'a> {
     credential: NetCredential,
-    client: Client,
+    client: &'a Client,
     ver: i32,
 }
 
 const AC_IDS: [i32; 5] = [1, 25, 33, 35, 37];
 
-impl AuthConnect {
-    pub fn from_cred(u: String, p: String, proxy: bool) -> Result<Self> {
-        AuthConnect::from_cred_v(u, p, proxy, 4)
+impl<'a> AuthConnect<'a> {
+    pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
+        Self::from_cred_client_v(u, p, client, 4)
     }
 
-    pub fn from_cred_v6(u: String, p: String, proxy: bool) -> Result<Self> {
-        AuthConnect::from_cred_v(u, p, proxy, 6)
+    pub fn from_cred_client_v6(u: String, p: String, client: &'a Client) -> Self {
+        Self::from_cred_client_v(u, p, client, 6)
     }
 
-    fn from_cred_v(u: String, p: String, proxy: bool, v: i32) -> Result<Self> {
-        let client = if proxy { Client::new() } else { Client::builder().no_proxy().build()? };
-        Ok(AuthConnect { credential: NetCredential::from_cred(u, p), client, ver: v })
+    fn from_cred_client_v(u: String, p: String, client: &'a Client, v: i32) -> Self {
+        AuthConnect { credential: NetCredential::from_cred(u, p), client, ver: v }
     }
 
     fn challenge(&self) -> Result<String> {
@@ -75,7 +74,7 @@ fn parse_response(t: &str) -> Result<(bool, String)> {
     Ok((false, String::new()))
 }
 
-impl NetHelper for AuthConnect {
+impl<'a> NetHelper for AuthConnect<'a> {
     fn login(&self) -> Result<String> {
         for ac_id in &AC_IDS {
             let token = self.challenge()?;
@@ -135,7 +134,7 @@ impl NetHelper for AuthConnect {
     }
 }
 
-impl NetConnectHelper for AuthConnect {
+impl<'a> NetConnectHelper for AuthConnect<'a> {
     fn flux(&self) -> Result<NetFlux> {
         let mut res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/rad_user_info.php", self.ver)).send()?;
         Ok(NetFlux::from_str(&res.text()?))
