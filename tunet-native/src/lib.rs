@@ -11,19 +11,26 @@ use std::vec::Vec;
 use tunet_rust::usereg::*;
 use tunet_rust::*;
 
-const TUNET_NET: i32 = 1;
-const TUNET_AUTH4: i32 = 2;
-const TUNET_AUTH6: i32 = 3;
+#[repr(i32)]
+pub enum State {
+    Unknown,
+    Net,
+    Auth4,
+    Auth6,
+}
 
-const TUNET_DETAIL_LOGIN_TIME: i32 = 0;
-const TUNET_DETAIL_LOGOUT_TIME: i32 = 1;
-const TUNET_DETAIL_FLUX: i32 = 2;
+#[repr(i32)]
+pub enum DetailOrder {
+    LoginTime,
+    LogoutTime,
+    Flux,
+}
 
 #[repr(C)]
 pub struct Credential {
     username: *const c_char,
     password: *const c_char,
-    state: i32,
+    state: State,
     use_proxy: i32,
 }
 
@@ -90,10 +97,10 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
     unsafe {
         let u = exact_str(cred.username);
         let p = exact_str(cred.password);
-        let state = match cred.state {
-            TUNET_NET => NetState::Net,
-            TUNET_AUTH4 => NetState::Auth4,
-            TUNET_AUTH6 => NetState::Auth6,
+        let state = match &cred.state {
+            State::Net => NetState::Net,
+            State::Auth4 => NetState::Auth4,
+            State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
         from_state_cred_client(state, u.to_owned(), p.to_owned(), get_client(cred.use_proxy != 0))
@@ -235,18 +242,17 @@ fn tunet_usereg_users_fetch_impl(index: i32, user: &mut User) -> Result<i32> {
 static mut USEREG_DETAILS: Vec<NetDetail> = Vec::new();
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_details(cred: &Credential, order: i32, desc: i32) -> i32 {
+pub extern "C" fn tunet_usereg_details(cred: &Credential, order: DetailOrder, desc: i32) -> i32 {
     unwrap_res(tunet_usereg_details_impl(cred, order, desc))
 }
 
-fn tunet_usereg_details_impl(cred: &Credential, order: i32, desc: i32) -> Result<i32> {
+fn tunet_usereg_details_impl(cred: &Credential, order: DetailOrder, desc: i32) -> Result<i32> {
     let helper = get_usereg_helper(cred)?;
     unsafe {
         let o = match order {
-            TUNET_DETAIL_LOGIN_TIME => NetDetailOrder::LoginTime,
-            TUNET_DETAIL_LOGOUT_TIME => NetDetailOrder::LogoutTime,
-            TUNET_DETAIL_FLUX => NetDetailOrder::Flux,
-            _ => return Err(NetHelperError::InvalidOrderErr),
+            DetailOrder::LoginTime => NetDetailOrder::LoginTime,
+            DetailOrder::LogoutTime => NetDetailOrder::LogoutTime,
+            DetailOrder::Flux => NetDetailOrder::Flux,
         };
         USEREG_DETAILS = helper.details(o, desc != 0)?;
         Ok(USEREG_DETAILS.len() as i32)
