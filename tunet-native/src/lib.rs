@@ -4,10 +4,9 @@ use std::convert::From;
 use std::ffi::CStr;
 use std::mem::size_of;
 use std::net::Ipv4Addr;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use std::ptr::{copy_nonoverlapping, null_mut};
 use std::string::String;
-use std::vec::Vec;
 use tunet_rust::usereg::*;
 use tunet_rust::*;
 
@@ -197,90 +196,51 @@ fn tunet_usereg_drop_impl(cred: &Credential, addr: i64) -> Result<i32> {
     Ok(0)
 }
 
-static mut USEREG_USERS: Vec<NetUser> = Vec::new();
+pub type UseregUsersCallback = extern "C" fn(user: &User, write_count: i32, data: *mut c_void) -> i32;
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_users(cred: &Credential) -> i32 {
-    unwrap_res(tunet_usereg_users_impl(cred))
+pub extern "C" fn tunet_usereg_users(cred: &Credential, user: &mut User, callback: Option<UseregUsersCallback>, data: *mut c_void) -> i32 {
+    unwrap_res(tunet_usereg_users_impl(cred, user, callback, data))
 }
 
-fn tunet_usereg_users_impl(cred: &Credential) -> Result<i32> {
+fn tunet_usereg_users_impl(cred: &Credential, user: &mut User, callback: Option<UseregUsersCallback>, data: *mut c_void) -> Result<i32> {
     let helper = get_usereg_helper(cred)?;
-    unsafe {
-        USEREG_USERS = helper.users()?;
-        Ok(USEREG_USERS.len() as i32)
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn tunet_usereg_users_destory() -> i32 {
-    unsafe {
-        USEREG_USERS.clear();
-    }
-    0
-}
-
-#[no_mangle]
-pub extern "C" fn tunet_usereg_users_fetch(index: i32, user: &mut User) -> i32 {
-    unwrap_res(tunet_usereg_users_fetch_impl(index, user))
-}
-
-fn tunet_usereg_users_fetch_impl(index: i32, user: &mut User) -> Result<i32> {
-    let index = index as usize;
-    unsafe {
-        if index < USEREG_USERS.len() {
-            let u = &USEREG_USERS[index];
+    let users = helper.users()?;
+    if let Some(callback) = callback {
+        for u in &users {
             user.address = u32::from(u.address) as i64;
             user.login_time = u.login_time.timestamp();
-            Ok(write_string(&u.client, user.client, user.client_len))
-        } else {
-            Ok(0)
+            let count = write_string(&u.client, user.client, user.client_len);
+            if callback(user, count, data) == 0 {
+                break;
+            }
         }
     }
+    Ok(users.len() as i32)
 }
 
-static mut USEREG_DETAILS: Vec<NetDetail> = Vec::new();
+pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_void) -> i32;
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_details(cred: &Credential, order: DetailOrder, desc: i32) -> i32 {
-    unwrap_res(tunet_usereg_details_impl(cred, order, desc))
+pub extern "C" fn tunet_usereg_details(cred: &Credential, order: DetailOrder, desc: i32, callback: Option<UseregDetailsCallback>, data: *mut c_void) -> i32 {
+    unwrap_res(tunet_usereg_details_impl(cred, order, desc, callback, data))
 }
 
-fn tunet_usereg_details_impl(cred: &Credential, order: DetailOrder, desc: i32) -> Result<i32> {
+fn tunet_usereg_details_impl(cred: &Credential, order: DetailOrder, desc: i32, callback: Option<UseregDetailsCallback>, data: *mut c_void) -> Result<i32> {
     let helper = get_usereg_helper(cred)?;
-    unsafe {
-        let o = match order {
-            DetailOrder::LoginTime => NetDetailOrder::LoginTime,
-            DetailOrder::LogoutTime => NetDetailOrder::LogoutTime,
-            DetailOrder::Flux => NetDetailOrder::Flux,
-        };
-        USEREG_DETAILS = helper.details(o, desc != 0)?;
-        Ok(USEREG_DETAILS.len() as i32)
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn tunet_usereg_details_destory() -> i32 {
-    unsafe {
-        USEREG_DETAILS.clear();
-    }
-    0
-}
-
-#[no_mangle]
-pub extern "C" fn tunet_usereg_details_fetch(index: i32, detail: &mut Detail) -> i32 {
-    unwrap_res(tunet_usereg_details_fetch_impl(index, detail))
-}
-
-fn tunet_usereg_details_fetch_impl(index: i32, detail: &mut Detail) -> Result<i32> {
-    let index = index as usize;
-    unsafe {
-        if index < USEREG_DETAILS.len() {
-            let d = &USEREG_DETAILS[index];
-            detail.login_time = d.login_time.timestamp();
-            detail.logout_time = d.logout_time.timestamp();
-            detail.flux = d.flux as i64;
+    let o = match order {
+        DetailOrder::LoginTime => NetDetailOrder::LoginTime,
+        DetailOrder::LogoutTime => NetDetailOrder::LogoutTime,
+        DetailOrder::Flux => NetDetailOrder::Flux,
+    };
+    let details = helper.details(o, desc != 0)?;
+    if let Some(callback) = callback {
+        for d in &details {
+            let detail = Detail { login_time: d.login_time.timestamp(), logout_time: d.logout_time.timestamp(), flux: d.flux as i64 };
+            if callback(&detail, data) == 0 {
+                break;
+            }
         }
     }
-    Ok(0)
+    Ok(details.len() as i32)
 }
