@@ -5,7 +5,7 @@ use chrono::Datelike;
 use dirs::config_dir;
 use itertools::Itertools;
 use lazy_static::*;
-use reqwest::Client;
+use reqwest::blocking::Client;
 use rpassword::read_password;
 use serde_json::{self, json};
 use std::fs::{remove_file, DirBuilder, File};

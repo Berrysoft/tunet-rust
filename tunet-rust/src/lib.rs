@@ -157,7 +157,7 @@ impl<'a> NetConnectHelper for TUNetConnect<'a> {
     }
 }
 
-pub fn from_state_cred_client<'a>(s: NetState, u: String, p: String, client: &'a reqwest::Client) -> Result<TUNetConnect> {
+pub fn from_state_cred_client<'a>(s: NetState, u: String, p: String, client: &'a reqwest::blocking::Client) -> Result<TUNetConnect> {
     match s {
         NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(u, p, client))),
         NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client(u, p, client))),

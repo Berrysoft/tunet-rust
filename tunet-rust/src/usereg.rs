@@ -2,7 +2,7 @@ use super::*;
 use chrono::prelude::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
-use reqwest::Client;
+use reqwest::blocking::Client;
 use select::document::Document;
 use select::predicate::*;
 use std::net::Ipv4Addr;
@@ -94,12 +94,12 @@ impl<'a> UseregHelper<'a> {
 
     pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {
         let params = [("action", "drop"), ("user_ip", &addr.to_string())];
-        let mut res = self.client.post(USEREG_INFO_URI).form(&params).send()?;
+        let res = self.client.post(USEREG_INFO_URI).form(&params).send()?;
         Ok(res.text()?)
     }
 
     pub fn users(&self) -> Result<Vec<NetUser>> {
-        let mut res = self.client.get(USEREG_INFO_URI).send()?;
+        let res = self.client.get(USEREG_INFO_URI).send()?;
         let doc = Document::from(&res.text()? as &str);
         Ok(doc
             .find(Name("tr").descendant(Attr("align", "center")))
@@ -117,7 +117,7 @@ impl<'a> UseregHelper<'a> {
         let mut list: Vec<NetDetail> = Vec::new();
         let mut i = 1;
         loop {
-            let mut res = self.client.get(&format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}", now.year(), now.month(), now.day(), i, off, o.get_query(), if des { "DESC" } else { "" },)).send()?;
+            let res = self.client.get(&format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}", now.year(), now.month(), now.day(), i, off, o.get_query(), if des { "DESC" } else { "" },)).send()?;
             let doc = Document::from(&res.text()? as &str);
             let mut ds = doc
                 .find(Name("tr").descendant(Attr("align", "center")))
@@ -147,12 +147,12 @@ impl<'a> NetHelper for UseregHelper<'a> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
         let params = [("action", "login"), ("user_login_name", &self.credential.username), ("user_password", &cry.result_str())];
-        let mut res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
+        let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }
     fn logout(&self) -> Result<String> {
         let params = [("action", "logout")];
-        let mut res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
+        let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }
 }

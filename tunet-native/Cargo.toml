@@ -13,4 +13,7 @@ crate-type = ["cdylib"]
 [dependencies]
 tunet-rust = { path = "../tunet-rust" }
 lazy_static = "1.4"
-reqwest = "0.9"
+
+[dependencies.reqwest]
+version = "0.10"
+features = ["cookies"]

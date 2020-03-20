@@ -1,5 +1,5 @@
 use lazy_static::*;
-use reqwest::Client;
+use reqwest::blocking::Client;
 use std::convert::From;
 use std::ffi::CStr;
 use std::mem::size_of;
