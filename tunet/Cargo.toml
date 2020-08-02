@@ -14,7 +14,7 @@ structopt = "0.3"
 itertools = "0.9"
 ansi_term = "0.12"
 rpassword = "4.0"
-dirs = "2.0"
+dirs = "3.0"
 base64 = "0.12"
 lazy_static = "1.4"
 

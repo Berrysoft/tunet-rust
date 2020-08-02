@@ -5,7 +5,7 @@ use std::ffi::CStr;
 use std::mem::size_of;
 use std::net::Ipv4Addr;
 use std::os::raw::{c_char, c_void};
-use std::ptr::{copy_nonoverlapping, null_mut};
+use std::ptr::copy_nonoverlapping;
 use std::string::String;
 use tunet_rust::usereg::*;
 use tunet_rust::*;
@@ -36,7 +36,6 @@ pub struct Credential {
 #[repr(C)]
 pub struct Flux {
     username: *mut c_char,
-    username_len: i32,
     flux: i64,
     online_time: i64,
     balance: f64,
@@ -47,7 +46,6 @@ pub struct User {
     address: i64,
     login_time: i64,
     client: *mut c_char,
-    client_len: i32,
 }
 
 #[repr(C)]
@@ -59,20 +57,25 @@ pub struct Detail {
 
 static mut ERROR_MSG: String = String::new();
 
-fn write_string(msg: &str, ptr: *mut c_char, len: i32) -> i32 {
-    if ptr != null_mut() {
-        unsafe {
-            copy_nonoverlapping(msg.as_ptr(), ptr as *mut u8, len as usize * size_of::<u8>());
+fn write_string(msg: &str) -> *mut c_char {
+    unsafe {
+        let ptr = libc::malloc(msg.len() + 1) as *mut c_char;
+        if !ptr.is_null() {
+            copy_nonoverlapping(msg.as_ptr(), ptr as *mut u8, msg.len() * size_of::<u8>());
+            *(ptr.add(msg.len())) = 0;
         }
-        msg.len() as i32
-    } else {
-        0
+        ptr
     }
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_last_err(message: *mut c_char, len: i32) -> i32 {
-    unsafe { write_string(&ERROR_MSG, message, len) }
+pub extern "C" fn tunet_last_err() -> *mut c_char {
+    unsafe { write_string(&ERROR_MSG) }
+}
+
+#[no_mangle]
+pub extern "C" fn tunet_string_free(ptr: *const c_char) {
+    unsafe { libc::free(ptr as *mut c_void) }
 }
 
 unsafe fn exact_str<'a>(cstr: *const c_char) -> &'a str {
@@ -156,10 +159,11 @@ pub extern "C" fn tunet_status(cred: &Credential, flux: &mut Flux) -> i32 {
 fn tunet_status_impl(cred: &Credential, flux: &mut Flux) -> Result<i32> {
     let helper = get_helper(cred)?;
     let f = helper.flux()?;
+    flux.username = write_string(&f.username);
     flux.online_time = f.online_time.as_secs() as i64;
     flux.flux = f.flux as i64;
     flux.balance = f.balance;
-    Ok(write_string(&f.username, flux.username, flux.username_len))
+    Ok(0)
 }
 
 #[no_mangle]
@@ -196,7 +200,7 @@ fn tunet_usereg_drop_impl(cred: &Credential, addr: i64) -> Result<i32> {
     Ok(0)
 }
 
-pub type UseregUsersCallback = extern "C" fn(user: &User, write_count: i32, data: *mut c_void) -> i32;
+pub type UseregUsersCallback = extern "C" fn(user: &User, data: *mut c_void) -> i32;
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_users(cred: &Credential, user: &mut User, callback: Option<UseregUsersCallback>, data: *mut c_void) -> i32 {
@@ -210,8 +214,8 @@ fn tunet_usereg_users_impl(cred: &Credential, user: &mut User, callback: Option<
         for u in &users {
             user.address = u32::from(u.address) as i64;
             user.login_time = u.login_time.timestamp();
-            let count = write_string(&u.client, user.client, user.client_len);
-            if callback(user, count, data) == 0 {
+            user.client = write_string(&u.client);
+            if callback(user, data) == 0 {
                 break;
             }
         }
