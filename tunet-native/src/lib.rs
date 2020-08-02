@@ -45,7 +45,7 @@ pub struct Flux {
 pub struct User {
     address: i64,
     login_time: i64,
-    client: *mut c_char,
+    mac_address: [u8; 6],
 }
 
 #[repr(C)]
@@ -214,7 +214,7 @@ fn tunet_usereg_users_impl(cred: &Credential, user: &mut User, callback: Option<
         for u in &users {
             user.address = u32::from(u.address) as i64;
             user.login_time = u.login_time.timestamp();
-            user.client = write_string(&u.client);
+            user.mac_address = u.mac_address.octets();
             if callback(user, data) == 0 {
                 break;
             }

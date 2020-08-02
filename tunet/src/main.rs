@@ -280,9 +280,9 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
     let us = c.users()?;
     for u in us {
         if color {
-            println!("{} {} {}", Color::Yellow.normal().paint(format!("{:15}", u.address.to_string())), strfmt::colored_date_time(u.login_time), Color::Blue.normal().paint(format!("{:10}", u.client)));
+            println!("{} {} {}", Color::Yellow.normal().paint(format!("{:15}", u.address.to_string())), strfmt::colored_date_time(u.login_time), Color::Blue.normal().paint(format!("{:10}", u.mac_address.to_string())));
         } else {
-            println!("{:15} {:20} {:10}", u.address.to_string(), strfmt::format_date_time(u.login_time), u.client);
+            println!("{:15} {:20} {:10}", u.address.to_string(), strfmt::format_date_time(u.login_time), u.mac_address.to_string());
         }
     }
     Ok(())

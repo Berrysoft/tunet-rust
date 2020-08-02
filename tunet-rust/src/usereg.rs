@@ -2,6 +2,7 @@ use super::*;
 use chrono::prelude::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
+use hwaddr::HwAddr;
 use reqwest::blocking::Client;
 use select::document::Document;
 use select::predicate::*;
@@ -13,12 +14,12 @@ use std::vec::Vec;
 pub struct NetUser {
     pub address: Ipv4Addr,
     pub login_time: NaiveDateTime,
-    pub client: String,
+    pub mac_address: HwAddr,
 }
 
 impl NetUser {
-    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, c: String) -> Self {
-        NetUser { address: a, login_time: t, client: c }
+    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: HwAddr) -> Self {
+        NetUser { address: a, login_time: t, mac_address: m }
     }
 }
 
@@ -106,7 +107,7 @@ impl<'a> UseregHelper<'a> {
             .skip(1)
             .map(|node| {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                NetUser::from_detail(Ipv4Addr::from_str(&tds[0].text()).unwrap(), NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT).unwrap(), tds[10].text())
+                NetUser::from_detail(Ipv4Addr::from_str(&tds[0].text()).unwrap(), NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT).unwrap(), tds[10].text().parse::<HwAddr>().unwrap())
             })
             .collect::<Vec<_>>())
     }
