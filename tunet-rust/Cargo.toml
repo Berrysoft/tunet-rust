@@ -17,6 +17,8 @@ rustc-serialize = "0.3"
 select = "0.5"
 chrono = "0.4"
 hwaddr = { git = "https://github.com/meh/rust-hwaddr" }
+lazy_static = "1.4"
+regex = "1"
 
 [dependencies.reqwest]
 version = "0.10"

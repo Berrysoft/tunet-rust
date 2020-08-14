@@ -5,6 +5,8 @@ use crypto::hmac::Hmac;
 use crypto::mac::Mac;
 use crypto::md5::Md5;
 use crypto::sha1::Sha1;
+use lazy_static::lazy_static;
+use regex::Regex;
 use reqwest::blocking::Client;
 use rustc_serialize::hex::ToHex;
 use serde_json::{self, Value};
@@ -40,6 +42,10 @@ pub struct AuthConnect<'a> {
 
 const AC_IDS: [i32; 5] = [1, 25, 33, 35, 37];
 
+lazy_static! {
+    static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
+}
+
 impl<'a> AuthConnect<'a> {
     pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
         Self::from_cred_client_v(u, p, client, 4)
@@ -62,6 +68,29 @@ impl<'a> AuthConnect<'a> {
             _ => Ok(String::new()),
         }
     }
+
+    fn get_ac_id(&self) -> Result<i32> {
+        let res = self.client.get(if self.ver == 4 { "http://3.3.3.3/" } else { "http://[333::3]/" }).send()?;
+        let t = res.text()?;
+        match AC_ID_REGEX.captures(&t) {
+            Some(cap) => Ok(cap[1].parse::<i32>().unwrap()),
+            _ => Err(NetHelperError::NoAcIdErr),
+        }
+    }
+
+    fn do_log<F>(&self, action: F) -> Result<String>
+    where
+        F: Fn(i32) -> Result<String>,
+    {
+        for ac_id in &AC_IDS {
+            let res = action(*ac_id);
+            if res.is_ok() {
+                return res;
+            }
+        }
+        let ac_id = self.get_ac_id()?;
+        return action(ac_id);
+    }
 }
 
 fn parse_response(t: &str) -> Result<(bool, String)> {
@@ -76,7 +105,7 @@ fn parse_response(t: &str) -> Result<(bool, String)> {
 
 impl<'a> NetHelper for AuthConnect<'a> {
     fn login(&self) -> Result<String> {
-        for ac_id in &AC_IDS {
+        self.do_log(|ac_id| {
             let token = self.challenge()?;
             let mut md5 = Md5::new();
             md5.input_str(&token);
@@ -99,16 +128,15 @@ impl<'a> NetHelper for AuthConnect<'a> {
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
-                return Ok(msg);
+                Ok(msg)
             } else {
-                continue;
+                Err(NetHelperError::NoAcIdErr)
             }
-        }
-        Err(NetHelperError::NoAcIdErr)
+        })
     }
 
     fn logout(&self) -> Result<String> {
-        for ac_id in &AC_IDS {
+        self.do_log(|ac_id| {
             let token = self.challenge()?;
             let encode_json = serde_json::json!({
                 "username":self.credential.username,
@@ -125,12 +153,11 @@ impl<'a> NetHelper for AuthConnect<'a> {
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
-                return Ok(msg);
+                Ok(msg)
             } else {
-                continue;
+                Err(NetHelperError::NoAcIdErr)
             }
-        }
-        Err(NetHelperError::NoAcIdErr)
+        })
     }
 }
 
