@@ -1,6 +1,6 @@
 use ansi_term;
 use ansi_term::Color;
-use base64::{decode, encode};
+use base64::encode;
 use chrono::Datelike;
 use dirs::config_dir;
 use itertools::Itertools;
@@ -133,7 +133,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_cred_from_stdio() -> Result<(String, String)> {
+fn read_cred_from_stdio() -> Result<(String, String, Vec<i32>)> {
     print!("请输入用户名：");
     stdout().flush()?;
     let mut u = String::new();
@@ -141,7 +141,7 @@ fn read_cred_from_stdio() -> Result<(String, String)> {
     print!("请输入密码：");
     stdout().flush()?;
     let p = read_password()?;
-    Ok((u, p))
+    Ok((u, p, vec![]))
 }
 
 fn settings_folder_path() -> Result<PathBuf> {
@@ -158,17 +158,19 @@ fn settings_file_path() -> Result<PathBuf> {
     Ok(p)
 }
 
-fn read_cred_from_file() -> Result<(String, String)> {
+fn read_cred_from_file() -> Result<(String, String, Vec<i32>)> {
     let p = settings_file_path()?;
     let f = File::open(p)?;
     let reader = BufReader::new(f);
     let json: serde_json::Value = serde_json::from_reader(reader)?;
     if let serde_json::Value::String(u) = &json["Username"] {
         if let serde_json::Value::String(p) = &json["Password"] {
-            return Ok((u.to_string(), p.to_string()));
+            if let serde_json::Value::Array(v) = &json["AcIds"] {
+                return Ok((u.to_string(), p.to_string(), v.into_iter().map(|v| v.as_i64().unwrap() as i32).collect()));
+            }
         }
     }
-    Ok((String::new(), String::new()))
+    Ok((String::new(), String::new(), vec![]))
 }
 
 fn settings_file_exists() -> bool {
@@ -188,7 +190,7 @@ fn create_settings_folder() -> Result<()> {
     Ok(())
 }
 
-fn read_cred() -> Result<(String, String)> {
+fn read_cred() -> Result<(String, String, Vec<i32>)> {
     if settings_file_exists() {
         read_cred_from_file()
     } else {
@@ -197,7 +199,7 @@ fn read_cred() -> Result<(String, String)> {
 }
 
 fn save_cred() -> Result<()> {
-    let (u, p) = read_cred_from_stdio()?;
+    let (u, p, _ac_ids) = read_cred_from_stdio()?;
     create_settings_folder()?;
     let json = json!({
         "username":u,
@@ -241,23 +243,23 @@ fn get_client(proxy: bool) -> &'static Client {
 }
 
 fn do_login(s: NetState, proxy: bool) -> Result<()> {
-    let (u, p) = read_cred()?;
-    let c = from_state_cred_client(s, u, p, get_client(proxy))?;
+    let (u, p, ac_ids) = read_cred()?;
+    let c = from_state_cred_client(s, u, p, get_client(proxy), &ac_ids)?;
     let res = c.login()?;
     println!("{}", res);
     Ok(())
 }
 
 fn do_logout(s: NetState, proxy: bool) -> Result<()> {
-    let (u, p) = read_cred()?;
-    let c = from_state_cred_client(s, u, p, get_client(proxy))?;
+    let (u, p, ac_ids) = read_cred()?;
+    let c = from_state_cred_client(s, u, p, get_client(proxy), &ac_ids)?;
     let res = c.logout()?;
     println!("{}", res);
     Ok(())
 }
 
 fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
-    let c = from_state_cred_client(s, String::new(), String::new(), get_client(proxy))?;
+    let c = from_state_cred_client(s, String::new(), String::new(), get_client(proxy), &[0; 0])?;
     let f = c.flux()?;
     if color {
         println!("{} {}", Color::Cyan.normal().paint("用户"), Color::Yellow.normal().paint(f.username));
@@ -274,7 +276,7 @@ fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
 }
 
 fn do_online(color: bool, proxy: bool) -> Result<()> {
-    let (u, p) = read_cred()?;
+    let (u, p, _ac_ids) = read_cred()?;
     let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let us = c.users()?;
@@ -289,7 +291,7 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
 }
 
 fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
-    let (u, p) = read_cred()?;
+    let (u, p, _ac_ids) = read_cred()?;
     let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let res = c.drop(a)?;
@@ -298,7 +300,7 @@ fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
 }
 
 fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
-    let (u, p) = read_cred()?;
+    let (u, p, _ac_ids) = read_cred()?;
     let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let details = c.details(o, d)?;
@@ -320,7 +322,7 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
 }
 
 fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
-    let (u, p) = read_cred()?;
+    let (u, p, _ac_ids) = read_cred()?;
     let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let mut details = c.details(NetDetailOrder::LogoutTime, d)?.iter().group_by(|detail| detail.logout_time.date()).into_iter().map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>())).collect::<Vec<_>>();

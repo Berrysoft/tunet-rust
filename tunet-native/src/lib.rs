@@ -105,7 +105,7 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        from_state_cred_client(state, u.to_owned(), p.to_owned(), get_client(cred.use_proxy != 0))
+        from_state_cred_client(state, u.to_owned(), p.to_owned(), get_client(cred.use_proxy != 0), &[0; 0])
     }
 }
 

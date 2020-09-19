@@ -38,6 +38,7 @@ pub struct AuthConnect<'a> {
     credential: NetCredential,
     client: &'a Client,
     ver: i32,
+    additional_ac_ids: &'a [i32],
 }
 
 const AC_IDS: [i32; 5] = [1, 25, 33, 35, 37];
@@ -47,16 +48,16 @@ lazy_static! {
 }
 
 impl<'a> AuthConnect<'a> {
-    pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
-        Self::from_cred_client_v(u, p, client, 4)
+    pub fn from_cred_client(u: String, p: String, client: &'a Client, ac_ids: &'a [i32]) -> Self {
+        Self::from_cred_client_v(u, p, client, 4, ac_ids)
     }
 
-    pub fn from_cred_client_v6(u: String, p: String, client: &'a Client) -> Self {
-        Self::from_cred_client_v(u, p, client, 6)
+    pub fn from_cred_client_v6(u: String, p: String, client: &'a Client, ac_ids: &'a [i32]) -> Self {
+        Self::from_cred_client_v(u, p, client, 6, ac_ids)
     }
 
-    fn from_cred_client_v(u: String, p: String, client: &'a Client, v: i32) -> Self {
-        AuthConnect { credential: NetCredential::from_cred(u, p), client, ver: v }
+    fn from_cred_client_v(u: String, p: String, client: &'a Client, v: i32, ac_ids: &'a [i32]) -> Self {
+        AuthConnect { credential: NetCredential::from_cred(u, p), client, ver: v, additional_ac_ids: ac_ids }
     }
 
     fn challenge(&self) -> Result<String> {
@@ -83,6 +84,12 @@ impl<'a> AuthConnect<'a> {
         F: Fn(i32) -> Result<String>,
     {
         for ac_id in &AC_IDS {
+            let res = action(*ac_id);
+            if res.is_ok() {
+                return res;
+            }
+        }
+        for ac_id in self.additional_ac_ids {
             let res = action(*ac_id);
             if res.is_ok() {
                 return res;
