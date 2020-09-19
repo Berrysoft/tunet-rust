@@ -1,0 +1,24 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+steps:
+- script: cargo build --release
+  displayName: 'Build'
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: 'target/release/'
+    Contents: 'tunet'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    ArtifactName: 'publish'
