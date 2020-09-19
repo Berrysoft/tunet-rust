@@ -163,9 +163,9 @@ fn read_cred_from_file() -> Result<(String, String)> {
     let f = File::open(p)?;
     let reader = BufReader::new(f);
     let json: serde_json::Value = serde_json::from_reader(reader)?;
-    if let serde_json::Value::String(u) = &json["username"] {
-        if let serde_json::Value::String(p) = &json["password"] {
-            return Ok((u.to_string(), unsafe { String::from_utf8_unchecked(decode(&p).unwrap()) }));
+    if let serde_json::Value::String(u) = &json["Username"] {
+        if let serde_json::Value::String(p) = &json["Password"] {
+            return Ok((u.to_string(), p.to_string()));
         }
     }
     Ok((String::new(), String::new()))
