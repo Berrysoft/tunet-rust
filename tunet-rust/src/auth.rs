@@ -137,7 +137,7 @@ impl<'a> NetHelper for AuthConnect<'a> {
             if suc {
                 Ok(msg)
             } else {
-                Err(NetHelperError::NoAcIdErr)
+                Err(NetHelperError::LogErr(msg))
             }
         })
     }
@@ -162,7 +162,7 @@ impl<'a> NetHelper for AuthConnect<'a> {
             if suc {
                 Ok(msg)
             } else {
-                Err(NetHelperError::NoAcIdErr)
+                Err(NetHelperError::LogErr(msg))
             }
         })
     }

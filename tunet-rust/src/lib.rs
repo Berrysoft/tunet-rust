@@ -62,6 +62,7 @@ pub enum NetHelperError {
     HttpErr(reqwest::Error),
     JsonErr(error::Error),
     NoAcIdErr,
+    LogErr(String),
     IoErr(io::Error),
     NoneErr(option::NoneError),
     InvalidOrderErr,
