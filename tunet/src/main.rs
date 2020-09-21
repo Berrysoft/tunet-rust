@@ -1,4 +1,3 @@
-use ansi_term;
 use ansi_term::Color;
 use chrono::Datelike;
 use dirs::config_dir;
@@ -59,6 +58,16 @@ enum TUNet {
         /// 使用系统代理
         proxy: bool,
     },
+    #[structopt(name = "connect")]
+    /// 上线IP
+    Connect {
+        #[structopt(long, short)]
+        /// IP地址
+        address: Ipv4Addr,
+        #[structopt(long = "use-proxy", short = "p")]
+        /// 使用系统代理
+        proxy: bool,
+    },
     #[structopt(name = "drop")]
     /// 下线IP
     Drop {
@@ -97,33 +106,21 @@ fn main() -> Result<()> {
     let console_color_ok = ansi_term::enable_ansi_support().is_ok();
     let opt = TUNet::from_args();
     match opt {
-        TUNet::Login { host, proxy } => {
-            do_login(host, proxy)?;
-        }
-        TUNet::Logout { host, proxy } => {
-            do_logout(host, proxy)?;
-        }
-        TUNet::Status { host, proxy } => {
-            do_status(host, console_color_ok, proxy)?;
-        }
-        TUNet::Online { proxy } => {
-            do_online(console_color_ok, proxy)?;
-        }
-        TUNet::Drop { address, proxy } => {
-            do_drop(address, proxy)?;
-        }
+        TUNet::Login { host, proxy } => do_login(host, proxy),
+        TUNet::Logout { host, proxy } => do_logout(host, proxy),
+        TUNet::Status { host, proxy } => do_status(host, console_color_ok, proxy),
+        TUNet::Online { proxy } => do_online(console_color_ok, proxy),
+        TUNet::Connect { address, proxy } => do_connect(address, proxy),
+        TUNet::Drop { address, proxy } => do_drop(address, proxy),
         TUNet::Detail { order, descending, grouping, proxy } => {
             if grouping {
-                do_detail_grouping(order, descending, console_color_ok, proxy)?;
+                do_detail_grouping(order, descending, console_color_ok, proxy)
             } else {
-                do_detail(order, descending, console_color_ok, proxy)?;
+                do_detail(order, descending, console_color_ok, proxy)
             }
         }
-        TUNet::DeleteCredential {} => {
-            delete_cred()?;
-        }
-    };
-    Ok(())
+        TUNet::DeleteCredential {} => delete_cred(),
+    }
 }
 
 fn read_cred_from_stdio() -> Result<(String, String, Vec<i32>)> {
@@ -283,6 +280,15 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
             println!("{:15} {:20} {:10}", u.address.to_string(), strfmt::format_date_time(u.login_time), u.mac_address.to_string());
         }
     }
+    Ok(())
+}
+
+fn do_connect(a: Ipv4Addr, proxy: bool) -> Result<()> {
+    let (u, p, _ac_ids) = read_cred()?;
+    let mut c = UseregHelper::from_cred_client(u, p, get_client(proxy));
+    c.login()?;
+    let res = c.connect(a)?;
+    println!("{}", res);
     Ok(())
 }
 

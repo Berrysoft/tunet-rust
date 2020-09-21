@@ -75,6 +75,7 @@ pub struct UseregHelper<'a> {
 
 const USEREG_LOG_URI: &'static str = "https://usereg.tsinghua.edu.cn/do.php";
 const USEREG_INFO_URI: &'static str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
+const USEREG_CONNECT_URI: &'static str = "https://usereg.tsinghua.edu.cn/ip_login.php";
 const DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 
 fn parse_flux(s: &str) -> u64 {
@@ -91,6 +92,12 @@ fn parse_flux(s: &str) -> u64 {
 impl<'a> UseregHelper<'a> {
     pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
         UseregHelper { credential: NetCredential::from_cred(u, p), client }
+    }
+
+    pub fn connect(&self, addr: Ipv4Addr) -> Result<String> {
+        let params = [("drop", "0"), ("user_ip", &addr.to_string())];
+        let res = self.client.post(USEREG_CONNECT_URI).form(&params).send()?;
+        Ok(res.text()?)
     }
 
     pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {
