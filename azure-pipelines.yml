@@ -10,12 +10,15 @@ strategy:
   matrix:
     linux:
       imageName: 'ubuntu-16.04'
+      rid: 'linux-x64'
       exeName: 'tunet'
     mac:
       imageName: 'macos-10.14'
+      rid: 'osx-x64'
       exeName: 'tunet'
     windows:
       imageName: 'windows-latest'
+      rid: 'win-x64'
       exeName: 'tunet.exe'
 pool:
   vmImage: $(imageName)
@@ -28,7 +31,7 @@ steps:
   inputs:
     SourceFolder: 'target/release/'
     Contents: '$(exeName)'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/$(rid)'
 
 - task: PublishBuildArtifacts@1
   inputs:

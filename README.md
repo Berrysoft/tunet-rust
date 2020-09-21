@@ -2,6 +2,8 @@
 清华大学校园网Rust库与客户端。
 
 这一版本与[TsinghuaNet](https://github.com/Berrysoft/TsinghuaNet)中的TsinghuaNet.CLI功能相同。
+
+[![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 ## 登录/注销
 ``` bash
 # 使用默认（自动判断）方式登录
@@ -24,7 +26,9 @@
 ``` bash
 # 查询
 ./tunet online
-# 强制下线
+# IP上线
+./tunet connect -a IP地址
+# IP下线
 ./tunet drop -a IP地址
 ```
 ## 流量明细
