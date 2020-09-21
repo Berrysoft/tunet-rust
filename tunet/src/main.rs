@@ -1,6 +1,5 @@
 use ansi_term;
 use ansi_term::Color;
-use base64::encode;
 use chrono::Datelike;
 use dirs::config_dir;
 use itertools::Itertools;
