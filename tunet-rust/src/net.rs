@@ -19,7 +19,7 @@ impl<'a> NetConnect<'a> {
 }
 
 impl<'a> NetHelper for NetConnect<'a> {
-    fn login(&self) -> Result<String> {
+    fn login(&mut self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
         let password_md5 = "{MD5_HEX}".to_owned() + &cry.result_str();
@@ -27,7 +27,7 @@ impl<'a> NetHelper for NetConnect<'a> {
         let res = self.client.post(NET_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }
-    fn logout(&self) -> Result<String> {
+    fn logout(&mut self) -> Result<String> {
         let params = [("action", "logout")];
         let res = self.client.post(NET_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
@@ -38,5 +38,8 @@ impl<'a> NetConnectHelper for NetConnect<'a> {
     fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(NET_FLUX_URI).send()?;
         Ok(NetFlux::from_str(&res.text()?))
+    }
+    fn ac_ids(&self) -> &[i32] {
+        &[0; 0]
     }
 }

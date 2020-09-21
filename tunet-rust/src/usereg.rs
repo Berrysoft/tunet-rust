@@ -144,14 +144,14 @@ impl<'a> UseregHelper<'a> {
 }
 
 impl<'a> NetHelper for UseregHelper<'a> {
-    fn login(&self) -> Result<String> {
+    fn login(&mut self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
         let params = [("action", "login"), ("user_login_name", &self.credential.username), ("user_password", &cry.result_str())];
         let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }
-    fn logout(&self) -> Result<String> {
+    fn logout(&mut self) -> Result<String> {
         let params = [("action", "logout")];
         let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)

@@ -105,7 +105,7 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        from_state_cred_client(state, u.to_owned(), p.to_owned(), get_client(cred.use_proxy != 0), &[0; 0])
+        from_state_cred_client(state, u.to_owned(), p.to_owned(), get_client(cred.use_proxy != 0), vec![])
     }
 }
 
@@ -135,7 +135,7 @@ pub extern "C" fn tunet_login(cred: &Credential) -> i32 {
 }
 
 fn tunet_login_impl(cred: &Credential) -> Result<i32> {
-    let helper = get_helper(cred)?;
+    let mut helper = get_helper(cred)?;
     helper.login()?;
     Ok(0)
 }
@@ -146,7 +146,7 @@ pub extern "C" fn tunet_logout(cred: &Credential) -> i32 {
 }
 
 fn tunet_logout_impl(cred: &Credential) -> Result<i32> {
-    let helper = get_helper(cred)?;
+    let mut helper = get_helper(cred)?;
     helper.logout()?;
     Ok(0)
 }
@@ -172,7 +172,7 @@ pub extern "C" fn tunet_usereg_login(cred: &Credential) -> i32 {
 }
 
 fn tunet_usereg_login_impl(cred: &Credential) -> Result<i32> {
-    let helper = get_usereg_helper(cred)?;
+    let mut helper = get_usereg_helper(cred)?;
     helper.login()?;
     Ok(0)
 }
@@ -183,7 +183,7 @@ pub extern "C" fn tunet_usereg_logout(cred: &Credential) -> i32 {
 }
 
 fn tunet_usereg_logout_impl(cred: &Credential) -> Result<i32> {
-    let helper = get_usereg_helper(cred)?;
+    let mut helper = get_usereg_helper(cred)?;
     helper.logout()?;
     Ok(0)
 }

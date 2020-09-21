@@ -38,7 +38,7 @@ pub struct AuthConnect<'a> {
     credential: NetCredential,
     client: &'a Client,
     ver: i32,
-    additional_ac_ids: &'a [i32],
+    additional_ac_ids: Vec<i32>,
 }
 
 const AC_IDS: [i32; 5] = [1, 25, 33, 35, 37];
@@ -48,15 +48,15 @@ lazy_static! {
 }
 
 impl<'a> AuthConnect<'a> {
-    pub fn from_cred_client(u: String, p: String, client: &'a Client, ac_ids: &'a [i32]) -> Self {
+    pub fn from_cred_client(u: String, p: String, client: &'a Client, ac_ids: Vec<i32>) -> Self {
         Self::from_cred_client_v(u, p, client, 4, ac_ids)
     }
 
-    pub fn from_cred_client_v6(u: String, p: String, client: &'a Client, ac_ids: &'a [i32]) -> Self {
+    pub fn from_cred_client_v6(u: String, p: String, client: &'a Client, ac_ids: Vec<i32>) -> Self {
         Self::from_cred_client_v(u, p, client, 6, ac_ids)
     }
 
-    fn from_cred_client_v(u: String, p: String, client: &'a Client, v: i32, ac_ids: &'a [i32]) -> Self {
+    fn from_cred_client_v(u: String, p: String, client: &'a Client, v: i32, ac_ids: Vec<i32>) -> Self {
         AuthConnect { credential: NetCredential::from_cred(u, p), client, ver: v, additional_ac_ids: ac_ids }
     }
 
@@ -79,24 +79,24 @@ impl<'a> AuthConnect<'a> {
         }
     }
 
-    fn do_log<F>(&self, action: F) -> Result<String>
+    fn do_log<F>(&mut self, action: F) -> Result<String>
     where
-        F: Fn(i32) -> Result<String>,
+        F: Fn(&Self, i32) -> Result<String>,
     {
         for ac_id in &AC_IDS {
-            let res = action(*ac_id);
+            let res = action(self, *ac_id);
             if res.is_ok() {
                 return res;
             }
         }
-        for ac_id in self.additional_ac_ids {
-            let res = action(*ac_id);
+        for ac_id in &self.additional_ac_ids {
+            let res = action(self, *ac_id);
             if res.is_ok() {
                 return res;
             }
         }
         let ac_id = self.get_ac_id()?;
-        return action(ac_id);
+        return action(self, ac_id);
     }
 }
 
@@ -111,17 +111,17 @@ fn parse_response(t: &str) -> Result<(bool, String)> {
 }
 
 impl<'a> NetHelper for AuthConnect<'a> {
-    fn login(&self) -> Result<String> {
-        self.do_log(|ac_id| {
-            let token = self.challenge()?;
+    fn login(&mut self) -> Result<String> {
+        self.do_log(|s, ac_id| {
+            let token = s.challenge()?;
             let mut md5 = Md5::new();
             md5.input_str(&token);
             let mut hmac = Hmac::new(md5, &[]);
             let password_md5 = hmac.result().code().to_hex();
             let p_mmd5 = "{MD5}".to_owned() + &password_md5;
             let encode_json = serde_json::json!({
-                "username":self.credential.username,
-                "password":self.credential.password,
+                "username":s.credential.username,
+                "password":s.credential.password,
                 "ip":"",
                 "acid":ac_id,
                 "enc_ver":"srun_bx1"
@@ -129,9 +129,9 @@ impl<'a> NetHelper for AuthConnect<'a> {
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
-            sha1.input_str(&format!("{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}", token, self.credential.username, password_md5, info, ac_id));
-            let params = [("action", "login"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &self.credential.username), ("password", &p_mmd5), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
-            let res = self.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", self.ver)).form(&params).send()?;
+            sha1.input_str(&format!("{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}", token, s.credential.username, password_md5, info, ac_id));
+            let params = [("action", "login"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &s.credential.username), ("password", &p_mmd5), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
+            let res = s.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", s.ver)).form(&params).send()?;
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
@@ -142,11 +142,11 @@ impl<'a> NetHelper for AuthConnect<'a> {
         })
     }
 
-    fn logout(&self) -> Result<String> {
-        self.do_log(|ac_id| {
-            let token = self.challenge()?;
+    fn logout(&mut self) -> Result<String> {
+        self.do_log(|s, ac_id| {
+            let token = s.challenge()?;
             let encode_json = serde_json::json!({
-                "username":self.credential.username,
+                "username":s.credential.username,
                 "ip":"",
                 "acid":ac_id,
                 "enc_ver":"srun_bx1"
@@ -154,9 +154,9 @@ impl<'a> NetHelper for AuthConnect<'a> {
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
-            sha1.input_str(&format!("{0}{1}{0}{3}{0}{0}200{0}1{0}{2}", token, self.credential.username, info, ac_id));
-            let params = [("action", "logout"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &self.credential.username), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
-            let res = self.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", self.ver)).form(&params).send()?;
+            sha1.input_str(&format!("{0}{1}{0}{3}{0}{0}200{0}1{0}{2}", token, s.credential.username, info, ac_id));
+            let params = [("action", "logout"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &s.credential.username), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
+            let res = s.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", s.ver)).form(&params).send()?;
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
@@ -172,5 +172,8 @@ impl<'a> NetConnectHelper for AuthConnect<'a> {
     fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/rad_user_info.php", self.ver)).send()?;
         Ok(NetFlux::from_str(&res.text()?))
+    }
+    fn ac_ids(&self) -> &[i32] {
+        &self.additional_ac_ids
     }
 }

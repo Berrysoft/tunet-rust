@@ -121,12 +121,13 @@ impl str::FromStr for NetState {
 }
 
 pub trait NetHelper {
-    fn login(&self) -> Result<String>;
-    fn logout(&self) -> Result<String>;
+    fn login(&mut self) -> Result<String>;
+    fn logout(&mut self) -> Result<String>;
 }
 
 pub trait NetConnectHelper: NetHelper {
     fn flux(&self) -> Result<NetFlux>;
+    fn ac_ids(&self) -> &[i32];
 }
 
 pub enum TUNetConnect<'a> {
@@ -135,13 +136,13 @@ pub enum TUNetConnect<'a> {
 }
 
 impl<'a> NetHelper for TUNetConnect<'a> {
-    fn login(&self) -> Result<String> {
+    fn login(&mut self) -> Result<String> {
         match self {
             Self::Net(c) => c.login(),
             Self::Auth(c) => c.login(),
         }
     }
-    fn logout(&self) -> Result<String> {
+    fn logout(&mut self) -> Result<String> {
         match self {
             Self::Net(c) => c.logout(),
             Self::Auth(c) => c.logout(),
@@ -156,9 +157,15 @@ impl<'a> NetConnectHelper for TUNetConnect<'a> {
             Self::Auth(c) => c.flux(),
         }
     }
+    fn ac_ids(&self) -> &[i32] {
+        match self {
+            Self::Net(c) => c.ac_ids(),
+            Self::Auth(c) => c.ac_ids(),
+        }
+    }
 }
 
-pub fn from_state_cred_client<'a>(s: NetState, u: String, p: String, client: &'a reqwest::blocking::Client, ac_ids: &'a [i32]) -> Result<TUNetConnect<'a>> {
+pub fn from_state_cred_client<'a>(s: NetState, u: String, p: String, client: &'a reqwest::blocking::Client, ac_ids: Vec<i32>) -> Result<TUNetConnect<'a>> {
     match s {
         NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(u, p, client))),
         NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client(u, p, client, ac_ids))),

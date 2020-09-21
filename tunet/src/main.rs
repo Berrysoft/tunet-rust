@@ -86,9 +86,6 @@ enum TUNet {
         /// 使用系统代理
         proxy: bool,
     },
-    #[structopt(name = "savecred")]
-    /// 保存用户名和密码
-    SaveCredential {},
     #[structopt(name = "deletecred")]
     /// 删除用户名和密码
     DeleteCredential {},
@@ -122,9 +119,6 @@ fn main() -> Result<()> {
             } else {
                 do_detail(order, descending, console_color_ok, proxy)?;
             }
-        }
-        TUNet::SaveCredential {} => {
-            save_cred()?;
         }
         TUNet::DeleteCredential {} => {
             delete_cred()?;
@@ -198,12 +192,13 @@ fn read_cred() -> Result<(String, String, Vec<i32>)> {
     }
 }
 
-fn save_cred() -> Result<()> {
+fn save_cred(ac_ids: &[i32]) -> Result<()> {
     let (u, p, _ac_ids) = read_cred_from_stdio()?;
     create_settings_folder()?;
     let json = json!({
-        "username":u,
-        "password":encode(&p)
+        "Username":u,
+        "Password":p,
+        "AcIds":ac_ids
     });
     let p = settings_file_path()?;
     let f = File::create(p)?;
@@ -244,22 +239,24 @@ fn get_client(proxy: bool) -> &'static Client {
 
 fn do_login(s: NetState, proxy: bool) -> Result<()> {
     let (u, p, ac_ids) = read_cred()?;
-    let c = from_state_cred_client(s, u, p, get_client(proxy), &ac_ids)?;
+    let mut c = from_state_cred_client(s, u, p, get_client(proxy), ac_ids)?;
     let res = c.login()?;
     println!("{}", res);
+    save_cred(c.ac_ids())?;
     Ok(())
 }
 
 fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     let (u, p, ac_ids) = read_cred()?;
-    let c = from_state_cred_client(s, u, p, get_client(proxy), &ac_ids)?;
+    let mut c = from_state_cred_client(s, u, p, get_client(proxy), ac_ids)?;
     let res = c.logout()?;
     println!("{}", res);
+    save_cred(c.ac_ids())?;
     Ok(())
 }
 
 fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
-    let c = from_state_cred_client(s, String::new(), String::new(), get_client(proxy), &[0; 0])?;
+    let c = from_state_cred_client(s, String::new(), String::new(), get_client(proxy), vec![])?;
     let f = c.flux()?;
     if color {
         println!("{} {}", Color::Cyan.normal().paint("用户"), Color::Yellow.normal().paint(f.username));
@@ -277,7 +274,7 @@ fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
 
 fn do_online(color: bool, proxy: bool) -> Result<()> {
     let (u, p, _ac_ids) = read_cred()?;
-    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
+    let mut c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let us = c.users()?;
     for u in us {
@@ -292,7 +289,7 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
 
 fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
     let (u, p, _ac_ids) = read_cred()?;
-    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
+    let mut c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let res = c.drop(a)?;
     println!("{}", res);
@@ -301,7 +298,7 @@ fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
 
 fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let (u, p, _ac_ids) = read_cred()?;
-    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
+    let mut c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let details = c.details(o, d)?;
     let mut total_flux = 0u64;
@@ -323,7 +320,7 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
 
 fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let (u, p, _ac_ids) = read_cred()?;
-    let c = UseregHelper::from_cred_client(u, p, get_client(proxy));
+    let mut c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
     let mut details = c.details(NetDetailOrder::LogoutTime, d)?.iter().group_by(|detail| detail.logout_time.date()).into_iter().map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>())).collect::<Vec<_>>();
     match o {
