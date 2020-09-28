@@ -95,7 +95,7 @@ impl<'a> UseregHelper<'a> {
     }
 
     pub fn connect(&self, addr: Ipv4Addr) -> Result<String> {
-        let params = [("drop", "0"), ("user_ip", &addr.to_string())];
+        let params = [("n", "100"), ("is_pad", "1"), ("type", "1"), ("action", "do_login"), ("user_ip", &addr.to_string()), ("drop", "0")];
         let res = self.client.post(USEREG_CONNECT_URI).form(&params).send()?;
         Ok(res.text()?)
     }
