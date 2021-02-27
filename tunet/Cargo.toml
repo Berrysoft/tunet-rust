@@ -11,16 +11,12 @@ tunet-rust = { path = "../tunet-rust" }
 serde_json = "1.0"
 chrono = "0.4"
 structopt = "0.3"
-itertools = "0.9"
+itertools = "0.10"
 ansi_term = "0.12"
 rpassword = "5.0"
 dirs = "3.0"
 lazy_static = "1.4"
 
 [dependencies.reqwest]
-version = "0.10"
+version = "0.11"
 features = ["cookies"]
-
-[[bin]]
-name = "tunet"
-path = "src/main.rs"

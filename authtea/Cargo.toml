@@ -7,6 +7,3 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-
-[lib]
-path = "src/lib.rs"
