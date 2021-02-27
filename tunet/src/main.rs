@@ -198,7 +198,7 @@ fn read_cred() -> Result<(String, String, Vec<i32>)> {
     }
 }
 
-fn save_cred(u: String, p: String, ac_ids: &[i32]) -> Result<()> {
+fn save_cred(u: &str, p: &str, ac_ids: &[i32]) -> Result<()> {
     create_settings_folder()?;
     let json = json!({
         "Username":u,
@@ -248,24 +248,24 @@ fn get_client(proxy: bool) -> &'static Client {
 
 fn do_login(s: NetState, proxy: bool) -> Result<()> {
     let (u, p, ac_ids) = read_cred()?;
-    let mut c = from_state_cred_client(s, u.clone(), p.clone(), get_client(proxy), ac_ids)?;
+    let mut c = from_state_cred_client(s, &u, &p, get_client(proxy), ac_ids)?;
     let res = c.login()?;
     println!("{}", res);
-    save_cred(u, p, c.ac_ids())?;
+    save_cred(&u, &p, c.ac_ids())?;
     Ok(())
 }
 
 fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     let (u, p, ac_ids) = read_cred()?;
-    let mut c = from_state_cred_client(s, u.clone(), p.clone(), get_client(proxy), ac_ids)?;
+    let mut c = from_state_cred_client(s, &u, &p, get_client(proxy), ac_ids)?;
     let res = c.logout()?;
     println!("{}", res);
-    save_cred(u, p, c.ac_ids())?;
+    save_cred(&u, &p, c.ac_ids())?;
     Ok(())
 }
 
 fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
-    let c = from_state_cred_client(s, String::new(), String::new(), get_client(proxy), vec![])?;
+    let c = from_state_cred_client(s, "", "", get_client(proxy), vec![])?;
     let f = c.flux()?;
     if color {
         println!(

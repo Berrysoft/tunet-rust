@@ -76,8 +76,8 @@ impl str::FromStr for NetDetailOrder {
     }
 }
 
-pub struct UseregHelper<'a> {
-    credential: NetCredential,
+pub struct UseregHelper<'a, 's> {
+    credential: NetCredential<'s>,
     client: &'a Client,
 }
 
@@ -97,8 +97,8 @@ fn parse_flux(s: &str) -> u64 {
     flux as u64
 }
 
-impl<'a> UseregHelper<'a> {
-    pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
+impl<'a, 's> UseregHelper<'a, 's> {
+    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a Client) -> Self {
         UseregHelper {
             credential: NetCredential::from_cred(u, p),
             client,
@@ -178,7 +178,7 @@ impl<'a> UseregHelper<'a> {
     }
 }
 
-impl<'a> NetHelper for UseregHelper<'a> {
+impl<'a, 's> NetHelper for UseregHelper<'a, 's> {
     fn login(&mut self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);

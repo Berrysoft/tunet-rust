@@ -36,8 +36,8 @@ fn base64(t: &[u8]) -> String {
     unsafe { String::from_utf8_unchecked(u) }
 }
 
-pub struct AuthConnect<'a> {
-    credential: NetCredential,
+pub struct AuthConnect<'a, 's> {
+    credential: NetCredential<'s>,
     client: &'a Client,
     ver: i32,
     additional_ac_ids: Vec<i32>,
@@ -49,18 +49,28 @@ lazy_static! {
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
 }
 
-impl<'a> AuthConnect<'a> {
-    pub fn from_cred_client(u: String, p: String, client: &'a Client, ac_ids: Vec<i32>) -> Self {
+impl<'a, 's> AuthConnect<'a, 's> {
+    pub fn from_cred_client<S: Into<Cow<'s, str>>>(
+        u: S,
+        p: S,
+        client: &'a Client,
+        ac_ids: Vec<i32>,
+    ) -> Self {
         Self::from_cred_client_v(u, p, client, 4, ac_ids)
     }
 
-    pub fn from_cred_client_v6(u: String, p: String, client: &'a Client, ac_ids: Vec<i32>) -> Self {
+    pub fn from_cred_client_v6<S: Into<Cow<'s, str>>>(
+        u: S,
+        p: S,
+        client: &'a Client,
+        ac_ids: Vec<i32>,
+    ) -> Self {
         Self::from_cred_client_v(u, p, client, 6, ac_ids)
     }
 
-    fn from_cred_client_v(
-        u: String,
-        p: String,
+    fn from_cred_client_v<S: Into<Cow<'s, str>>>(
+        u: S,
+        p: S,
         client: &'a Client,
         v: i32,
         ac_ids: Vec<i32>,
@@ -134,7 +144,7 @@ fn parse_response(t: &str) -> Result<(bool, String)> {
     Ok((false, String::new()))
 }
 
-impl<'a> NetHelper for AuthConnect<'a> {
+impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
     fn login(&mut self) -> Result<String> {
         self.do_log(|s, ac_id| {
             let token = s.challenge()?;
@@ -233,7 +243,7 @@ impl<'a> NetHelper for AuthConnect<'a> {
     }
 }
 
-impl<'a> NetConnectHelper for AuthConnect<'a> {
+impl<'a, 's> NetConnectHelper for AuthConnect<'a, 's> {
     fn flux(&self) -> Result<NetFlux> {
         let res = self
             .client

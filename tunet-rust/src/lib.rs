@@ -1,5 +1,4 @@
-#![feature(try_trait)]
-
+use std::borrow::Cow;
 use std::result;
 use std::str;
 use std::time;
@@ -10,24 +9,22 @@ mod net;
 pub mod suggest;
 pub mod usereg;
 
-pub struct NetCredential {
-    username: String,
-    password: String,
+#[derive(Debug, Default)]
+pub struct NetCredential<'a> {
+    username: Cow<'a, str>,
+    password: Cow<'a, str>,
 }
 
-impl NetCredential {
-    pub fn new() -> Self {
-        NetCredential::from_cred(String::new(), String::new())
-    }
-
-    pub fn from_cred(u: String, p: String) -> Self {
+impl<'a> NetCredential<'a> {
+    pub fn from_cred<S: Into<Cow<'a, str>>>(u: S, p: S) -> Self {
         NetCredential {
-            username: u,
-            password: p,
+            username: u.into(),
+            password: p.into(),
         }
     }
 }
 
+#[derive(Debug, Default)]
 pub struct NetFlux {
     pub username: String,
     pub flux: u64,
@@ -36,10 +33,6 @@ pub struct NetFlux {
 }
 
 impl NetFlux {
-    pub fn new() -> Self {
-        NetFlux::from_detail(String::new(), 0, time::Duration::new(0, 0), 0.0)
-    }
-
     pub fn from_detail(u: String, f: u64, t: time::Duration, b: f64) -> Self {
         NetFlux {
             username: u,
@@ -52,7 +45,7 @@ impl NetFlux {
     pub fn from_str(s: &str) -> Self {
         let vec = s.split(',').collect::<Vec<_>>();
         if vec.len() <= 1 {
-            NetFlux::new()
+            NetFlux::default()
         } else {
             NetFlux::from_detail(
                 vec[0].to_string(),
@@ -126,12 +119,12 @@ pub trait NetConnectHelper: NetHelper {
     fn ac_ids(&self) -> &[i32];
 }
 
-pub enum TUNetConnect<'a> {
-    Net(net::NetConnect<'a>),
-    Auth(auth::AuthConnect<'a>),
+pub enum TUNetConnect<'a, 's> {
+    Net(net::NetConnect<'a, 's>),
+    Auth(auth::AuthConnect<'a, 's>),
 }
 
-impl<'a> NetHelper for TUNetConnect<'a> {
+impl<'a, 's> NetHelper for TUNetConnect<'a, 's> {
     fn login(&mut self) -> Result<String> {
         match self {
             Self::Net(c) => c.login(),
@@ -146,7 +139,7 @@ impl<'a> NetHelper for TUNetConnect<'a> {
     }
 }
 
-impl<'a> NetConnectHelper for TUNetConnect<'a> {
+impl<'a, 's> NetConnectHelper for TUNetConnect<'a, 's> {
     fn flux(&self) -> Result<NetFlux> {
         match self {
             Self::Net(c) => c.flux(),
@@ -161,13 +154,13 @@ impl<'a> NetConnectHelper for TUNetConnect<'a> {
     }
 }
 
-pub fn from_state_cred_client<'a>(
+pub fn from_state_cred_client<'a, 's, S: Into<Cow<'s, str>>>(
     s: NetState,
-    u: String,
-    p: String,
+    u: S,
+    p: S,
     client: &'a reqwest::blocking::Client,
     ac_ids: Vec<i32>,
-) -> Result<TUNetConnect<'a>> {
+) -> Result<TUNetConnect<'a, 's>> {
     match s {
         NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(
             u, p, client,

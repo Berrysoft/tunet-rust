@@ -4,16 +4,16 @@ use crypto::md5::Md5;
 use reqwest::blocking::Client;
 use std::string::String;
 
-pub struct NetConnect<'a> {
-    credential: NetCredential,
+pub struct NetConnect<'a, 's> {
+    credential: NetCredential<'s>,
     client: &'a Client,
 }
 
 const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
 const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
-impl<'a> NetConnect<'a> {
-    pub fn from_cred_client(u: String, p: String, client: &'a Client) -> Self {
+impl<'a, 's> NetConnect<'a, 's> {
+    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a Client) -> Self {
         NetConnect {
             credential: NetCredential::from_cred(u, p),
             client,
@@ -21,7 +21,7 @@ impl<'a> NetConnect<'a> {
     }
 }
 
-impl<'a> NetHelper for NetConnect<'a> {
+impl<'a, 's> NetHelper for NetConnect<'a, 's> {
     fn login(&mut self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
@@ -42,7 +42,7 @@ impl<'a> NetHelper for NetConnect<'a> {
     }
 }
 
-impl<'a> NetConnectHelper for NetConnect<'a> {
+impl<'a, 's> NetConnectHelper for NetConnect<'a, 's> {
     fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(NET_FLUX_URI).send()?;
         Ok(NetFlux::from_str(&res.text()?))

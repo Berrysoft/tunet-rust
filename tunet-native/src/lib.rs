@@ -104,13 +104,7 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        from_state_cred_client(
-            state,
-            u.into_owned(),
-            p.into_owned(),
-            get_client(cred.use_proxy != 0),
-            vec![],
-        )
+        from_state_cred_client(state, u, p, get_client(cred.use_proxy != 0), vec![])
     }
 }
 
@@ -119,8 +113,8 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
         let u = exact_str(cred.username);
         let p = exact_str(cred.password);
         Ok(UseregHelper::from_cred_client(
-            u.into_owned(),
-            p.into_owned(),
+            u,
+            p,
             get_client(cred.use_proxy != 0),
         ))
     }
