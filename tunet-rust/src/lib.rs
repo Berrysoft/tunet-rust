@@ -18,7 +18,7 @@ pub struct NetCredential<'a> {
 }
 
 impl<'a> NetCredential<'a> {
-    pub fn from_cred<S: Into<Cow<'a, str>>>(u: S, p: S) -> Self {
+    pub fn from_cred<SU: Into<Cow<'a, str>>, SP: Into<Cow<'a, str>>>(u: SU, p: SP) -> Self {
         NetCredential {
             username: u.into(),
             password: p.into(),
@@ -156,10 +156,10 @@ impl<'a, 's> NetConnectHelper for TUNetConnect<'a, 's> {
     }
 }
 
-pub fn from_state_cred_client<'a, 's, S: Into<Cow<'s, str>>>(
+pub fn from_state_cred_client<'a, 's, SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
     s: NetState,
-    u: S,
-    p: S,
+    u: SU,
+    p: SP,
     client: &'a HttpClient,
     ac_ids: Vec<i32>,
 ) -> Result<TUNetConnect<'a, 's>> {

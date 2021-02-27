@@ -126,15 +126,20 @@ fn main() -> Result<()> {
 }
 
 fn read_cred_from_stdio() -> Result<(String, String, Vec<i32>)> {
+    let (u, ac_ids) = read_username_from_stdio()?;
+    print!("请输入密码：");
+    stdout().flush()?;
+    let p = read_password()?;
+    Ok((u, p, ac_ids))
+}
+
+fn read_username_from_stdio() -> Result<(String, Vec<i32>)> {
     print!("请输入用户名：");
     stdout().flush()?;
     let mut u = String::new();
     stdin().read_line(&mut u)?;
     u = u.replace("\n", "").replace("\r", "");
-    print!("请输入密码：");
-    stdout().flush()?;
-    let p = read_password()?;
-    Ok((u, p, vec![]))
+    Ok((u, vec![]))
 }
 
 fn settings_folder_path() -> Result<PathBuf> {
@@ -151,23 +156,49 @@ fn settings_file_path() -> Result<PathBuf> {
     Ok(p)
 }
 
-fn read_cred_from_file() -> Result<(String, String, Vec<i32>)> {
+fn read_json_from_file() -> Result<serde_json::Value> {
     let p = settings_file_path()?;
     let f = File::open(p)?;
     let reader = BufReader::new(f);
-    let json: serde_json::Value = serde_json::from_reader(reader)?;
-    if let serde_json::Value::String(u) = &json["Username"] {
-        if let serde_json::Value::String(p) = &json["Password"] {
-            if let serde_json::Value::Array(v) = &json["AcIds"] {
-                return Ok((
-                    u.to_string(),
-                    p.to_string(),
-                    v.into_iter().map(|v| v.as_i64().unwrap() as i32).collect(),
-                ));
-            }
-        }
-    }
-    Ok((String::new(), String::new(), vec![]))
+    Ok(serde_json::from_reader(reader)?)
+}
+
+fn read_cred_from_file() -> Result<(String, String, Vec<i32>)> {
+    let json = read_json_from_file()?;
+    let u = json["Username"]
+        .as_str()
+        .map(|s| s.to_owned())
+        .unwrap_or_default();
+    let p = json["Password"]
+        .as_str()
+        .map(|s| s.to_owned())
+        .unwrap_or_default();
+    let ac_ids = json["AcIds"]
+        .as_array()
+        .map(|v| {
+            v.iter()
+                .map(|v| v.as_i64().unwrap_or_default() as i32)
+                .collect()
+        })
+        .unwrap_or_default();
+    Ok((u, p, ac_ids))
+}
+
+fn read_username_from_file() -> Result<(String, Vec<i32>)> {
+    let json = read_json_from_file()?;
+    let u = json["Username"]
+        .as_str()
+        .map(|s| s.to_owned())
+        .unwrap_or_default();
+    let ac_ids = json["AcIds"]
+        .as_array()
+        .map(|v| {
+            v.iter()
+                .map(|v| v.as_i64().unwrap_or_default() as i32)
+                .collect()
+        })
+        .unwrap_or_default();
+    Ok((u, ac_ids))
 }
 
 fn settings_file_exists() -> bool {
@@ -192,6 +223,14 @@ fn read_cred() -> Result<(String, String, Vec<i32>)> {
         read_cred_from_file()
     } else {
         read_cred_from_stdio()
+    }
+}
+
+fn read_username() -> Result<(String, Vec<i32>)> {
+    if settings_file_exists() {
+        read_username_from_file()
+    } else {
+        read_username_from_stdio()
     }
 }
 
@@ -238,11 +277,10 @@ fn do_login(s: NetState, proxy: bool) -> Result<()> {
 
 fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
-    let (u, p, ac_ids) = read_cred()?;
-    let mut c = from_state_cred_client(s, &u, &p, &client, ac_ids)?;
+    let (u, ac_ids) = read_username()?;
+    let mut c = from_state_cred_client(s, &u, "", &client, ac_ids)?;
     let res = c.logout()?;
     println!("{}", res);
-    save_cred(&u, &p, c.ac_ids())?;
     Ok(())
 }
 

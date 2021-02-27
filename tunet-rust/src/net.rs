@@ -12,7 +12,11 @@ const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
 const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl<'a, 's> NetConnect<'a, 's> {
-    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a HttpClient) -> Self {
+    pub fn from_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
+        u: SU,
+        p: SP,
+        client: &'a HttpClient,
+    ) -> Self {
         NetConnect {
             credential: NetCredential::from_cred(u, p),
             client,

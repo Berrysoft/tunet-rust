@@ -48,27 +48,27 @@ lazy_static! {
 }
 
 impl<'a, 's> AuthConnect<'a, 's> {
-    pub fn from_cred_client<S: Into<Cow<'s, str>>>(
-        u: S,
-        p: S,
+    pub fn from_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
+        u: SU,
+        p: SP,
         client: &'a HttpClient,
         ac_ids: Vec<i32>,
     ) -> Self {
         Self::from_cred_client_v(u, p, client, 4, ac_ids)
     }
 
-    pub fn from_cred_client_v6<S: Into<Cow<'s, str>>>(
-        u: S,
-        p: S,
+    pub fn from_cred_client_v6<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
+        u: SU,
+        p: SP,
         client: &'a HttpClient,
         ac_ids: Vec<i32>,
     ) -> Self {
         Self::from_cred_client_v(u, p, client, 6, ac_ids)
     }
 
-    fn from_cred_client_v<S: Into<Cow<'s, str>>>(
-        u: S,
-        p: S,
+    fn from_cred_client_v<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
+        u: SU,
+        p: SP,
         client: &'a HttpClient,
         v: i32,
         ac_ids: Vec<i32>,
