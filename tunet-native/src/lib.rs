@@ -1,5 +1,4 @@
 use lazy_static::*;
-use reqwest::blocking::Client;
 use std::ffi::{CStr, CString};
 use std::net::Ipv4Addr;
 use std::os::raw::{c_char, c_void};
@@ -78,15 +77,11 @@ unsafe fn exact_str<'a>(cstr: *const c_char) -> Cow<'a, str> {
 }
 
 lazy_static! {
-    static ref CLIENT: Client = Client::builder().cookie_store(true).build().unwrap();
-    static ref NO_PROXY_CLIENT: Client = Client::builder()
-        .cookie_store(true)
-        .no_proxy()
-        .build()
-        .unwrap();
+    static ref CLIENT: HttpClient = create_http_client(true).unwrap();
+    static ref NO_PROXY_CLIENT: HttpClient = create_http_client(false).unwrap();
 }
 
-fn get_client(proxy: bool) -> &'static Client {
+fn get_client(proxy: bool) -> &'static HttpClient {
     if proxy {
         &*CLIENT
     } else {

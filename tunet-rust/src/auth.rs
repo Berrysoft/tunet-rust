@@ -7,8 +7,6 @@ use crypto::md5::Md5;
 use crypto::sha1::Sha1;
 use lazy_static::lazy_static;
 use regex::Regex;
-use reqwest::blocking::Client;
-use rustc_serialize::hex::ToHex;
 use serde_json::{self, Value};
 use std::string::String;
 
@@ -38,7 +36,7 @@ fn base64(t: &[u8]) -> String {
 
 pub struct AuthConnect<'a, 's> {
     credential: NetCredential<'s>,
-    client: &'a Client,
+    client: &'a HttpClient,
     ver: i32,
     additional_ac_ids: Vec<i32>,
 }
@@ -53,7 +51,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
     pub fn from_cred_client<S: Into<Cow<'s, str>>>(
         u: S,
         p: S,
-        client: &'a Client,
+        client: &'a HttpClient,
         ac_ids: Vec<i32>,
     ) -> Self {
         Self::from_cred_client_v(u, p, client, 4, ac_ids)
@@ -62,7 +60,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
     pub fn from_cred_client_v6<S: Into<Cow<'s, str>>>(
         u: S,
         p: S,
-        client: &'a Client,
+        client: &'a HttpClient,
         ac_ids: Vec<i32>,
     ) -> Self {
         Self::from_cred_client_v(u, p, client, 6, ac_ids)
@@ -71,7 +69,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
     fn from_cred_client_v<S: Into<Cow<'s, str>>>(
         u: S,
         p: S,
-        client: &'a Client,
+        client: &'a HttpClient,
         v: i32,
         ac_ids: Vec<i32>,
     ) -> Self {
@@ -151,7 +149,7 @@ impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
             let mut md5 = Md5::new();
             md5.input_str(&token);
             let mut hmac = Hmac::new(md5, &[]);
-            let password_md5 = hmac.result().code().to_hex();
+            let password_md5 = hex::encode(hmac.result().code());
             let p_mmd5 = "{MD5}".to_owned() + &password_md5;
             let encode_json = serde_json::json!({
                 "username":s.credential.username,

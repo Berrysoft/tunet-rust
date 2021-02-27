@@ -3,7 +3,6 @@ use chrono::prelude::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
 use hwaddr::HwAddr;
-use reqwest::blocking::Client;
 use select::document::Document;
 use select::predicate::*;
 use std::net::Ipv4Addr;
@@ -78,7 +77,7 @@ impl str::FromStr for NetDetailOrder {
 
 pub struct UseregHelper<'a, 's> {
     credential: NetCredential<'s>,
-    client: &'a Client,
+    client: &'a HttpClient,
 }
 
 const USEREG_LOG_URI: &'static str = "https://usereg.tsinghua.edu.cn/do.php";
@@ -98,7 +97,7 @@ fn parse_flux(s: &str) -> u64 {
 }
 
 impl<'a, 's> UseregHelper<'a, 's> {
-    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a Client) -> Self {
+    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a HttpClient) -> Self {
         UseregHelper {
             credential: NetCredential::from_cred(u, p),
             client,

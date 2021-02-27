@@ -1,8 +1,7 @@
 use super::*;
-use reqwest::blocking::Client;
 
 fn can_connect(uri: &str) -> bool {
-    let client = Client::new();
+    let client = HttpClient::new();
     match client.get(uri).send() {
         Ok(_) => true,
         Err(_) => false,

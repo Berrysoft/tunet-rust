@@ -10,7 +10,7 @@ license = "MIT"
 authtea = { path = "../authtea" }
 rust-crypto = "0.2"
 serde_json = "1.0"
-rustc-serialize = "0.3"
+hex = "0.4"
 select = "0.5"
 chrono = "0.4"
 hwaddr = { git = "https://github.com/meh/rust-hwaddr" }
@@ -20,4 +20,4 @@ thiserror = "1.0"
 
 [dependencies.reqwest]
 version = "0.11"
-features = ["blocking"]
+features = [ "blocking", "cookies" ]

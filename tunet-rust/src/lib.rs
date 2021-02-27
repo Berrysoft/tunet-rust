@@ -4,6 +4,8 @@ use std::str;
 use std::time;
 use thiserror::Error;
 
+pub use reqwest::blocking::Client as HttpClient;
+
 mod auth;
 mod net;
 pub mod suggest;
@@ -158,7 +160,7 @@ pub fn from_state_cred_client<'a, 's, S: Into<Cow<'s, str>>>(
     s: NetState,
     u: S,
     p: S,
-    client: &'a reqwest::blocking::Client,
+    client: &'a HttpClient,
     ac_ids: Vec<i32>,
 ) -> Result<TUNetConnect<'a, 's>> {
     match s {
@@ -173,4 +175,15 @@ pub fn from_state_cred_client<'a, 's, S: Into<Cow<'s, str>>>(
         ))),
         _ => Err(NetHelperError::HostErr),
     }
+}
+
+pub fn create_http_client(proxy: bool) -> Result<HttpClient> {
+    Ok(if proxy {
+        HttpClient::builder().cookie_store(true).build()?
+    } else {
+        HttpClient::builder()
+            .cookie_store(true)
+            .no_proxy()
+            .build()?
+    })
 }

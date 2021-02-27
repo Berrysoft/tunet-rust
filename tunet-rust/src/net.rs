@@ -1,19 +1,18 @@
 use super::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
-use reqwest::blocking::Client;
 use std::string::String;
 
 pub struct NetConnect<'a, 's> {
     credential: NetCredential<'s>,
-    client: &'a Client,
+    client: &'a HttpClient,
 }
 
 const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
 const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl<'a, 's> NetConnect<'a, 's> {
-    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a Client) -> Self {
+    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a HttpClient) -> Self {
         NetConnect {
             credential: NetCredential::from_cred(u, p),
             client,
