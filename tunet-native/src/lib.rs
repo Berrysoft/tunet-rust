@@ -84,7 +84,11 @@ unsafe fn exact_str<'a>(cstr: *const c_char) -> &'a str {
 
 lazy_static! {
     static ref CLIENT: Client = Client::builder().cookie_store(true).build().unwrap();
-    static ref NO_PROXY_CLIENT: Client = Client::builder().cookie_store(true).no_proxy().build().unwrap();
+    static ref NO_PROXY_CLIENT: Client = Client::builder()
+        .cookie_store(true)
+        .no_proxy()
+        .build()
+        .unwrap();
 }
 
 fn get_client(proxy: bool) -> &'static Client {
@@ -105,7 +109,13 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        from_state_cred_client(state, u.to_owned(), p.to_owned(), get_client(cred.use_proxy != 0), vec![])
+        from_state_cred_client(
+            state,
+            u.to_owned(),
+            p.to_owned(),
+            get_client(cred.use_proxy != 0),
+            vec![],
+        )
     }
 }
 
@@ -113,7 +123,11 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
     unsafe {
         let u = exact_str(cred.username);
         let p = exact_str(cred.password);
-        Ok(UseregHelper::from_cred_client(u.to_owned(), p.to_owned(), get_client(cred.use_proxy != 0)))
+        Ok(UseregHelper::from_cred_client(
+            u.to_owned(),
+            p.to_owned(),
+            get_client(cred.use_proxy != 0),
+        ))
     }
 }
 
@@ -203,11 +217,21 @@ fn tunet_usereg_drop_impl(cred: &Credential, addr: i64) -> Result<i32> {
 pub type UseregUsersCallback = extern "C" fn(user: &User, data: *mut c_void) -> i32;
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_users(cred: &Credential, user: &mut User, callback: Option<UseregUsersCallback>, data: *mut c_void) -> i32 {
+pub extern "C" fn tunet_usereg_users(
+    cred: &Credential,
+    user: &mut User,
+    callback: Option<UseregUsersCallback>,
+    data: *mut c_void,
+) -> i32 {
     unwrap_res(tunet_usereg_users_impl(cred, user, callback, data))
 }
 
-fn tunet_usereg_users_impl(cred: &Credential, user: &mut User, callback: Option<UseregUsersCallback>, data: *mut c_void) -> Result<i32> {
+fn tunet_usereg_users_impl(
+    cred: &Credential,
+    user: &mut User,
+    callback: Option<UseregUsersCallback>,
+    data: *mut c_void,
+) -> Result<i32> {
     let helper = get_usereg_helper(cred)?;
     let users = helper.users()?;
     if let Some(callback) = callback {
@@ -226,11 +250,23 @@ fn tunet_usereg_users_impl(cred: &Credential, user: &mut User, callback: Option<
 pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_void) -> i32;
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_details(cred: &Credential, order: DetailOrder, desc: i32, callback: Option<UseregDetailsCallback>, data: *mut c_void) -> i32 {
+pub extern "C" fn tunet_usereg_details(
+    cred: &Credential,
+    order: DetailOrder,
+    desc: i32,
+    callback: Option<UseregDetailsCallback>,
+    data: *mut c_void,
+) -> i32 {
     unwrap_res(tunet_usereg_details_impl(cred, order, desc, callback, data))
 }
 
-fn tunet_usereg_details_impl(cred: &Credential, order: DetailOrder, desc: i32, callback: Option<UseregDetailsCallback>, data: *mut c_void) -> Result<i32> {
+fn tunet_usereg_details_impl(
+    cred: &Credential,
+    order: DetailOrder,
+    desc: i32,
+    callback: Option<UseregDetailsCallback>,
+    data: *mut c_void,
+) -> Result<i32> {
     let helper = get_usereg_helper(cred)?;
     let o = match order {
         DetailOrder::LoginTime => NetDetailOrder::LoginTime,
@@ -240,7 +276,11 @@ fn tunet_usereg_details_impl(cred: &Credential, order: DetailOrder, desc: i32, c
     let details = helper.details(o, desc != 0)?;
     if let Some(callback) = callback {
         for d in &details {
-            let detail = Detail { login_time: d.login_time.timestamp(), logout_time: d.logout_time.timestamp(), flux: d.flux as i64 };
+            let detail = Detail {
+                login_time: d.login_time.timestamp(),
+                logout_time: d.logout_time.timestamp(),
+                flux: d.flux as i64,
+            };
             if callback(&detail, data) == 0 {
                 break;
             }

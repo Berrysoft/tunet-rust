@@ -20,7 +20,11 @@ pub fn format_flux(flux: u64) -> String {
 }
 
 pub fn colored_flux(flux: u64, total: bool, right_aligned: bool) -> ANSIString<'static> {
-    let f = if right_aligned { format!("{:>8}", format_flux(flux)) } else { format_flux(flux) };
+    let f = if right_aligned {
+        format!("{:>8}", format_flux(flux))
+    } else {
+        format_flux(flux)
+    };
     if flux == 0 {
         Color::Blue.normal().paint(f)
     } else if flux < if total { 20_000_000_000 } else { 2_000_000_000 } {
@@ -65,7 +69,9 @@ pub fn format_date_time(t: NaiveDateTime) -> String {
 }
 
 pub fn colored_date_time(t: NaiveDateTime) -> ANSIString<'static> {
-    Color::Green.normal().paint(format!("{:20}", format_date_time(t)))
+    Color::Green
+        .normal()
+        .paint(format!("{:20}", format_date_time(t)))
 }
 
 pub fn format_date(t: NaiveDate) -> String {
@@ -73,5 +79,7 @@ pub fn format_date(t: NaiveDate) -> String {
 }
 
 pub fn colored_date(t: NaiveDate) -> ANSIString<'static> {
-    Color::Green.normal().paint(format!("{:10}", format_date(t)))
+    Color::Green
+        .normal()
+        .paint(format!("{:10}", format_date(t)))
 }

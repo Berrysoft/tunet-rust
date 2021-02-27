@@ -21,7 +21,9 @@ fn base64(t: &[u8]) -> String {
     let mut u = vec![b'\0'; len];
     let mut ui = 0;
     for o in (0..a).step_by(3) {
-        let h = ((t[o] as u32) << 16) + (if o + 1 < a { (t[o + 1] as u32) << 8 } else { 0 }) + (if o + 2 < a { t[o + 2] as u32 } else { 0 });
+        let h = ((t[o] as u32) << 16)
+            + (if o + 1 < a { (t[o + 1] as u32) << 8 } else { 0 })
+            + (if o + 2 < a { t[o + 2] as u32 } else { 0 });
         for i in 0..4 {
             if o * 8 + i * 6 > a * 8 {
                 u[ui] = BASE64PAD;
@@ -56,8 +58,19 @@ impl<'a> AuthConnect<'a> {
         Self::from_cred_client_v(u, p, client, 6, ac_ids)
     }
 
-    fn from_cred_client_v(u: String, p: String, client: &'a Client, v: i32, ac_ids: Vec<i32>) -> Self {
-        AuthConnect { credential: NetCredential::from_cred(u, p), client, ver: v, additional_ac_ids: ac_ids }
+    fn from_cred_client_v(
+        u: String,
+        p: String,
+        client: &'a Client,
+        v: i32,
+        ac_ids: Vec<i32>,
+    ) -> Self {
+        AuthConnect {
+            credential: NetCredential::from_cred(u, p),
+            client,
+            ver: v,
+            additional_ac_ids: ac_ids,
+        }
     }
 
     fn challenge(&self) -> Result<String> {
@@ -71,7 +84,14 @@ impl<'a> AuthConnect<'a> {
     }
 
     fn get_ac_id(&self) -> Result<i32> {
-        let res = self.client.get(if self.ver == 4 { "http://3.3.3.3/" } else { "http://[333::3]/" }).send()?;
+        let res = self
+            .client
+            .get(if self.ver == 4 {
+                "http://3.3.3.3/"
+            } else {
+                "http://[333::3]/"
+            })
+            .send()?;
         let t = res.text()?;
         match AC_ID_REGEX.captures(&t) {
             Some(cap) => Ok(cap[1].parse::<i32>().unwrap()),
@@ -96,6 +116,7 @@ impl<'a> AuthConnect<'a> {
             }
         }
         let ac_id = self.get_ac_id()?;
+        self.additional_ac_ids.push(ac_id);
         return action(self, ac_id);
     }
 }
@@ -104,7 +125,10 @@ fn parse_response(t: &str) -> Result<(bool, String)> {
     let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
     if let Value::String(error) = &json["error"] {
         if let Value::String(error_msg) = &json["error_msg"] {
-            return Ok((error == "ok", format!("error: {}; error_msg: {}", error, error_msg)));
+            return Ok((
+                error == "ok",
+                format!("error: {}; error_msg: {}", error, error_msg),
+            ));
         }
     }
     Ok((false, String::new()))
@@ -129,9 +153,30 @@ impl<'a> NetHelper for AuthConnect<'a> {
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
-            sha1.input_str(&format!("{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}", token, s.credential.username, password_md5, info, ac_id));
-            let params = [("action", "login"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &s.credential.username), ("password", &p_mmd5), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
-            let res = s.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", s.ver)).form(&params).send()?;
+            sha1.input_str(&format!(
+                "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
+                token, s.credential.username, password_md5, info, ac_id
+            ));
+            let params = [
+                ("action", "login"),
+                ("ac_id", &ac_id.to_string()),
+                ("double_stack", "1"),
+                ("n", "200"),
+                ("type", "1"),
+                ("username", &s.credential.username),
+                ("password", &p_mmd5),
+                ("info", &info),
+                ("chksum", &sha1.result_str()),
+                ("callback", "callback"),
+            ];
+            let res = s
+                .client
+                .post(&format!(
+                    "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
+                    s.ver
+                ))
+                .form(&params)
+                .send()?;
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
@@ -154,9 +199,29 @@ impl<'a> NetHelper for AuthConnect<'a> {
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
-            sha1.input_str(&format!("{0}{1}{0}{3}{0}{0}200{0}1{0}{2}", token, s.credential.username, info, ac_id));
-            let params = [("action", "logout"), ("ac_id", &ac_id.to_string()), ("double_stack", "1"), ("n", "200"), ("type", "1"), ("username", &s.credential.username), ("info", &info), ("chksum", &sha1.result_str()), ("callback", "callback")];
-            let res = s.client.post(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal", s.ver)).form(&params).send()?;
+            sha1.input_str(&format!(
+                "{0}{1}{0}{3}{0}{0}200{0}1{0}{2}",
+                token, s.credential.username, info, ac_id
+            ));
+            let params = [
+                ("action", "logout"),
+                ("ac_id", &ac_id.to_string()),
+                ("double_stack", "1"),
+                ("n", "200"),
+                ("type", "1"),
+                ("username", &s.credential.username),
+                ("info", &info),
+                ("chksum", &sha1.result_str()),
+                ("callback", "callback"),
+            ];
+            let res = s
+                .client
+                .post(&format!(
+                    "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
+                    s.ver
+                ))
+                .form(&params)
+                .send()?;
             let t = res.text()?;
             let (suc, msg) = parse_response(&t)?;
             if suc {
@@ -170,7 +235,13 @@ impl<'a> NetHelper for AuthConnect<'a> {
 
 impl<'a> NetConnectHelper for AuthConnect<'a> {
     fn flux(&self) -> Result<NetFlux> {
-        let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/rad_user_info.php", self.ver)).send()?;
+        let res = self
+            .client
+            .get(&format!(
+                "https://auth{0}.tsinghua.edu.cn/rad_user_info.php",
+                self.ver
+            ))
+            .send()?;
         Ok(NetFlux::from_str(&res.text()?))
     }
     fn ac_ids(&self) -> &[i32] {

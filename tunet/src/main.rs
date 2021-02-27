@@ -112,7 +112,12 @@ fn main() -> Result<()> {
         TUNet::Online { proxy } => do_online(console_color_ok, proxy),
         TUNet::Connect { address, proxy } => do_connect(address, proxy),
         TUNet::Drop { address, proxy } => do_drop(address, proxy),
-        TUNet::Detail { order, descending, grouping, proxy } => {
+        TUNet::Detail {
+            order,
+            descending,
+            grouping,
+            proxy,
+        } => {
             if grouping {
                 do_detail_grouping(order, descending, console_color_ok, proxy)
             } else {
@@ -128,6 +133,7 @@ fn read_cred_from_stdio() -> Result<(String, String, Vec<i32>)> {
     stdout().flush()?;
     let mut u = String::new();
     stdin().read_line(&mut u)?;
+    u = u.replace("\n", "").replace("\r", "");
     print!("请输入密码：");
     stdout().flush()?;
     let p = read_password()?;
@@ -136,7 +142,7 @@ fn read_cred_from_stdio() -> Result<(String, String, Vec<i32>)> {
 
 fn settings_folder_path() -> Result<PathBuf> {
     let mut path = PathBuf::new();
-    path.push(config_dir()?);
+    path.push(config_dir().ok_or(NetHelperError::ConfigDirErr)?);
     path.push("TsinghuaNet.CLI");
     Ok(path)
 }
@@ -156,7 +162,11 @@ fn read_cred_from_file() -> Result<(String, String, Vec<i32>)> {
     if let serde_json::Value::String(u) = &json["Username"] {
         if let serde_json::Value::String(p) = &json["Password"] {
             if let serde_json::Value::Array(v) = &json["AcIds"] {
-                return Ok((u.to_string(), p.to_string(), v.into_iter().map(|v| v.as_i64().unwrap() as i32).collect()));
+                return Ok((
+                    u.to_string(),
+                    p.to_string(),
+                    v.into_iter().map(|v| v.as_i64().unwrap() as i32).collect(),
+                ));
             }
         }
     }
@@ -188,8 +198,7 @@ fn read_cred() -> Result<(String, String, Vec<i32>)> {
     }
 }
 
-fn save_cred(ac_ids: &[i32]) -> Result<()> {
-    let (u, p, _ac_ids) = read_cred_from_stdio()?;
+fn save_cred(u: String, p: String, ac_ids: &[i32]) -> Result<()> {
     create_settings_folder()?;
     let json = json!({
         "Username":u,
@@ -222,7 +231,11 @@ fn delete_cred() -> Result<()> {
 
 lazy_static! {
     static ref CLIENT: Client = Client::builder().cookie_store(true).build().unwrap();
-    static ref NO_PROXY_CLIENT: Client = Client::builder().cookie_store(true).no_proxy().build().unwrap();
+    static ref NO_PROXY_CLIENT: Client = Client::builder()
+        .cookie_store(true)
+        .no_proxy()
+        .build()
+        .unwrap();
 }
 
 fn get_client(proxy: bool) -> &'static Client {
@@ -235,19 +248,19 @@ fn get_client(proxy: bool) -> &'static Client {
 
 fn do_login(s: NetState, proxy: bool) -> Result<()> {
     let (u, p, ac_ids) = read_cred()?;
-    let mut c = from_state_cred_client(s, u, p, get_client(proxy), ac_ids)?;
+    let mut c = from_state_cred_client(s, u.clone(), p.clone(), get_client(proxy), ac_ids)?;
     let res = c.login()?;
     println!("{}", res);
-    save_cred(c.ac_ids())?;
+    save_cred(u, p, c.ac_ids())?;
     Ok(())
 }
 
 fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     let (u, p, ac_ids) = read_cred()?;
-    let mut c = from_state_cred_client(s, u, p, get_client(proxy), ac_ids)?;
+    let mut c = from_state_cred_client(s, u.clone(), p.clone(), get_client(proxy), ac_ids)?;
     let res = c.logout()?;
     println!("{}", res);
-    save_cred(c.ac_ids())?;
+    save_cred(u, p, c.ac_ids())?;
     Ok(())
 }
 
@@ -255,10 +268,26 @@ fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
     let c = from_state_cred_client(s, String::new(), String::new(), get_client(proxy), vec![])?;
     let f = c.flux()?;
     if color {
-        println!("{} {}", Color::Cyan.normal().paint("用户"), Color::Yellow.normal().paint(f.username));
-        println!("{} {}", Color::Cyan.normal().paint("流量"), strfmt::colored_flux(f.flux, true, false));
-        println!("{} {}", Color::Cyan.normal().paint("时长"), strfmt::colored_duration(f.online_time));
-        println!("{} {}", Color::Cyan.normal().paint("余额"), strfmt::colored_currency(f.balance));
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("用户"),
+            Color::Yellow.normal().paint(f.username)
+        );
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("流量"),
+            strfmt::colored_flux(f.flux, true, false)
+        );
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("时长"),
+            strfmt::colored_duration(f.online_time)
+        );
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("余额"),
+            strfmt::colored_currency(f.balance)
+        );
     } else {
         println!("{} {}", "用户", f.username);
         println!("{} {}", "流量", strfmt::format_flux(f.flux));
@@ -275,9 +304,23 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
     let us = c.users()?;
     for u in us {
         if color {
-            println!("{} {} {}", Color::Yellow.normal().paint(format!("{:15}", u.address.to_string())), strfmt::colored_date_time(u.login_time), Color::Blue.normal().paint(format!("{:10}", u.mac_address.to_string())));
+            println!(
+                "{} {} {}",
+                Color::Yellow
+                    .normal()
+                    .paint(format!("{:15}", u.address.to_string())),
+                strfmt::colored_date_time(u.login_time),
+                Color::Blue
+                    .normal()
+                    .paint(format!("{:10}", u.mac_address.to_string()))
+            );
         } else {
-            println!("{:15} {:20} {:10}", u.address.to_string(), strfmt::format_date_time(u.login_time), u.mac_address.to_string());
+            println!(
+                "{:15} {:20} {:10}",
+                u.address.to_string(),
+                strfmt::format_date_time(u.login_time),
+                u.mac_address.to_string()
+            );
         }
     }
     Ok(())
@@ -309,14 +352,28 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
     let mut total_flux = 0u64;
     for d in details {
         if color {
-            println!("{} {} {}", strfmt::colored_date_time(d.login_time), strfmt::colored_date_time(d.logout_time), strfmt::colored_flux(d.flux, false, true));
+            println!(
+                "{} {} {}",
+                strfmt::colored_date_time(d.login_time),
+                strfmt::colored_date_time(d.logout_time),
+                strfmt::colored_flux(d.flux, false, true)
+            );
         } else {
-            println!("{:20} {:20} {:>8}", strfmt::format_date_time(d.login_time), strfmt::format_date_time(d.logout_time), strfmt::format_flux(d.flux));
+            println!(
+                "{:20} {:20} {:>8}",
+                strfmt::format_date_time(d.login_time),
+                strfmt::format_date_time(d.logout_time),
+                strfmt::format_flux(d.flux)
+            );
         }
         total_flux += d.flux;
     }
     if color {
-        println!("{} {}", Color::Cyan.normal().paint("总流量"), strfmt::colored_flux(total_flux, true, false));
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("总流量"),
+            strfmt::colored_flux(total_flux, true, false)
+        );
     } else {
         println!("{} {}", "总流量", strfmt::format_flux(total_flux));
     }
@@ -327,7 +384,13 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> R
     let (u, p, _ac_ids) = read_cred()?;
     let mut c = UseregHelper::from_cred_client(u, p, get_client(proxy));
     c.login()?;
-    let mut details = c.details(NetDetailOrder::LogoutTime, d)?.iter().group_by(|detail| detail.logout_time.date()).into_iter().map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>())).collect::<Vec<_>>();
+    let mut details = c
+        .details(NetDetailOrder::LogoutTime, d)?
+        .iter()
+        .group_by(|detail| detail.logout_time.date())
+        .into_iter()
+        .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
+        .collect::<Vec<_>>();
     match o {
         NetDetailOrder::Flux => {
             if d {
@@ -345,14 +408,26 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> R
     let mut total_flux = 0u64;
     for d in details {
         if color {
-            println!("{} {}", strfmt::colored_date(d.0), strfmt::colored_flux(d.1, false, true));
+            println!(
+                "{} {}",
+                strfmt::colored_date(d.0),
+                strfmt::colored_flux(d.1, false, true)
+            );
         } else {
-            println!("{:10} {:>8}", strfmt::format_date(d.0), strfmt::format_flux(d.1));
+            println!(
+                "{:10} {:>8}",
+                strfmt::format_date(d.0),
+                strfmt::format_flux(d.1)
+            );
         }
         total_flux += d.1;
     }
     if color {
-        println!("{} {}", Color::Cyan.normal().paint("总流量"), strfmt::colored_flux(total_flux, true, false));
+        println!(
+            "{} {}",
+            Color::Cyan.normal().paint("总流量"),
+            strfmt::colored_flux(total_flux, true, false)
+        );
     } else {
         println!("{} {}", "总流量", strfmt::format_flux(total_flux));
     }

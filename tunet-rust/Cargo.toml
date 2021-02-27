@@ -16,6 +16,7 @@ chrono = "0.4"
 hwaddr = { git = "https://github.com/meh/rust-hwaddr" }
 lazy_static = "1.4"
 regex = "1"
+thiserror = "1.0"
 
 [dependencies.reqwest]
 version = "0.11"
