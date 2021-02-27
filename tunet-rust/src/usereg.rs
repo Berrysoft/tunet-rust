@@ -7,8 +7,6 @@ use select::document::Document;
 use select::predicate::*;
 use std::net::Ipv4Addr;
 use std::str::FromStr;
-use std::string::String;
-use std::vec::Vec;
 
 pub struct NetUser {
     pub address: Ipv4Addr,

@@ -1,7 +1,6 @@
 use super::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
-use std::string::String;
 
 pub struct NetConnect<'a, 's> {
     credential: NetCredential<'s>,

@@ -2,7 +2,6 @@ use ansi_term::Color;
 use chrono::Datelike;
 use itertools::Itertools;
 use std::net::Ipv4Addr;
-use std::option::Option;
 use structopt::StructOpt;
 use tunet_rust::{usereg::*, *};
 

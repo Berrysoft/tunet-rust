@@ -8,7 +8,6 @@ use crypto::sha1::Sha1;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde_json::{self, Value};
-use std::string::String;
 
 const BASE64N: &[u8] = b"LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA";
 const BASE64PAD: u8 = b'=';
