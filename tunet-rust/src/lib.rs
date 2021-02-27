@@ -1,7 +1,5 @@
 #![feature(try_trait)]
 
-use serde_json::error;
-use std::io;
 use std::result;
 use std::str;
 use std::time;
@@ -75,13 +73,13 @@ pub enum NetHelperError {
     #[error(transparent)]
     HttpErr(#[from] reqwest::Error),
     #[error(transparent)]
-    JsonErr(#[from] error::Error),
+    JsonErr(#[from] serde_json::error::Error),
     #[error("无法获取ac_id")]
     NoAcIdErr,
     #[error("操作失败`{0}`")]
     LogErr(String),
     #[error(transparent)]
-    IoErr(#[from] io::Error),
+    IoErr(#[from] std::io::Error),
     #[error("排序方式无效")]
     OrderError,
     #[error("无法确定登录方式")]
