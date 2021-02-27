@@ -76,15 +76,17 @@ pub enum NetHelperError {
     HttpErr(#[from] reqwest::Error),
     #[error(transparent)]
     JsonErr(#[from] error::Error),
-    #[error("Cannot determine value of ac_id")]
+    #[error("无法获取ac_id")]
     NoAcIdErr,
-    #[error("Auth log failed: `{0}`")]
+    #[error("操作失败`{0}`")]
     LogErr(String),
     #[error(transparent)]
     IoErr(#[from] io::Error),
-    #[error("Cannot determine host type")]
+    #[error("排序方式无效")]
+    OrderError,
+    #[error("无法确定登录方式")]
     HostErr,
-    #[error("Cannot determine config dir")]
+    #[error("找不到配置文件目录")]
     ConfigDirErr,
 }
 

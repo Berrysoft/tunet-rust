@@ -61,8 +61,8 @@ impl NetDetailOrder {
 }
 
 impl str::FromStr for NetDetailOrder {
-    type Err = String;
-    fn from_str(s: &str) -> result::Result<Self, Self::Err> {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> Result<Self> {
         let ls = s.to_lowercase();
         if ls == "login" || ls == "logintime" {
             Ok(NetDetailOrder::LoginTime)
@@ -71,7 +71,7 @@ impl str::FromStr for NetDetailOrder {
         } else if ls == "flux" {
             Ok(NetDetailOrder::Flux)
         } else {
-            Err("排序方式错误".to_string())
+            Err(NetHelperError::OrderError)
         }
     }
 }
