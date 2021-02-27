@@ -1,14 +1,10 @@
 use lazy_static::*;
 use reqwest::blocking::Client;
-use std::convert::From;
-use std::ffi::CStr;
-use std::mem::size_of;
+use std::ffi::{CStr, CString};
 use std::net::Ipv4Addr;
 use std::os::raw::{c_char, c_void};
-use std::ptr::copy_nonoverlapping;
-use std::string::String;
-use tunet_rust::usereg::*;
-use tunet_rust::*;
+use std::{borrow::Cow, convert::From};
+use tunet_rust::{usereg::*, *};
 
 #[repr(i32)]
 pub enum State {
@@ -58,14 +54,9 @@ pub struct Detail {
 static mut ERROR_MSG: String = String::new();
 
 fn write_string(msg: &str) -> *mut c_char {
-    unsafe {
-        let ptr = libc::malloc(msg.len() + 1) as *mut c_char;
-        if !ptr.is_null() {
-            copy_nonoverlapping(msg.as_ptr(), ptr as *mut u8, msg.len() * size_of::<u8>());
-            *(ptr.add(msg.len())) = 0;
-        }
-        ptr
-    }
+    CString::new(msg)
+        .map(|s| s.into_raw())
+        .unwrap_or(std::ptr::null_mut())
 }
 
 #[no_mangle]
@@ -74,12 +65,16 @@ pub extern "C" fn tunet_last_err() -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_string_free(ptr: *const c_char) {
-    unsafe { libc::free(ptr as *mut c_void) }
+pub extern "C" fn tunet_string_free(ptr: *mut c_char) {
+    unsafe {
+        if !ptr.is_null() {
+            let _s = CString::from_raw(ptr);
+        }
+    }
 }
 
-unsafe fn exact_str<'a>(cstr: *const c_char) -> &'a str {
-    CStr::from_ptr(cstr).to_str().expect("")
+unsafe fn exact_str<'a>(cstr: *const c_char) -> Cow<'a, str> {
+    CStr::from_ptr(cstr).to_string_lossy()
 }
 
 lazy_static! {
@@ -111,8 +106,8 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
         };
         from_state_cred_client(
             state,
-            u.to_owned(),
-            p.to_owned(),
+            u.into_owned(),
+            p.into_owned(),
             get_client(cred.use_proxy != 0),
             vec![],
         )
@@ -124,8 +119,8 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
         let u = exact_str(cred.username);
         let p = exact_str(cred.password);
         Ok(UseregHelper::from_cred_client(
-            u.to_owned(),
-            p.to_owned(),
+            u.into_owned(),
+            p.into_owned(),
             get_client(cred.use_proxy != 0),
         ))
     }
