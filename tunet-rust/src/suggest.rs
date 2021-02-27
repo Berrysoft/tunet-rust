@@ -2,7 +2,7 @@ use super::*;
 
 fn can_connect(uri: &str) -> bool {
     let client = HttpClient::new();
-    match client.get(uri).send() {
+    match client.head(uri).send() {
         Ok(_) => true,
         Err(_) => false,
     }

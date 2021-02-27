@@ -94,8 +94,8 @@ pub enum NetState {
 }
 
 impl str::FromStr for NetState {
-    type Err = String;
-    fn from_str(s: &str) -> result::Result<Self, Self::Err> {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> Result<Self> {
         let ls = s.to_lowercase();
         if ls == "net" {
             Ok(NetState::Net)
@@ -106,7 +106,7 @@ impl str::FromStr for NetState {
         } else if ls == "auto" {
             Ok(suggest::suggest())
         } else {
-            Err("连接方式错误".to_string())
+            Err(NetHelperError::HostErr)
         }
     }
 }
