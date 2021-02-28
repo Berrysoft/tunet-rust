@@ -78,20 +78,20 @@ pub struct UseregHelper<'a, 's> {
     client: &'a HttpClient,
 }
 
-const USEREG_LOG_URI: &'static str = "https://usereg.tsinghua.edu.cn/do.php";
-const USEREG_INFO_URI: &'static str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
-const USEREG_CONNECT_URI: &'static str = "https://usereg.tsinghua.edu.cn/ip_login.php";
-const DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+static USEREG_LOG_URI: &str = "https://usereg.tsinghua.edu.cn/do.php";
+static USEREG_INFO_URI: &str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
+static USEREG_CONNECT_URI: &str = "https://usereg.tsinghua.edu.cn/ip_login.php";
+static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
 fn parse_flux(s: &str) -> u64 {
-    let mut flux = s[0..s.len() - 1].parse::<f64>().unwrap_or_default();
-    flux *= match s.as_bytes()[s.len() - 1] {
-        b'G' => 1000.0 * 1000.0 * 1000.0,
-        b'M' => 1000.0 * 1000.0,
-        b'K' => 1000.0,
-        _ => 1.0,
-    };
-    flux as u64
+    let (flux, unit) = s.split_at(s.len() - 1);
+    (flux.parse::<f64>().unwrap_or_default()
+        * match unit.as_bytes()[0] {
+            b'G' => 1_000_000_000.0,
+            b'M' => 1_000_000.0,
+            b'K' => 1_000.0,
+            _ => 1.0,
+        }) as u64
 }
 
 impl<'a, 's> UseregHelper<'a, 's> {

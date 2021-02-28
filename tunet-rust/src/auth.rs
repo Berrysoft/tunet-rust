@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde_json::{self, Value};
 
-const BASE64N: &[u8] = b"LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA";
+static BASE64N: &[u8] = b"LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA";
 const BASE64PAD: u8 = b'=';
 
 fn base64(t: &[u8]) -> String {
@@ -40,7 +40,7 @@ pub struct AuthConnect<'a, 's> {
     additional_ac_ids: Vec<i32>,
 }
 
-const AC_IDS: [i32; 5] = [1, 25, 33, 35, 37];
+static AC_IDS: &[i32] = &[1, 25, 33, 35, 37];
 
 lazy_static! {
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
@@ -110,7 +110,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
     where
         F: Fn(&Self, i32) -> Result<String>,
     {
-        for ac_id in &AC_IDS {
+        for ac_id in AC_IDS {
             let res = action(self, *ac_id);
             if res.is_ok() {
                 return res;

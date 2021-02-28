@@ -61,8 +61,8 @@ pub fn colored_currency(c: f64) -> ANSIString<'static> {
     Color::Yellow.normal().paint(format_currency(c))
 }
 
-const TUNET_DATE_TIME_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
-const TUNET_DATE_FORMAT: &'static str = "%Y-%m-%d";
+static TUNET_DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+static TUNET_DATE_FORMAT: &str = "%Y-%m-%d";
 
 pub fn format_date_time(t: NaiveDateTime) -> String {
     t.format(TUNET_DATE_TIME_FORMAT).to_string()

@@ -7,8 +7,8 @@ pub struct NetConnect<'a, 's> {
     client: &'a HttpClient,
 }
 
-const NET_LOG_URI: &'static str = "http://net.tsinghua.edu.cn/do_login.php";
-const NET_FLUX_URI: &'static str = "http://net.tsinghua.edu.cn/rad_user_info.php";
+static NET_LOG_URI: &str = "http://net.tsinghua.edu.cn/do_login.php";
+static NET_FLUX_URI: &str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl<'a, 's> NetConnect<'a, 's> {
     pub fn from_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
