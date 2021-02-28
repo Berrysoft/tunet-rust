@@ -226,17 +226,19 @@ fn tunet_usereg_users_impl(
 ) -> Result<i32> {
     let helper = get_usereg_helper(cred)?;
     let users = helper.users()?;
+    let mut len = 0;
     if let Some(callback) = callback {
-        for u in &users {
+        for u in users {
             user.address = u.address.into();
             user.login_time = u.login_time.timestamp();
             user.mac_address = u.mac_address.octets();
+            len += 1;
             if callback(user, data) == 0 {
                 break;
             }
         }
     }
-    Ok(users.len() as i32)
+    Ok(len)
 }
 
 pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_void) -> i32;
@@ -266,17 +268,19 @@ fn tunet_usereg_details_impl(
         DetailOrder::Flux => NetDetailOrder::Flux,
     };
     let details = helper.details(o, desc != 0)?;
+    let mut len = 0;
     if let Some(callback) = callback {
-        for d in &details {
+        for d in details {
             let detail = Detail {
                 login_time: d.login_time.timestamp(),
                 logout_time: d.logout_time.timestamp(),
                 flux: d.flux,
             };
+            len += 1;
             if callback(&detail, data) == 0 {
                 break;
             }
         }
     }
-    Ok(details.len() as i32)
+    Ok(len)
 }

@@ -6,6 +6,7 @@ use hwaddr::HwAddr;
 use select::document::Document;
 use select::predicate::*;
 use std::net::Ipv4Addr;
+use std::ops::Generator;
 use std::str::FromStr;
 
 pub struct NetUser {
@@ -121,58 +122,67 @@ impl<'a, 's> UseregHelper<'a, 's> {
         Ok(res.text()?)
     }
 
-    pub fn users(&self) -> Result<Vec<NetUser>> {
+    pub fn users(
+        &self,
+    ) -> Result<GeneratorIteratorAdapter<impl Generator<Return = (), Yield = NetUser>>> {
         let res = self.client.get(USEREG_INFO_URI).send()?;
         let doc = Document::from(res.text()?.as_str());
-        Ok(doc
-            .find(Name("tr").descendant(Attr("align", "center")))
-            .skip(1)
-            .map(|node| {
+        Ok(GeneratorIteratorAdapter::new(move || {
+            let doc = Box::new(doc);
+            for node in doc
+                .find(Name("tr").descendant(Attr("align", "center")))
+                .skip(1)
+            {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                NetUser::from_detail(
+                yield NetUser::from_detail(
                     Ipv4Addr::from_str(&tds[0].text()).unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
                     NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
                         .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
                     tds[10].text().parse::<HwAddr>().unwrap_or(HwAddr::from(0)),
                 )
-            })
-            .collect::<Vec<_>>())
+            }
+        }))
     }
 
-    pub fn details(&self, o: NetDetailOrder, des: bool) -> Result<Vec<NetDetail>> {
+    pub fn details(
+        &self,
+        o: NetDetailOrder,
+        des: bool,
+    ) -> Result<GeneratorIteratorAdapter<impl Generator<Return = (), Yield = NetDetail> + '_>> {
         let now = Local::now();
-        let off = 100;
-        let mut list: Vec<NetDetail> = Vec::new();
-        let mut i = 1;
-        loop {
-            let res = self.client.get(&format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}", now.year(), now.month(), now.day(), i, off, o.get_query(), if des { "DESC" } else { "" },)).send()?;
-            let doc = Document::from(res.text()?.as_str());
-            let mut ds = doc
-                .find(Name("tr").descendant(Attr("align", "center")))
-                .skip(1)
-                .filter_map(|node| {
-                    let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                    if tds.len() == 0 {
-                        None
-                    } else {
-                        Some(NetDetail::from_detail(
-                            NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                            NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
-                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                            parse_flux(&tds[4].text()),
-                        ))
+        let off: i32 = 100;
+        Ok(GeneratorIteratorAdapter::new(move || {
+            let mut i: usize = 1;
+            loop {
+                if let Ok(res) = self.client.get(&format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}", now.year(), now.month(), now.day(), i, off, o.get_query(), if des { "DESC" } else { "" },)).send() {
+                    if let Ok(text) = res.text() {
+                        let doc = Box::new(Document::from(text.as_str()));
+                        let mut new_len = 0;
+                        for node in doc
+                            .find(Name("tr").descendant(Attr("align", "center")))
+                            .skip(1) {
+                            let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
+                            if tds.len() != 0 {
+                                yield NetDetail::from_detail(
+                                    NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
+                                        .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                                    NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
+                                        .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                                    parse_flux(&tds[4].text()),
+                                );
+                                new_len += 1;
+                            }
+                        }
+                        if new_len < off {
+                            break;
+                        }
+                        i += 1;
+                        continue;
                     }
-                })
-                .collect::<Vec<_>>();
-            let new_len = ds.len();
-            list.append(&mut ds);
-            if new_len < off {
+                }
                 break;
             }
-            i += 1;
-        }
-        Ok(list)
+        }))
     }
 }
 
