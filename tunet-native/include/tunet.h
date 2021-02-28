@@ -56,7 +56,7 @@ extern "C"
         uint8_t mac_address[6];
     } tunet_user;
 
-    typedef int(TUNET_API* tunet_usereg_users_callback)(const tunet_user* const user, void* const data);
+    typedef bool(TUNET_API* tunet_usereg_users_callback)(const tunet_user* const user, void* const data);
 
     typedef struct tunet_detail
     {
@@ -65,7 +65,7 @@ extern "C"
         uint64_t flux;
     } tunet_detail;
 
-    typedef int(TUNET_API* tunet_usereg_details_callback)(const tunet_detail* const detail, void* const data);
+    typedef bool(TUNET_API* tunet_usereg_details_callback)(const tunet_detail* const detail, void* const data);
 
     enum tunet_detail_order
     {

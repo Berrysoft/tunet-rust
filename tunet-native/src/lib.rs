@@ -128,7 +128,7 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
 fn unwrap_res(res: Result<i32>) -> i32 {
     match res {
         Ok(r) => r,
-        Err(e) => match ERROR_MSG.lock().map(|mut s| *s = format!("{:?}", e)) {
+        Err(e) => match ERROR_MSG.lock().map(|mut s| *s = format!("{}", e)) {
             Ok(_) => -1,
             Err(_) => -2,
         },
@@ -206,7 +206,7 @@ fn tunet_usereg_drop_impl(cred: &Credential, addr: u32) -> Result<i32> {
     Ok(0)
 }
 
-pub type UseregUsersCallback = extern "C" fn(user: &User, data: *mut c_void) -> i32;
+pub type UseregUsersCallback = extern "C" fn(user: &User, data: *mut c_void) -> bool;
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_users(
@@ -233,7 +233,7 @@ fn tunet_usereg_users_impl(
                 mac_address: u.mac_address.octets(),
             };
             len += 1;
-            if callback(&user, data) == 0 {
+            if !callback(&user, data) {
                 break;
             }
         }
@@ -241,7 +241,7 @@ fn tunet_usereg_users_impl(
     Ok(len)
 }
 
-pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_void) -> i32;
+pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_void) -> bool;
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_details(
@@ -277,7 +277,7 @@ fn tunet_usereg_details_impl(
                 flux: d.flux,
             };
             len += 1;
-            if callback(&detail, data) == 0 {
+            if !callback(&detail, data) {
                 break;
             }
         }
