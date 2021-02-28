@@ -148,40 +148,42 @@ impl<'a, 's> UseregHelper<'a, 's> {
         &self,
         o: NetDetailOrder,
         des: bool,
-    ) -> Result<GeneratorIteratorAdapter<impl Generator<Return = (), Yield = NetDetail> + '_>> {
+    ) -> Result<GeneratorIteratorAdapter<impl Generator<Return = Result<()>, Yield = NetDetail> + '_>>
+    {
         let now = Local::now();
-        let off: i32 = 100;
+        let off = 100;
+        let des = if des { "DESC" } else { "" };
         Ok(GeneratorIteratorAdapter::new(move || {
             let mut i: usize = 1;
             loop {
-                if let Ok(res) = self.client.get(&format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}", now.year(), now.month(), now.day(), i, off, o.get_query(), if des { "DESC" } else { "" },)).send() {
-                    if let Ok(text) = res.text() {
-                        let doc = Box::new(Document::from(text.as_str()));
-                        let mut new_len = 0;
-                        for node in doc
-                            .find(Name("tr").descendant(Attr("align", "center")))
-                            .skip(1) {
-                            let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                            if tds.len() != 0 {
-                                yield NetDetail::from_detail(
-                                    NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                                        .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                                    NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
-                                        .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                                    parse_flux(&tds[4].text()),
-                                );
-                                new_len += 1;
-                            }
-                        }
-                        if new_len < off {
-                            break;
-                        }
-                        i += 1;
-                        continue;
+                let res = self.client.get(
+                    &format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
+                        now.year(), now.month(), now.day(), i, off, o.get_query(), des))
+                    .send()?;
+                let doc = Box::new(Document::from(res.text()?.as_str()));
+                let mut new_len = 0;
+                for node in doc
+                    .find(Name("tr").descendant(Attr("align", "center")))
+                    .skip(1)
+                {
+                    let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
+                    if !tds.is_empty() {
+                        yield NetDetail::from_detail(
+                            NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
+                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                            NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
+                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                            parse_flux(&tds[4].text()),
+                        );
+                        new_len += 1;
                     }
                 }
-                break;
+                if new_len < off {
+                    break;
+                }
+                i += 1;
             }
+            Ok(())
         }))
     }
 }

@@ -27,7 +27,7 @@ pub struct Credential {
     username: *const c_char,
     password: *const c_char,
     state: State,
-    use_proxy: i32,
+    use_proxy: bool,
 }
 
 #[repr(C)]
@@ -109,7 +109,7 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        from_state_cred_client(state, u, p, get_client(cred.use_proxy != 0)?, vec![])
+        from_state_cred_client(state, u, p, get_client(cred.use_proxy)?, vec![])
     }
 }
 
@@ -120,7 +120,7 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
         Ok(UseregHelper::from_cred_client(
             u,
             p,
-            get_client(cred.use_proxy != 0)?,
+            get_client(cred.use_proxy)?,
         ))
     }
 }
@@ -267,10 +267,10 @@ fn tunet_usereg_details_impl(
         DetailOrder::LogoutTime => NetDetailOrder::LogoutTime,
         DetailOrder::Flux => NetDetailOrder::Flux,
     };
-    let details = helper.details(o, desc != 0)?;
+    let mut details = helper.details(o, desc != 0)?;
     let mut len = 0;
     if let Some(callback) = callback {
-        for d in details {
+        for d in &mut details {
             let detail = Detail {
                 login_time: d.login_time.timestamp(),
                 logout_time: d.logout_time.timestamp(),
@@ -281,6 +281,9 @@ fn tunet_usereg_details_impl(
                 break;
             }
         }
+    }
+    if let Some(ret) = details.into_ret() {
+        ret?;
     }
     Ok(len)
 }
