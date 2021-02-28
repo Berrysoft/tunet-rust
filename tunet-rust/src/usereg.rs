@@ -86,10 +86,10 @@ static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 fn parse_flux(s: &str) -> u64 {
     let (flux, unit) = s.split_at(s.len() - 1);
     (flux.parse::<f64>().unwrap_or_default()
-        * match unit.as_bytes()[0] {
-            b'G' => 1_000_000_000.0,
-            b'M' => 1_000_000.0,
-            b'K' => 1_000.0,
+        * match unit {
+            "G" => 1_000_000_000.0,
+            "M" => 1_000_000.0,
+            "K" => 1_000.0,
             _ => 1.0,
         }) as u64
 }
