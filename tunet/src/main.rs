@@ -179,6 +179,7 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
     let mut c = UseregHelper::from_cred_client(u, p, &client);
     c.login()?;
     let us = c.users()?;
+    println!("    IP地址            登录时间            MAC地址");
     for u in us {
         if color {
             println!(
@@ -187,13 +188,11 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
                     .normal()
                     .paint(format!("{:15}", u.address.to_string())),
                 strfmt::colored_date_time(u.login_time),
-                Color::Blue
-                    .normal()
-                    .paint(format!("{:10}", u.mac_address.to_string()))
+                Color::Cyan.normal().paint(u.mac_address.to_string())
             );
         } else {
             println!(
-                "{:15} {:20} {:10}",
+                "{:15} {:20} {}",
                 u.address.to_string(),
                 strfmt::format_date_time(u.login_time),
                 u.mac_address.to_string()
@@ -229,6 +228,7 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
     let mut c = UseregHelper::from_cred_client(u, p, &client);
     c.login()?;
     let mut details = c.details(o, d)?;
+    println!("      登录时间             注销时间         流量");
     let mut total_flux = 0u64;
     for d in &mut details {
         if color {
@@ -294,6 +294,7 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> R
             }
         }
     }
+    println!(" 登录日期    流量");
     let mut total_flux = 0;
     for (date, flux) in details {
         if color {

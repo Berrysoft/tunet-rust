@@ -26,7 +26,7 @@ pub fn colored_flux(flux: u64, total: bool, right_aligned: bool) -> ANSIString<'
         format_flux(flux)
     };
     if flux == 0 {
-        Color::Blue.normal().paint(f)
+        Color::Cyan.normal().paint(f)
     } else if flux < if total { 20_000_000_000 } else { 2_000_000_000 } {
         Color::Yellow.bold().paint(f)
     } else {

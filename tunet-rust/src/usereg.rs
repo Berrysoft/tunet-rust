@@ -7,7 +7,6 @@ use select::document::Document;
 use select::predicate::*;
 use std::net::Ipv4Addr;
 use std::ops::Generator;
-use std::str::FromStr;
 
 pub struct NetUser {
     pub address: Ipv4Addr,
@@ -135,10 +134,13 @@ impl<'a, 's> UseregHelper<'a, 's> {
             {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
                 yield NetUser::from_detail(
-                    Ipv4Addr::from_str(&tds[0].text()).unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
+                    tds[0]
+                        .text()
+                        .parse::<Ipv4Addr>()
+                        .unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
                     NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
                         .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                    tds[10].text().parse::<HwAddr>().unwrap_or(HwAddr::from(0)),
+                    tds[6].text().parse::<HwAddr>().unwrap_or(HwAddr::from(0)),
                 )
             }
         }))
