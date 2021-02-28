@@ -2,6 +2,8 @@ use lazy_static::*;
 use std::ffi::{CStr, CString};
 use std::net::Ipv4Addr;
 use std::os::raw::{c_char, c_void};
+use std::ptr::null_mut;
+use std::sync::Mutex;
 use std::{borrow::Cow, convert::From};
 use tunet_rust::{usereg::*, *};
 
@@ -38,7 +40,7 @@ pub struct Flux {
 
 #[repr(C)]
 pub struct User {
-    address: i64,
+    address: u32,
     login_time: i64,
     mac_address: [u8; 6],
 }
@@ -50,17 +52,22 @@ pub struct Detail {
     flux: i64,
 }
 
-static mut ERROR_MSG: String = String::new();
+lazy_static! {
+    static ref ERROR_MSG: Mutex<String> = Mutex::new(String::new());
+}
 
 fn write_string(msg: &str) -> *mut c_char {
     CString::new(msg)
         .map(|s| s.into_raw())
-        .unwrap_or(std::ptr::null_mut())
+        .unwrap_or(null_mut())
 }
 
 #[no_mangle]
 pub extern "C" fn tunet_last_err() -> *mut c_char {
-    unsafe { write_string(&ERROR_MSG) }
+    ERROR_MSG
+        .lock()
+        .map(|s| write_string(&s))
+        .unwrap_or(null_mut())
 }
 
 #[no_mangle]
@@ -118,12 +125,10 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
 fn unwrap_res(res: Result<i32>) -> i32 {
     match res {
         Ok(r) => r,
-        Err(e) => {
-            unsafe {
-                ERROR_MSG = format!("{:?}", e);
-            }
-            -1
-        }
+        Err(e) => match ERROR_MSG.lock().map(|mut s| *s = format!("{:?}", e)) {
+            Ok(_) => -1,
+            Err(_) => -2,
+        },
     }
 }
 
@@ -187,13 +192,13 @@ fn tunet_usereg_logout_impl(cred: &Credential) -> Result<i32> {
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_drop(cred: &Credential, addr: i64) -> i32 {
+pub extern "C" fn tunet_usereg_drop(cred: &Credential, addr: u32) -> i32 {
     unwrap_res(tunet_usereg_drop_impl(cred, addr))
 }
 
-fn tunet_usereg_drop_impl(cred: &Credential, addr: i64) -> Result<i32> {
+fn tunet_usereg_drop_impl(cred: &Credential, addr: u32) -> Result<i32> {
     let helper = get_usereg_helper(cred)?;
-    let a = Ipv4Addr::from(addr as u32);
+    let a = Ipv4Addr::from(addr);
     helper.drop(a)?;
     Ok(0)
 }
@@ -220,7 +225,7 @@ fn tunet_usereg_users_impl(
     let users = helper.users()?;
     if let Some(callback) = callback {
         for u in &users {
-            user.address = u32::from(u.address) as i64;
+            user.address = u.address.into();
             user.login_time = u.login_time.timestamp();
             user.mac_address = u.mac_address.octets();
             if callback(user, data) == 0 {
