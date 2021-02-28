@@ -40,8 +40,6 @@ pub struct AuthConnect<'a, 's> {
     additional_ac_ids: Vec<i32>,
 }
 
-static AC_IDS: &[i32] = &[1, 25, 33, 35, 37];
-
 lazy_static! {
     // SATETY: this regex expression is valid.
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
@@ -111,12 +109,6 @@ impl<'a, 's> AuthConnect<'a, 's> {
     where
         F: Fn(&Self, i32) -> Result<String>,
     {
-        for ac_id in AC_IDS {
-            let res = action(self, *ac_id);
-            if res.is_ok() {
-                return res;
-            }
-        }
         for ac_id in &self.additional_ac_ids {
             let res = action(self, *ac_id);
             if res.is_ok() {
@@ -196,48 +188,28 @@ impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
     }
 
     fn logout(&mut self) -> Result<String> {
-        self.do_log(|s, ac_id| {
-            let token = s.challenge()?;
-            let encode_json = serde_json::json!({
-                "username":s.credential.username,
-                "ip":"",
-                "acid":ac_id,
-                "enc_ver":"srun_bx1"
-            });
-            let tea = AuthTea::new(token.as_bytes());
-            let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
-            let mut sha1 = Sha1::new();
-            sha1.input_str(&format!(
-                "{0}{1}{0}{3}{0}{0}200{0}1{0}{2}",
-                token, s.credential.username, info, ac_id
-            ));
-            let params = [
-                ("action", "logout"),
-                ("ac_id", &ac_id.to_string()),
-                ("double_stack", "1"),
-                ("n", "200"),
-                ("type", "1"),
-                ("username", &s.credential.username),
-                ("info", &info),
-                ("chksum", &sha1.result_str()),
-                ("callback", "callback"),
-            ];
-            let res = s
-                .client
-                .post(&format!(
-                    "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
-                    s.ver
-                ))
-                .form(&params)
-                .send()?;
-            let t = res.text()?;
-            let (suc, msg) = parse_response(&t)?;
-            if suc {
-                Ok(msg)
-            } else {
-                Err(NetHelperError::LogErr(msg))
-            }
-        })
+        let params = [
+            ("action", "logout"),
+            ("ac_id", "1"),
+            ("double_stack", "1"),
+            ("username", &self.credential.username),
+            ("callback", "callback"),
+        ];
+        let res = self
+            .client
+            .post(&format!(
+                "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
+                self.ver
+            ))
+            .form(&params)
+            .send()?;
+        let t = res.text()?;
+        let (suc, msg) = parse_response(&t)?;
+        if suc {
+            Ok(msg)
+        } else {
+            Err(NetHelperError::LogErr(msg))
+        }
     }
 }
 
