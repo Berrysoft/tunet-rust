@@ -84,15 +84,18 @@ unsafe fn exact_str<'a>(cstr: *const c_char) -> Cow<'a, str> {
 }
 
 lazy_static! {
-    static ref CLIENT: HttpClient = create_http_client(true).unwrap();
-    static ref NO_PROXY_CLIENT: HttpClient = create_http_client(false).unwrap();
+    static ref CLIENT: Option<HttpClient> = create_http_client(true).ok();
+    static ref NO_PROXY_CLIENT: Option<HttpClient> = create_http_client(false).ok();
 }
 
-fn get_client(proxy: bool) -> &'static HttpClient {
-    if proxy {
-        &*CLIENT
+fn get_client(proxy: bool) -> Result<&'static HttpClient> {
+    match if proxy {
+        CLIENT.as_ref()
     } else {
-        &*NO_PROXY_CLIENT
+        NO_PROXY_CLIENT.as_ref()
+    } {
+        Some(c) => Ok(c),
+        None => Err(NetHelperError::InitErr),
     }
 }
 
@@ -106,7 +109,7 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        from_state_cred_client(state, u, p, get_client(cred.use_proxy != 0), vec![])
+        from_state_cred_client(state, u, p, get_client(cred.use_proxy != 0)?, vec![])
     }
 }
 
@@ -117,7 +120,7 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
         Ok(UseregHelper::from_cred_client(
             u,
             p,
-            get_client(cred.use_proxy != 0),
+            get_client(cred.use_proxy != 0)?,
         ))
     }
 }

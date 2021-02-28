@@ -43,6 +43,7 @@ pub struct AuthConnect<'a, 's> {
 static AC_IDS: &[i32] = &[1, 25, 33, 35, 37];
 
 lazy_static! {
+    // SATETY: this regex expression is valid.
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
 }
 
@@ -101,7 +102,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
             .send()?;
         let t = res.text()?;
         match AC_ID_REGEX.captures(&t) {
-            Some(cap) => Ok(cap[1].parse::<i32>().unwrap()),
+            Some(cap) => Ok(cap[1].parse::<i32>().unwrap_or_default()),
             _ => Err(NetHelperError::NoAcIdErr),
         }
     }

@@ -81,6 +81,8 @@ pub enum NetHelperError {
     HostErr,
     #[error("找不到配置文件目录")]
     ConfigDirErr,
+    #[error("初始化失败")]
+    InitErr,
 }
 
 pub type Result<T> = result::Result<T, NetHelperError>;

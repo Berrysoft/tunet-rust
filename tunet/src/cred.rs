@@ -130,8 +130,7 @@ pub fn delete_cred() -> Result<()> {
         stdout().flush()?;
         let mut s = String::new();
         stdin().read_line(&mut s)?;
-        let c = s.chars().next().unwrap_or_default();
-        if c.to_ascii_lowercase() == 'y' {
+        if s.to_ascii_lowercase() == "y" {
             let p = settings_file_path()?;
             remove_file(p)?;
             println!("已删除");

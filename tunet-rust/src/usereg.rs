@@ -130,9 +130,10 @@ impl<'a, 's> UseregHelper<'a, 's> {
             .map(|node| {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
                 NetUser::from_detail(
-                    Ipv4Addr::from_str(&tds[0].text()).unwrap(),
-                    NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT).unwrap(),
-                    tds[10].text().parse::<HwAddr>().unwrap(),
+                    Ipv4Addr::from_str(&tds[0].text()).unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
+                    NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
+                        .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                    tds[10].text().parse::<HwAddr>().unwrap_or(HwAddr::from(0)),
                 )
             })
             .collect::<Vec<_>>())
@@ -156,9 +157,9 @@ impl<'a, 's> UseregHelper<'a, 's> {
                     } else {
                         Some(NetDetail::from_detail(
                             NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                                .unwrap(),
+                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
                             NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
-                                .unwrap(),
+                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
                             parse_flux(&tds[4].text()),
                         ))
                     }
