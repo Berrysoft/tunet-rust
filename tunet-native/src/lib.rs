@@ -33,8 +33,8 @@ pub struct Credential {
 #[repr(C)]
 pub struct Flux {
     username: *mut c_char,
-    flux: i64,
-    online_time: i64,
+    flux: u64,
+    online_time: u64,
     balance: f64,
 }
 
@@ -49,7 +49,7 @@ pub struct User {
 pub struct Detail {
     login_time: i64,
     logout_time: i64,
-    flux: i64,
+    flux: u64,
 }
 
 lazy_static! {
@@ -163,8 +163,8 @@ fn tunet_status_impl(cred: &Credential, flux: &mut Flux) -> Result<i32> {
     let helper = get_helper(cred)?;
     let f = helper.flux()?;
     flux.username = write_string(&f.username);
-    flux.online_time = f.online_time.as_secs() as i64;
-    flux.flux = f.flux as i64;
+    flux.online_time = f.online_time.as_secs();
+    flux.flux = f.flux;
     flux.balance = f.balance;
     Ok(0)
 }
@@ -268,7 +268,7 @@ fn tunet_usereg_details_impl(
             let detail = Detail {
                 login_time: d.login_time.timestamp(),
                 logout_time: d.logout_time.timestamp(),
-                flux: d.flux as i64,
+                flux: d.flux,
             };
             if callback(&detail, data) == 0 {
                 break;

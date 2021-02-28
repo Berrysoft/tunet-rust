@@ -267,7 +267,7 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> R
     c.login()?;
     let mut details = c
         .details(NetDetailOrder::LogoutTime, d)?
-        .iter()
+        .into_iter()
         .group_by(|detail| detail.logout_time.date())
         .into_iter()
         .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
@@ -275,33 +275,33 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> R
     match o {
         NetDetailOrder::Flux => {
             if d {
-                details.sort_unstable_by_key(|x| -(x.1 as i64));
+                details.sort_unstable_by_key(|(_, flux)| -(*flux as i64));
             } else {
-                details.sort_unstable_by_key(|x| x.1);
+                details.sort_unstable_by_key(|(_, flux)| *flux);
             }
         }
         _ => {
             if d {
-                details.sort_unstable_by_key(|x| -(x.0.day() as i32));
+                details.sort_unstable_by_key(|(date, _)| -(date.day() as i32));
             }
         }
     }
-    let mut total_flux = 0u64;
-    for d in details {
+    let mut total_flux = 0;
+    for (date, flux) in details {
         if color {
             println!(
                 "{} {}",
-                strfmt::colored_date(d.0),
-                strfmt::colored_flux(d.1, false, true)
+                strfmt::colored_date(date),
+                strfmt::colored_flux(flux, false, true)
             );
         } else {
             println!(
                 "{:10} {:>8}",
-                strfmt::format_date(d.0),
-                strfmt::format_flux(d.1)
+                strfmt::format_date(date),
+                strfmt::format_flux(flux)
             );
         }
-        total_flux += d.1;
+        total_flux += flux;
     }
     if color {
         println!(

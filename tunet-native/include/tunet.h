@@ -43,8 +43,8 @@ extern "C"
     typedef struct tunet_flux
     {
         char* username;
-        int64_t flux;
-        int64_t online_time;
+        uint64_t flux;
+        uint64_t online_time;
         double balance;
     } tunet_flux;
 
@@ -61,7 +61,7 @@ extern "C"
     {
         int64_t login_time;
         int64_t logout_time;
-        int64_t flux;
+        uint64_t flux;
     } tunet_detail;
 
     typedef int (TUNET_API *tunet_usereg_details_callback)(const tunet_detail* detail, void* data);

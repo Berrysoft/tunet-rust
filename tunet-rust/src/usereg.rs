@@ -123,7 +123,7 @@ impl<'a, 's> UseregHelper<'a, 's> {
 
     pub fn users(&self) -> Result<Vec<NetUser>> {
         let res = self.client.get(USEREG_INFO_URI).send()?;
-        let doc = Document::from(&res.text()? as &str);
+        let doc = Document::from(res.text()?.as_str());
         Ok(doc
             .find(Name("tr").descendant(Attr("align", "center")))
             .skip(1)
@@ -145,7 +145,7 @@ impl<'a, 's> UseregHelper<'a, 's> {
         let mut i = 1;
         loop {
             let res = self.client.get(&format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}", now.year(), now.month(), now.day(), i, off, o.get_query(), if des { "DESC" } else { "" },)).send()?;
-            let doc = Document::from(&res.text()? as &str);
+            let doc = Document::from(res.text()?.as_str());
             let mut ds = doc
                 .find(Name("tr").descendant(Attr("align", "center")))
                 .skip(1)
