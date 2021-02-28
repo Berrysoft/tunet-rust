@@ -211,16 +211,14 @@ pub type UseregUsersCallback = extern "C" fn(user: &User, data: *mut c_void) -> 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_users(
     cred: &Credential,
-    user: &mut User,
     callback: Option<UseregUsersCallback>,
     data: *mut c_void,
 ) -> i32 {
-    unwrap_res(tunet_usereg_users_impl(cred, user, callback, data))
+    unwrap_res(tunet_usereg_users_impl(cred, callback, data))
 }
 
 fn tunet_usereg_users_impl(
     cred: &Credential,
-    user: &mut User,
     callback: Option<UseregUsersCallback>,
     data: *mut c_void,
 ) -> Result<i32> {
@@ -229,11 +227,13 @@ fn tunet_usereg_users_impl(
     let mut len = 0;
     if let Some(callback) = callback {
         for u in users {
-            user.address = u.address.into();
-            user.login_time = u.login_time.timestamp();
-            user.mac_address = u.mac_address.octets();
+            let user = User {
+                address: u.address.into(),
+                login_time: u.login_time.timestamp(),
+                mac_address: u.mac_address.octets(),
+            };
             len += 1;
-            if callback(user, data) == 0 {
+            if callback(&user, data) == 0 {
                 break;
             }
         }
@@ -247,7 +247,7 @@ pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_voi
 pub extern "C" fn tunet_usereg_details(
     cred: &Credential,
     order: DetailOrder,
-    desc: i32,
+    desc: bool,
     callback: Option<UseregDetailsCallback>,
     data: *mut c_void,
 ) -> i32 {
@@ -257,7 +257,7 @@ pub extern "C" fn tunet_usereg_details(
 fn tunet_usereg_details_impl(
     cred: &Credential,
     order: DetailOrder,
-    desc: i32,
+    desc: bool,
     callback: Option<UseregDetailsCallback>,
     data: *mut c_void,
 ) -> Result<i32> {
@@ -267,7 +267,7 @@ fn tunet_usereg_details_impl(
         DetailOrder::LogoutTime => NetDetailOrder::LogoutTime,
         DetailOrder::Flux => NetDetailOrder::Flux,
     };
-    let mut details = helper.details(o, desc != 0)?;
+    let mut details = helper.details(o, desc)?;
     let mut len = 0;
     if let Some(callback) = callback {
         for d in &mut details {
