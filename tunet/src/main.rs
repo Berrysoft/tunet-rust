@@ -6,10 +6,10 @@ use std::net::Ipv4Addr;
 use structopt::StructOpt;
 use tunet_rust::{usereg::*, *};
 
-mod cred;
+mod settings;
 mod strfmt;
 
-use cred::*;
+use settings::*;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
@@ -124,17 +124,19 @@ fn main() -> Result<()> {
 fn do_login(s: NetState, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
     let (u, p, ac_ids) = read_cred()?;
-    let mut c = from_state_cred_client(s, &u, &p, &client, ac_ids)?;
-    let res = c.login()?;
-    println!("{}", res);
-    save_cred(&u, &p, c.ac_ids())?;
-    Ok(())
+    let ac_ids = {
+        let mut c = TUNetConnect::from_state_cred_client(s, &u, &p, &client, ac_ids)?;
+        let res = c.login()?;
+        println!("{}", res);
+        c.ac_ids().to_owned()
+    };
+    save_cred(u, p, ac_ids)
 }
 
 fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
     let (u, ac_ids) = read_username()?;
-    let mut c = from_state_cred_client(s, &u, "", &client, ac_ids)?;
+    let mut c = TUNetConnect::from_state_cred_client(s, &u, "", &client, ac_ids)?;
     let res = c.logout()?;
     println!("{}", res);
     Ok(())
@@ -142,7 +144,7 @@ fn do_logout(s: NetState, proxy: bool) -> Result<()> {
 
 fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
-    let c = from_state_cred_client(s, "", "", &client, vec![])?;
+    let c = TUNetConnect::from_state_cred_client(s, "", "", &client, vec![])?;
     let f = c.flux()?;
     if color {
         println!(
@@ -176,151 +178,157 @@ fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
 
 fn do_online(color: bool, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
-    let (u, p, _ac_ids) = read_cred()?;
-    let mut c = UseregHelper::from_cred_client(u, p, &client);
-    c.login()?;
-    let us = c.users()?;
-    println!("    IP地址            登录时间            MAC地址");
-    for u in us {
-        if color {
-            println!(
-                "{} {} {}",
-                Color::Yellow
-                    .normal()
-                    .paint(format!("{:15}", u.address.to_string())),
-                strfmt::colored_date_time(u.login_time),
-                Color::Cyan.normal().paint(u.mac_address.to_string())
-            );
-        } else {
-            println!(
-                "{:15} {:20} {}",
-                u.address.to_string(),
-                strfmt::format_date_time(u.login_time),
-                u.mac_address.to_string()
-            );
+    let (u, p, ac_ids) = read_cred()?;
+    {
+        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
+        c.login()?;
+        let us = c.users()?;
+        println!("    IP地址            登录时间            MAC地址");
+        for u in us {
+            if color {
+                println!(
+                    "{} {} {}",
+                    Color::Yellow
+                        .normal()
+                        .paint(format!("{:15}", u.address.to_string())),
+                    strfmt::colored_date_time(u.login_time),
+                    Color::Cyan.normal().paint(u.mac_address.to_string())
+                );
+            } else {
+                println!(
+                    "{:15} {:20} {}",
+                    u.address.to_string(),
+                    strfmt::format_date_time(u.login_time),
+                    u.mac_address.to_string()
+                );
+            }
         }
     }
-    Ok(())
+    save_cred(u, p, ac_ids)
 }
 
 fn do_connect(a: Ipv4Addr, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
-    let (u, p, _ac_ids) = read_cred()?;
-    let mut c = UseregHelper::from_cred_client(u, p, &client);
-    c.login()?;
-    let res = c.connect(a)?;
-    println!("{}", res);
-    Ok(())
+    let (u, p, ac_ids) = read_cred()?;
+    {
+        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
+        c.login()?;
+        let res = c.connect(a)?;
+        println!("{}", res);
+    }
+    save_cred(u, p, ac_ids)
 }
 
 fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
-    let (u, p, _ac_ids) = read_cred()?;
-    let mut c = UseregHelper::from_cred_client(u, p, &client);
-    c.login()?;
-    let res = c.drop(a)?;
-    println!("{}", res);
-    Ok(())
+    let (u, p, ac_ids) = read_cred()?;
+    {
+        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
+        c.login()?;
+        let res = c.drop(a)?;
+        println!("{}", res);
+    }
+    save_cred(u, p, ac_ids)
 }
 
 fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
-    let (u, p, _ac_ids) = read_cred()?;
-    let mut c = UseregHelper::from_cred_client(u, p, &client);
-    c.login()?;
-    let mut details = c.details(o, d)?;
-    println!("      登录时间             注销时间         流量");
-    let mut total_flux = 0u64;
-    for d in &mut details {
+    let (u, p, ac_ids) = read_cred()?;
+    {
+        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
+        c.login()?;
+        let mut details = c.details(o, d)?;
+        println!("      登录时间             注销时间         流量");
+        let mut total_flux = 0u64;
+        for d in &mut details {
+            if color {
+                println!(
+                    "{} {} {}",
+                    strfmt::colored_date_time(d.login_time),
+                    strfmt::colored_date_time(d.logout_time),
+                    strfmt::colored_flux(d.flux, false, true)
+                );
+            } else {
+                println!(
+                    "{:20} {:20} {:>8}",
+                    strfmt::format_date_time(d.login_time),
+                    strfmt::format_date_time(d.logout_time),
+                    strfmt::format_flux(d.flux)
+                );
+            }
+            total_flux += d.flux;
+        }
+        details.into_ret().unwrap_or(Ok(()))?;
         if color {
             println!(
-                "{} {} {}",
-                strfmt::colored_date_time(d.login_time),
-                strfmt::colored_date_time(d.logout_time),
-                strfmt::colored_flux(d.flux, false, true)
+                "{} {}",
+                Color::Cyan.normal().paint("总流量"),
+                strfmt::colored_flux(total_flux, true, false)
             );
         } else {
-            println!(
-                "{:20} {:20} {:>8}",
-                strfmt::format_date_time(d.login_time),
-                strfmt::format_date_time(d.logout_time),
-                strfmt::format_flux(d.flux)
-            );
+            println!("{} {}", "总流量", strfmt::format_flux(total_flux));
         }
-        total_flux += d.flux;
     }
-    if let Some(ret) = details.into_ret() {
-        ret?;
-    }
-    if color {
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("总流量"),
-            strfmt::colored_flux(total_flux, true, false)
-        );
-    } else {
-        println!("{} {}", "总流量", strfmt::format_flux(total_flux));
-    }
-    Ok(())
+    save_cred(u, p, ac_ids)
 }
 
 fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
     let client = create_http_client(proxy)?;
-    let (u, p, _ac_ids) = read_cred()?;
-    let mut c = UseregHelper::from_cred_client(u, p, &client);
-    c.login()?;
-    let mut details = {
-        let mut details = c.details(NetDetailOrder::LogoutTime, d)?;
-        let res = (&mut details)
-            .group_by(|detail| detail.logout_time.date())
-            .into_iter()
-            .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
-            .collect::<Vec<_>>();
-        if let Some(ret) = details.into_ret() {
-            ret?;
+    let (u, p, ac_ids) = read_cred()?;
+    {
+        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
+        c.login()?;
+        let mut details = {
+            let mut details = c.details(NetDetailOrder::LogoutTime, d)?;
+            let res = (&mut details)
+                .group_by(|detail| detail.logout_time.date())
+                .into_iter()
+                .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
+                .collect::<Vec<_>>();
+            details.into_ret().unwrap_or(Ok(()))?;
+            res
+        };
+        match o {
+            NetDetailOrder::Flux => {
+                if d {
+                    details.sort_unstable_by_key(|(_, flux)| Reverse(*flux));
+                } else {
+                    details.sort_unstable_by_key(|(_, flux)| *flux);
+                }
+            }
+            _ => {
+                if d {
+                    details.sort_unstable_by_key(|(date, _)| Reverse(date.day()));
+                }
+            }
         }
-        res
-    };
-    match o {
-        NetDetailOrder::Flux => {
-            if d {
-                details.sort_unstable_by_key(|(_, flux)| Reverse(*flux));
+        println!(" 登录日期    流量");
+        let mut total_flux = 0;
+        for (date, flux) in details {
+            if color {
+                println!(
+                    "{} {}",
+                    strfmt::colored_date(date),
+                    strfmt::colored_flux(flux, false, true)
+                );
             } else {
-                details.sort_unstable_by_key(|(_, flux)| *flux);
+                println!(
+                    "{:10} {:>8}",
+                    strfmt::format_date(date),
+                    strfmt::format_flux(flux)
+                );
             }
+            total_flux += flux;
         }
-        _ => {
-            if d {
-                details.sort_unstable_by_key(|(date, _)| Reverse(date.day()));
-            }
-        }
-    }
-    println!(" 登录日期    流量");
-    let mut total_flux = 0;
-    for (date, flux) in details {
         if color {
             println!(
                 "{} {}",
-                strfmt::colored_date(date),
-                strfmt::colored_flux(flux, false, true)
+                Color::Cyan.normal().paint("总流量"),
+                strfmt::colored_flux(total_flux, true, false)
             );
         } else {
-            println!(
-                "{:10} {:>8}",
-                strfmt::format_date(date),
-                strfmt::format_flux(flux)
-            );
+            println!("{} {}", "总流量", strfmt::format_flux(total_flux));
         }
-        total_flux += flux;
     }
-    if color {
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("总流量"),
-            strfmt::colored_flux(total_flux, true, false)
-        );
-    } else {
-        println!("{} {}", "总流量", strfmt::format_flux(total_flux));
-    }
-    Ok(())
+    save_cred(u, p, ac_ids)
 }

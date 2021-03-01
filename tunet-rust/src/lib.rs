@@ -162,24 +162,26 @@ impl<'a, 's> NetConnectHelper for TUNetConnect<'a, 's> {
     }
 }
 
-pub fn from_state_cred_client<'a, 's, SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
-    s: NetState,
-    u: SU,
-    p: SP,
-    client: &'a HttpClient,
-    ac_ids: Vec<i32>,
-) -> Result<TUNetConnect<'a, 's>> {
-    match s {
-        NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(
-            u, p, client,
-        ))),
-        NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client(
-            u, p, client, ac_ids,
-        ))),
-        NetState::Auth6 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client_v6(
-            u, p, client, ac_ids,
-        ))),
-        _ => Err(NetHelperError::HostErr),
+impl<'a, 's> TUNetConnect<'a, 's> {
+    pub fn from_state_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
+        s: NetState,
+        u: SU,
+        p: SP,
+        client: &'a HttpClient,
+        ac_ids: Vec<i32>,
+    ) -> Result<Self> {
+        match s {
+            NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(
+                u, p, client,
+            ))),
+            NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client(
+                u, p, client, ac_ids,
+            ))),
+            NetState::Auth6 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client_v6(
+                u, p, client, ac_ids,
+            ))),
+            _ => Err(NetHelperError::HostErr),
+        }
     }
 }
 

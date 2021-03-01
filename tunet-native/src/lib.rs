@@ -109,7 +109,7 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        from_state_cred_client(state, u, p, get_client(cred.use_proxy)?, vec![])
+        TUNetConnect::from_state_cred_client(state, u, p, get_client(cred.use_proxy)?, vec![])
     }
 }
 
@@ -282,8 +282,6 @@ fn tunet_usereg_details_impl(
             }
         }
     }
-    if let Some(ret) = details.into_ret() {
-        ret?;
-    }
+    details.into_ret().unwrap_or(Ok(()))?;
     Ok(len)
 }
