@@ -12,14 +12,17 @@ strategy:
       imageName: 'ubuntu-latest'
       rid: 'linux-x64'
       exeName: 'tunet'
+      libName: 'tunet_native.so'
     mac:
       imageName: 'macOS-latest'
       rid: 'osx-x64'
       exeName: 'tunet'
+      libName: 'tunet_native.dylib'
     windows:
       imageName: 'windows-latest'
       rid: 'win-x64'
       exeName: 'tunet.exe'
+      libName: 'tunet_native.dll'
 pool:
   vmImage: $(imageName)
 
@@ -28,9 +31,31 @@ steps:
   displayName: 'Build'
 
 - task: CopyFiles@2
+  displayName: 'Copy binaries'
   inputs:
     SourceFolder: 'target/release/'
-    Contents: '$(exeName)'
+    Contents: |
+      '$(exeName)'
+      '$(libName)'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/$(rid)'
+
+- task: CopyFiles@2
+  displayName: 'Copy headers'
+  condition: eq(variables.rid, 'linux-x64')
+  inputs:
+    SourceFolder: 'tunet-native/include/'
+    Contents: '*.h'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/include'
+
+- task: CopyFiles@2
+  displayName: 'Copy debug symbols and import libs'
+  condition: eq(variables.rid, 'win-x64')
+  inputs:
+    SourceFolder: 'target/release/'
+    Contents: |
+      'tunet.pdb'
+      'tunet_native.pdb'
+      'tunet_native.dll.lib'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/$(rid)'
 
 - task: PublishBuildArtifacts@1
