@@ -23,6 +23,7 @@ extern "C"
 #endif // __cplusplus
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
     enum tunet_state
