@@ -87,6 +87,8 @@ pub enum NetHelperError {
     ConfigDirErr,
     #[error("初始化失败")]
     InitErr,
+    #[error("指针不能为空")]
+    NullPtrErr,
 }
 
 pub type Result<T> = result::Result<T, NetHelperError>;

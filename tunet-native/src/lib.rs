@@ -148,12 +148,21 @@ fn unwrap_res(res: Result<i32>) -> i32 {
     }
 }
 
+fn unwrap_ptr<'a, T>(ptr: *const T) -> Result<&'a T> {
+    if let Some(r) = unsafe { ptr.as_ref() } {
+        Ok(r)
+    } else {
+        Err(NetHelperError::NullPtrErr)
+    }
+}
+
 #[no_mangle]
-pub extern "C" fn tunet_login(cred: &Credential, ac_id_hints: *mut AcIdHints) -> i32 {
+pub extern "C" fn tunet_login(cred: *const Credential, ac_id_hints: *mut AcIdHints) -> i32 {
     unwrap_res(tunet_login_impl(cred, ac_id_hints))
 }
 
-fn tunet_login_impl(cred: &Credential, ac_id_hints: *mut AcIdHints) -> Result<i32> {
+fn tunet_login_impl(cred: *const Credential, ac_id_hints: *mut AcIdHints) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let mut helper = get_helper(cred)?;
     helper.login()?;
     if let Some(hints) = unsafe { ac_id_hints.as_mut() } {
@@ -168,32 +177,36 @@ fn tunet_login_impl(cred: &Credential, ac_id_hints: *mut AcIdHints) -> Result<i3
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_ac_id_hints_free(ac_id_hints: &AcIdHints) {
+pub extern "C" fn tunet_ac_id_hints_free(ac_id_hints: *const AcIdHints) {
     unsafe {
-        Box::from_raw(std::slice::from_raw_parts_mut(
-            ac_id_hints.data as *mut i32,
-            ac_id_hints.size,
-        ));
+        if let Some(hints) = ac_id_hints.as_ref() {
+            Box::from_raw(std::slice::from_raw_parts_mut(
+                hints.data as *mut i32,
+                hints.size,
+            ));
+        }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_logout(cred: &Credential) -> i32 {
+pub extern "C" fn tunet_logout(cred: *const Credential) -> i32 {
     unwrap_res(tunet_logout_impl(cred))
 }
 
-fn tunet_logout_impl(cred: &Credential) -> Result<i32> {
+fn tunet_logout_impl(cred: *const Credential) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let mut helper = get_helper(cred)?;
     helper.logout()?;
     Ok(0)
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_status(cred: &Credential, flux: &mut Flux) -> i32 {
+pub extern "C" fn tunet_status(cred: *const Credential, flux: &mut Flux) -> i32 {
     unwrap_res(tunet_status_impl(cred, flux))
 }
 
-fn tunet_status_impl(cred: &Credential, flux: &mut Flux) -> Result<i32> {
+fn tunet_status_impl(cred: *const Credential, flux: &mut Flux) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let helper = get_helper(cred)?;
     let f = helper.flux()?;
     flux.username = write_string(&f.username);
@@ -204,33 +217,36 @@ fn tunet_status_impl(cred: &Credential, flux: &mut Flux) -> Result<i32> {
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_login(cred: &Credential) -> i32 {
+pub extern "C" fn tunet_usereg_login(cred: *const Credential) -> i32 {
     unwrap_res(tunet_usereg_login_impl(cred))
 }
 
-fn tunet_usereg_login_impl(cred: &Credential) -> Result<i32> {
+fn tunet_usereg_login_impl(cred: *const Credential) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let mut helper = get_usereg_helper(cred)?;
     helper.login()?;
     Ok(0)
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_logout(cred: &Credential) -> i32 {
+pub extern "C" fn tunet_usereg_logout(cred: *const Credential) -> i32 {
     unwrap_res(tunet_usereg_logout_impl(cred))
 }
 
-fn tunet_usereg_logout_impl(cred: &Credential) -> Result<i32> {
+fn tunet_usereg_logout_impl(cred: *const Credential) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let mut helper = get_usereg_helper(cred)?;
     helper.logout()?;
     Ok(0)
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_usereg_drop(cred: &Credential, addr: u32) -> i32 {
+pub extern "C" fn tunet_usereg_drop(cred: *const Credential, addr: u32) -> i32 {
     unwrap_res(tunet_usereg_drop_impl(cred, addr))
 }
 
-fn tunet_usereg_drop_impl(cred: &Credential, addr: u32) -> Result<i32> {
+fn tunet_usereg_drop_impl(cred: *const Credential, addr: u32) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let helper = get_usereg_helper(cred)?;
     let a = Ipv4Addr::from(addr);
     helper.drop(a)?;
@@ -241,7 +257,7 @@ pub type UseregUsersCallback = extern "C" fn(user: &User, data: *mut c_void) -> 
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_users(
-    cred: &Credential,
+    cred: *const Credential,
     callback: Option<UseregUsersCallback>,
     data: *mut c_void,
 ) -> i32 {
@@ -249,10 +265,11 @@ pub extern "C" fn tunet_usereg_users(
 }
 
 fn tunet_usereg_users_impl(
-    cred: &Credential,
+    cred: *const Credential,
     callback: Option<UseregUsersCallback>,
     data: *mut c_void,
 ) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let helper = get_usereg_helper(cred)?;
     let users = helper.users()?;
     let mut len = 0;
@@ -276,7 +293,7 @@ pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_voi
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_details(
-    cred: &Credential,
+    cred: *const Credential,
     order: DetailOrder,
     desc: bool,
     callback: Option<UseregDetailsCallback>,
@@ -286,12 +303,13 @@ pub extern "C" fn tunet_usereg_details(
 }
 
 fn tunet_usereg_details_impl(
-    cred: &Credential,
+    cred: *const Credential,
     order: DetailOrder,
     desc: bool,
     callback: Option<UseregDetailsCallback>,
     data: *mut c_void,
 ) -> Result<i32> {
+    let cred = unwrap_ptr(cred)?;
     let helper = get_usereg_helper(cred)?;
     let o = match order {
         DetailOrder::LoginTime => NetDetailOrder::LoginTime,
