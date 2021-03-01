@@ -28,6 +28,13 @@ pub struct Credential {
     password: *const c_char,
     state: State,
     use_proxy: bool,
+    ac_id_hints: AcIdHints,
+}
+
+#[repr(C)]
+pub struct AcIdHints {
+    data: *const i32,
+    size: usize,
 }
 
 #[repr(C)]
@@ -74,7 +81,7 @@ pub extern "C" fn tunet_last_err() -> *mut c_char {
 pub extern "C" fn tunet_string_free(ptr: *mut c_char) {
     unsafe {
         if !ptr.is_null() {
-            let _s = CString::from_raw(ptr);
+            CString::from_raw(ptr);
         }
     }
 }
@@ -109,7 +116,13 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Auth6 => NetState::Auth6,
             _ => NetState::Unknown,
         };
-        TUNetConnect::from_state_cred_client(state, u, p, get_client(cred.use_proxy)?, vec![])
+        TUNetConnect::from_state_cred_client(
+            state,
+            u,
+            p,
+            get_client(cred.use_proxy)?,
+            std::slice::from_raw_parts(cred.ac_id_hints.data, cred.ac_id_hints.size).to_vec(),
+        )
     }
 }
 
@@ -136,14 +149,32 @@ fn unwrap_res(res: Result<i32>) -> i32 {
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_login(cred: &Credential) -> i32 {
-    unwrap_res(tunet_login_impl(cred))
+pub extern "C" fn tunet_login(cred: &Credential, ac_id_hints: *mut AcIdHints) -> i32 {
+    unwrap_res(tunet_login_impl(cred, ac_id_hints))
 }
 
-fn tunet_login_impl(cred: &Credential) -> Result<i32> {
+fn tunet_login_impl(cred: &Credential, ac_id_hints: *mut AcIdHints) -> Result<i32> {
     let mut helper = get_helper(cred)?;
     helper.login()?;
+    if let Some(hints) = unsafe { ac_id_hints.as_mut() } {
+        let ac_ids = helper.ac_ids().to_vec().into_boxed_slice();
+        let ac_ids = Box::leak(ac_ids);
+        *hints = AcIdHints {
+            data: ac_ids.as_ptr(),
+            size: ac_ids.len(),
+        };
+    }
     Ok(0)
+}
+
+#[no_mangle]
+pub extern "C" fn tunet_ac_id_hints_free(ac_id_hints: &AcIdHints) {
+    unsafe {
+        Box::from_raw(std::slice::from_raw_parts_mut(
+            ac_id_hints.data as *mut i32,
+            ac_id_hints.size,
+        ));
+    }
 }
 
 #[no_mangle]

@@ -33,12 +33,19 @@ extern "C"
         tunet_auth6
     };
 
+    typedef struct tunet_ac_id_hints
+    {
+        const int32_t* data;
+        size_t size;
+    } tunet_ac_id_hints;
+
     typedef struct tunet_credential
     {
         const char* username;
         const char* password;
         tunet_state state;
         bool use_proxy;
+        tunet_ac_id_hints ac_id_hints;
     } tunet_credential;
 
     typedef struct tunet_flux
@@ -77,7 +84,8 @@ extern "C"
     char* TUNET_API tunet_last_err(void);
     void TUNET_API tunet_string_free(char* const message);
 
-    int32_t TUNET_API tunet_login(const tunet_credential* const cred);
+    int32_t TUNET_API tunet_login(const tunet_credential* const cred, tunet_ac_id_hints* const ac_id_hints);
+    void TUNET_API tunet_ac_id_hints_free(const tunet_ac_id_hints* const ac_id_hints);
     int32_t TUNET_API tunet_logout(const tunet_credential* const cred);
     int32_t TUNET_API tunet_status(const tunet_credential* const TUNET_RESTRICT cred, tunet_flux* const TUNET_RESTRICT flux);
 

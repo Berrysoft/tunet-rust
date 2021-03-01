@@ -128,7 +128,7 @@ fn do_login(s: NetState, proxy: bool) -> Result<()> {
         let mut c = TUNetConnect::from_state_cred_client(s, &u, &p, &client, ac_ids)?;
         let res = c.login()?;
         println!("{}", res);
-        c.ac_ids().to_owned()
+        c.ac_ids().to_vec()
     };
     save_cred(u, p, ac_ids)
 }

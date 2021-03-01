@@ -142,7 +142,7 @@ impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
             md5.input_str(&token);
             let mut hmac = Hmac::new(md5, &[]);
             let password_md5 = hex::encode(hmac.result().code());
-            let p_mmd5 = "{MD5}".to_owned() + &password_md5;
+            let p_mmd5 = "{MD5}".to_string() + &password_md5;
             let encode_json = serde_json::json!({
                 "username":s.credential.username,
                 "password":s.credential.password,
@@ -151,7 +151,7 @@ impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
                 "enc_ver":"srun_bx1"
             });
             let tea = AuthTea::new(token.as_bytes());
-            let info = "{SRBX1}".to_owned() + &base64(&tea.encrypt_str(&encode_json.to_string()));
+            let info = "{SRBX1}".to_string() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
             sha1.input_str(&format!(
                 "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
