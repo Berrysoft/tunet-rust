@@ -35,8 +35,8 @@ steps:
   inputs:
     SourceFolder: 'target/release/'
     Contents: |
-      '$(exeName)'
-      '$(libName)'
+      $(exeName)
+      $(libName)
     TargetFolder: '$(Build.ArtifactStagingDirectory)/$(rid)'
 
 - task: CopyFiles@2
@@ -53,9 +53,8 @@ steps:
   inputs:
     SourceFolder: 'target/release/'
     Contents: |
-      'tunet.pdb'
-      'tunet_native.pdb'
-      'tunet_native.dll.lib'
+      *.pdb
+      *.lib
     TargetFolder: '$(Build.ArtifactStagingDirectory)/$(rid)'
 
 - task: PublishBuildArtifacts@1
