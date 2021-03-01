@@ -1,6 +1,7 @@
 use ansi_term::Color;
 use chrono::Datelike;
 use itertools::Itertools;
+use std::cmp::Reverse;
 use std::net::Ipv4Addr;
 use structopt::StructOpt;
 use tunet_rust::{usereg::*, *};
@@ -283,14 +284,14 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> R
     match o {
         NetDetailOrder::Flux => {
             if d {
-                details.sort_unstable_by_key(|(_, flux)| -(*flux as i64));
+                details.sort_unstable_by_key(|(_, flux)| Reverse(*flux));
             } else {
                 details.sort_unstable_by_key(|(_, flux)| *flux);
             }
         }
         _ => {
             if d {
-                details.sort_unstable_by_key(|(date, _)| -(date.day() as i32));
+                details.sort_unstable_by_key(|(date, _)| Reverse(date.day()));
             }
         }
     }
