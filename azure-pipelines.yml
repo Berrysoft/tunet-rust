@@ -12,12 +12,12 @@ strategy:
       imageName: 'ubuntu-latest'
       rid: 'linux-x64'
       exeName: 'tunet'
-      libName: 'tunet_native.so'
+      libName: 'libtunet_native.so'
     mac:
       imageName: 'macOS-latest'
       rid: 'osx-x64'
       exeName: 'tunet'
-      libName: 'tunet_native.dylib'
+      libName: 'libtunet_native.dylib'
     windows:
       imageName: 'windows-latest'
       rid: 'win-x64'
