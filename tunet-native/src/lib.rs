@@ -1,3 +1,4 @@
+#![feature(option_result_unwrap_unchecked)]
 #![feature(thread_local)]
 
 use lazy_static::*;
@@ -65,8 +66,12 @@ pub struct Detail {
 static mut ERROR_MSG: Option<CString> = None;
 
 fn write_string<'a, S: Into<Cow<'a, str>>>(msg: S, storage: &mut Option<CString>) -> *const c_char {
-    *storage = Some(unsafe { CString::from_vec_unchecked(msg.into().into_owned().into_bytes()) });
-    storage.as_ref().unwrap().as_ptr()
+    unsafe {
+        *storage = Some(CString::from_vec_unchecked(
+            msg.into().into_owned().into_bytes(),
+        ));
+        storage.as_ref().unwrap_unchecked().as_ptr()
+    }
 }
 
 #[no_mangle]
@@ -277,7 +282,7 @@ fn tunet_usereg_users_impl(
             let user = User {
                 address: u.address.into(),
                 login_time: u.login_time.timestamp(),
-                mac_address: u.mac_address.octets(),
+                mac_address: u.mac_address.bytes(),
             };
             len += 1;
             if !callback(&user, data) {

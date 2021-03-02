@@ -1,6 +1,7 @@
 use ansi_term::Color;
 use chrono::Datelike;
 use itertools::Itertools;
+use mac_address::get_mac_address;
 use std::cmp::Reverse;
 use std::net::Ipv4Addr;
 use structopt::StructOpt;
@@ -185,21 +186,27 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
         let us = c.users()?;
         println!("    IP地址            登录时间            MAC地址");
         for u in us {
+            let is_self = get_mac_address()
+                .map(|self_addr| self_addr == Some(u.mac_address))
+                .unwrap_or(false);
+            let is_self = if is_self { "*" } else { "" };
             if color {
                 println!(
-                    "{} {} {}",
+                    "{} {} {}{}",
                     Color::Yellow
                         .normal()
                         .paint(format!("{:15}", u.address.to_string())),
                     strfmt::colored_date_time(u.login_time),
-                    Color::Cyan.normal().paint(u.mac_address.to_string())
+                    Color::Cyan.normal().paint(u.mac_address.to_string()),
+                    is_self
                 );
             } else {
                 println!(
-                    "{:15} {:20} {}",
+                    "{:15} {:20} {}{}",
                     u.address.to_string(),
                     strfmt::format_date_time(u.login_time),
-                    u.mac_address.to_string()
+                    u.mac_address.to_string(),
+                    is_self
                 );
             }
         }

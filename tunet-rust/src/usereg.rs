@@ -2,7 +2,7 @@ use super::*;
 use chrono::prelude::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
-use hwaddr::HwAddr;
+use mac_address::MacAddress;
 use select::document::Document;
 use select::predicate::*;
 use std::net::Ipv4Addr;
@@ -11,11 +11,11 @@ use std::ops::Generator;
 pub struct NetUser {
     pub address: Ipv4Addr,
     pub login_time: NaiveDateTime,
-    pub mac_address: HwAddr,
+    pub mac_address: MacAddress,
 }
 
 impl NetUser {
-    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: HwAddr) -> Self {
+    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: MacAddress) -> Self {
         NetUser {
             address: a,
             login_time: t,
@@ -134,13 +134,10 @@ impl<'a, 's> UseregHelper<'a, 's> {
             {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
                 yield NetUser::from_detail(
-                    tds[0]
-                        .text()
-                        .parse::<Ipv4Addr>()
-                        .unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
+                    tds[0].text().parse().unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
                     NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
                         .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                    tds[6].text().parse::<HwAddr>().unwrap_or(HwAddr::from(0)),
+                    tds[6].text().parse().unwrap_or(MacAddress::new([0; 6])),
                 )
             }
         }))

@@ -1,4 +1,5 @@
 #![feature(generators, generator_trait)]
+#![feature(option_result_unwrap_unchecked)]
 
 use std::borrow::Cow;
 use std::result;
