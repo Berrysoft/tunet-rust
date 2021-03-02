@@ -282,7 +282,7 @@ fn tunet_usereg_users_impl(
             let user = User {
                 address: u.address.into(),
                 login_time: u.login_time.timestamp(),
-                mac_address: u.mac_address.bytes(),
+                mac_address: u.mac_address.map(|a| a.bytes()).unwrap_or_default(),
             };
             len += 1;
             if !callback(&user, data) {

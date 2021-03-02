@@ -11,11 +11,11 @@ use std::ops::Generator;
 pub struct NetUser {
     pub address: Ipv4Addr,
     pub login_time: NaiveDateTime,
-    pub mac_address: MacAddress,
+    pub mac_address: Option<MacAddress>,
 }
 
 impl NetUser {
-    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: MacAddress) -> Self {
+    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: Option<MacAddress>) -> Self {
         NetUser {
             address: a,
             login_time: t,
@@ -137,7 +137,7 @@ impl<'a, 's> UseregHelper<'a, 's> {
                     tds[0].text().parse().unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
                     NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
                         .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                    tds[6].text().parse().unwrap_or(MacAddress::new([0; 6])),
+                    tds[6].text().parse().ok(),
                 )
             }
         }))
