@@ -1,10 +1,12 @@
+#![feature(thread_local)]
+
 use lazy_static::*;
+use std::borrow::Cow;
+use std::convert::From;
 use std::ffi::{CStr, CString};
 use std::net::Ipv4Addr;
 use std::os::raw::{c_char, c_void};
-use std::ptr::null_mut;
-use std::sync::Mutex;
-use std::{borrow::Cow, convert::From};
+use std::ptr::null;
 use tunet_rust::{usereg::*, *};
 
 #[repr(i32)]
@@ -39,7 +41,7 @@ pub struct AcIdHints {
 
 #[repr(C)]
 pub struct Flux {
-    username: *mut c_char,
+    username: *const c_char,
     flux: u64,
     online_time: u64,
     balance: f64,
@@ -59,29 +61,20 @@ pub struct Detail {
     flux: u64,
 }
 
-lazy_static! {
-    static ref ERROR_MSG: Mutex<String> = Mutex::new(String::new());
-}
+#[thread_local]
+static mut ERROR_MSG: Option<CString> = None;
 
-fn write_string(msg: &str) -> *mut c_char {
-    CString::new(msg)
-        .map(|s| s.into_raw())
-        .unwrap_or(null_mut())
-}
-
-#[no_mangle]
-pub extern "C" fn tunet_last_err() -> *mut c_char {
-    ERROR_MSG
-        .lock()
-        .map(|s| write_string(&s))
-        .unwrap_or(null_mut())
+fn write_string<'a, S: Into<Cow<'a, str>>>(msg: S, storage: &mut Option<CString>) -> *const c_char {
+    *storage = Some(unsafe { CString::from_vec_unchecked(msg.into().into_owned().into_bytes()) });
+    storage.as_ref().unwrap().as_ptr()
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_string_free(ptr: *mut c_char) {
+pub extern "C" fn tunet_last_err() -> *const c_char {
     unsafe {
-        if !ptr.is_null() {
-            CString::from_raw(ptr);
+        match &ERROR_MSG {
+            Some(str) => str.as_ptr(),
+            None => null(),
         }
     }
 }
@@ -139,12 +132,17 @@ fn get_usereg_helper(cred: &Credential) -> Result<UseregHelper> {
 }
 
 fn unwrap_res(res: Result<i32>) -> i32 {
-    match res {
-        Ok(r) => r,
-        Err(e) => match ERROR_MSG.lock().map(|mut s| *s = format!("{}", e)) {
-            Ok(_) => -1,
-            Err(_) => -2,
-        },
+    unsafe {
+        match res {
+            Ok(r) => {
+                ERROR_MSG = None;
+                r
+            }
+            Err(e) => {
+                write_string(format!("{}", e), &mut ERROR_MSG);
+                -1
+            }
+        }
     }
 }
 
@@ -156,34 +154,30 @@ fn unwrap_ptr<'a, T>(ptr: *const T) -> Result<&'a T> {
     }
 }
 
+#[thread_local]
+static mut AC_ID_HINTS: Vec<i32> = Vec::new();
+
 #[no_mangle]
-pub extern "C" fn tunet_login(cred: *const Credential, ac_id_hints: *mut AcIdHints) -> i32 {
-    unwrap_res(tunet_login_impl(cred, ac_id_hints))
+pub extern "C" fn tunet_login(cred: *const Credential) -> i32 {
+    unwrap_res(tunet_login_impl(cred))
 }
 
-fn tunet_login_impl(cred: *const Credential, ac_id_hints: *mut AcIdHints) -> Result<i32> {
+fn tunet_login_impl(cred: *const Credential) -> Result<i32> {
     let cred = unwrap_ptr(cred)?;
     let mut helper = get_helper(cred)?;
     helper.login()?;
-    if let Some(hints) = unsafe { ac_id_hints.as_mut() } {
-        let ac_ids = helper.ac_ids().to_vec().into_boxed_slice();
-        let ac_ids = Box::leak(ac_ids);
-        *hints = AcIdHints {
-            data: ac_ids.as_ptr(),
-            size: ac_ids.len(),
-        };
+    unsafe {
+        AC_ID_HINTS = helper.ac_ids().to_vec();
     }
     Ok(0)
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_ac_id_hints_free(ac_id_hints: *const AcIdHints) {
+pub extern "C" fn tunet_hints() -> AcIdHints {
     unsafe {
-        if let Some(hints) = ac_id_hints.as_ref() {
-            Box::from_raw(std::slice::from_raw_parts_mut(
-                hints.data as *mut i32,
-                hints.size,
-            ));
+        AcIdHints {
+            data: AC_ID_HINTS.as_ptr(),
+            size: AC_ID_HINTS.len(),
         }
     }
 }
@@ -200,6 +194,9 @@ fn tunet_logout_impl(cred: *const Credential) -> Result<i32> {
     Ok(0)
 }
 
+#[thread_local]
+static mut FLUX_USERNAME: Option<CString> = None;
+
 #[no_mangle]
 pub extern "C" fn tunet_status(cred: *const Credential, flux: &mut Flux) -> i32 {
     unwrap_res(tunet_status_impl(cred, flux))
@@ -209,7 +206,9 @@ fn tunet_status_impl(cred: *const Credential, flux: &mut Flux) -> Result<i32> {
     let cred = unwrap_ptr(cred)?;
     let helper = get_helper(cred)?;
     let f = helper.flux()?;
-    flux.username = write_string(&f.username);
+    unsafe {
+        flux.username = write_string(f.username, &mut FLUX_USERNAME);
+    }
     flux.online_time = f.online_time.as_secs();
     flux.flux = f.flux;
     flux.balance = f.balance;

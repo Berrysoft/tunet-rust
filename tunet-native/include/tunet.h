@@ -51,7 +51,7 @@ extern "C"
 
     typedef struct tunet_flux
     {
-        char* username;
+        const char* username;
         uint64_t flux;
         uint64_t online_time;
         double balance;
@@ -82,11 +82,10 @@ extern "C"
         tunet_detail_flux
     };
 
-    char* TUNET_API tunet_last_err(void);
-    void TUNET_API tunet_string_free(char* const message);
+    const char* TUNET_API tunet_last_err(void);
 
-    int32_t TUNET_API tunet_login(const tunet_credential* const cred, tunet_ac_id_hints* const ac_id_hints);
-    void TUNET_API tunet_ac_id_hints_free(const tunet_ac_id_hints* const ac_id_hints);
+    int32_t TUNET_API tunet_login(const tunet_credential* const cred);
+    tunet_ac_id_hints TUNET_API tunet_hints(void);
     int32_t TUNET_API tunet_logout(const tunet_credential* const cred);
     int32_t TUNET_API tunet_status(const tunet_credential* const TUNET_RESTRICT cred, tunet_flux* const TUNET_RESTRICT flux);
 
