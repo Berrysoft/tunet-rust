@@ -16,6 +16,7 @@ pub enum State {
     Net,
     Auth4,
     Auth6,
+    Auto,
 }
 
 #[repr(i32)]
@@ -112,6 +113,7 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
             State::Net => NetState::Net,
             State::Auth4 => NetState::Auth4,
             State::Auth6 => NetState::Auth6,
+            State::Auto => NetState::Auto,
             _ => NetState::Unknown,
         };
         TUNetConnect::from_state_cred_client(

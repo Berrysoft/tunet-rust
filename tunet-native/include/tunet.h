@@ -31,7 +31,8 @@ extern "C"
         tunet_unknown,
         tunet_net,
         tunet_auth4,
-        tunet_auth6
+        tunet_auth6,
+        tunet_auto
     };
 
     typedef struct tunet_ac_id_hints

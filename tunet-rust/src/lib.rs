@@ -100,6 +100,7 @@ pub enum NetState {
     Net,
     Auth4,
     Auth6,
+    Auto,
 }
 
 impl str::FromStr for NetState {
@@ -113,7 +114,7 @@ impl str::FromStr for NetState {
         } else if ls == "auth6" {
             Ok(NetState::Auth6)
         } else if ls == "auto" {
-            Ok(suggest::suggest())
+            Ok(NetState::Auto)
         } else {
             Err(NetHelperError::HostErr)
         }
@@ -183,7 +184,10 @@ impl<'a, 's> TUNetConnect<'a, 's> {
             NetState::Auth6 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client_v6(
                 u, p, client, ac_ids,
             ))),
-            _ => Err(NetHelperError::HostErr),
+            NetState::Auto => {
+                Self::from_state_cred_client(suggest::suggest(client), u, p, client, ac_ids)
+            }
+            NetState::Unknown => Err(NetHelperError::HostErr),
         }
     }
 }
