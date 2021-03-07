@@ -40,6 +40,14 @@ steps:
     TargetFolder: '$(Build.ArtifactStagingDirectory)/$(rid)'
 
 - task: CopyFiles@2
+  displayName: 'Copy libs'
+  condition: ne(variables.rid, 'win-x64')
+  inputs:
+    SourceFolder: 'target/release/'
+    Contents: '*.a'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/$(rid)'
+
+- task: CopyFiles@2
   displayName: 'Copy headers'
   condition: eq(variables.rid, 'linux-x64')
   inputs:

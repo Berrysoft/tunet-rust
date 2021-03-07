@@ -7,7 +7,7 @@ readme = "README.md"
 license = "MIT"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 tunet-rust = { path = "../tunet-rust" }
