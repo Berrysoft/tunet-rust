@@ -5,8 +5,8 @@ use crypto::md5::Md5;
 use mac_address::MacAddress;
 use select::document::Document;
 use select::predicate::*;
+use std::collections::VecDeque;
 use std::net::Ipv4Addr;
-use std::ops::Generator;
 
 pub struct NetUser {
     pub address: Ipv4Addr,
@@ -48,12 +48,12 @@ pub enum NetDetailOrder {
 }
 
 impl NetDetailOrder {
-    fn get_query(&self) -> String {
-        String::from(match self {
+    fn get_query(&self) -> &'static str {
+        match self {
             NetDetailOrder::LoginTime => "user_login_time",
             NetDetailOrder::LogoutTime => "user_drop_time",
             NetDetailOrder::Flux => "user_in_bytes",
-        })
+        }
     }
 }
 
@@ -121,69 +121,26 @@ impl<'a, 's> UseregHelper<'a, 's> {
         Ok(res.text()?)
     }
 
-    pub fn users(
-        &self,
-    ) -> Result<GeneratorIteratorAdapter<impl Generator<Return = (), Yield = NetUser>>> {
+    pub fn users(&self) -> Result<Vec<NetUser>> {
         let res = self.client.get(USEREG_INFO_URI).send()?;
         let doc = Document::from(res.text()?.as_str());
-        Ok(GeneratorIteratorAdapter::new(move || {
-            let doc = Box::new(doc);
-            for node in doc
-                .find(Name("tr").descendant(Attr("align", "center")))
-                .skip(1)
-            {
+        Ok(doc
+            .find(Name("tr").descendant(Attr("align", "center")))
+            .skip(1)
+            .map(|node| {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                yield NetUser::from_detail(
+                NetUser::from_detail(
                     tds[0].text().parse().unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
                     NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
                         .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
                     tds[6].text().parse().ok(),
                 )
-            }
-        }))
+            })
+            .collect())
     }
 
-    pub fn details(
-        &self,
-        o: NetDetailOrder,
-        des: bool,
-    ) -> Result<GeneratorIteratorAdapter<impl Generator<Return = Result<()>, Yield = NetDetail> + '_>>
-    {
-        let now = Local::now();
-        let off = 100;
-        let des = if des { "DESC" } else { "" };
-        Ok(GeneratorIteratorAdapter::new(move || {
-            let mut i: usize = 1;
-            loop {
-                let res = self.client.get(
-                    &format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
-                        now.year(), now.month(), now.day(), i, off, o.get_query(), des))
-                    .send()?;
-                let doc = Box::new(Document::from(res.text()?.as_str()));
-                let mut new_len = 0;
-                for node in doc
-                    .find(Name("tr").descendant(Attr("align", "center")))
-                    .skip(1)
-                {
-                    let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                    if !tds.is_empty() {
-                        yield NetDetail::from_detail(
-                            NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                            NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
-                                .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
-                            parse_flux(&tds[4].text()),
-                        );
-                        new_len += 1;
-                    }
-                }
-                if new_len < off {
-                    break;
-                }
-                i += 1;
-            }
-            Ok(())
-        }))
+    pub fn details(&self, o: NetDetailOrder, des: bool) -> Result<UseregDetails<'a>> {
+        Ok(UseregDetails::new(self.client, o, des))
     }
 }
 
@@ -203,5 +160,81 @@ impl<'a, 's> NetHelper for UseregHelper<'a, 's> {
         let params = [("action", "logout")];
         let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
+    }
+}
+
+const USEREG_OFF: usize = 100;
+
+pub struct UseregDetails<'a> {
+    client: &'a HttpClient,
+    index: usize,
+    now: DateTime<Local>,
+    order: &'static str,
+    des: &'static str,
+    len: usize,
+    data: VecDeque<NetDetail>,
+}
+
+impl<'a> UseregDetails<'a> {
+    pub(crate) fn new(client: &'a HttpClient, order: NetDetailOrder, des: bool) -> Self {
+        Self {
+            client,
+            index: 0,
+            now: Local::now(),
+            order: order.get_query(),
+            des: if des { "DESC" } else { "" },
+            len: USEREG_OFF,
+            data: VecDeque::new(),
+        }
+    }
+
+    fn load_newpage(&mut self) -> Result<()> {
+        let res = self.client.get(
+                    &format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
+                        self.now.year(), self.now.month(), self.now.day(), self.index, USEREG_OFF, self.order, self.des))
+                    .send()?;
+        let doc = Document::from(res.text()?.as_str());
+        self.data = doc
+            .find(Name("tr").descendant(Attr("align", "center")))
+            .skip(1)
+            .filter_map(|node| {
+                let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
+                if tds.is_empty() {
+                    None
+                } else {
+                    Some(NetDetail::from_detail(
+                        NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
+                            .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                        NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
+                            .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                        parse_flux(&tds[4].text()),
+                    ))
+                }
+            })
+            .collect();
+        self.len = self.data.len();
+        self.index += 1;
+        Ok(())
+    }
+}
+
+impl Iterator for UseregDetails<'_> {
+    type Item = Result<NetDetail>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(item) = self.data.pop_front() {
+            Some(Ok(item))
+        } else {
+            if self.len < USEREG_OFF {
+                None
+            } else {
+                if let Some(err) = self.load_newpage().err() {
+                    self.len = 0;
+                    Some(Err(err))
+                } else {
+                    self.next()
+                }
+            }
+        }
     }
 }

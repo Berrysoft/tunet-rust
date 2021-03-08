@@ -326,6 +326,7 @@ fn tunet_usereg_details_impl(
     let mut len = 0;
     if let Some(callback) = callback {
         for d in &mut details {
+            let d = d?;
             let detail = Detail {
                 login_time: d.login_time.timestamp(),
                 logout_time: d.logout_time.timestamp(),
@@ -337,6 +338,5 @@ fn tunet_usereg_details_impl(
             }
         }
     }
-    details.into_ret().unwrap_or(Ok(()))?;
     Ok(len)
 }

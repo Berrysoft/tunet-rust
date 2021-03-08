@@ -250,6 +250,7 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
         println!("      登录时间             注销时间         流量");
         let mut total_flux = 0u64;
         for d in &mut details {
+            let d = d?;
             if color {
                 println!(
                     "{} {} {}",
@@ -267,7 +268,6 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
             }
             total_flux += d.flux;
         }
-        details.into_ret().unwrap_or(Ok(()))?;
         if color {
             println!(
                 "{} {}",
@@ -287,16 +287,15 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> R
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
         c.login()?;
-        let mut details = {
-            let mut details = c.details(NetDetailOrder::LogoutTime, d)?;
-            let res = (&mut details)
-                .group_by(|detail| detail.logout_time.date())
-                .into_iter()
-                .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
-                .collect::<Vec<_>>();
-            details.into_ret().unwrap_or(Ok(()))?;
-            res
-        };
+        let details = c
+            .details(NetDetailOrder::LogoutTime, d)?
+            .try_collect::<_, Vec<_>, _>()?;
+        let mut details = details
+            .into_iter()
+            .group_by(|detail| detail.logout_time.date())
+            .into_iter()
+            .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
+            .collect::<Vec<_>>();
         match o {
             NetDetailOrder::Flux => {
                 if d {

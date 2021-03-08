@@ -1,4 +1,3 @@
-#![feature(generators, generator_trait)]
 #![feature(option_result_unwrap_unchecked)]
 
 use std::borrow::Cow;
@@ -10,11 +9,9 @@ use thiserror::Error;
 pub use reqwest::blocking::Client as HttpClient;
 
 mod auth;
-mod generator;
 mod net;
 pub mod suggest;
 pub mod usereg;
-pub use generator::GeneratorIteratorAdapter;
 
 #[derive(Debug, Default)]
 pub struct NetCredential<'a> {
