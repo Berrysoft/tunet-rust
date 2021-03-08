@@ -10,27 +10,11 @@ use std::os::raw::{c_char, c_void};
 use std::ptr::null;
 use tunet_rust::{usereg::*, *};
 
-#[repr(i32)]
-pub enum State {
-    Unknown,
-    Net,
-    Auth4,
-    Auth6,
-    Auto,
-}
-
-#[repr(i32)]
-pub enum DetailOrder {
-    LoginTime,
-    LogoutTime,
-    Flux,
-}
-
 #[repr(C)]
 pub struct Credential {
     username: *const c_char,
     password: *const c_char,
-    state: State,
+    state: NetState,
     use_proxy: bool,
     ac_id_hints: AcIdHints,
 }
@@ -109,15 +93,8 @@ fn get_helper(cred: &Credential) -> Result<TUNetConnect> {
     unsafe {
         let u = exact_str(cred.username);
         let p = exact_str(cred.password);
-        let state = match &cred.state {
-            State::Net => NetState::Net,
-            State::Auth4 => NetState::Auth4,
-            State::Auth6 => NetState::Auth6,
-            State::Auto => NetState::Auto,
-            _ => NetState::Unknown,
-        };
         TUNetConnect::from_state_cred_client(
-            state,
+            cred.state,
             u,
             p,
             get_client(cred.use_proxy)?,
@@ -300,7 +277,7 @@ pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_voi
 #[no_mangle]
 pub extern "C" fn tunet_usereg_details(
     cred: *const Credential,
-    order: DetailOrder,
+    order: NetDetailOrder,
     desc: bool,
     callback: Option<UseregDetailsCallback>,
     data: *mut c_void,
@@ -310,19 +287,14 @@ pub extern "C" fn tunet_usereg_details(
 
 fn tunet_usereg_details_impl(
     cred: *const Credential,
-    order: DetailOrder,
+    order: NetDetailOrder,
     desc: bool,
     callback: Option<UseregDetailsCallback>,
     data: *mut c_void,
 ) -> Result<i32> {
     let cred = unwrap_ptr(cred)?;
     let helper = get_usereg_helper(cred)?;
-    let o = match order {
-        DetailOrder::LoginTime => NetDetailOrder::LoginTime,
-        DetailOrder::LogoutTime => NetDetailOrder::LogoutTime,
-        DetailOrder::Flux => NetDetailOrder::Flux,
-    };
-    let mut details = helper.details(o, desc)?;
+    let mut details = helper.details(order, desc)?;
     let mut len = 0;
     if let Some(callback) = callback {
         for d in &mut details {

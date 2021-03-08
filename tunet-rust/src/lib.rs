@@ -91,7 +91,8 @@ pub enum NetHelperError {
 
 pub type Result<T> = result::Result<T, NetHelperError>;
 
-#[derive(Debug)]
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub enum NetState {
     Unknown,
     Net,

@@ -40,7 +40,8 @@ impl NetDetail {
     }
 }
 
-#[derive(Debug)]
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub enum NetDetailOrder {
     LoginTime,
     LogoutTime,
