@@ -9,7 +9,7 @@ cfg_if! {
         mod winrt;
 
         pub fn suggest(client: &HttpClient) -> NetState {
-            match winrt::suggest().unwrap_or(NetState::Unknown) {
+            match winrt::suggest() {
                 NetState::Unknown => ping::suggest(client),
                 state => state,
             }

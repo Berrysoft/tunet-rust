@@ -16,10 +16,10 @@ lazy_static! {
     };
 }
 
-pub fn suggest() -> winrt_bindings::windows::Result<NetState> {
+fn suggest_impl() -> winrt_bindings::windows::Result<NetState> {
     let profile = NetworkInformation::get_internet_connection_profile()?;
     let cl = profile.get_network_connectivity_level()?;
-    if cl.0 == NetworkConnectivityLevel::None.0 {
+    if cl == NetworkConnectivityLevel::None {
         Ok(NetState::Unknown)
     } else {
         if profile.is_wlan_connection_profile()? {
@@ -36,4 +36,12 @@ pub fn suggest() -> winrt_bindings::windows::Result<NetState> {
             Ok(NetState::Auth4)
         }
     }
+}
+
+pub fn suggest() -> NetState {
+    suggest_impl().unwrap_or_else(|_e| {
+        #[cfg(debug_assertions)]
+        eprintln!("WARNING: {}", _e.message());
+        NetState::Unknown
+    })
 }
