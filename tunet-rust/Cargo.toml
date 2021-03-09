@@ -22,3 +22,7 @@ cfg-if = "1.0"
 
 [target.'cfg(windows)'.dependencies]
 winrt-bindings = { path = "../winrt-bindings" }
+
+[target.'cfg(macos)'.dependencies]
+libc = "0.2"
+objc = "0.2"
