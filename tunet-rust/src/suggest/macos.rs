@@ -1,5 +1,3 @@
-#![allow(non_camel_case_types)]
-
 use super::SUGGEST_SSID_MAP;
 use crate::*;
 use libc::{sockaddr, sockaddr_in, AF_INET};
