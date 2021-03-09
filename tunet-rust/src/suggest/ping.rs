@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 fn can_connect(client: &HttpClient, uri: &str) -> bool {
     client.head(uri).send().is_ok()
