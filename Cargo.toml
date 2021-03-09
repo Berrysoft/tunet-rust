@@ -6,5 +6,9 @@ members = [
     "tunet-native"
 ]
 
+exclude = [
+    "winrt-bindings"
+]
+
 [profile.release]
 lto = true

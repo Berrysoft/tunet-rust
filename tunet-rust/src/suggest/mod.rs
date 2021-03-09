@@ -1,10 +1,11 @@
-use crate::*;
 use cfg_if::cfg_if;
 
 mod ping;
 
 cfg_if! {
     if #[cfg(windows)] {
+        use crate::*;
+
         mod winrt;
 
         pub fn suggest(client: &HttpClient) -> NetState {
