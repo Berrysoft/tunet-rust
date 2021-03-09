@@ -1,20 +1,6 @@
+use super::SUGGEST_SSID_MAP;
 use crate::*;
-use lazy_static::lazy_static;
-use std::collections::BTreeMap;
 use winrt_bindings::windows::networking::connectivity::*;
-
-lazy_static! {
-    static ref SUGGEST_SSID_MAP: BTreeMap<&'static str, NetState> = {
-        let mut map = BTreeMap::new();
-        map.insert("Tsinghua", NetState::Auth4);
-        map.insert("Tsinghua-5G", NetState::Auth4);
-        map.insert("Tsinghua-IPv4", NetState::Auth4);
-        map.insert("Tsinghua-IPv6", NetState::Auth6);
-        map.insert("Tsinghua-Secure", NetState::Net);
-        map.insert("Wifi.郑裕彤讲堂", NetState::Net);
-        map
-    };
-}
 
 fn suggest_impl() -> winrt_bindings::windows::Result<NetState> {
     let profile = NetworkInformation::get_internet_connection_profile()?;

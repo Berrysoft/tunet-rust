@@ -20,9 +20,9 @@ regex = "1"
 thiserror = "1.0"
 cfg-if = "1.0"
 
-[target.'cfg(windows)'.dependencies]
+[target.'cfg(target_os = "windows")'.dependencies]
 winrt-bindings = { path = "../winrt-bindings" }
 
-[target.'cfg(macos)'.dependencies]
+[target.'cfg(target_os = "macos")'.dependencies]
 libc = "0.2"
 objc = "0.2"
