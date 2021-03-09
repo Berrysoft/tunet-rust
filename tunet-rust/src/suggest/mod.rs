@@ -21,7 +21,7 @@ cfg_if! {
         }
 
         pub fn suggest(client: &HttpClient) -> NetState {
-            match platform::suggest().unwrap_or(NetState::Unknown) {
+            match platform::suggest() {
                 NetState::Unknown => ping::suggest(client),
                 state => state,
             }
