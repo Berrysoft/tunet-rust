@@ -46,7 +46,6 @@ extern "C" {
         ifname: *const c_char,
         info: *mut wireless_config,
     ) -> c_int;
-    pub fn iw_essid_escape(dest: *mut c_char, src: *const c_char, slen: c_int);
 }
 
 #[inline]

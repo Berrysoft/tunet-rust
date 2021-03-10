@@ -1,7 +1,6 @@
 use super::SUGGEST_SSID_MAP;
 use crate::*;
 use libiw_bindings::*;
-use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::os::raw::{c_char, c_int};
 
@@ -28,9 +27,13 @@ unsafe extern "C" fn enum_handler(
     let mut info = MaybeUninit::uninit().assume_init();
     iw_get_basic_config(skfd, ifname, &mut info);
     if info.has_essid != 0 {
-        let mut dest = [0; 129];
-        iw_essid_escape(dest.as_mut_ptr(), info.essid.as_ptr(), info.essid_len);
-        ssids.push(CStr::from_ptr(dest.as_ptr()).to_string_lossy().into_owned());
+        ssids.push(
+            std::str::from_utf8_unchecked(std::slice::from_raw_parts(
+                info.essid.as_ptr() as _,
+                info.essid_len as _,
+            ))
+            .to_owned(),
+        );
     }
     0
 }
