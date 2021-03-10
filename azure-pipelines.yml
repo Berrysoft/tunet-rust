@@ -27,6 +27,10 @@ pool:
   vmImage: $(imageName)
 
 steps:
+- script: sudo apt-get install libiw30
+  condition: eq(variables.rid, 'linux-x64')
+  displayName: 'Install libiw'
+
 - script: cargo build --release
   displayName: 'Build'
 
