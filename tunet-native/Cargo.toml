@@ -1,6 +1,6 @@
 [package]
 name = "tunet-native"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2018"
 readme = "README.md"

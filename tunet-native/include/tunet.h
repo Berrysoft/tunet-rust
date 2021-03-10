@@ -85,6 +85,8 @@ extern "C"
 
     const char* TUNET_API tunet_last_err(void);
 
+    int32_t TUNET_API tunet_suggest(bool proxy);
+
     int32_t TUNET_API tunet_login(const tunet_credential* const cred);
     tunet_ac_id_hints TUNET_API tunet_hints(void);
     int32_t TUNET_API tunet_logout(const tunet_credential* const cred);

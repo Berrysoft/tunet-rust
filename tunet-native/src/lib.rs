@@ -138,6 +138,24 @@ fn unwrap_ptr<'a, T>(ptr: *const T) -> Result<&'a T> {
     }
 }
 
+fn unwrap_mut_ptr<'a, T>(ptr: *mut T) -> Result<&'a mut T> {
+    if let Some(r) = unsafe { ptr.as_mut() } {
+        Ok(r)
+    } else {
+        Err(NetHelperError::NullPtrErr)
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn tunet_suggest(proxy: bool) -> i32 {
+    unwrap_res(tunet_suggest_impl(proxy))
+}
+
+fn tunet_suggest_impl(proxy: bool) -> Result<i32> {
+    let client = get_client(proxy)?;
+    Ok(suggest::suggest(client) as i32)
+}
+
 #[thread_local]
 static mut AC_ID_HINTS: Vec<i32> = Vec::new();
 
@@ -182,14 +200,15 @@ fn tunet_logout_impl(cred: *const Credential) -> Result<i32> {
 static mut FLUX_USERNAME: Option<CString> = None;
 
 #[no_mangle]
-pub extern "C" fn tunet_status(cred: *const Credential, flux: &mut Flux) -> i32 {
+pub extern "C" fn tunet_status(cred: *const Credential, flux: *mut Flux) -> i32 {
     unwrap_res(tunet_status_impl(cred, flux))
 }
 
-fn tunet_status_impl(cred: *const Credential, flux: &mut Flux) -> Result<i32> {
+fn tunet_status_impl(cred: *const Credential, flux: *mut Flux) -> Result<i32> {
     let cred = unwrap_ptr(cred)?;
     let helper = get_helper(cred)?;
     let f = helper.flux()?;
+    let flux = unwrap_mut_ptr(flux)?;
     unsafe {
         flux.username = write_string(f.username, &mut FLUX_USERNAME);
     }
@@ -236,7 +255,7 @@ fn tunet_usereg_drop_impl(cred: *const Credential, addr: u32) -> Result<i32> {
     Ok(0)
 }
 
-pub type UseregUsersCallback = extern "C" fn(user: &User, data: *mut c_void) -> bool;
+pub type UseregUsersCallback = extern "C" fn(user: *const User, data: *mut c_void) -> bool;
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_users(
@@ -272,7 +291,7 @@ fn tunet_usereg_users_impl(
     Ok(len)
 }
 
-pub type UseregDetailsCallback = extern "C" fn(detail: &Detail, data: *mut c_void) -> bool;
+pub type UseregDetailsCallback = extern "C" fn(detail: *const Detail, data: *mut c_void) -> bool;
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_details(
