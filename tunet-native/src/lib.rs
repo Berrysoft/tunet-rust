@@ -255,12 +255,12 @@ fn tunet_usereg_drop_impl(cred: *const Credential, addr: u32) -> Result<i32> {
     Ok(0)
 }
 
-pub type UseregUsersCallback = extern "C" fn(user: *const User, data: *mut c_void) -> bool;
+pub type UseregUsersCallback = Option<extern "C" fn(user: *const User, data: *mut c_void) -> bool>;
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_users(
     cred: *const Credential,
-    callback: Option<UseregUsersCallback>,
+    callback: UseregUsersCallback,
     data: *mut c_void,
 ) -> i32 {
     unwrap_res(tunet_usereg_users_impl(cred, callback, data))
@@ -268,7 +268,7 @@ pub extern "C" fn tunet_usereg_users(
 
 fn tunet_usereg_users_impl(
     cred: *const Credential,
-    callback: Option<UseregUsersCallback>,
+    callback: UseregUsersCallback,
     data: *mut c_void,
 ) -> Result<i32> {
     let cred = unwrap_ptr(cred)?;
@@ -291,14 +291,15 @@ fn tunet_usereg_users_impl(
     Ok(len)
 }
 
-pub type UseregDetailsCallback = extern "C" fn(detail: *const Detail, data: *mut c_void) -> bool;
+pub type UseregDetailsCallback =
+    Option<extern "C" fn(detail: *const Detail, data: *mut c_void) -> bool>;
 
 #[no_mangle]
 pub extern "C" fn tunet_usereg_details(
     cred: *const Credential,
     order: NetDetailOrder,
     desc: bool,
-    callback: Option<UseregDetailsCallback>,
+    callback: UseregDetailsCallback,
     data: *mut c_void,
 ) -> i32 {
     unwrap_res(tunet_usereg_details_impl(cred, order, desc, callback, data))
@@ -308,7 +309,7 @@ fn tunet_usereg_details_impl(
     cred: *const Credential,
     order: NetDetailOrder,
     desc: bool,
-    callback: Option<UseregDetailsCallback>,
+    callback: UseregDetailsCallback,
     data: *mut c_void,
 ) -> Result<i32> {
     let cred = unwrap_ptr(cred)?;
