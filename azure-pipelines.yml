@@ -27,7 +27,7 @@ pool:
   vmImage: $(imageName)
 
 steps:
-- script: sudo apt-get install libiw30
+- script: sudo apt-get install libiw-dev
   condition: eq(variables.rid, 'linux-x64')
   displayName: 'Install libiw'
 
