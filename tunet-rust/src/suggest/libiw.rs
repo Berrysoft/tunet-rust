@@ -27,9 +27,11 @@ unsafe extern "C" fn enum_handler(
     let ssids = ((*args) as *mut Vec<String>).as_mut().unwrap_unchecked();
     let mut info = MaybeUninit::uninit().assume_init();
     iw_get_basic_config(skfd, ifname, &mut info);
-    let mut dest = [0; 129];
-    iw_essid_escape(dest.as_mut_ptr(), info.essid.as_ptr(), info.essid_len);
-    ssids.push(CStr::from_ptr(dest.as_ptr()).to_string_lossy().into_owned());
+    if info.has_essid != 0 {
+        let mut dest = [0; 129];
+        iw_essid_escape(dest.as_mut_ptr(), info.essid.as_ptr(), info.essid_len);
+        ssids.push(CStr::from_ptr(dest.as_ptr()).to_string_lossy().into_owned());
+    }
     0
 }
 
