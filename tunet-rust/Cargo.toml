@@ -18,7 +18,6 @@ mac_address = "1.1"
 lazy_static = "1.4"
 regex = "1"
 thiserror = "1.0"
-cfg-if = "1.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winrt-bindings = { path = "../winrt-bindings" }
