@@ -7,7 +7,7 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-tunet-rust = { path = "../tunet-rust" }
+tunet-rust = { path = "../tunet-rust", features = [ "netstatus" ] }
 serde = "1.0"
 serde_json = "1.0"
 chrono = "0.4"

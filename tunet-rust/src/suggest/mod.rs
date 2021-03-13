@@ -1,10 +1,9 @@
 mod ping;
 
-use crate::*;
-use lazy_static::lazy_static;
-use netstatus::NetStatus;
-use std::collections::BTreeMap;
+#[cfg(feature = "netstatus")]
+use {crate::*, lazy_static::lazy_static, netstatus::NetStatus, std::collections::BTreeMap};
 
+#[cfg(feature = "netstatus")]
 lazy_static! {
     static ref SUGGEST_SSID_MAP: BTreeMap<&'static str, NetState> = {
         let mut map = BTreeMap::new();
@@ -18,6 +17,7 @@ lazy_static! {
     };
 }
 
+#[cfg(feature = "netstatus")]
 pub fn suggest(client: &HttpClient) -> NetState {
     let state = match NetStatus::current() {
         NetStatus::Unknown | NetStatus::Wwan => NetState::Unknown,
@@ -32,3 +32,6 @@ pub fn suggest(client: &HttpClient) -> NetState {
         _ => state,
     }
 }
+
+#[cfg(not(feature = "netstatus"))]
+pub use ping::suggest;

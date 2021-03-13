@@ -8,6 +8,7 @@ license = "MIT"
 
 [dependencies]
 authtea = { path = "../authtea" }
+netstatus = { path = "../netstatus", optional = true }
 reqwest = { version = "0.11", features = [ "blocking", "cookies" ] }
 rust-crypto = "0.2"
 serde_json = "1.0"
@@ -18,4 +19,3 @@ mac_address = "1.1"
 lazy_static = "1.4"
 regex = "1"
 thiserror = "1.0"
-netstatus = { path = "../netstatus" }

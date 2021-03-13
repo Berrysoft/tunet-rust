@@ -10,5 +10,5 @@ license = "MIT"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-tunet-rust = { path = "../tunet-rust" }
+tunet-rust = { path = "../tunet-rust", features = [ "netstatus" ] }
 lazy_static = "1.4"
