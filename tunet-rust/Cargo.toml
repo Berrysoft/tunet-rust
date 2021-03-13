@@ -18,13 +18,4 @@ mac_address = "1.1"
 lazy_static = "1.4"
 regex = "1"
 thiserror = "1.0"
-
-[target.'cfg(target_os = "windows")'.dependencies]
-winrt-bindings = { path = "../winrt-bindings" }
-
-[target.'cfg(target_os = "macos")'.dependencies]
-libc = "0.2"
-objc = "0.2"
-
-[target.'cfg(target_os = "linux")'.dependencies]
-libiw-bindings = { path = "../libiw-bindings" }
+netstatus = { path = "../netstatus" }

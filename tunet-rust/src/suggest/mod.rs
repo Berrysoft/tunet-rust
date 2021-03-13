@@ -2,6 +2,7 @@ mod ping;
 
 use crate::*;
 use lazy_static::lazy_static;
+use netstatus::NetStatus;
 use std::collections::BTreeMap;
 
 lazy_static! {
@@ -17,29 +18,17 @@ lazy_static! {
     };
 }
 
-#[cfg(target_os = "windows")]
-mod winrt;
-
-#[cfg(target_os = "macos")]
-mod macos;
-
-#[cfg(target_os = "linux")]
-mod libiw;
-
-mod platform {
-    #[cfg(target_os = "windows")]
-    pub use super::winrt::*;
-
-    #[cfg(target_os = "macos")]
-    pub use super::macos::*;
-
-    #[cfg(target_os = "linux")]
-    pub use super::libiw::*;
-}
-
 pub fn suggest(client: &HttpClient) -> NetState {
-    match platform::suggest() {
+    let state = match NetStatus::current() {
+        NetStatus::Unknown | NetStatus::Wwan => NetState::Unknown,
+        NetStatus::Wlan(ssid) => SUGGEST_SSID_MAP
+            .get(ssid.as_str())
+            .copied()
+            .unwrap_or(NetState::Unknown),
+        NetStatus::Lan => NetState::Auth4,
+    };
+    match state {
         NetState::Unknown => ping::suggest(client),
-        state => state,
+        _ => state,
     }
 }
