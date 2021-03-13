@@ -1,3 +1,5 @@
+#![feature(option_result_unwrap_unchecked)]
+
 #[cfg(target_os = "windows")]
 mod winrt;
 

@@ -1,6 +1,10 @@
 use crate::*;
 use libc::{sockaddr, sockaddr_in, AF_INET};
-use objc::{rc::StrongPtr, runtime::Class, *};
+use objc::{
+    rc::StrongPtr,
+    runtime::{Class, Object},
+    *,
+};
 use std::ffi::{c_void, CStr};
 use std::mem::{size_of, MaybeUninit};
 
@@ -22,8 +26,12 @@ enum SCNetworkReachabilityFlags {
 }
 
 impl SCNetworkReachabilityFlags {
-    pub const fn has_flag(&self, f: Self) -> bool {
+    pub const fn has(&self, f: Self) -> bool {
         (*self as u32 & f as u32) != 0
+    }
+
+    pub const fn has_only(&self, f: Self) -> bool {
+        (*self as u32 & f as u32) == f as u32
     }
 }
 
@@ -64,14 +72,13 @@ impl Drop for SCNetworkReachability {
 unsafe fn get_ssid() -> Option<String> {
     let client = StrongPtr::new(msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient]);
     let interface = StrongPtr::new(msg_send![*client, interface]);
-    let name = msg_send![*interface, ssid];
+    let name: *mut Object = msg_send![*interface, ssid];
     if !name.is_null() {
         let name = StrongPtr::new(name);
-        Some(
-            CStr::from_ptr(msg_send![*name, UTF8String])
-                .to_string_lossy()
-                .into_owned(),
-        )
+        let name = CStr::from_ptr(msg_send![*name, UTF8String])
+            .to_string_lossy()
+            .into_owned();
+        Some(name)
     } else {
         None
     }
@@ -91,26 +98,29 @@ pub fn current() -> NetStatus {
         } else {
             let mut flag = SCNetworkReachabilityFlags::InvalidValue;
             if SCNetworkReachabilityGetFlags(reach.0, &mut flag) == 0 {
-                NetStaus::Unknown
+                NetStatus::Unknown
             } else {
-                if !flag.has_flag(SCNetworkReachabilityFlags::Reachable) {
+                if !flag.has(SCNetworkReachabilityFlags::Reachable) {
                     return NetStatus::Unknown;
                 }
-                if !flag.has_flag(SCNetworkReachabilityFlags::ConnectionRequired) {
+                if !flag.has(SCNetworkReachabilityFlags::ConnectionRequired) {
                     return match get_ssid() {
                         Some(ssid) => NetStatus::Wlan(ssid),
-                        None => NetStatus::Lan,
+                        None => NetStatus::Unknown,
                     };
                 }
-                if flag.has_flag(SCNetworkReachabilityFlags::ConnectionOnDemand)
-                    || flag.has_flag(SCNetworkReachabilityFlags::ConnectionOnTraffic)
+                if flag.has(SCNetworkReachabilityFlags::ConnectionOnDemand)
+                    || flag.has(SCNetworkReachabilityFlags::ConnectionOnTraffic)
                 {
-                    if !flag.has_flag(SCNetworkReachabilityFlags::InterventionRequired) {
+                    if !flag.has(SCNetworkReachabilityFlags::InterventionRequired) {
                         return match get_ssid() {
                             Some(ssid) => NetStatus::Wlan(ssid),
-                            None => NetStatus::Lan,
+                            None => NetStatus::Unknown,
                         };
                     }
+                }
+                if flag.has_only(SCNetworkReachabilityFlags::IsWWAN) {
+                    return NetStatus::Wwan;
                 }
                 return NetStatus::Unknown;
             }

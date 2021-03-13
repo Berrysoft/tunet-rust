@@ -44,14 +44,15 @@ pub fn current() -> NetStatus {
     unsafe {
         let skfd = Socket(iw_sockets_open());
         if skfd.0 < 0 {
-            return NetStatus::Unknown;
-        }
-        let mut ssids: Vec<String> = vec![];
-        let mut args = [&mut ssids as *mut _ as *mut c_char];
-        iw_enum_devices(skfd.0, Some(enum_handler), args.as_mut_ptr(), 1);
-        match ssids.pop_front() {
-            Some(ssid) => NetStatus::Wlan(ssid),
-            None => NetStatus::Unknown,
+            NetStatus::Unknown
+        } else {
+            let mut ssids = VecDeque::new();
+            let mut args = [&mut ssids as *mut _ as *mut c_char];
+            iw_enum_devices(skfd.0, Some(enum_handler), args.as_mut_ptr(), 1);
+            match ssids.pop_front() {
+                Some(ssid) => NetStatus::Wlan(ssid),
+                None => NetStatus::Unknown,
+            }
         }
     }
 }
