@@ -20,16 +20,14 @@ lazy_static! {
 #[cfg(feature = "netstatus")]
 pub fn suggest(client: &HttpClient) -> NetState {
     let state = match NetStatus::current() {
-        NetStatus::Unknown | NetStatus::Wwan => NetState::Unknown,
-        NetStatus::Wlan(ssid) => SUGGEST_SSID_MAP
-            .get(ssid.as_str())
-            .copied()
-            .unwrap_or(NetState::Unknown),
-        NetStatus::Lan => NetState::Auth4,
+        NetStatus::Unknown => None,
+        NetStatus::Wwan => Some(NetState::Unknown),
+        NetStatus::Wlan(ssid) => SUGGEST_SSID_MAP.get(ssid.as_str()).copied(),
+        NetStatus::Lan => Some(NetState::Auth4),
     };
     match state {
-        NetState::Unknown => ping::suggest(client),
-        _ => state,
+        Some(state) => state,
+        None => ping::suggest(client),
     }
 }
 
