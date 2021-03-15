@@ -1,15 +1,17 @@
 use crate::*;
 use libc::{sockaddr, sockaddr_in, AF_INET};
+use std::ffi::{c_void, CStr};
+use std::mem::{size_of, MaybeUninit};
+
+#[cfg(target_os = "macos")]
 use objc::{
     rc::StrongPtr,
     runtime::{Class, Object},
     *,
 };
-use std::ffi::{c_void, CStr};
-use std::mem::{size_of, MaybeUninit};
 
-type CFTypeRef = *const c_void;
 type CFAllocatorRef = *mut c_void;
+type CFTypeRef = *const c_void;
 type SCNetworkReachabilityRef = *mut c_void;
 type Boolean = u8;
 
@@ -36,12 +38,8 @@ impl SCNetworkReachabilityFlags {
 }
 
 #[link(name = "CoreFoundation", kind = "framework")]
-#[link(name = "CoreWLAN", kind = "framework")]
 #[link(name = "SystemConfiguration", kind = "framework")]
 extern "C" {
-    #[link_name = "OBJC_CLASS_$_CWWiFiClient"]
-    static OBJC_CLASS__CWWiFiClient: Class;
-
     static kCFAllocatorDefault: CFAllocatorRef;
 
     fn CFRelease(cf: CFTypeRef);
@@ -59,9 +57,9 @@ extern "C" {
 
 #[repr(transparent)]
 #[derive(Debug)]
-struct SCNetworkReachability(SCNetworkReachabilityRef);
+struct CFObject(*mut c_void);
 
-impl Drop for SCNetworkReachability {
+impl Drop for CFObject {
     fn drop(&mut self) {
         if !self.0.is_null() {
             unsafe { CFRelease(self.0) }
@@ -69,7 +67,14 @@ impl Drop for SCNetworkReachability {
     }
 }
 
+#[cfg(target_os = "macos")]
 unsafe fn get_ssid() -> Option<String> {
+    #[link(name = "CoreWLAN", kind = "framework")]
+    extern "C" {
+        #[link_name = "OBJC_CLASS_$_CWWiFiClient"]
+        static OBJC_CLASS__CWWiFiClient: Class;
+    }
+
     let client = StrongPtr::new(msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient]);
     let interface = StrongPtr::new(msg_send![*client, interface]);
     let name: *mut Object = msg_send![*interface, ssid];
@@ -84,12 +89,67 @@ unsafe fn get_ssid() -> Option<String> {
     }
 }
 
+#[cfg(target_os = "ios")]
+unsafe fn get_ssid() -> Option<String> {
+    type CFArrayRef = *mut c_void;
+    type CFDictionaryRef = *mut c_void;
+    type CFStringRef = *mut c_void;
+    type CFIndex = std::os::raw::c_long;
+    type CFStringEncoding = u32;
+
+    extern "C" {
+        static kCNNetworkInfoKeySSID: CFStringRef;
+
+        fn CNCopySupportedInterfaces() -> CFArrayRef;
+        fn CNCopyCurrentNetworkInfo(interface: CFStringRef) -> CFDictionaryRef;
+
+        fn CFArrayGetValueAtIndex(arr: CFArrayRef, idx: CFIndex) -> *const c_void;
+
+        fn CFDictionaryGetValue(dict: CFDictionaryRef, key: *const c_void) -> *const c_void;
+
+        fn CFStringGetLength(std: CFStringRef) -> CFIndex;
+        fn CFStringGetCString(
+            str: CFStringRef,
+            buffer: *mut std::os::raw::c_char,
+            size: CFIndex,
+            enc: CFStringEncoding,
+        ) -> Boolean;
+    }
+
+    #[allow(non_upper_case_globals)]
+    const kCFStringEncodingUTF8: CFStringEncoding = 0x08000100;
+
+    let arr = CNCopySupportedInterfaces();
+    if arr.is_null() {
+        None
+    } else {
+        let interface = CFObject(CFArrayGetValueAtIndex(arr, 0) as _);
+        let dict = CFObject(CNCopyCurrentNetworkInfo(interface.0));
+        let ssid = CFDictionaryGetValue(dict.0, kCNNetworkInfoKeySSID) as CFStringRef;
+        let len = CFStringGetLength(ssid);
+        if len == 0 {
+            Some(String::new())
+        } else {
+            let mut buffer = vec![0u8; len as usize];
+            if CFStringGetCString(ssid, buffer.as_mut_ptr() as _, len, kCFStringEncodingUTF8) != 0 {
+                Some(
+                    CStr::from_bytes_with_nul_unchecked(&buffer)
+                        .to_string_lossy()
+                        .into_owned(),
+                )
+            } else {
+                None
+            }
+        }
+    }
+}
+
 pub fn current() -> NetStatus {
     unsafe {
         let mut addr = MaybeUninit::<sockaddr_in>::zeroed().assume_init();
         addr.sin_len = size_of::<sockaddr_in>() as _;
         addr.sin_family = AF_INET as _;
-        let reach = SCNetworkReachability(SCNetworkReachabilityCreateWithAddress(
+        let reach = CFObject(SCNetworkReachabilityCreateWithAddress(
             kCFAllocatorDefault,
             &addr as *const sockaddr_in as _,
         ));

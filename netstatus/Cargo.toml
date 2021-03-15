@@ -12,8 +12,10 @@ license = "MIT"
 winrt-bindings = { path = "../winrt-bindings" }
 windows = "0.4"
 
-[target.'cfg(target_os = "macos")'.dependencies]
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
 objc = "0.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
