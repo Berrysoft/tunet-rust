@@ -1,6 +1,6 @@
 use crate::*;
 use libc::{sockaddr, sockaddr_in, AF_INET};
-use std::ffi::{c_void, CStr};
+use std::ffi::c_void;
 use std::mem::{size_of, MaybeUninit};
 
 #[cfg(target_os = "macos")]
@@ -80,7 +80,7 @@ unsafe fn get_ssid() -> Option<String> {
     let name: *mut Object = msg_send![*interface, ssid];
     if !name.is_null() {
         let name = StrongPtr::new(name);
-        let name = CStr::from_ptr(msg_send![*name, UTF8String])
+        let name = std::ffi::CStr::from_ptr(msg_send![*name, UTF8String])
             .to_string_lossy()
             .into_owned();
         Some(name)
@@ -125,18 +125,21 @@ unsafe fn get_ssid() -> Option<String> {
     } else {
         let interface = CFObject(CFArrayGetValueAtIndex(arr, 0) as _);
         let dict = CFObject(CNCopyCurrentNetworkInfo(interface.0));
-        let ssid = CFDictionaryGetValue(dict.0, kCNNetworkInfoKeySSID) as CFStringRef;
-        let len = CFStringGetLength(ssid);
+        let ssid = CFObject(CFDictionaryGetValue(dict.0, kCNNetworkInfoKeySSID) as _);
+        let len = CFStringGetLength(ssid.0);
         if len == 0 {
             Some(String::new())
         } else {
-            let mut buffer = vec![0u8; len as usize];
-            if CFStringGetCString(ssid, buffer.as_mut_ptr() as _, len, kCFStringEncodingUTF8) != 0 {
-                Some(
-                    CStr::from_bytes_with_nul_unchecked(&buffer)
-                        .to_string_lossy()
-                        .into_owned(),
-                )
+            let mut buffer = vec![0u8; (len + 1) as usize];
+            if CFStringGetCString(
+                ssid.0,
+                buffer.as_mut_ptr() as _,
+                len + 1,
+                kCFStringEncodingUTF8,
+            ) != 0
+            {
+                buffer.pop();
+                Some(String::from_utf8_unchecked(buffer))
             } else {
                 None
             }
