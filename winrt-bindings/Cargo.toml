@@ -7,7 +7,7 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-windows = "0.4"
+windows = "0.5"
 
 [build-dependencies]
-windows = "0.4"
+windows = "0.5"
