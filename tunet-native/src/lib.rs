@@ -1,4 +1,3 @@
-#![feature(option_result_unwrap_unchecked)]
 #![feature(thread_local)]
 
 use lazy_static::*;
@@ -52,10 +51,10 @@ static mut ERROR_MSG: Option<CString> = None;
 
 fn write_string<'a, S: Into<Cow<'a, str>>>(msg: S, storage: &mut Option<CString>) -> *const c_char {
     unsafe {
-        *storage = Some(CString::from_vec_unchecked(
-            msg.into().into_owned().into_bytes(),
-        ));
-        storage.as_ref().unwrap_unchecked().as_ptr()
+        let str = CString::from_vec_unchecked(msg.into().into_owned().into_bytes());
+        let ptr = str.as_ptr();
+        *storage = Some(str);
+        ptr
     }
 }
 
