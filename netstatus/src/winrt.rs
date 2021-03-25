@@ -1,7 +1,7 @@
 use crate::*;
-use winrt_bindings::windows::networking::connectivity::*;
+use winrt_bindings::windows::{networking::connectivity::*, Result};
 
-fn current_impl() -> windows::Result<NetStatus> {
+fn current_impl() -> Result<NetStatus> {
     let profile = NetworkInformation::get_internet_connection_profile()?;
     let cl = profile.get_network_connectivity_level()?;
     match cl {
