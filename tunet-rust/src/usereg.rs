@@ -40,7 +40,6 @@ impl NetDetail {
     }
 }
 
-#[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub enum NetDetailOrder {
     LoginTime,
@@ -69,7 +68,7 @@ impl str::FromStr for NetDetailOrder {
         } else if ls == "flux" {
             Ok(NetDetailOrder::Flux)
         } else {
-            Err(NetHelperError::OrderError)
+            Err(NetHelperError::OrderErr)
         }
     }
 }
@@ -143,10 +142,7 @@ impl<'a, 's> UseregHelper<'a, 's> {
     pub fn details(&self, o: NetDetailOrder, des: bool) -> Result<UseregDetails<'a>> {
         Ok(UseregDetails::new(self.client, o, des))
     }
-}
-
-impl<'a, 's> NetHelper for UseregHelper<'a, 's> {
-    fn login(&mut self) -> Result<String> {
+    pub fn login(&mut self) -> Result<String> {
         let mut cry = Md5::new();
         cry.input_str(&self.credential.password);
         let params = [
@@ -157,7 +153,7 @@ impl<'a, 's> NetHelper for UseregHelper<'a, 's> {
         let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)
     }
-    fn logout(&mut self) -> Result<String> {
+    pub fn logout(&mut self) -> Result<String> {
         let params = [("action", "logout")];
         let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
         Ok(res.text()?)

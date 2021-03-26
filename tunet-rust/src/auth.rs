@@ -119,23 +119,21 @@ impl<'a, 's> AuthConnect<'a, 's> {
         self.additional_ac_ids.push(ac_id);
         return action(self, ac_id);
     }
-}
 
-fn parse_response(t: &str) -> Result<(bool, String)> {
-    let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
-    if let Value::String(error) = &json["error"] {
-        if let Value::String(error_msg) = &json["error_msg"] {
-            return Ok((
-                error == "ok",
-                format!("error: {}; error_msg: {}", error, error_msg),
-            ));
+    fn parse_response(t: &str) -> Result<(bool, String)> {
+        let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
+        if let Value::String(error) = &json["error"] {
+            if let Value::String(error_msg) = &json["error_msg"] {
+                return Ok((
+                    error == "ok",
+                    format!("error: {}; error_msg: {}", error, error_msg),
+                ));
+            }
         }
+        Ok((false, String::new()))
     }
-    Ok((false, String::new()))
-}
 
-impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
-    fn login(&mut self) -> Result<String> {
+    pub fn login(&mut self) -> Result<String> {
         self.do_log(|s, ac_id| {
             let token = s.challenge()?;
             let mut md5 = Md5::new();
@@ -178,7 +176,7 @@ impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
                 .form(&params)
                 .send()?;
             let t = res.text()?;
-            let (suc, msg) = parse_response(&t)?;
+            let (suc, msg) = Self::parse_response(&t)?;
             if suc {
                 Ok(msg)
             } else {
@@ -187,7 +185,7 @@ impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
         })
     }
 
-    fn logout(&mut self) -> Result<String> {
+    pub fn logout(&mut self) -> Result<String> {
         let params = [
             ("action", "logout"),
             ("ac_id", "1"),
@@ -204,17 +202,14 @@ impl<'a, 's> NetHelper for AuthConnect<'a, 's> {
             .form(&params)
             .send()?;
         let t = res.text()?;
-        let (suc, msg) = parse_response(&t)?;
+        let (suc, msg) = Self::parse_response(&t)?;
         if suc {
             Ok(msg)
         } else {
             Err(NetHelperError::LogErr(msg))
         }
     }
-}
-
-impl<'a, 's> NetConnectHelper for AuthConnect<'a, 's> {
-    fn flux(&self) -> Result<NetFlux> {
+    pub fn flux(&self) -> Result<NetFlux> {
         let res = self
             .client
             .get(&format!(
@@ -224,7 +219,7 @@ impl<'a, 's> NetConnectHelper for AuthConnect<'a, 's> {
             .send()?;
         Ok(NetFlux::from_str(&res.text()?))
     }
-    fn ac_ids(&self) -> &[i32] {
+    pub fn ac_ids(&self) -> &[i32] {
         &self.additional_ac_ids
     }
 }

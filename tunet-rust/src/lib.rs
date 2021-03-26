@@ -78,20 +78,15 @@ pub enum NetHelperError {
     #[error(transparent)]
     IoErr(#[from] std::io::Error),
     #[error("排序方式无效")]
-    OrderError,
+    OrderErr,
     #[error("无法确定登录方式")]
     HostErr,
     #[error("找不到配置文件目录")]
     ConfigDirErr,
-    #[error("初始化失败")]
-    InitErr,
-    #[error("指针不能为空")]
-    NullPtrErr,
 }
 
 pub type Result<T> = result::Result<T, NetHelperError>;
 
-#[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub enum NetState {
     Unknown,
@@ -119,52 +114,36 @@ impl str::FromStr for NetState {
     }
 }
 
-pub trait NetHelper {
-    fn login(&mut self) -> Result<String>;
-    fn logout(&mut self) -> Result<String>;
-}
-
-pub trait NetConnectHelper: NetHelper {
-    fn flux(&self) -> Result<NetFlux>;
-    fn ac_ids(&self) -> &[i32];
-}
-
 pub enum TUNetConnect<'a, 's> {
     Net(net::NetConnect<'a, 's>),
     Auth(auth::AuthConnect<'a, 's>),
 }
 
-impl<'a, 's> NetHelper for TUNetConnect<'a, 's> {
-    fn login(&mut self) -> Result<String> {
+impl<'a, 's> TUNetConnect<'a, 's> {
+    pub fn login(&mut self) -> Result<String> {
         match self {
             Self::Net(c) => c.login(),
             Self::Auth(c) => c.login(),
         }
     }
-    fn logout(&mut self) -> Result<String> {
+    pub fn logout(&mut self) -> Result<String> {
         match self {
             Self::Net(c) => c.logout(),
             Self::Auth(c) => c.logout(),
         }
     }
-}
-
-impl<'a, 's> NetConnectHelper for TUNetConnect<'a, 's> {
-    fn flux(&self) -> Result<NetFlux> {
+    pub fn flux(&self) -> Result<NetFlux> {
         match self {
             Self::Net(c) => c.flux(),
             Self::Auth(c) => c.flux(),
         }
     }
-    fn ac_ids(&self) -> &[i32] {
+    pub fn ac_ids(&self) -> &[i32] {
         match self {
-            Self::Net(c) => c.ac_ids(),
+            Self::Net(_) => &[0; 0],
             Self::Auth(c) => c.ac_ids(),
         }
     }
-}
-
-impl<'a, 's> TUNetConnect<'a, 's> {
     pub fn from_state_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
         s: NetState,
         u: SU,
