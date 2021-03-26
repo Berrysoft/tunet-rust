@@ -23,9 +23,7 @@ unsafe extern "C" fn enum_handler(
 ) -> c_int {
     #[cfg(debug_assertions)]
     assert_eq!(_count, 1);
-    let ssids = ((*args) as *mut VecDeque<String>)
-        .as_mut()
-        .unwrap_unchecked();
+    let ssids = ((*args) as *mut VecDeque<String>).as_mut().unwrap();
     let mut info = MaybeUninit::uninit().assume_init();
     iw_get_basic_config(skfd, ifname, &mut info);
     if info.has_essid != 0 {

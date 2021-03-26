@@ -41,8 +41,7 @@ pub struct AuthConnect<'a, 's> {
 }
 
 lazy_static! {
-    // SATETY: this regex expression is valid.
-    static ref AC_ID_REGEX: Regex = unsafe { Regex::new(r"/index_([0-9]+)\.html").unwrap_unchecked() };
+    static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
 }
 
 impl<'a, 's> AuthConnect<'a, 's> {
