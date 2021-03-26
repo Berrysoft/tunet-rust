@@ -21,9 +21,6 @@ enum TUNet {
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
-        #[structopt(long = "use-proxy", short = "p")]
-        /// 使用系统代理
-        proxy: bool,
     },
     #[structopt(name = "logout")]
     /// 注销
@@ -31,9 +28,6 @@ enum TUNet {
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
-        #[structopt(long = "use-proxy", short = "p")]
-        /// 使用系统代理
-        proxy: bool,
     },
     #[structopt(name = "status")]
     /// 查看在线状态
@@ -41,26 +35,16 @@ enum TUNet {
         #[structopt(long, short = "s", default_value = "auto")]
         /// 连接方式
         host: NetState,
-        #[structopt(long = "use-proxy", short = "p")]
-        /// 使用系统代理
-        proxy: bool,
     },
     #[structopt(name = "online")]
     /// 查询在线IP
-    Online {
-        #[structopt(long = "use-proxy", short = "p")]
-        /// 使用系统代理
-        proxy: bool,
-    },
+    Online,
     #[structopt(name = "connect")]
     /// 上线IP
     Connect {
         #[structopt(long, short)]
         /// IP地址
         address: Ipv4Addr,
-        #[structopt(long = "use-proxy", short = "p")]
-        /// 使用系统代理
-        proxy: bool,
     },
     #[structopt(name = "drop")]
     /// 下线IP
@@ -68,9 +52,6 @@ enum TUNet {
         #[structopt(long, short)]
         /// IP地址
         address: Ipv4Addr,
-        #[structopt(long = "use-proxy", short = "p")]
-        /// 使用系统代理
-        proxy: bool,
     },
     #[structopt(name = "detail")]
     /// 流量明细
@@ -84,9 +65,6 @@ enum TUNet {
         #[structopt(long, short)]
         /// 按日期分组
         grouping: bool,
-        #[structopt(long = "use-proxy", short = "p")]
-        /// 使用系统代理
-        proxy: bool,
     },
     #[structopt(name = "deletecred")]
     /// 删除用户名和密码
@@ -100,30 +78,29 @@ fn main() -> Result<()> {
     let console_color_ok = ansi_term::enable_ansi_support().is_ok();
     let opt = TUNet::from_args();
     match opt {
-        TUNet::Login { host, proxy } => do_login(host, proxy),
-        TUNet::Logout { host, proxy } => do_logout(host, proxy),
-        TUNet::Status { host, proxy } => do_status(host, console_color_ok, proxy),
-        TUNet::Online { proxy } => do_online(console_color_ok, proxy),
-        TUNet::Connect { address, proxy } => do_connect(address, proxy),
-        TUNet::Drop { address, proxy } => do_drop(address, proxy),
+        TUNet::Login { host } => do_login(host),
+        TUNet::Logout { host } => do_logout(host),
+        TUNet::Status { host } => do_status(host, console_color_ok),
+        TUNet::Online => do_online(console_color_ok),
+        TUNet::Connect { address } => do_connect(address),
+        TUNet::Drop { address } => do_drop(address),
         TUNet::Detail {
             order,
             descending,
             grouping,
-            proxy,
         } => {
             if grouping {
-                do_detail_grouping(order, descending, console_color_ok, proxy)
+                do_detail_grouping(order, descending, console_color_ok)
             } else {
-                do_detail(order, descending, console_color_ok, proxy)
+                do_detail(order, descending, console_color_ok)
             }
         }
         TUNet::DeleteCredential {} => delete_cred(),
     }
 }
 
-fn do_login(s: NetState, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_login(s: NetState) -> Result<()> {
+    let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     let ac_ids = {
         let mut c = TUNetConnect::from_state_cred_client(s, &u, &p, &client, ac_ids)?;
@@ -134,8 +111,8 @@ fn do_login(s: NetState, proxy: bool) -> Result<()> {
     save_cred(u, p, ac_ids)
 }
 
-fn do_logout(s: NetState, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_logout(s: NetState) -> Result<()> {
+    let client = create_http_client();
     let (u, ac_ids) = read_username()?;
     let mut c = TUNetConnect::from_state_cred_client(s, &u, "", &client, ac_ids)?;
     let res = c.logout()?;
@@ -143,8 +120,8 @@ fn do_logout(s: NetState, proxy: bool) -> Result<()> {
     Ok(())
 }
 
-fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_status(s: NetState, color: bool) -> Result<()> {
+    let client = create_http_client();
     let c = TUNetConnect::from_state_cred_client(s, "", "", &client, vec![])?;
     let f = c.flux()?;
     if color {
@@ -177,8 +154,8 @@ fn do_status(s: NetState, color: bool, proxy: bool) -> Result<()> {
     Ok(())
 }
 
-fn do_online(color: bool, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_online(color: bool) -> Result<()> {
+    let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
@@ -216,8 +193,8 @@ fn do_online(color: bool, proxy: bool) -> Result<()> {
     save_cred(u, p, ac_ids)
 }
 
-fn do_connect(a: Ipv4Addr, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_connect(a: Ipv4Addr) -> Result<()> {
+    let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
@@ -228,8 +205,8 @@ fn do_connect(a: Ipv4Addr, proxy: bool) -> Result<()> {
     save_cred(u, p, ac_ids)
 }
 
-fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_drop(a: Ipv4Addr) -> Result<()> {
+    let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
@@ -240,8 +217,8 @@ fn do_drop(a: Ipv4Addr, proxy: bool) -> Result<()> {
     save_cred(u, p, ac_ids)
 }
 
-fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_detail(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+    let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
@@ -281,8 +258,8 @@ fn do_detail(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()>
     save_cred(u, p, ac_ids)
 }
 
-fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool, proxy: bool) -> Result<()> {
-    let client = create_http_client(proxy)?;
+fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+    let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);

@@ -4,7 +4,8 @@ use std::str;
 use std::time;
 use thiserror::Error;
 
-pub use reqwest::blocking::Client as HttpClient;
+pub use ureq::agent as create_http_client;
+pub use ureq::Agent as HttpClient;
 
 mod auth;
 mod net;
@@ -66,7 +67,7 @@ impl NetFlux {
 #[derive(Debug, Error)]
 pub enum NetHelperError {
     #[error(transparent)]
-    HttpErr(#[from] reqwest::Error),
+    HttpErr(#[from] ureq::Error),
     #[error(transparent)]
     JsonErr(#[from] serde_json::error::Error),
     #[error("无法获取ac_id")]
@@ -165,15 +166,4 @@ impl<'a, 's> TUNetConnect<'a, 's> {
             NetState::Unknown => Err(NetHelperError::HostErr),
         }
     }
-}
-
-pub fn create_http_client(proxy: bool) -> Result<HttpClient> {
-    Ok(if proxy {
-        HttpClient::builder().cookie_store(true).build()?
-    } else {
-        HttpClient::builder()
-            .cookie_store(true)
-            .no_proxy()
-            .build()?
-    })
 }

@@ -1,7 +1,7 @@
 use crate::*;
 
 fn can_connect(client: &HttpClient, uri: &str) -> bool {
-    client.head(uri).send().is_ok()
+    client.head(uri).call().is_ok()
 }
 
 pub fn suggest(client: &HttpClient) -> NetState {

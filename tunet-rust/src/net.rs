@@ -31,16 +31,16 @@ impl<'a, 's> NetConnect<'a, 's> {
             ("username", &self.credential.username),
             ("password", &password_md5),
         ];
-        let res = self.client.post(NET_LOG_URI).form(&params).send()?;
-        Ok(res.text()?)
+        let res = self.client.post(NET_LOG_URI).send_form(&params)?;
+        Ok(res.into_string()?)
     }
     pub fn logout(&mut self) -> Result<String> {
         let params = [("action", "logout")];
-        let res = self.client.post(NET_LOG_URI).form(&params).send()?;
-        Ok(res.text()?)
+        let res = self.client.post(NET_LOG_URI).send_form(&params)?;
+        Ok(res.into_string()?)
     }
     pub fn flux(&self) -> Result<NetFlux> {
-        let res = self.client.get(NET_FLUX_URI).send()?;
-        Ok(NetFlux::from_str(&res.text()?))
+        let res = self.client.get(NET_FLUX_URI).call()?;
+        Ok(NetFlux::from_str(&res.into_string()?))
     }
 }

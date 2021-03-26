@@ -78,9 +78,10 @@ pub struct UseregHelper<'a, 's> {
     client: &'a HttpClient,
 }
 
-static USEREG_LOG_URI: &str = "https://usereg.tsinghua.edu.cn/do.php";
-static USEREG_INFO_URI: &str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
-static USEREG_CONNECT_URI: &str = "https://usereg.tsinghua.edu.cn/ip_login.php";
+// Use HTTP because TLS1.0/1.1 is supported.
+static USEREG_LOG_URI: &str = "http://usereg.tsinghua.edu.cn/do.php";
+static USEREG_INFO_URI: &str = "http://usereg.tsinghua.edu.cn/online_user_ipv4.php";
+static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
 fn parse_flux(s: &str) -> u64 {
@@ -111,19 +112,19 @@ impl<'a, 's> UseregHelper<'a, 's> {
             ("user_ip", &addr.to_string()),
             ("drop", "0"),
         ];
-        let res = self.client.post(USEREG_CONNECT_URI).form(&params).send()?;
-        Ok(res.text()?)
+        let res = self.client.post(USEREG_CONNECT_URI).send_form(&params)?;
+        Ok(res.into_string()?)
     }
 
     pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {
         let params = [("action", "drop"), ("user_ip", &addr.to_string())];
-        let res = self.client.post(USEREG_INFO_URI).form(&params).send()?;
-        Ok(res.text()?)
+        let res = self.client.post(USEREG_INFO_URI).send_form(&params)?;
+        Ok(res.into_string()?)
     }
 
     pub fn users(&self) -> Result<Vec<NetUser>> {
-        let res = self.client.get(USEREG_INFO_URI).send()?;
-        let doc = Document::from(res.text()?.as_str());
+        let res = self.client.get(USEREG_INFO_URI).call()?;
+        let doc = Document::from(res.into_string()?.as_str());
         Ok(doc
             .find(Name("tr").descendant(Attr("align", "center")))
             .skip(1)
@@ -150,13 +151,13 @@ impl<'a, 's> UseregHelper<'a, 's> {
             ("user_login_name", &self.credential.username),
             ("user_password", &cry.result_str()),
         ];
-        let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
-        Ok(res.text()?)
+        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
+        Ok(res.into_string()?)
     }
     pub fn logout(&mut self) -> Result<String> {
         let params = [("action", "logout")];
-        let res = self.client.post(USEREG_LOG_URI).form(&params).send()?;
-        Ok(res.text()?)
+        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
+        Ok(res.into_string()?)
     }
 }
 
@@ -187,10 +188,10 @@ impl<'a> UseregDetails<'a> {
 
     fn load_newpage(&mut self) -> Result<()> {
         let res = self.client.get(
-                    &format!("https://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
+                    &format!("http://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
                         self.now.year(), self.now.month(), self.now.day(), self.index, USEREG_OFF, self.order, self.des))
-                    .send()?;
-        let doc = Document::from(res.text()?.as_str());
+                    .call()?;
+        let doc = Document::from(res.into_string()?.as_str());
         self.data = doc
             .find(Name("tr").descendant(Attr("align", "center")))
             .skip(1)

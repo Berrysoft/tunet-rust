@@ -79,8 +79,8 @@ impl<'a, 's> AuthConnect<'a, 's> {
     }
 
     fn challenge(&self) -> Result<String> {
-        let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback", self.ver, self.credential.username)).send()?;
-        let t = res.text()?;
+        let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback", self.ver, self.credential.username)).call()?;
+        let t = res.into_string()?;
         let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
         match &json["challenge"] {
             Value::String(s) => Ok(s.to_string()),
@@ -96,8 +96,8 @@ impl<'a, 's> AuthConnect<'a, 's> {
             } else {
                 "http://[333::3]/"
             })
-            .send()?;
-        let t = res.text()?;
+            .call()?;
+        let t = res.into_string()?;
         match AC_ID_REGEX.captures(&t) {
             Some(cap) => Ok(cap[1].parse::<i32>().unwrap_or_default()),
             _ => Err(NetHelperError::NoAcIdErr),
@@ -172,9 +172,8 @@ impl<'a, 's> AuthConnect<'a, 's> {
                     "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
                     s.ver
                 ))
-                .form(&params)
-                .send()?;
-            let t = res.text()?;
+                .send_form(&params)?;
+            let t = res.into_string()?;
             let (suc, msg) = Self::parse_response(&t)?;
             if suc {
                 Ok(msg)
@@ -198,9 +197,8 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
                 self.ver
             ))
-            .form(&params)
-            .send()?;
-        let t = res.text()?;
+            .send_form(&params)?;
+        let t = res.into_string()?;
         let (suc, msg) = Self::parse_response(&t)?;
         if suc {
             Ok(msg)
@@ -215,8 +213,8 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 "https://auth{0}.tsinghua.edu.cn/rad_user_info.php",
                 self.ver
             ))
-            .send()?;
-        Ok(NetFlux::from_str(&res.text()?))
+            .call()?;
+        Ok(NetFlux::from_str(&res.into_string()?))
     }
     pub fn ac_ids(&self) -> &[i32] {
         &self.additional_ac_ids
