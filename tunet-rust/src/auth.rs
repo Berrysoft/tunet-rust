@@ -1,10 +1,7 @@
 use super::*;
 use authtea::AuthTea;
-use crypto::digest::Digest;
-use crypto::hmac::Hmac;
-use crypto::mac::Mac;
-use crypto::md5::Md5;
-use crypto::sha1::Sha1;
+use crypto2::hash::Sha1;
+use crypto2::mac::HmacMd5;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde_json::{self, Value};
@@ -135,10 +132,9 @@ impl<'a, 's> AuthConnect<'a, 's> {
     pub fn login(&mut self) -> Result<String> {
         self.do_log(|s, ac_id| {
             let token = s.challenge()?;
-            let mut md5 = Md5::new();
-            md5.input_str(&token);
-            let mut hmac = Hmac::new(md5, &[]);
-            let password_md5 = hex::encode(hmac.result().code());
+            let mut hmac = HmacMd5::new(&[]);
+            hmac.update(token.as_bytes());
+            let password_md5 = hex::encode(hmac.finalize());
             let p_mmd5 = "{MD5}".to_string() + &password_md5;
             let encode_json = serde_json::json!({
                 "username": s.credential.username,
@@ -150,10 +146,13 @@ impl<'a, 's> AuthConnect<'a, 's> {
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_string() + &base64(&tea.encrypt_str(&encode_json.to_string()));
             let mut sha1 = Sha1::new();
-            sha1.input_str(&format!(
-                "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                token, s.credential.username, password_md5, info, ac_id
-            ));
+            sha1.update(
+                format!(
+                    "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
+                    token, s.credential.username, password_md5, info, ac_id
+                )
+                .as_bytes(),
+            );
             let params = [
                 ("action", "login"),
                 ("ac_id", &ac_id.to_string()),
@@ -163,7 +162,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 ("username", &s.credential.username),
                 ("password", &p_mmd5),
                 ("info", &info),
-                ("chksum", &sha1.result_str()),
+                ("chksum", &hex::encode(sha1.finalize())),
                 ("callback", "callback"),
             ];
             let res = s

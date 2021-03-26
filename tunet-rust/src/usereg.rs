@@ -1,7 +1,6 @@
 use super::*;
 use chrono::prelude::*;
-use crypto::digest::Digest;
-use crypto::md5::Md5;
+use crypto2::hash::Md5;
 use mac_address::MacAddress;
 use select::document::Document;
 use select::predicate::*;
@@ -145,11 +144,11 @@ impl<'a, 's> UseregHelper<'a, 's> {
     }
     pub fn login(&mut self) -> Result<String> {
         let mut cry = Md5::new();
-        cry.input_str(&self.credential.password);
+        cry.update(self.credential.password.as_bytes());
         let params = [
             ("action", "login"),
             ("user_login_name", &self.credential.username),
-            ("user_password", &cry.result_str()),
+            ("user_password", &hex::encode(cry.finalize())),
         ];
         let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
         Ok(res.into_string()?)
