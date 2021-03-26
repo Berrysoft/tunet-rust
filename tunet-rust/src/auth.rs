@@ -141,11 +141,11 @@ impl<'a, 's> AuthConnect<'a, 's> {
             let password_md5 = hex::encode(hmac.result().code());
             let p_mmd5 = "{MD5}".to_string() + &password_md5;
             let encode_json = serde_json::json!({
-                "username":s.credential.username,
-                "password":s.credential.password,
-                "ip":"",
-                "acid":ac_id,
-                "enc_ver":"srun_bx1"
+                "username": s.credential.username,
+                "password": s.credential.password,
+                "ip": "",
+                "acid": ac_id,
+                "enc_ver": "srun_bx1"
             });
             let tea = AuthTea::new(token.as_bytes());
             let info = "{SRBX1}".to_string() + &base64(&tea.encrypt_str(&encode_json.to_string()));

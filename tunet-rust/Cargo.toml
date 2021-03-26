@@ -9,7 +9,7 @@ license = "MIT"
 [dependencies]
 authtea = { path = "../authtea" }
 netstatus = { path = "../netstatus", optional = true }
-ureq = { version = "2.1", features = [ "cookies" ] }
+ureq = { version = "2.1", features = [ "cookies", "charset" ] }
 rust-crypto = "0.2"
 serde_json = "1.0"
 hex = "0.4"
