@@ -4,7 +4,6 @@ use std::str;
 use std::time;
 use thiserror::Error;
 
-pub use ureq::agent as create_http_client;
 pub use ureq::Agent as HttpClient;
 
 mod auth;
@@ -166,4 +165,8 @@ impl<'a, 's> TUNetConnect<'a, 's> {
             NetState::Unknown => Err(NetHelperError::HostErr),
         }
     }
+}
+
+pub fn create_http_client() -> HttpClient {
+    ureq::AgentBuilder::new().redirects(0).build()
 }
