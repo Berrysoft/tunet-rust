@@ -103,12 +103,13 @@ impl<'a, 's> UseregHelper<'a, 's> {
     }
 
     pub fn login(&mut self) -> Result<String> {
-        let mut cry = Md5::new();
-        cry.update(self.credential.password.as_bytes());
         let params = [
             ("action", "login"),
             ("user_login_name", &self.credential.username),
-            ("user_password", &hex::encode(cry.finalize())),
+            (
+                "user_password",
+                &hex::encode(Md5::oneshot(self.credential.password.as_bytes())),
+            ),
         ];
         let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
         Ok(res.into_string()?)

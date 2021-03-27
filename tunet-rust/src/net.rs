@@ -22,9 +22,10 @@ impl<'a, 's> NetConnect<'a, 's> {
     }
 
     pub fn login(&mut self) -> Result<String> {
-        let mut cry = Md5::new();
-        cry.update(self.credential.password.as_bytes());
-        let password_md5 = format!("{{MD5_HEX}}{}", hex::encode(cry.finalize()));
+        let password_md5 = format!(
+            "{{MD5_HEX}}{}",
+            hex::encode(Md5::oneshot(self.credential.password.as_bytes()))
+        );
         let params = [
             ("action", "login"),
             ("ac_id", "1"),

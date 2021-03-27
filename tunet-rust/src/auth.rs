@@ -125,9 +125,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
     pub fn login(&mut self) -> Result<String> {
         self.do_log(|s, ac_id| {
             let token = s.challenge()?;
-            let mut hmac = HmacMd5::new(&[]);
-            hmac.update(token.as_bytes());
-            let password_md5 = hex::encode(hmac.finalize());
+            let password_md5 = hex::encode(HmacMd5::oneshot(&[], token.as_bytes()));
             let p_mmd5 = format!("{{MD5}}{}", password_md5);
             let encode_json = serde_json::json!({
                 "username": s.credential.username,
@@ -141,14 +139,10 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 "{{SRBX1}}{}",
                 AUTH_BASE64.encode(&tea.encrypt_str(&encode_json.to_string()))
             );
-            let mut sha1 = Sha1::new();
-            sha1.update(
-                format!(
-                    "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                    token, s.credential.username, password_md5, info, ac_id
-                )
-                .as_bytes(),
-            );
+            let chksum = Sha1::oneshot(format!(
+                "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
+                token, s.credential.username, password_md5, info, ac_id
+            ));
             let params = [
                 ("action", "login"),
                 ("ac_id", &ac_id.to_string()),
@@ -158,7 +152,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 ("username", &s.credential.username),
                 ("password", &p_mmd5),
                 ("info", &info),
-                ("chksum", &hex::encode(sha1.finalize())),
+                ("chksum", &hex::encode(chksum)),
                 ("callback", "callback"),
             ];
             let res = s
