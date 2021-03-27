@@ -71,7 +71,7 @@ pub enum NetHelperError {
     JsonErr(#[from] serde_json::error::Error),
     #[error("无法获取ac_id")]
     NoAcIdErr,
-    #[error("操作失败`{0}`")]
+    #[error("操作失败：{0}")]
     LogErr(String),
     #[error(transparent)]
     IoErr(#[from] std::io::Error),

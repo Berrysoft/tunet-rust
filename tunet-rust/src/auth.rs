@@ -101,17 +101,25 @@ impl<'a, 's> AuthConnect<'a, 's> {
         return action(self, ac_id);
     }
 
-    fn parse_response(t: &str) -> Result<(bool, String)> {
+    fn parse_response(t: &str) -> Result<String> {
         let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
         if let Value::String(error) = &json["error"] {
-            if let Value::String(error_msg) = &json["error_msg"] {
-                return Ok((
-                    error == "ok",
-                    format!("error: {}; error_msg: {}", error, error_msg),
-                ));
+            if error == "ok" {
+                Ok(json["suc_msg"]
+                    .as_str()
+                    .map(|s| s.to_string())
+                    .unwrap_or_default())
+            } else {
+                Err(NetHelperError::LogErr(
+                    json["error_msg"]
+                        .as_str()
+                        .map(|s| s.to_string())
+                        .unwrap_or_default(),
+                ))
             }
+        } else {
+            Err(NetHelperError::LogErr(json.to_string()))
         }
-        Ok((false, String::new()))
     }
 
     pub fn login(&mut self) -> Result<String> {
@@ -161,12 +169,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 ))
                 .send_form(&params)?;
             let t = res.into_string()?;
-            let (suc, msg) = Self::parse_response(&t)?;
-            if suc {
-                Ok(msg)
-            } else {
-                Err(NetHelperError::LogErr(msg))
-            }
+            Self::parse_response(&t)
         })
     }
 
@@ -186,12 +189,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
             ))
             .send_form(&params)?;
         let t = res.into_string()?;
-        let (suc, msg) = Self::parse_response(&t)?;
-        if suc {
-            Ok(msg)
-        } else {
-            Err(NetHelperError::LogErr(msg))
-        }
+        Self::parse_response(&t)
     }
 
     pub fn flux(&self) -> Result<NetFlux> {
