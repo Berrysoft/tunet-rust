@@ -20,10 +20,11 @@ impl<'a, 's> NetConnect<'a, 's> {
             client,
         }
     }
+
     pub fn login(&mut self) -> Result<String> {
         let mut cry = Md5::new();
         cry.update(self.credential.password.as_bytes());
-        let password_md5 = "{MD5_HEX}".to_string() + &hex::encode(cry.finalize());
+        let password_md5 = format!("{{MD5_HEX}}{}", hex::encode(cry.finalize()));
         let params = [
             ("action", "login"),
             ("ac_id", "1"),
@@ -33,11 +34,13 @@ impl<'a, 's> NetConnect<'a, 's> {
         let res = self.client.post(NET_LOG_URI).send_form(&params)?;
         Ok(res.into_string()?)
     }
+
     pub fn logout(&mut self) -> Result<String> {
         let params = [("action", "logout")];
         let res = self.client.post(NET_LOG_URI).send_form(&params)?;
         Ok(res.into_string()?)
     }
+
     pub fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(NET_FLUX_URI).call()?;
         Ok(NetFlux::from_str(&res.into_string()?))

@@ -3,31 +3,16 @@ use authtea::AuthTea;
 use crypto2::hash::Sha1;
 use crypto2::mac::HmacMd5;
 use lazy_static::lazy_static;
+use radix64::CustomConfig;
 use regex::Regex;
 use serde_json::{self, Value};
 
-static BASE64N: &[u8] = b"LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA";
-const BASE64PAD: u8 = b'=';
-
-fn base64(t: &[u8]) -> String {
-    let a = t.len();
-    let len = (a + 2) / 3 * 4;
-    let mut u = vec![b'\0'; len];
-    let mut ui = 0;
-    for o in (0..a).step_by(3) {
-        let h = ((t[o] as u32) << 16)
-            + (if o + 1 < a { (t[o + 1] as u32) << 8 } else { 0 })
-            + (if o + 2 < a { t[o + 2] as u32 } else { 0 });
-        for i in 0..4 {
-            if o * 8 + i * 6 > a * 8 {
-                u[ui] = BASE64PAD;
-            } else {
-                u[ui] = BASE64N[(h >> (6 * (3 - i)) & 0x3F) as usize];
-            }
-            ui += 1;
-        }
-    }
-    unsafe { String::from_utf8_unchecked(u) }
+lazy_static! {
+    static ref AUTH_BASE64: CustomConfig = CustomConfig::with_alphabet(
+        "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA"
+    )
+    .build()
+    .unwrap();
 }
 
 pub struct AuthConnect<'a, 's> {
@@ -135,7 +120,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
             let mut hmac = HmacMd5::new(&[]);
             hmac.update(token.as_bytes());
             let password_md5 = hex::encode(hmac.finalize());
-            let p_mmd5 = "{MD5}".to_string() + &password_md5;
+            let p_mmd5 = format!("{{MD5}}{}", password_md5);
             let encode_json = serde_json::json!({
                 "username": s.credential.username,
                 "password": s.credential.password,
@@ -144,7 +129,10 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 "enc_ver": "srun_bx1"
             });
             let tea = AuthTea::new(token.as_bytes());
-            let info = "{SRBX1}".to_string() + &base64(&tea.encrypt_str(&encode_json.to_string()));
+            let info = format!(
+                "{{SRBX1}}{}",
+                AUTH_BASE64.encode(&tea.encrypt_str(&encode_json.to_string()))
+            );
             let mut sha1 = Sha1::new();
             sha1.update(
                 format!(
@@ -205,6 +193,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
             Err(NetHelperError::LogErr(msg))
         }
     }
+
     pub fn flux(&self) -> Result<NetFlux> {
         let res = self
             .client
@@ -215,6 +204,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
             .call()?;
         Ok(NetFlux::from_str(&res.into_string()?))
     }
+
     pub fn ac_ids(&self) -> &[i32] {
         &self.additional_ac_ids
     }

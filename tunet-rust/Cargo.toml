@@ -11,8 +11,9 @@ authtea = { path = "../authtea" }
 netstatus = { path = "../netstatus", optional = true }
 ureq = { version = "2.1", features = [ "cookies", "charset" ] }
 crypto2 = "0.1"
-serde_json = "1.0"
 hex = "0.4"
+radix64 = "0.6"
+serde_json = "1.0"
 select = "0.5"
 chrono = "0.4"
 mac_address = "1.1"

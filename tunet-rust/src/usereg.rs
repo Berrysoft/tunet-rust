@@ -102,6 +102,24 @@ impl<'a, 's> UseregHelper<'a, 's> {
         }
     }
 
+    pub fn login(&mut self) -> Result<String> {
+        let mut cry = Md5::new();
+        cry.update(self.credential.password.as_bytes());
+        let params = [
+            ("action", "login"),
+            ("user_login_name", &self.credential.username),
+            ("user_password", &hex::encode(cry.finalize())),
+        ];
+        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
+        Ok(res.into_string()?)
+    }
+
+    pub fn logout(&mut self) -> Result<String> {
+        let params = [("action", "logout")];
+        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
+        Ok(res.into_string()?)
+    }
+
     pub fn connect(&self, addr: Ipv4Addr) -> Result<String> {
         let params = [
             ("n", "100"),
@@ -141,22 +159,6 @@ impl<'a, 's> UseregHelper<'a, 's> {
 
     pub fn details(&self, o: NetDetailOrder, des: bool) -> Result<UseregDetails<'a>> {
         Ok(UseregDetails::new(self.client, o, des))
-    }
-    pub fn login(&mut self) -> Result<String> {
-        let mut cry = Md5::new();
-        cry.update(self.credential.password.as_bytes());
-        let params = [
-            ("action", "login"),
-            ("user_login_name", &self.credential.username),
-            ("user_password", &hex::encode(cry.finalize())),
-        ];
-        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
-        Ok(res.into_string()?)
-    }
-    pub fn logout(&mut self) -> Result<String> {
-        let params = [("action", "logout")];
-        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
-        Ok(res.into_string()?)
     }
 }
 
