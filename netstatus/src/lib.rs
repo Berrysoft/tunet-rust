@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 mod winrt;
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
+#[cfg(target_os = "macos")]
 mod sc;
 
 #[cfg(target_os = "linux")]
@@ -11,7 +11,7 @@ mod platform {
     #[cfg(target_os = "windows")]
     pub use super::winrt::*;
 
-    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    #[cfg(target_os = "macos")]
     pub use super::sc::*;
 
     #[cfg(target_os = "linux")]

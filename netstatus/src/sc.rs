@@ -1,14 +1,12 @@
 use crate::*;
 use libc::{sockaddr, sockaddr_in, AF_INET};
-use std::ffi::c_void;
-use std::mem::{size_of, MaybeUninit};
-
-#[cfg(target_os = "macos")]
 use objc::{
     rc::StrongPtr,
     runtime::{Class, Object},
     *,
 };
+use std::ffi::c_void;
+use std::mem::{size_of, MaybeUninit};
 
 type CFAllocatorRef = *mut c_void;
 type CFTypeRef = *const c_void;
@@ -37,9 +35,13 @@ impl SCNetworkReachabilityFlags {
     }
 }
 
+#[link(name = "CoreWLAN", kind = "framework")]
 #[link(name = "CoreFoundation", kind = "framework")]
 #[link(name = "SystemConfiguration", kind = "framework")]
 extern "C" {
+    #[link_name = "OBJC_CLASS_$_CWWiFiClient"]
+    static OBJC_CLASS__CWWiFiClient: Class;
+
     static kCFAllocatorDefault: CFAllocatorRef;
 
     fn CFRelease(cf: CFTypeRef);
@@ -67,14 +69,7 @@ impl Drop for CFObject {
     }
 }
 
-#[cfg(target_os = "macos")]
 unsafe fn get_ssid() -> Option<String> {
-    #[link(name = "CoreWLAN", kind = "framework")]
-    extern "C" {
-        #[link_name = "OBJC_CLASS_$_CWWiFiClient"]
-        static OBJC_CLASS__CWWiFiClient: Class;
-    }
-
     let client = StrongPtr::new(msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient]);
     let interface = StrongPtr::new(msg_send![*client, interface]);
     let name: *mut Object = msg_send![*interface, ssid];
@@ -86,64 +81,6 @@ unsafe fn get_ssid() -> Option<String> {
         Some(name)
     } else {
         None
-    }
-}
-
-#[cfg(target_os = "ios")]
-unsafe fn get_ssid() -> Option<String> {
-    type CFArrayRef = *mut c_void;
-    type CFDictionaryRef = *mut c_void;
-    type CFStringRef = *mut c_void;
-    type CFIndex = std::os::raw::c_long;
-    type CFStringEncoding = u32;
-
-    extern "C" {
-        static kCNNetworkInfoKeySSID: CFStringRef;
-
-        fn CNCopySupportedInterfaces() -> CFArrayRef;
-        fn CNCopyCurrentNetworkInfo(interface: CFStringRef) -> CFDictionaryRef;
-
-        fn CFArrayGetValueAtIndex(arr: CFArrayRef, idx: CFIndex) -> *const c_void;
-
-        fn CFDictionaryGetValue(dict: CFDictionaryRef, key: *const c_void) -> *const c_void;
-
-        fn CFStringGetLength(std: CFStringRef) -> CFIndex;
-        fn CFStringGetCString(
-            str: CFStringRef,
-            buffer: *mut std::os::raw::c_char,
-            size: CFIndex,
-            enc: CFStringEncoding,
-        ) -> Boolean;
-    }
-
-    #[allow(non_upper_case_globals)]
-    const kCFStringEncodingUTF8: CFStringEncoding = 0x08000100;
-
-    let arr = CNCopySupportedInterfaces();
-    if arr.is_null() {
-        None
-    } else {
-        let interface = CFObject(CFArrayGetValueAtIndex(arr, 0) as _);
-        let dict = CFObject(CNCopyCurrentNetworkInfo(interface.0));
-        let ssid = CFObject(CFDictionaryGetValue(dict.0, kCNNetworkInfoKeySSID) as _);
-        let len = CFStringGetLength(ssid.0);
-        if len == 0 {
-            Some(String::new())
-        } else {
-            let mut buffer = vec![0u8; (len + 1) as usize];
-            if CFStringGetCString(
-                ssid.0,
-                buffer.as_mut_ptr() as _,
-                len + 1,
-                kCFStringEncodingUTF8,
-            ) != 0
-            {
-                buffer.pop();
-                Some(String::from_utf8_unchecked(buffer))
-            } else {
-                None
-            }
-        }
     }
 }
 
