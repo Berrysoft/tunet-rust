@@ -16,5 +16,4 @@ libc = "0.2"
 objc = "0.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-libc = "0.2"
-libloading = "0.7"
+netlink_wi = "0.3"
