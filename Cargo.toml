@@ -7,8 +7,7 @@ members = [
 
 exclude = [
     "netstatus",
-    "winrt-bindings",
-    "libiw-bindings"
+    "winrt-bindings"
 ]
 
 [profile.release]

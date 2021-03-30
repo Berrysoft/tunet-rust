@@ -16,4 +16,5 @@ libc = "0.2"
 objc = "0.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-libiw-bindings = { path = "../libiw-bindings" }
+libc = "0.2"
+libloading = "0.7"
