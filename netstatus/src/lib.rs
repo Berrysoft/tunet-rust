@@ -5,7 +5,7 @@ mod winrt;
 mod sc;
 
 #[cfg(target_os = "linux")]
-mod libiw;
+mod netlink;
 
 #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
 mod stub;
@@ -18,7 +18,7 @@ mod platform {
     pub use super::sc::*;
 
     #[cfg(target_os = "linux")]
-    pub use super::libiw::*;
+    pub use super::netlink::*;
 
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     pub use super::stub::*;
