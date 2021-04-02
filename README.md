@@ -52,5 +52,5 @@
 |平台|方法|
 |-|-|
 |Windows|`Windows::Networking::Connectivity`|
-|Linux|`libiw`|
+|Linux|[Netlink](https://wiki.linuxfoundation.org/networking/generic_netlink_howto)|
 |macOS|System Configuration 与 Core WLAN|
