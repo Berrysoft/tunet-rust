@@ -134,10 +134,12 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 "acid": ac_id,
                 "enc_ver": "srun_bx1"
             });
-            let tea = AuthTea::new(token.as_bytes());
             let info = format!(
                 "{{SRBX1}}{}",
-                AUTH_BASE64.encode(&tea.encrypt_str(&encode_json.to_string()))
+                AUTH_BASE64.encode(&AuthTea::oneshot(
+                    token.as_bytes(),
+                    encode_json.to_string().as_bytes()
+                ))
             );
             let chksum = Sha1::oneshot(format!(
                 "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",

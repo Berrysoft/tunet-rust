@@ -31,8 +31,8 @@ impl AuthTea {
         Self { k }
     }
 
-    pub fn encrypt_str(&self, data: &str) -> Vec<u8> {
-        let mut vv = to_u32_with_len(data.as_bytes());
+    pub fn encode(&self, data: &[u8]) -> Vec<u8> {
+        let mut vv = to_u32_with_len(data);
         let n = vv.len() / 4 - 1;
         let v = vv.as_mut_ptr().cast::<u32>();
         let mut y: u32;
@@ -55,5 +55,10 @@ impl AuthTea {
             }
         }
         vv
+    }
+
+    pub fn oneshot(key: &[u8], data: &[u8]) -> Vec<u8> {
+        let tea = Self::new(key);
+        tea.encode(data)
     }
 }
