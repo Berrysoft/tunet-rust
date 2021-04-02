@@ -7,6 +7,9 @@ mod sc;
 #[cfg(target_os = "linux")]
 mod libiw;
 
+#[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+mod stub;
+
 mod platform {
     #[cfg(target_os = "windows")]
     pub use super::winrt::*;
@@ -16,6 +19,9 @@ mod platform {
 
     #[cfg(target_os = "linux")]
     pub use super::libiw::*;
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    pub use super::stub::*;
 }
 
 pub enum NetStatus {
