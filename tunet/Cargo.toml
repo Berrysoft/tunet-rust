@@ -15,6 +15,6 @@ mac_address = "1.1"
 structopt = "0.3"
 itertools = "0.10"
 termcolor = "1.1"
-termcolor_output = "1.0"
+termcolor_output = { git = "https://github.com/Berrysoft/termcolor_output.git" }
 rpassword = "5.0"
 dirs = "3.0"
