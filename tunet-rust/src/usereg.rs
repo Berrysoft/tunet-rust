@@ -26,11 +26,11 @@ impl NetUser {
 pub struct NetDetail {
     pub login_time: NaiveDateTime,
     pub logout_time: NaiveDateTime,
-    pub flux: u64,
+    pub flux: Flux,
 }
 
 impl NetDetail {
-    pub fn from_detail(i: NaiveDateTime, o: NaiveDateTime, f: u64) -> Self {
+    pub fn from_detail(i: NaiveDateTime, o: NaiveDateTime, f: Flux) -> Self {
         NetDetail {
             login_time: i,
             logout_time: o,
@@ -83,15 +83,17 @@ static USEREG_INFO_URI: &str = "http://usereg.tsinghua.edu.cn/online_user_ipv4.p
 static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
-fn parse_flux(s: &str) -> u64 {
+fn parse_flux(s: &str) -> Flux {
     let (flux, unit) = s.split_at(s.len() - 1);
-    (flux.parse::<f64>().unwrap_or_default()
-        * match unit {
-            "G" => 1_000_000_000.0,
-            "M" => 1_000_000.0,
-            "K" => 1_000.0,
-            _ => 1.0,
-        }) as u64
+    Flux(
+        (flux.parse::<f64>().unwrap_or_default()
+            * match unit {
+                "G" => 1_000_000_000.0,
+                "M" => 1_000_000.0,
+                "K" => 1_000.0,
+                _ => 1.0,
+            }) as u64,
+    )
 }
 
 impl<'a, 's> UseregHelper<'a, 's> {

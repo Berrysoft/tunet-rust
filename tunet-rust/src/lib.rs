@@ -1,7 +1,8 @@
 use std::borrow::Cow;
+use std::fmt::{Display, Formatter};
 use std::result;
 use std::str;
-use std::time;
+use std::time::Duration;
 use thiserror::Error;
 
 pub use ureq::Agent as HttpClient;
@@ -26,16 +27,49 @@ impl<'a> NetCredential<'a> {
     }
 }
 
+#[repr(transparent)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+pub struct Flux(pub u64);
+
+impl Display for Flux {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut flux = self.0 as f64;
+        if flux < 1000.0 {
+            return write!(f, "{} B", flux);
+        }
+        flux /= 1000.0;
+        if flux < 1000.0 {
+            return write!(f, "{:.2} K", flux);
+        }
+        flux /= 1000.0;
+        if flux < 1000.0 {
+            return write!(f, "{:.2} M", flux);
+        }
+        flux /= 1000.0;
+        write!(f, "{:.2} G", flux)
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug, Default)]
+pub struct Balance(pub f64);
+
+impl Display for Balance {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "¥{:.2}", self.0)
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct NetFlux {
     pub username: String,
-    pub flux: u64,
-    pub online_time: time::Duration,
-    pub balance: f64,
+    pub flux: Flux,
+    pub online_time: Duration,
+    pub balance: Balance,
 }
 
 impl NetFlux {
-    pub fn from_detail(u: String, f: u64, t: time::Duration, b: f64) -> Self {
+    pub fn from_detail(u: String, f: Flux, t: Duration, b: Balance) -> Self {
         NetFlux {
             username: u,
             flux: f,
@@ -51,13 +85,13 @@ impl NetFlux {
         } else {
             NetFlux::from_detail(
                 vec[0].to_string(),
-                vec[6].parse::<u64>().unwrap_or_default(),
-                time::Duration::from_secs(
+                Flux(vec[6].parse::<u64>().unwrap_or_default()),
+                Duration::from_secs(
                     (vec[2].parse::<i64>().unwrap_or_default()
                         - vec[1].parse::<i64>().unwrap_or_default())
                     .max(0) as u64,
                 ),
-                vec[11].parse::<f64>().unwrap_or_default(),
+                Balance(vec[11].parse::<f64>().unwrap_or_default()),
             )
         }
     }

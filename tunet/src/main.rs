@@ -1,16 +1,18 @@
-use ansi_term::Color;
 use chrono::Datelike;
 use itertools::Itertools;
 use mac_address::MacAddressIterator;
 use std::cmp::Reverse;
+use std::io::Write;
 use std::net::Ipv4Addr;
 use structopt::StructOpt;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use tunet_rust::{usereg::*, *};
 
 mod settings;
 mod strfmt;
 
 use settings::*;
+use strfmt::FmtColor;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
@@ -72,16 +74,12 @@ enum TUNet {
 }
 
 fn main() -> Result<()> {
-    #[cfg(not(target_os = "windows"))]
-    let console_color_ok = true;
-    #[cfg(target_os = "windows")]
-    let console_color_ok = ansi_term::enable_ansi_support().is_ok();
     let opt = TUNet::from_args();
     match opt {
         TUNet::Login { host } => do_login(host),
         TUNet::Logout { host } => do_logout(host),
-        TUNet::Status { host } => do_status(host, console_color_ok),
-        TUNet::Online => do_online(console_color_ok),
+        TUNet::Status { host } => do_status(host),
+        TUNet::Online => do_online(),
         TUNet::Connect { address } => do_connect(address),
         TUNet::Drop { address } => do_drop(address),
         TUNet::Detail {
@@ -90,9 +88,9 @@ fn main() -> Result<()> {
             grouping,
         } => {
             if grouping {
-                do_detail_grouping(order, descending, console_color_ok)
+                do_detail_grouping(order, descending)
             } else {
-                do_detail(order, descending, console_color_ok)
+                do_detail(order, descending)
             }
         }
         TUNet::DeleteCredential {} => delete_cred(),
@@ -120,74 +118,66 @@ fn do_logout(s: NetState) -> Result<()> {
     Ok(())
 }
 
-fn do_status(s: NetState, color: bool) -> Result<()> {
+fn do_status(s: NetState) -> Result<()> {
     let client = create_http_client();
     let c = TUNetConnect::from_state_cred_client(s, "", "", &client, vec![])?;
     let f = c.flux()?;
-    if color {
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("用户"),
-            Color::Yellow.normal().paint(f.username)
-        );
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("流量"),
-            strfmt::colored_flux(f.flux, true, false)
-        );
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("时长"),
-            strfmt::colored_duration(f.online_time)
-        );
-        println!(
-            "{} {}",
-            Color::Cyan.normal().paint("余额"),
-            strfmt::colored_currency(f.balance)
-        );
-    } else {
-        println!("{} {}", "用户", f.username);
-        println!("{} {}", "流量", strfmt::format_flux(f.flux));
-        println!("{} {}", "时长", strfmt::format_duration(f.online_time));
-        println!("{} {}", "余额", strfmt::format_currency(f.balance));
-    }
+    let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+    let mut labelspec = ColorSpec::new();
+    labelspec.set_fg(Some(Color::Cyan));
+    stdout.set_color(&labelspec)?;
+    write!(&mut stdout, "用户 ")?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+    writeln!(&mut stdout, "{}", f.username)?;
+    stdout.set_color(&labelspec)?;
+    write!(&mut stdout, "流量 ")?;
+    f.flux.fmt_color(&mut stdout)?;
+    writeln!(&mut stdout)?;
+    stdout.set_color(&labelspec)?;
+    write!(&mut stdout, "时长 ")?;
+    f.online_time.fmt_color(&mut stdout)?;
+    writeln!(&mut stdout)?;
+    stdout.set_color(&labelspec)?;
+    write!(&mut stdout, "余额 ")?;
+    f.balance.fmt_color(&mut stdout)?;
+    writeln!(&mut stdout)?;
     Ok(())
 }
 
-fn do_online(color: bool) -> Result<()> {
+fn do_online() -> Result<()> {
     let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
         c.login()?;
         let us = c.users()?;
-        println!("    IP地址            登录时间            MAC地址");
+        let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+        writeln!(
+            &mut stdout,
+            "    IP地址            登录时间            MAC地址"
+        )?;
+        let mut ipspec = ColorSpec::new();
+        ipspec.set_fg(Some(Color::Yellow));
+        let mut macspec = ColorSpec::new();
+        macspec.set_fg(Some(Color::Cyan));
         for u in us {
             let is_self = MacAddressIterator::new()
                 .map(|mut it| it.any(|self_addr| Some(self_addr) == u.mac_address))
                 .unwrap_or(false);
-            let is_self = if is_self { "*" } else { "" };
-            if color {
-                println!(
-                    "{} {} {}{}",
-                    Color::Yellow
-                        .normal()
-                        .paint(format!("{:15}", u.address.to_string())),
-                    strfmt::colored_date_time(u.login_time),
-                    Color::Cyan
-                        .normal()
-                        .paint(u.mac_address.map(|a| a.to_string()).unwrap_or_default()),
-                    Color::Purple.normal().paint(is_self)
-                );
-            } else {
-                println!(
-                    "{:15} {:20} {}{}",
-                    u.address.to_string(),
-                    strfmt::format_date_time(u.login_time),
-                    u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
-                    is_self
-                );
+            stdout.set_color(&ipspec)?;
+            write!(&mut stdout, "{:15} ", u.address.to_string())?;
+            u.login_time.fmt_color_aligned(&mut stdout)?;
+            stdout.set_color(&macspec)?;
+            write!(
+                &mut stdout,
+                " {}",
+                u.mac_address.map(|a| a.to_string()).unwrap_or_default()
+            )?;
+            if is_self {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Magenta)))?;
+                write!(&mut stdout, "*")?;
             }
+            writeln!(&mut stdout)?;
         }
     }
     save_cred(u, p, ac_ids)
@@ -217,48 +207,38 @@ fn do_drop(a: Ipv4Addr) -> Result<()> {
     save_cred(u, p, ac_ids)
 }
 
-fn do_detail(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+fn do_detail(o: NetDetailOrder, d: bool) -> Result<()> {
     let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
         c.login()?;
         let mut details = c.details(o, d)?;
-        println!("      登录时间             注销时间         流量");
-        let mut total_flux = 0u64;
+        let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+        writeln!(
+            &mut stdout,
+            "      登录时间             注销时间         流量"
+        )?;
+        let mut total_flux = Flux(0);
         for d in &mut details {
             let d = d?;
-            if color {
-                println!(
-                    "{} {} {}",
-                    strfmt::colored_date_time(d.login_time),
-                    strfmt::colored_date_time(d.logout_time),
-                    strfmt::colored_flux(d.flux, false, true)
-                );
-            } else {
-                println!(
-                    "{:20} {:20} {:>8}",
-                    strfmt::format_date_time(d.login_time),
-                    strfmt::format_date_time(d.logout_time),
-                    strfmt::format_flux(d.flux)
-                );
-            }
-            total_flux += d.flux;
+            d.login_time.fmt_color_aligned(&mut stdout)?;
+            write!(&mut stdout, " ")?;
+            d.logout_time.fmt_color_aligned(&mut stdout)?;
+            write!(&mut stdout, " ")?;
+            d.flux.fmt_color_aligned(&mut stdout)?;
+            writeln!(&mut stdout)?;
+            total_flux.0 += d.flux.0;
         }
-        if color {
-            println!(
-                "{} {}",
-                Color::Cyan.normal().paint("总流量"),
-                strfmt::colored_flux(total_flux, true, false)
-            );
-        } else {
-            println!("{} {}", "总流量", strfmt::format_flux(total_flux));
-        }
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+        write!(&mut stdout, "总流量 ")?;
+        total_flux.fmt_color(&mut stdout)?;
+        writeln!(&mut stdout)?;
     }
     save_cred(u, p, ac_ids)
 }
 
-fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
+fn do_detail_grouping(o: NetDetailOrder, d: bool) -> Result<()> {
     let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
     {
@@ -271,7 +251,7 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
             .into_iter()
             .group_by(|detail| detail.logout_time.date())
             .into_iter()
-            .map(|(key, group)| (key, group.map(|detail| detail.flux).sum::<u64>()))
+            .map(|(key, group)| (key, Flux(group.map(|detail| detail.flux.0).sum::<u64>())))
             .collect::<Vec<_>>();
         match o {
             NetDetailOrder::Flux => {
@@ -287,33 +267,20 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool, color: bool) -> Result<()> {
                 }
             }
         }
-        println!(" 登录日期    流量");
-        let mut total_flux = 0;
+        let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+        writeln!(&mut stdout, " 登录日期    流量")?;
+        let mut total_flux = Flux(0);
         for (date, flux) in details {
-            if color {
-                println!(
-                    "{} {}",
-                    strfmt::colored_date(date),
-                    strfmt::colored_flux(flux, false, true)
-                );
-            } else {
-                println!(
-                    "{:10} {:>8}",
-                    strfmt::format_date(date),
-                    strfmt::format_flux(flux)
-                );
-            }
-            total_flux += flux;
+            date.fmt_color_aligned(&mut stdout)?;
+            write!(&mut stdout, " ")?;
+            flux.fmt_color_aligned(&mut stdout)?;
+            writeln!(&mut stdout)?;
+            total_flux.0 += flux.0;
         }
-        if color {
-            println!(
-                "{} {}",
-                Color::Cyan.normal().paint("总流量"),
-                strfmt::colored_flux(total_flux, true, false)
-            );
-        } else {
-            println!("{} {}", "总流量", strfmt::format_flux(total_flux));
-        }
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+        write!(&mut stdout, "总流量 ")?;
+        total_flux.fmt_color(&mut stdout)?;
+        writeln!(&mut stdout)?;
     }
     save_cred(u, p, ac_ids)
 }
