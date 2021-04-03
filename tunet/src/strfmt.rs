@@ -14,12 +14,12 @@ impl Display for FmtDuration {
         total_sec /= 60;
         let h = total_sec % 24;
         total_sec /= 24;
-        if total_sec > 0 {
-            write!(f, "{}.{:02}:{:02}:{:02}", total_sec, h, min, sec)?;
+        let str = if total_sec > 0 {
+            format!("{}.{:02}:{:02}:{:02}", total_sec, h, min, sec)
         } else {
-            write!(f, "{:02}:{:02}:{:02}", h, min, sec)?;
-        }
-        Ok(())
+            format!("{:02}:{:02}:{:02}", h, min, sec)
+        };
+        f.pad(&str)
     }
 }
 
@@ -30,8 +30,7 @@ pub struct FmtDateTime(pub NaiveDateTime);
 
 impl Display for FmtDateTime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0.format(TUNET_DATE_TIME_FORMAT))?;
-        Ok(())
+        self.0.format(TUNET_DATE_TIME_FORMAT).fmt(f)
     }
 }
 
@@ -39,7 +38,6 @@ pub struct FmtDate(pub NaiveDate);
 
 impl Display for FmtDate {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0.format(TUNET_DATE_FORMAT))?;
-        Ok(())
+        self.0.format(TUNET_DATE_FORMAT).fmt(f)
     }
 }
