@@ -31,22 +31,28 @@ impl<'a> NetCredential<'a> {
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct Flux(pub u64);
 
-impl Display for Flux {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl Flux {
+    fn string(&self) -> String {
         let mut flux = self.0 as f64;
         if flux < 1000.0 {
-            return write!(f, "{} B", flux);
+            return format!("{} B", flux);
         }
         flux /= 1000.0;
         if flux < 1000.0 {
-            return write!(f, "{:.2} K", flux);
+            return format!("{:.2} K", flux);
         }
         flux /= 1000.0;
         if flux < 1000.0 {
-            return write!(f, "{:.2} M", flux);
+            return format!("{:.2} M", flux);
         }
         flux /= 1000.0;
-        write!(f, "{:.2} G", flux)
+        format!("{:.2} G", flux)
+    }
+}
+
+impl Display for Flux {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.pad(&self.string())
     }
 }
 

@@ -2,17 +2,17 @@ use chrono::Datelike;
 use itertools::Itertools;
 use mac_address::MacAddressIterator;
 use std::cmp::Reverse;
-use std::io::Write;
 use std::net::Ipv4Addr;
 use structopt::StructOpt;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use termcolor::{Color, ColorChoice, StandardStream};
+use termcolor_output::*;
 use tunet_rust::{usereg::*, *};
 
 mod settings;
 mod strfmt;
 
 use settings::*;
-use strfmt::FmtColor;
+use strfmt::*;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
@@ -97,6 +97,17 @@ fn main() -> Result<()> {
     }
 }
 
+fn get_flux_color(f: &Flux, total: bool) -> Color {
+    let flux = f.0;
+    if flux == 0 {
+        Color::Cyan
+    } else if flux < if total { 20_000_000_000 } else { 2_000_000_000 } {
+        Color::Yellow
+    } else {
+        Color::Magenta
+    }
+}
+
 fn do_login(s: NetState) -> Result<()> {
     let client = create_http_client();
     let (u, p, ac_ids) = read_cred()?;
@@ -123,24 +134,35 @@ fn do_status(s: NetState) -> Result<()> {
     let c = TUNetConnect::from_state_cred_client(s, "", "", &client, vec![])?;
     let f = c.flux()?;
     let mut stdout = StandardStream::stdout(ColorChoice::Auto);
-    let mut labelspec = ColorSpec::new();
-    labelspec.set_fg(Some(Color::Cyan));
-    stdout.set_color(&labelspec)?;
-    write!(&mut stdout, "用户 ")?;
-    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-    writeln!(&mut stdout, "{}", f.username)?;
-    stdout.set_color(&labelspec)?;
-    write!(&mut stdout, "流量 ")?;
-    f.flux.fmt_color(&mut stdout)?;
-    writeln!(&mut stdout)?;
-    stdout.set_color(&labelspec)?;
-    write!(&mut stdout, "时长 ")?;
-    f.online_time.fmt_color(&mut stdout)?;
-    writeln!(&mut stdout)?;
-    stdout.set_color(&labelspec)?;
-    write!(&mut stdout, "余额 ")?;
-    f.balance.fmt_color(&mut stdout)?;
-    writeln!(&mut stdout)?;
+    colored!(
+        &mut stdout,
+        "{}用户 {}{}\n",
+        fg!(Some(Color::Cyan)),
+        reset!(),
+        f.username
+    )?;
+    colored!(
+        &mut stdout,
+        "{}流量 {}{}{}\n",
+        fg!(Some(Color::Cyan)),
+        fg!(Some(get_flux_color(&f.flux, true))),
+        bold!(true),
+        f.flux
+    )?;
+    colored!(
+        &mut stdout,
+        "{}时长 {}{}\n",
+        fg!(Some(Color::Cyan)),
+        fg!(Some(Color::Green)),
+        FmtDuration(f.online_time)
+    )?;
+    colored!(
+        &mut stdout,
+        "{}余额 {}{}\n",
+        fg!(Some(Color::Cyan)),
+        fg!(Some(Color::Yellow)),
+        f.balance
+    )?;
     Ok(())
 }
 
@@ -151,33 +173,30 @@ fn do_online() -> Result<()> {
         let mut c = UseregHelper::from_cred_client(&u, &p, &client);
         c.login()?;
         let us = c.users()?;
+        let mac_addrs = MacAddressIterator::new()
+            .map(|it| it.collect::<Vec<_>>())
+            .unwrap_or_default();
         let mut stdout = StandardStream::stdout(ColorChoice::Auto);
-        writeln!(
+        colored!(
             &mut stdout,
-            "    IP地址            登录时间            MAC地址"
+            "    IP地址            登录时间            MAC地址\n"
         )?;
-        let mut ipspec = ColorSpec::new();
-        ipspec.set_fg(Some(Color::Yellow));
-        let mut macspec = ColorSpec::new();
-        macspec.set_fg(Some(Color::Cyan));
         for u in us {
-            let is_self = MacAddressIterator::new()
-                .map(|mut it| it.any(|self_addr| Some(self_addr) == u.mac_address))
-                .unwrap_or(false);
-            stdout.set_color(&ipspec)?;
-            write!(&mut stdout, "{:15} ", u.address.to_string())?;
-            u.login_time.fmt_color_aligned(&mut stdout)?;
-            stdout.set_color(&macspec)?;
-            write!(
+            let is_self = mac_addrs
+                .iter()
+                .any(|it| Some(it) == u.mac_address.as_ref());
+            colored!(
                 &mut stdout,
-                " {}",
-                u.mac_address.map(|a| a.to_string()).unwrap_or_default()
+                "{}{:15} {}{:20} {}{}{}{}\n",
+                fg!(Some(Color::Yellow)),
+                u.address,
+                fg!(Some(Color::Green)),
+                FmtDateTime(u.login_time),
+                fg!(Some(Color::Cyan)),
+                u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
+                fg!(Some(Color::Magenta)),
+                if is_self { "*" } else { "" }
             )?;
-            if is_self {
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Magenta)))?;
-                write!(&mut stdout, "*")?;
-            }
-            writeln!(&mut stdout)?;
         }
     }
     save_cred(u, p, ac_ids)
@@ -215,25 +234,32 @@ fn do_detail(o: NetDetailOrder, d: bool) -> Result<()> {
         c.login()?;
         let mut details = c.details(o, d)?;
         let mut stdout = StandardStream::stdout(ColorChoice::Auto);
-        writeln!(
+        colored!(
             &mut stdout,
-            "      登录时间             注销时间         流量"
+            "      登录时间             注销时间         流量\n"
         )?;
         let mut total_flux = Flux(0);
         for d in &mut details {
             let d = d?;
-            d.login_time.fmt_color_aligned(&mut stdout)?;
-            write!(&mut stdout, " ")?;
-            d.logout_time.fmt_color_aligned(&mut stdout)?;
-            write!(&mut stdout, " ")?;
-            d.flux.fmt_color_aligned(&mut stdout)?;
-            writeln!(&mut stdout)?;
+            colored!(
+                &mut stdout,
+                "{}{:20} {:20} {}{:>8}\n",
+                fg!(Some(Color::Green)),
+                FmtDateTime(d.login_time),
+                FmtDateTime(d.logout_time),
+                fg!(Some(get_flux_color(&d.flux, false))),
+                d.flux
+            )?;
             total_flux.0 += d.flux.0;
         }
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
-        write!(&mut stdout, "总流量 ")?;
-        total_flux.fmt_color(&mut stdout)?;
-        writeln!(&mut stdout)?;
+        colored!(
+            &mut stdout,
+            "{}总流量 {}{}{}\n",
+            fg!(Some(Color::Cyan)),
+            fg!(Some(get_flux_color(&total_flux, true))),
+            bold!(true),
+            total_flux
+        )?;
     }
     save_cred(u, p, ac_ids)
 }
@@ -268,19 +294,27 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool) -> Result<()> {
             }
         }
         let mut stdout = StandardStream::stdout(ColorChoice::Auto);
-        writeln!(&mut stdout, " 登录日期    流量")?;
+        colored!(&mut stdout, " 登录日期    流量\n")?;
         let mut total_flux = Flux(0);
         for (date, flux) in details {
-            date.fmt_color_aligned(&mut stdout)?;
-            write!(&mut stdout, " ")?;
-            flux.fmt_color_aligned(&mut stdout)?;
-            writeln!(&mut stdout)?;
+            colored!(
+                &mut stdout,
+                "{}{:10} {}{:>8}\n",
+                fg!(Some(Color::Green)),
+                date,
+                fg!(Some(get_flux_color(&flux, true))),
+                flux
+            )?;
             total_flux.0 += flux.0;
         }
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
-        write!(&mut stdout, "总流量 ")?;
-        total_flux.fmt_color(&mut stdout)?;
-        writeln!(&mut stdout)?;
+        colored!(
+            &mut stdout,
+            "{}总流量 {}{}{}\n",
+            fg!(Some(Color::Cyan)),
+            fg!(Some(get_flux_color(&total_flux, true))),
+            bold!(true),
+            total_flux
+        )?;
     }
     save_cred(u, p, ac_ids)
 }
