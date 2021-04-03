@@ -4,7 +4,7 @@ use mac_address::MacAddressIterator;
 use std::cmp::Reverse;
 use std::net::Ipv4Addr;
 use structopt::StructOpt;
-use termcolor::{Color, ColorChoice, StandardStream};
+use termcolor::{Color, ColorChoice, StandardStream, WriteColor};
 use termcolor_output::*;
 use tunet_rust::{usereg::*, *};
 
@@ -163,6 +163,7 @@ fn do_status(s: NetState) -> Result<()> {
         fg!(Some(Color::Yellow)),
         f.balance
     )?;
+    stdout.reset()?;
     Ok(())
 }
 
@@ -198,6 +199,7 @@ fn do_online() -> Result<()> {
                 if is_self { "*" } else { "" }
             )?;
         }
+        stdout.reset()?;
     }
     save_cred(u, p, ac_ids)
 }
@@ -260,6 +262,7 @@ fn do_detail(o: NetDetailOrder, d: bool) -> Result<()> {
             bold!(true),
             total_flux
         )?;
+        stdout.reset()?;
     }
     save_cred(u, p, ac_ids)
 }
@@ -315,6 +318,7 @@ fn do_detail_grouping(o: NetDetailOrder, d: bool) -> Result<()> {
             bold!(true),
             total_flux
         )?;
+        stdout.reset()?;
     }
     save_cred(u, p, ac_ids)
 }
