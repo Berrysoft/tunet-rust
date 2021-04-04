@@ -6,6 +6,11 @@
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
 ## tunet
+### 安全性
+用户名和密码在第一次登录时根据提示输入，是**明文**保存的，请不要在不信任的电脑上保存。可以使用如下命令删除：
+``` bash
+./tunet deletecred
+```
 ### 登录/注销
 ``` bash
 # 使用默认（自动判断）方式登录
