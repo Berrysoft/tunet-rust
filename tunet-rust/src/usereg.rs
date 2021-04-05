@@ -1,7 +1,7 @@
 use super::*;
 use chrono::prelude::*;
-use crypto2::hash::Md5;
 use mac_address::MacAddress;
+use md5::{Digest, Md5};
 use select::document::Document;
 use select::predicate::*;
 use std::collections::VecDeque;
@@ -105,13 +105,15 @@ impl<'a, 's> UseregHelper<'a, 's> {
     }
 
     pub fn login(&mut self) -> Result<String> {
+        let password_md5 = {
+            let mut md5 = Md5::new();
+            md5.update(self.credential.password.as_bytes());
+            md5.finalize()
+        };
         let params = [
             ("action", "login"),
             ("user_login_name", &self.credential.username),
-            (
-                "user_password",
-                &hex::encode(Md5::oneshot(self.credential.password.as_bytes())),
-            ),
+            ("user_password", &hex::encode(password_md5)),
         ];
         let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
         Ok(res.into_string()?)

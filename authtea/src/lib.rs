@@ -56,9 +56,4 @@ impl AuthTea {
         }
         vv
     }
-
-    pub fn oneshot(key: &[u8], data: &[u8]) -> Vec<u8> {
-        let tea = Self::new(key);
-        tea.encode(data)
-    }
 }

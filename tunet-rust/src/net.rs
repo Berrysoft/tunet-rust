@@ -1,5 +1,5 @@
 use super::*;
-use crypto2::hash::Md5;
+use md5::{Digest, Md5};
 
 pub struct NetConnect<'a, 's> {
     credential: NetCredential<'s>,
@@ -22,10 +22,12 @@ impl<'a, 's> NetConnect<'a, 's> {
     }
 
     pub fn login(&mut self) -> Result<String> {
-        let password_md5 = format!(
-            "{{MD5_HEX}}{}",
-            hex::encode(Md5::oneshot(self.credential.password.as_bytes()))
-        );
+        let password_md5 = {
+            let mut md5 = Md5::new();
+            md5.update(self.credential.password.as_bytes());
+            md5.finalize()
+        };
+        let password_md5 = format!("{{MD5_HEX}}{}", hex::encode(password_md5));
         let params = [
             ("action", "login"),
             ("ac_id", "1"),

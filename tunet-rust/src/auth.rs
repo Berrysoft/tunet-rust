@@ -1,11 +1,12 @@
 use super::*;
 use authtea::AuthTea;
-use crypto2::hash::Sha1;
-use crypto2::mac::HmacMd5;
+use hmac::{Hmac, Mac, NewMac};
 use lazy_static::lazy_static;
+use md5::Md5;
 use radix64::CustomConfig;
 use regex::Regex;
 use serde_json::{self, Value};
+use sha1::{Digest, Sha1};
 
 lazy_static! {
     static ref AUTH_BASE64: CustomConfig = CustomConfig::with_alphabet(
@@ -125,7 +126,12 @@ impl<'a, 's> AuthConnect<'a, 's> {
     pub fn login(&mut self) -> Result<String> {
         self.do_log(|s, ac_id| {
             let token = s.challenge()?;
-            let password_md5 = hex::encode(HmacMd5::oneshot(&[], token.as_bytes()));
+            let password_md5 = {
+                let mut hmacmd5 = Hmac::<Md5>::new_varkey(&[]).unwrap();
+                hmacmd5.update(token.as_bytes());
+                hmacmd5.finalize().into_bytes()
+            };
+            let password_md5 = hex::encode(password_md5);
             let p_mmd5 = format!("{{MD5}}{}", password_md5);
             let encode_json = serde_json::json!({
                 "username": s.credential.username,
@@ -134,17 +140,19 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 "acid": ac_id,
                 "enc_ver": "srun_bx1"
             });
-            let info = format!(
-                "{{SRBX1}}{}",
-                AUTH_BASE64.encode(&AuthTea::oneshot(
-                    token.as_bytes(),
-                    encode_json.to_string().as_bytes()
-                ))
-            );
-            let chksum = Sha1::oneshot(format!(
-                "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                token, s.credential.username, password_md5, info, ac_id
-            ));
+            let info = {
+                let tea = AuthTea::new(token.as_bytes());
+                tea.encode(encode_json.to_string().as_bytes())
+            };
+            let info = format!("{{SRBX1}}{}", AUTH_BASE64.encode(&info));
+            let chksum = {
+                let mut sha1 = Sha1::new();
+                sha1.update(format!(
+                    "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
+                    token, s.credential.username, password_md5, info, ac_id
+                ));
+                sha1.finalize()
+            };
             let params = [
                 ("action", "login"),
                 ("ac_id", &ac_id.to_string()),
