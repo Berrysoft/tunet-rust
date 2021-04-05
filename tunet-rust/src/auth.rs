@@ -132,7 +132,6 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 hmacmd5.finalize().into_bytes()
             };
             let password_md5 = hex::encode(password_md5);
-            let p_mmd5 = format!("{{MD5}}{}", password_md5);
             let encode_json = serde_json::json!({
                 "username": s.credential.username,
                 "password": s.credential.password,
@@ -160,7 +159,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 ("n", "200"),
                 ("type", "1"),
                 ("username", &s.credential.username),
-                ("password", &p_mmd5),
+                ("password", &format!("{{MD5}}{}", password_md5)),
                 ("info", &info),
                 ("chksum", &hex::encode(chksum)),
                 ("callback", "callback"),
