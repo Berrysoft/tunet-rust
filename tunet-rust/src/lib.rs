@@ -156,32 +156,37 @@ impl str::FromStr for NetState {
 
 pub enum TUNetConnect<'a, 's> {
     Net(net::NetConnect<'a, 's>),
-    Auth(auth::AuthConnect<'a, 's>),
+    Auth4(auth::AuthConnect<'a, 's, 4>),
+    Auth6(auth::AuthConnect<'a, 's, 6>),
 }
 
 impl<'a, 's> TUNetConnect<'a, 's> {
     pub fn login(&mut self) -> Result<String> {
         match self {
             Self::Net(c) => c.login(),
-            Self::Auth(c) => c.login(),
+            Self::Auth4(c) => c.login(),
+            Self::Auth6(c) => c.login(),
         }
     }
     pub fn logout(&mut self) -> Result<String> {
         match self {
             Self::Net(c) => c.logout(),
-            Self::Auth(c) => c.logout(),
+            Self::Auth4(c) => c.logout(),
+            Self::Auth6(c) => c.logout(),
         }
     }
     pub fn flux(&self) -> Result<NetFlux> {
         match self {
             Self::Net(c) => c.flux(),
-            Self::Auth(c) => c.flux(),
+            Self::Auth4(c) => c.flux(),
+            Self::Auth6(c) => c.flux(),
         }
     }
     pub fn ac_ids(&self) -> &[i32] {
         match self {
             Self::Net(_) => &[0; 0],
-            Self::Auth(c) => c.ac_ids(),
+            Self::Auth4(c) => c.ac_ids(),
+            Self::Auth6(c) => c.ac_ids(),
         }
     }
     pub fn from_state_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
@@ -195,10 +200,10 @@ impl<'a, 's> TUNetConnect<'a, 's> {
             NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(
                 u, p, client,
             ))),
-            NetState::Auth4 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client(
+            NetState::Auth4 => Ok(TUNetConnect::Auth4(auth::AuthConnect::from_cred_client(
                 u, p, client, ac_ids,
             ))),
-            NetState::Auth6 => Ok(TUNetConnect::Auth(auth::AuthConnect::from_cred_client_v6(
+            NetState::Auth6 => Ok(TUNetConnect::Auth6(auth::AuthConnect::from_cred_client(
                 u, p, client, ac_ids,
             ))),
             NetState::Auto => {

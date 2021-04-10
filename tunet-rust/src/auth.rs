@@ -14,10 +14,9 @@ const AUTH_BASE64: Encoding = new_encoding! {
     padding: '=',
 };
 
-pub struct AuthConnect<'a, 's> {
+pub struct AuthConnect<'a, 's, const V: i32> {
     credential: NetCredential<'s>,
     client: &'a HttpClient,
-    ver: i32,
     additional_ac_ids: Vec<i32>,
 }
 
@@ -25,42 +24,25 @@ lazy_static! {
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
 }
 
-impl<'a, 's> AuthConnect<'a, 's> {
+impl<'a, 's, const V: i32> AuthConnect<'a, 's, V>
+where
+    Self: AuthConnectUri,
+{
     pub fn from_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
         u: SU,
         p: SP,
         client: &'a HttpClient,
         ac_ids: Vec<i32>,
     ) -> Self {
-        Self::from_cred_client_v(u, p, client, 4, ac_ids)
-    }
-
-    pub fn from_cred_client_v6<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
-        u: SU,
-        p: SP,
-        client: &'a HttpClient,
-        ac_ids: Vec<i32>,
-    ) -> Self {
-        Self::from_cred_client_v(u, p, client, 6, ac_ids)
-    }
-
-    fn from_cred_client_v<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
-        u: SU,
-        p: SP,
-        client: &'a HttpClient,
-        v: i32,
-        ac_ids: Vec<i32>,
-    ) -> Self {
-        AuthConnect {
+        Self {
             credential: NetCredential::from_cred(u, p),
             client,
-            ver: v,
             additional_ac_ids: ac_ids,
         }
     }
 
     fn challenge(&self) -> Result<String> {
-        let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback", self.ver, self.credential.username)).call()?;
+        let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback", V, self.credential.username)).call()?;
         let t = res.into_string()?;
         let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
         match &json["challenge"] {
@@ -70,14 +52,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
     }
 
     fn get_ac_id(&self) -> Result<i32> {
-        let res = self
-            .client
-            .get(if self.ver == 4 {
-                "http://3.3.3.3/"
-            } else {
-                "http://[333::3]/"
-            })
-            .call()?;
+        let res = self.client.get(Self::redirect_uri()).call()?;
         let t = res.into_string()?;
         match AC_ID_REGEX.captures(&t) {
             Some(cap) => Ok(cap[1].parse::<i32>().unwrap_or_default()),
@@ -162,13 +137,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 ("chksum", &HEXLOWER.encode(&chksum)),
                 ("callback", "callback"),
             ];
-            let res = s
-                .client
-                .post(&format!(
-                    "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
-                    s.ver
-                ))
-                .send_form(&params)?;
+            let res = s.client.post(Self::log_uri()).send_form(&params)?;
             let t = res.into_string()?;
             Self::parse_response(&t)
         })
@@ -182,29 +151,57 @@ impl<'a, 's> AuthConnect<'a, 's> {
             ("username", &self.credential.username),
             ("callback", "callback"),
         ];
-        let res = self
-            .client
-            .post(&format!(
-                "https://auth{0}.tsinghua.edu.cn/cgi-bin/srun_portal",
-                self.ver
-            ))
-            .send_form(&params)?;
+        let res = self.client.post(Self::log_uri()).send_form(&params)?;
         let t = res.into_string()?;
         Self::parse_response(&t)
     }
 
     pub fn flux(&self) -> Result<NetFlux> {
-        let res = self
-            .client
-            .get(&format!(
-                "https://auth{0}.tsinghua.edu.cn/rad_user_info.php",
-                self.ver
-            ))
-            .call()?;
+        let res = self.client.get(Self::flux_uri()).call()?;
         Ok(NetFlux::from_str(&res.into_string()?))
     }
 
     pub fn ac_ids(&self) -> &[i32] {
         &self.additional_ac_ids
+    }
+}
+
+pub trait AuthConnectUri {
+    fn log_uri() -> &'static str;
+    fn flux_uri() -> &'static str;
+    fn redirect_uri() -> &'static str;
+}
+
+impl AuthConnectUri for AuthConnect<'_, '_, 4> {
+    #[inline]
+    fn log_uri() -> &'static str {
+        "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
+    }
+
+    #[inline]
+    fn flux_uri() -> &'static str {
+        "https://auth4.tsinghua.edu.cn/rad_user_info.php"
+    }
+
+    #[inline]
+    fn redirect_uri() -> &'static str {
+        "http://3.3.3.3/"
+    }
+}
+
+impl AuthConnectUri for AuthConnect<'_, '_, 6> {
+    #[inline]
+    fn log_uri() -> &'static str {
+        "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal"
+    }
+
+    #[inline]
+    fn flux_uri() -> &'static str {
+        "https://auth6.tsinghua.edu.cn/rad_user_info.php"
+    }
+
+    #[inline]
+    fn redirect_uri() -> &'static str {
+        "http://[333::3]/"
     }
 }
