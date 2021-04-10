@@ -17,7 +17,7 @@ const AUTH_BASE64: Encoding = new_encoding! {
 pub struct AuthConnect<'a, 's, const V: i32> {
     credential: NetCredential<'s>,
     client: &'a HttpClient,
-    additional_ac_ids: Vec<i32>,
+    ac_ids: Vec<i32>,
 }
 
 lazy_static! {
@@ -37,7 +37,7 @@ where
         Self {
             credential: NetCredential::from_cred(u, p),
             client,
-            additional_ac_ids: ac_ids,
+            ac_ids: ac_ids,
         }
     }
 
@@ -64,14 +64,14 @@ where
     where
         F: Fn(&Self, i32) -> Result<String>,
     {
-        for ac_id in &self.additional_ac_ids {
+        for ac_id in &self.ac_ids {
             let res = action(self, *ac_id);
             if res.is_ok() {
                 return res;
             }
         }
         let ac_id = self.get_ac_id()?;
-        self.additional_ac_ids.push(ac_id);
+        self.ac_ids.push(ac_id);
         return action(self, ac_id);
     }
 
@@ -162,7 +162,7 @@ where
     }
 
     pub fn ac_ids(&self) -> &[i32] {
-        &self.additional_ac_ids
+        &self.ac_ids
     }
 }
 
