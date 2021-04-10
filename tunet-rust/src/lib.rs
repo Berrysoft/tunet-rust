@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 use std::result;
