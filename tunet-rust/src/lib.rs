@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 use std::result;
 use std::str;
 use std::time::Duration;
+use suggest::suggest;
 use thiserror::Error;
 
 pub use ureq::Agent as HttpClient;
@@ -127,7 +128,7 @@ pub enum NetHelperError {
 
 pub type Result<T> = result::Result<T, NetHelperError>;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NetState {
     Unknown,
     Net,
@@ -207,7 +208,9 @@ impl<'a, 's> TUNetConnect<'a, 's> {
                 u, p, client, ac_ids,
             ))),
             NetState::Auto => {
-                Self::from_state_cred_client(suggest::suggest(client), u, p, client, ac_ids)
+                let s = suggest::suggest(client);
+                debug_assert_ne!(s, NetState::Auto);
+                Self::from_state_cred_client(s, u, p, client, ac_ids)
             }
             NetState::Unknown => Err(NetHelperError::HostErr),
         }
