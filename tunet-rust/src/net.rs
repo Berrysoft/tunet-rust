@@ -1,4 +1,5 @@
 use super::*;
+use data_encoding::HEXLOWER;
 use md5::{Digest, Md5};
 
 pub struct NetConnect<'a, 's> {
@@ -27,7 +28,7 @@ impl<'a, 's> NetConnect<'a, 's> {
             md5.update(self.credential.password.as_bytes());
             md5.finalize()
         };
-        let password_md5 = format!("{{MD5_HEX}}{}", hex::encode(password_md5));
+        let password_md5 = format!("{{MD5_HEX}}{}", HEXLOWER.encode(&password_md5));
         let params = [
             ("action", "login"),
             ("ac_id", "1"),

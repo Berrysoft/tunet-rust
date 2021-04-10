@@ -1,5 +1,6 @@
 use super::*;
 use chrono::prelude::*;
+use data_encoding::HEXLOWER;
 use mac_address::MacAddress;
 use md5::{Digest, Md5};
 use select::document::Document;
@@ -113,7 +114,7 @@ impl<'a, 's> UseregHelper<'a, 's> {
         let params = [
             ("action", "login"),
             ("user_login_name", &self.credential.username),
-            ("user_password", &hex::encode(password_md5)),
+            ("user_password", &HEXLOWER.encode(&password_md5)),
         ];
         let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
         Ok(res.into_string()?)

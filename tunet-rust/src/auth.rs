@@ -1,20 +1,18 @@
 use super::*;
 use authtea::AuthTea;
+use data_encoding::{Encoding, HEXLOWER};
+use data_encoding_macro::new_encoding;
 use hmac::{Hmac, Mac, NewMac};
 use lazy_static::lazy_static;
 use md5::Md5;
-use radix64::CustomConfig;
 use regex::Regex;
 use serde_json::{self, Value};
 use sha1::{Digest, Sha1};
 
-lazy_static! {
-    static ref AUTH_BASE64: CustomConfig = CustomConfig::with_alphabet(
-        "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA"
-    )
-    .build()
-    .unwrap();
-}
+const AUTH_BASE64: Encoding = new_encoding! {
+    symbols: "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA",
+    padding: '=',
+};
 
 pub struct AuthConnect<'a, 's> {
     credential: NetCredential<'s>,
@@ -131,7 +129,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 hmacmd5.update(token.as_bytes());
                 hmacmd5.finalize().into_bytes()
             };
-            let password_md5 = hex::encode(password_md5);
+            let password_md5 = HEXLOWER.encode(&password_md5);
             let encode_json = serde_json::json!({
                 "username": s.credential.username,
                 "password": s.credential.password,
@@ -161,7 +159,7 @@ impl<'a, 's> AuthConnect<'a, 's> {
                 ("username", &s.credential.username),
                 ("password", &format!("{{MD5}}{}", password_md5)),
                 ("info", &info),
-                ("chksum", &hex::encode(chksum)),
+                ("chksum", &HEXLOWER.encode(&chksum)),
                 ("callback", "callback"),
             ];
             let res = s
