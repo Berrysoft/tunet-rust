@@ -208,7 +208,7 @@ impl<'a, 's> TUNetConnect<'a, 's> {
                 u, p, client, ac_ids,
             ))),
             NetState::Auto => {
-                let s = suggest::suggest(client);
+                let s = suggest(client);
                 debug_assert_ne!(s, NetState::Auto);
                 Self::from_state_cred_client(s, u, p, client, ac_ids)
             }
