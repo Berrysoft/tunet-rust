@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 use authtea::AuthTea;
 use data_encoding::{Encoding, HEXLOWER};
 use data_encoding_macro::new_encoding;
@@ -6,7 +6,7 @@ use hmac::{Hmac, Mac, NewMac};
 use lazy_static::lazy_static;
 use md5::Md5;
 use regex::Regex;
-use serde_json::{self, Value};
+use serde_json::{self, json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 
 const AUTH_BASE64: Encoding = new_encoding! {
@@ -44,9 +44,9 @@ where
     fn challenge(&self) -> Result<String> {
         let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback", V, self.credential.username)).call()?;
         let t = res.into_string()?;
-        let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
+        let json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
         match &json["challenge"] {
-            Value::String(s) => Ok(s.to_string()),
+            JsonValue::String(s) => Ok(s.to_string()),
             _ => Ok(String::new()),
         }
     }
@@ -76,8 +76,8 @@ where
     }
 
     fn parse_response(t: &str) -> Result<String> {
-        let json: Value = serde_json::from_str(&t[9..t.len() - 1])?;
-        if let Value::String(error) = &json["error"] {
+        let json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
+        if let JsonValue::String(error) = &json["error"] {
             if error == "ok" {
                 Ok(json["suc_msg"]
                     .as_str()
@@ -105,7 +105,7 @@ where
                 hmacmd5.finalize().into_bytes()
             };
             let password_md5 = HEXLOWER.encode(&password_md5);
-            let encode_json = serde_json::json!({
+            let encode_json = json!({
                 "username": s.credential.username,
                 "password": s.credential.password,
                 "ip": "",

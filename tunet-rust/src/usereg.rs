@@ -1,5 +1,5 @@
-use super::*;
-use chrono::prelude::*;
+use crate::*;
+use chrono::{DateTime, Local};
 use data_encoding::HEXLOWER;
 use mac_address::MacAddress;
 use md5::{Digest, Md5};
@@ -57,7 +57,7 @@ impl NetDetailOrder {
     }
 }
 
-impl str::FromStr for NetDetailOrder {
+impl std::str::FromStr for NetDetailOrder {
     type Err = NetHelperError;
     fn from_str(s: &str) -> Result<Self> {
         let ls = s.to_lowercase();

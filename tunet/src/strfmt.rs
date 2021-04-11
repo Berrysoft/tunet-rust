@@ -1,21 +1,17 @@
-use chrono::{NaiveDate, NaiveDateTime};
 use std::fmt;
 use std::fmt::Display;
-use std::time::Duration;
+use tunet_rust::*;
 
 pub struct FmtDuration(pub Duration);
 
 impl Display for FmtDuration {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut total_sec = self.0.as_secs();
-        let sec = total_sec % 60;
-        total_sec /= 60;
-        let min = total_sec % 60;
-        total_sec /= 60;
-        let h = total_sec % 24;
-        total_sec /= 24;
-        let str = if total_sec > 0 {
-            format!("{}.{:02}:{:02}:{:02}", total_sec, h, min, sec)
+        let total_sec = self.0.num_seconds();
+        let (total_min, sec) = (total_sec / 60, total_sec % 60);
+        let (total_h, min) = (total_min / 60, total_min % 60);
+        let (day, h) = (total_h / 24, total_h % 24);
+        let str = if day != 0 {
+            format!("{}.{:02}:{:02}:{:02}", day, h, min, sec)
         } else {
             format!("{:02}:{:02}:{:02}", h, min, sec)
         };

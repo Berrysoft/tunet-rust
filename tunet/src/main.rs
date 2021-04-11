@@ -1,6 +1,5 @@
 #![forbid(unsafe_code)]
 
-use chrono::Datelike;
 use itertools::Itertools;
 use mac_address::MacAddressIterator;
 use std::cmp::Reverse;

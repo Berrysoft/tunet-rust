@@ -2,12 +2,9 @@
 
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
-use std::result;
-use std::str;
-use std::time::Duration;
-use suggest::suggest;
 use thiserror::Error;
 
+pub use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
 pub use ureq::Agent as HttpClient;
 
 mod auth;
@@ -69,12 +66,23 @@ impl Display for Balance {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct NetFlux {
     pub username: String,
     pub flux: Flux,
     pub online_time: Duration,
     pub balance: Balance,
+}
+
+impl Default for NetFlux {
+    fn default() -> Self {
+        Self {
+            username: String::default(),
+            flux: Flux::default(),
+            online_time: Duration::zero(),
+            balance: Balance::default(),
+        }
+    }
 }
 
 impl NetFlux {
@@ -95,10 +103,10 @@ impl NetFlux {
             NetFlux::from_detail(
                 vec[0].to_string(),
                 Flux(vec[6].parse::<u64>().unwrap_or_default()),
-                Duration::from_secs(
+                Duration::seconds(
                     (vec[2].parse::<i64>().unwrap_or_default()
                         - vec[1].parse::<i64>().unwrap_or_default())
-                    .max(0) as u64,
+                    .max(0),
                 ),
                 Balance(vec[11].parse::<f64>().unwrap_or_default()),
             )
@@ -126,7 +134,7 @@ pub enum NetHelperError {
     ConfigDirErr,
 }
 
-pub type Result<T> = result::Result<T, NetHelperError>;
+pub type Result<T> = std::result::Result<T, NetHelperError>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NetState {
@@ -137,7 +145,7 @@ pub enum NetState {
     Auto,
 }
 
-impl str::FromStr for NetState {
+impl std::str::FromStr for NetState {
     type Err = NetHelperError;
     fn from_str(s: &str) -> Result<Self> {
         let ls = s.to_lowercase();
@@ -208,7 +216,7 @@ impl<'a, 's> TUNetConnect<'a, 's> {
                 u, p, client, ac_ids,
             ))),
             NetState::Auto => {
-                let s = suggest(client);
+                let s = suggest::suggest(client);
                 debug_assert_ne!(s, NetState::Auto);
                 Self::from_state_cred_client(s, u, p, client, ac_ids)
             }

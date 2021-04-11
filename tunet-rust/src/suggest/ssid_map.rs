@@ -1,5 +1,4 @@
-use crate::suggest::ping;
-use crate::*;
+use crate::{suggest::ping, *};
 use lazy_static::lazy_static;
 use netstatus::NetStatus;
 use std::collections::BTreeMap;
