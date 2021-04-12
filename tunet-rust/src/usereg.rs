@@ -7,6 +7,7 @@ use select::document::Document;
 use select::predicate::*;
 use std::collections::VecDeque;
 use std::net::Ipv4Addr;
+use url::Url;
 
 pub struct NetUser {
     pub address: Ipv4Addr,
@@ -82,6 +83,7 @@ pub struct UseregHelper<'a, 's> {
 static USEREG_LOG_URI: &str = "http://usereg.tsinghua.edu.cn/do.php";
 static USEREG_INFO_URI: &str = "http://usereg.tsinghua.edu.cn/online_user_ipv4.php";
 static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
+static USEREG_DETAIL_URI: &str = "http://usereg.tsinghua.edu.cn/user_detail_list.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
 fn parse_flux(s: &str) -> Flux {
@@ -174,8 +176,8 @@ pub struct UseregDetails<'a> {
     client: &'a HttpClient,
     index: usize,
     now: DateTime<Local>,
-    order: &'static str,
-    des: &'static str,
+    order: NetDetailOrder,
+    des: bool,
     len: usize,
     data: VecDeque<NetDetail>,
 }
@@ -186,18 +188,28 @@ impl<'a> UseregDetails<'a> {
             client,
             index: 0,
             now: Local::now(),
-            order: order.get_query(),
-            des: if des { "DESC" } else { "" },
+            order,
+            des,
             len: USEREG_OFF,
             data: VecDeque::new(),
         }
     }
 
     fn load_newpage(&mut self) -> Result<()> {
-        let res = self.client.get(
-                    &format!("http://usereg.tsinghua.edu.cn/user_detail_list.php?action=query&desc={6}&order={5}&start_time={0}-{1:02}-01&end_time={0}-{1:02}-{2:02}&page={3}&offset={4}",
-                        self.now.year(), self.now.month(), self.now.day(), self.index, USEREG_OFF, self.order, self.des))
-                    .call()?;
+        let uri = Url::parse_with_params(
+            USEREG_DETAIL_URI,
+            &[
+                ("action", "query"),
+                ("desc", if self.des { "DESC" } else { "" }),
+                ("order", self.order.get_query()),
+                ("start_time", &self.now.format("%Y-%m-01").to_string()),
+                ("end_time", &self.now.format("%Y-%m-%d").to_string()),
+                ("page", &self.index.to_string()),
+                ("offset", &USEREG_OFF.to_string()),
+            ],
+        )
+        .unwrap();
+        let res = self.client.request_url("GET", &uri).call()?;
         let doc = Document::from(res.into_string()?.as_str());
         self.data = doc
             .find(Name("tr").descendant(Attr("align", "center")))

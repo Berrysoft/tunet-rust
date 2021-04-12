@@ -8,6 +8,7 @@ use md5::Md5;
 use regex::Regex;
 use serde_json::{self, json, Value as JsonValue};
 use sha1::{Digest, Sha1};
+use url::Url;
 
 const AUTH_BASE64: Encoding = new_encoding! {
     symbols: "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA",
@@ -42,7 +43,17 @@ where
     }
 
     fn challenge(&self) -> Result<String> {
-        let res = self.client.get(&format!("https://auth{0}.tsinghua.edu.cn/cgi-bin/get_challenge?username={1}&double_stack=1&ip&callback=callback", V, self.credential.username)).call()?;
+        let uri = Url::parse_with_params(
+            Self::challenge_uri(),
+            &[
+                ("username", self.credential.username.as_ref()),
+                ("double_stack", "1"),
+                ("ip", ""),
+                ("callback", "callback"),
+            ],
+        )
+        .unwrap();
+        let res = self.client.request_url("GET", &uri).call()?;
         let t = res.into_string()?;
         let json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
         match &json["challenge"] {
@@ -168,6 +179,7 @@ where
 
 pub trait AuthConnectUri {
     fn log_uri() -> &'static str;
+    fn challenge_uri() -> &'static str;
     fn flux_uri() -> &'static str;
     fn redirect_uri() -> &'static str;
 }
@@ -176,6 +188,11 @@ impl AuthConnectUri for AuthConnect<'_, '_, 4> {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
+    }
+
+    #[inline]
+    fn challenge_uri() -> &'static str {
+        "https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge"
     }
 
     #[inline]
@@ -193,6 +210,11 @@ impl AuthConnectUri for AuthConnect<'_, '_, 6> {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal"
+    }
+
+    #[inline]
+    fn challenge_uri() -> &'static str {
+        "https://auth6.tsinghua.edu.cn/cgi-bin/get_challenge"
     }
 
     #[inline]

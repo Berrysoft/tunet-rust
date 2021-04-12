@@ -10,6 +10,7 @@ license = "MIT"
 authtea = { path = "../authtea" }
 netstatus = { path = "../netstatus", optional = true }
 ureq = { version = "2.1", features = [ "cookies", "charset" ] }
+url = "2.2"
 md-5 = "0.9"
 sha-1 = "0.9"
 hmac = "0.10"
