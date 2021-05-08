@@ -111,7 +111,7 @@ where
         self.do_log(|s, ac_id| {
             let token = s.challenge()?;
             let password_md5 = {
-                let mut hmacmd5 = Hmac::<Md5>::new_varkey(&[]).unwrap();
+                let mut hmacmd5 = Hmac::<Md5>::new_from_slice(&[]).unwrap();
                 hmacmd5.update(token.as_bytes());
                 hmacmd5.finalize().into_bytes()
             };
