@@ -15,38 +15,28 @@ const AUTH_BASE64: Encoding = new_encoding! {
     padding: '=',
 };
 
-pub struct AuthConnect<'a, 's, const V: i32> {
-    credential: NetCredential<'s>,
+pub struct AuthConnect<'a, const V: i32> {
+    cred: NetCredential,
     client: &'a HttpClient,
-    ac_ids: Vec<i32>,
 }
 
 lazy_static! {
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
 }
 
-impl<'a, 's, const V: i32> AuthConnect<'a, 's, V>
+impl<'a, const V: i32> AuthConnect<'a, V>
 where
     Self: AuthConnectUri,
 {
-    pub fn from_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
-        u: SU,
-        p: SP,
-        client: &'a HttpClient,
-        ac_ids: Vec<i32>,
-    ) -> Self {
-        Self {
-            credential: NetCredential::from_cred(u, p),
-            client,
-            ac_ids: ac_ids,
-        }
+    pub fn from_cred_client(cred: NetCredential, client: &'a HttpClient) -> Self {
+        Self { cred, client }
     }
 
     fn challenge(&self) -> Result<String> {
         let uri = Url::parse_with_params(
             Self::challenge_uri(),
             &[
-                ("username", self.credential.username.as_ref()),
+                ("username", self.cred.username.as_ref()),
                 ("double_stack", "1"),
                 ("ip", ""),
                 ("callback", "callback"),
@@ -75,14 +65,14 @@ where
     where
         F: Fn(&Self, i32) -> Result<String>,
     {
-        for ac_id in &self.ac_ids {
+        for ac_id in &self.cred.ac_ids {
             let res = action(self, *ac_id);
             if res.is_ok() {
                 return res;
             }
         }
         let ac_id = self.get_ac_id()?;
-        self.ac_ids.push(ac_id);
+        self.cred.ac_ids.push(ac_id);
         return action(self, ac_id);
     }
 
@@ -106,8 +96,13 @@ where
             Err(NetHelperError::LogErr(json.to_string()))
         }
     }
+}
 
-    pub fn login(&mut self) -> Result<String> {
+impl<'a, const V: i32> TUNetHelper for AuthConnect<'a, V>
+where
+    Self: AuthConnectUri,
+{
+    fn login(&mut self) -> Result<String> {
         self.do_log(|s, ac_id| {
             let token = s.challenge()?;
             let password_md5 = {
@@ -117,8 +112,8 @@ where
             };
             let password_md5 = HEXLOWER.encode(&password_md5);
             let encode_json = json!({
-                "username": s.credential.username,
-                "password": s.credential.password,
+                "username": s.cred.username,
+                "password": s.cred.password,
                 "ip": "",
                 "acid": ac_id,
                 "enc_ver": "srun_bx1"
@@ -132,7 +127,7 @@ where
                 let mut sha1 = Sha1::new();
                 sha1.update(format!(
                     "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                    token, s.credential.username, password_md5, info, ac_id
+                    token, s.cred.username, password_md5, info, ac_id
                 ));
                 sha1.finalize()
             };
@@ -142,7 +137,7 @@ where
                 ("double_stack", "1"),
                 ("n", "200"),
                 ("type", "1"),
-                ("username", &s.credential.username),
+                ("username", &s.cred.username),
                 ("password", &format!("{{MD5}}{}", password_md5)),
                 ("info", &info),
                 ("chksum", &HEXLOWER.encode(&chksum)),
@@ -154,12 +149,12 @@ where
         })
     }
 
-    pub fn logout(&mut self) -> Result<String> {
+    fn logout(&mut self) -> Result<String> {
         let params = [
             ("action", "logout"),
             ("ac_id", "1"),
             ("double_stack", "1"),
-            ("username", &self.credential.username),
+            ("username", &self.cred.username),
             ("callback", "callback"),
         ];
         let res = self.client.post(Self::log_uri()).send_form(&params)?;
@@ -167,13 +162,13 @@ where
         Self::parse_response(&t)
     }
 
-    pub fn flux(&self) -> Result<NetFlux> {
+    fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(Self::flux_uri()).call()?;
         Ok(NetFlux::from_str(&res.into_string()?))
     }
 
-    pub fn ac_ids(&self) -> &[i32] {
-        &self.ac_ids
+    fn cred(&self) -> &NetCredential {
+        &self.cred
     }
 }
 
@@ -184,7 +179,7 @@ pub trait AuthConnectUri {
     fn redirect_uri() -> &'static str;
 }
 
-impl AuthConnectUri for AuthConnect<'_, '_, 4> {
+impl AuthConnectUri for AuthConnect<'_, 4> {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
@@ -206,7 +201,7 @@ impl AuthConnectUri for AuthConnect<'_, '_, 4> {
     }
 }
 
-impl AuthConnectUri for AuthConnect<'_, '_, 6> {
+impl AuthConnectUri for AuthConnect<'_, 6> {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal"

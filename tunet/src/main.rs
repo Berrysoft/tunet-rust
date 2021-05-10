@@ -111,20 +111,17 @@ fn get_flux_color(f: &Flux, total: bool) -> Color {
 
 fn do_login(s: NetState) -> Result<()> {
     let client = create_http_client();
-    let (u, p, ac_ids) = read_cred()?;
-    let ac_ids = {
-        let mut c = TUNetConnect::from_state_cred_client(s, &u, &p, &client, ac_ids)?;
-        let res = c.login()?;
-        println!("{}", res);
-        c.ac_ids().to_vec()
-    };
-    save_cred(u, p, ac_ids)
+    let cred = read_cred()?;
+    let mut c = TUNetConnect::from_state_cred_client(s, cred, &client)?;
+    let res = c.login()?;
+    println!("{}", res);
+    save_cred(c.cred())
 }
 
 fn do_logout(s: NetState) -> Result<()> {
     let client = create_http_client();
-    let (u, ac_ids) = read_username()?;
-    let mut c = TUNetConnect::from_state_cred_client(s, &u, "", &client, ac_ids)?;
+    let cred = read_username()?;
+    let mut c = TUNetConnect::from_state_cred_client(s, cred, &client)?;
     let res = c.logout()?;
     println!("{}", res);
     Ok(())
@@ -132,7 +129,7 @@ fn do_logout(s: NetState) -> Result<()> {
 
 fn do_status(s: NetState) -> Result<()> {
     let client = create_http_client();
-    let c = TUNetConnect::from_state_cred_client(s, "", "", &client, vec![])?;
+    let c = TUNetConnect::from_state_cred_client(s, NetCredential::default(), &client)?;
     let f = c.flux()?;
     let stdout = StandardStream::stdout(ColorChoice::Auto);
     let mut stdout = tco::ResetGuard::Owned(stdout);
@@ -170,150 +167,140 @@ fn do_status(s: NetState) -> Result<()> {
 
 fn do_online() -> Result<()> {
     let client = create_http_client();
-    let (u, p, ac_ids) = read_cred()?;
-    {
-        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
-        c.login()?;
-        let us = c.users()?;
-        let mac_addrs = MacAddressIterator::new()
-            .map(|it| it.collect::<Vec<_>>())
-            .unwrap_or_default();
-        let stdout = StandardStream::stdout(ColorChoice::Auto);
-        let mut stdout = tco::ResetGuard::Owned(stdout);
-        tco::writeln!(stdout, "    IP地址            登录时间            MAC地址")?;
-        for u in us {
-            let is_self = mac_addrs
-                .iter()
-                .any(|it| Some(it) == u.mac_address.as_ref());
-            tco::writeln!(
-                stdout,
-                "{}{:15} {}{:20} {}{}{}{}",
-                fg!(Some(Color::Yellow)),
-                u.address,
-                fg!(Some(Color::Green)),
-                FmtDateTime(u.login_time),
-                fg!(Some(Color::Cyan)),
-                u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
-                fg!(Some(Color::Magenta)),
-                if is_self { "*" } else { "" }
-            )?;
-        }
+    let cred = read_cred()?;
+    let mut c = UseregHelper::from_cred_client(cred, &client);
+    c.login()?;
+    let us = c.users()?;
+    let mac_addrs = MacAddressIterator::new()
+        .map(|it| it.collect::<Vec<_>>())
+        .unwrap_or_default();
+    let stdout = StandardStream::stdout(ColorChoice::Auto);
+    let mut stdout = tco::ResetGuard::Owned(stdout);
+    tco::writeln!(stdout, "    IP地址            登录时间            MAC地址")?;
+    for u in us {
+        let is_self = mac_addrs
+            .iter()
+            .any(|it| Some(it) == u.mac_address.as_ref());
+        tco::writeln!(
+            stdout,
+            "{}{:15} {}{:20} {}{}{}{}",
+            fg!(Some(Color::Yellow)),
+            u.address,
+            fg!(Some(Color::Green)),
+            FmtDateTime(u.login_time),
+            fg!(Some(Color::Cyan)),
+            u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
+            fg!(Some(Color::Magenta)),
+            if is_self { "*" } else { "" }
+        )?;
     }
-    save_cred(u, p, ac_ids)
+    save_cred(c.cred())
 }
 
 fn do_connect(a: Ipv4Addr) -> Result<()> {
     let client = create_http_client();
-    let (u, p, ac_ids) = read_cred()?;
-    {
-        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
-        c.login()?;
-        let res = c.connect(a)?;
-        println!("{}", res);
-    }
-    save_cred(u, p, ac_ids)
+    let cred = read_cred()?;
+    let mut c = UseregHelper::from_cred_client(cred, &client);
+    c.login()?;
+    let res = c.connect(a)?;
+    println!("{}", res);
+    save_cred(c.cred())
 }
 
 fn do_drop(a: Ipv4Addr) -> Result<()> {
     let client = create_http_client();
-    let (u, p, ac_ids) = read_cred()?;
-    {
-        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
-        c.login()?;
-        let res = c.drop(a)?;
-        println!("{}", res);
-    }
-    save_cred(u, p, ac_ids)
+    let cred = read_cred()?;
+    let mut c = UseregHelper::from_cred_client(cred, &client);
+    c.login()?;
+    let res = c.drop(a)?;
+    println!("{}", res);
+    save_cred(c.cred())
 }
 
 fn do_detail(o: NetDetailOrder, d: bool) -> Result<()> {
     let client = create_http_client();
-    let (u, p, ac_ids) = read_cred()?;
-    {
-        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
-        c.login()?;
-        let mut details = c.details(o, d)?;
-        let stdout = StandardStream::stdout(ColorChoice::Auto);
-        let mut stdout = tco::ResetGuard::Owned(stdout);
-        tco::writeln!(stdout, "      登录时间             注销时间         流量")?;
-        let mut total_flux = Flux(0);
-        for d in &mut details {
-            let d = d?;
-            tco::writeln!(
-                stdout,
-                "{}{:20} {:20} {}{:>8}",
-                fg!(Some(Color::Green)),
-                FmtDateTime(d.login_time),
-                FmtDateTime(d.logout_time),
-                fg!(Some(get_flux_color(&d.flux, false))),
-                d.flux
-            )?;
-            total_flux.0 += d.flux.0;
-        }
+    let cred = read_cred()?;
+    let mut c = UseregHelper::from_cred_client(cred, &client);
+    c.login()?;
+    let mut details = c.details(o, d)?;
+    let stdout = StandardStream::stdout(ColorChoice::Auto);
+    let mut stdout = tco::ResetGuard::Owned(stdout);
+    tco::writeln!(stdout, "      登录时间             注销时间         流量")?;
+    let mut total_flux = Flux(0);
+    for d in &mut details {
+        let d = d?;
         tco::writeln!(
             stdout,
-            "{}总流量 {}{}{}",
-            fg!(Some(Color::Cyan)),
-            fg!(Some(get_flux_color(&total_flux, true))),
-            bold!(true),
-            total_flux
+            "{}{:20} {:20} {}{:>8}",
+            fg!(Some(Color::Green)),
+            FmtDateTime(d.login_time),
+            FmtDateTime(d.logout_time),
+            fg!(Some(get_flux_color(&d.flux, false))),
+            d.flux
         )?;
+        total_flux.0 += d.flux.0;
     }
-    save_cred(u, p, ac_ids)
+    tco::writeln!(
+        stdout,
+        "{}总流量 {}{}{}",
+        fg!(Some(Color::Cyan)),
+        fg!(Some(get_flux_color(&total_flux, true))),
+        bold!(true),
+        total_flux
+    )?;
+    save_cred(c.cred())
 }
 
 fn do_detail_grouping(o: NetDetailOrder, d: bool) -> Result<()> {
     let client = create_http_client();
-    let (u, p, ac_ids) = read_cred()?;
-    {
-        let mut c = UseregHelper::from_cred_client(&u, &p, &client);
-        c.login()?;
-        let details = c
-            .details(NetDetailOrder::LogoutTime, d)?
-            .try_collect::<_, Vec<_>, _>()?;
-        let mut details = details
-            .into_iter()
-            .group_by(|detail| detail.logout_time.date())
-            .into_iter()
-            .map(|(key, group)| (key, Flux(group.map(|detail| detail.flux.0).sum::<u64>())))
-            .collect::<Vec<_>>();
-        match o {
-            NetDetailOrder::Flux => {
-                if d {
-                    details.sort_unstable_by_key(|(_, flux)| Reverse(*flux));
-                } else {
-                    details.sort_unstable_by_key(|(_, flux)| *flux);
-                }
-            }
-            _ => {
-                if d {
-                    details.sort_unstable_by_key(|(date, _)| Reverse(date.day()));
-                }
+    let cred = read_cred()?;
+    let mut c = UseregHelper::from_cred_client(cred, &client);
+    c.login()?;
+    let details = c
+        .details(NetDetailOrder::LogoutTime, d)?
+        .try_collect::<_, Vec<_>, _>()?;
+    let mut details = details
+        .into_iter()
+        .group_by(|detail| detail.logout_time.date())
+        .into_iter()
+        .map(|(key, group)| (key, Flux(group.map(|detail| detail.flux.0).sum::<u64>())))
+        .collect::<Vec<_>>();
+    match o {
+        NetDetailOrder::Flux => {
+            if d {
+                details.sort_unstable_by_key(|(_, flux)| Reverse(*flux));
+            } else {
+                details.sort_unstable_by_key(|(_, flux)| *flux);
             }
         }
-        let stdout = StandardStream::stdout(ColorChoice::Auto);
-        let mut stdout = tco::ResetGuard::Owned(stdout);
-        tco::writeln!(stdout, " 登录日期    流量")?;
-        let mut total_flux = Flux(0);
-        for (date, flux) in details {
-            tco::writeln!(
-                stdout,
-                "{}{:10} {}{:>8}",
-                fg!(Some(Color::Green)),
-                date,
-                fg!(Some(get_flux_color(&flux, true))),
-                flux
-            )?;
-            total_flux.0 += flux.0;
+        _ => {
+            if d {
+                details.sort_unstable_by_key(|(date, _)| Reverse(date.day()));
+            }
         }
+    }
+    let stdout = StandardStream::stdout(ColorChoice::Auto);
+    let mut stdout = tco::ResetGuard::Owned(stdout);
+    tco::writeln!(stdout, " 登录日期    流量")?;
+    let mut total_flux = Flux(0);
+    for (date, flux) in details {
         tco::writeln!(
             stdout,
-            "{}总流量 {}{}{}",
-            fg!(Some(Color::Cyan)),
-            fg!(Some(get_flux_color(&total_flux, true))),
-            bold!(true),
-            total_flux
+            "{}{:10} {}{:>8}",
+            fg!(Some(Color::Green)),
+            date,
+            fg!(Some(get_flux_color(&flux, true))),
+            flux
         )?;
+        total_flux.0 += flux.0;
     }
-    save_cred(u, p, ac_ids)
+    tco::writeln!(
+        stdout,
+        "{}总流量 {}{}{}",
+        fg!(Some(Color::Cyan)),
+        fg!(Some(get_flux_color(&total_flux, true))),
+        bold!(true),
+        total_flux
+    )?;
+    save_cred(c.cred())
 }

@@ -74,8 +74,8 @@ impl std::str::FromStr for NetDetailOrder {
     }
 }
 
-pub struct UseregHelper<'a, 's> {
-    credential: NetCredential<'s>,
+pub struct UseregHelper<'a> {
+    cred: NetCredential,
     client: &'a HttpClient,
 }
 
@@ -99,23 +99,20 @@ fn parse_flux(s: &str) -> Flux {
     )
 }
 
-impl<'a, 's> UseregHelper<'a, 's> {
-    pub fn from_cred_client<S: Into<Cow<'s, str>>>(u: S, p: S, client: &'a HttpClient) -> Self {
-        UseregHelper {
-            credential: NetCredential::from_cred(u, p),
-            client,
-        }
+impl<'a> UseregHelper<'a> {
+    pub fn from_cred_client(cred: NetCredential, client: &'a HttpClient) -> Self {
+        UseregHelper { cred, client }
     }
 
     pub fn login(&mut self) -> Result<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
-            md5.update(self.credential.password.as_bytes());
+            md5.update(self.cred.password.as_bytes());
             md5.finalize()
         };
         let params = [
             ("action", "login"),
-            ("user_login_name", &self.credential.username),
+            ("user_login_name", &self.cred.username),
             ("user_password", &HEXLOWER.encode(&password_md5)),
         ];
         let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
@@ -126,6 +123,10 @@ impl<'a, 's> UseregHelper<'a, 's> {
         let params = [("action", "logout")];
         let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
         Ok(res.into_string()?)
+    }
+
+    pub fn cred(&self) -> &NetCredential {
+        &self.cred
     }
 
     pub fn connect(&self, addr: Ipv4Addr) -> Result<String> {

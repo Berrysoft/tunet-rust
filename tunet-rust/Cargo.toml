@@ -1,6 +1,6 @@
 [package]
 name = "tunet-rust"
-version = "0.7.3"
+version = "0.8.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2018"
 readme = "README.md"
@@ -16,6 +16,7 @@ sha-1 = "0.9"
 hmac = "0.11"
 data-encoding = "2.3"
 data-encoding-macro = "0.1"
+serde = { version = "1.0", optional = true }
 serde_json = "1.0"
 select = "0.5"
 chrono = { version = "0.4", default-features = false, features = [ "clock", "std" ] }

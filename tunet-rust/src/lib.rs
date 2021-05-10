@@ -1,8 +1,11 @@
 #![forbid(unsafe_code)]
 
-use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
+use std::ops::{Deref, DerefMut};
 use thiserror::Error;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
 pub use ureq::Agent as HttpClient;
@@ -13,18 +16,17 @@ pub mod suggest;
 pub mod usereg;
 
 #[derive(Debug, Default)]
-pub struct NetCredential<'a> {
-    username: Cow<'a, str>,
-    password: Cow<'a, str>,
-}
-
-impl<'a> NetCredential<'a> {
-    pub fn from_cred<SU: Into<Cow<'a, str>>, SP: Into<Cow<'a, str>>>(u: SU, p: SP) -> Self {
-        NetCredential {
-            username: u.into(),
-            password: p.into(),
-        }
-    }
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub struct NetCredential {
+    #[cfg_attr(feature = "serde", serde(rename = "Username"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub username: String,
+    #[cfg_attr(feature = "serde", serde(rename = "Password"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub password: String,
+    #[cfg_attr(feature = "serde", serde(rename = "AcIds"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub ac_ids: Vec<i32>,
 }
 
 #[repr(transparent)]
@@ -163,64 +165,61 @@ impl std::str::FromStr for NetState {
     }
 }
 
-pub enum TUNetConnect<'a, 's> {
-    Net(net::NetConnect<'a, 's>),
-    Auth4(auth::AuthConnect<'a, 's, 4>),
-    Auth6(auth::AuthConnect<'a, 's, 6>),
+pub trait TUNetHelper {
+    fn login(&mut self) -> Result<String>;
+    fn logout(&mut self) -> Result<String>;
+    fn flux(&self) -> Result<NetFlux>;
+    fn cred(&self) -> &NetCredential;
 }
 
-impl<'a, 's> TUNetConnect<'a, 's> {
-    pub fn login(&mut self) -> Result<String> {
-        match self {
-            Self::Net(c) => c.login(),
-            Self::Auth4(c) => c.login(),
-            Self::Auth6(c) => c.login(),
-        }
-    }
-    pub fn logout(&mut self) -> Result<String> {
-        match self {
-            Self::Net(c) => c.logout(),
-            Self::Auth4(c) => c.logout(),
-            Self::Auth6(c) => c.logout(),
-        }
-    }
-    pub fn flux(&self) -> Result<NetFlux> {
-        match self {
-            Self::Net(c) => c.flux(),
-            Self::Auth4(c) => c.flux(),
-            Self::Auth6(c) => c.flux(),
-        }
-    }
-    pub fn ac_ids(&self) -> &[i32] {
-        match self {
-            Self::Net(_) => &[0; 0],
-            Self::Auth4(c) => c.ac_ids(),
-            Self::Auth6(c) => c.ac_ids(),
-        }
-    }
-    pub fn from_state_cred_client<SU: Into<Cow<'s, str>>, SP: Into<Cow<'s, str>>>(
+pub enum TUNetConnect<'a> {
+    Net(net::NetConnect<'a>),
+    Auth4(auth::AuthConnect<'a, 4>),
+    Auth6(auth::AuthConnect<'a, 6>),
+}
+
+impl<'a> TUNetConnect<'a> {
+    pub fn from_state_cred_client(
         s: NetState,
-        u: SU,
-        p: SP,
+        cred: NetCredential,
         client: &'a HttpClient,
-        ac_ids: Vec<i32>,
     ) -> Result<Self> {
         match s {
-            NetState::Net => Ok(TUNetConnect::Net(net::NetConnect::from_cred_client(
-                u, p, client,
+            NetState::Net => Ok(Self::Net(net::NetConnect::from_cred_client(cred, client))),
+            NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::from_cred_client(
+                cred, client,
             ))),
-            NetState::Auth4 => Ok(TUNetConnect::Auth4(auth::AuthConnect::from_cred_client(
-                u, p, client, ac_ids,
-            ))),
-            NetState::Auth6 => Ok(TUNetConnect::Auth6(auth::AuthConnect::from_cred_client(
-                u, p, client, ac_ids,
+            NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::from_cred_client(
+                cred, client,
             ))),
             NetState::Auto => {
                 let s = suggest::suggest(client);
                 debug_assert_ne!(s, NetState::Auto);
-                Self::from_state_cred_client(s, u, p, client, ac_ids)
+                Self::from_state_cred_client(s, cred, client)
             }
             NetState::Unknown => Err(NetHelperError::HostErr),
+        }
+    }
+}
+
+impl<'a> Deref for TUNetConnect<'a> {
+    type Target = dyn TUNetHelper + 'a;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Net(c) => c,
+            Self::Auth4(c) => c,
+            Self::Auth6(c) => c,
+        }
+    }
+}
+
+impl<'a> DerefMut for TUNetConnect<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self {
+            Self::Net(c) => c,
+            Self::Auth4(c) => c,
+            Self::Auth6(c) => c,
         }
     }
 }
