@@ -10,15 +10,15 @@ use serde_json::{self, json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use url::Url;
 
-const AUTH_BASE64: Encoding = new_encoding! {
-    symbols: "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA",
-    padding: '=',
-};
-
 pub struct AuthConnect<'a, const V: i32> {
     cred: NetCredential,
     client: &'a HttpClient,
 }
+
+const AUTH_BASE64: Encoding = new_encoding! {
+    symbols: "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA",
+    padding: '=',
+};
 
 lazy_static! {
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
@@ -45,11 +45,11 @@ where
         .unwrap();
         let res = self.client.request_url("GET", &uri).call()?;
         let t = res.into_string()?;
-        let json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
-        match &json["challenge"] {
-            JsonValue::String(s) => Ok(s.to_string()),
-            _ => Ok(String::new()),
-        }
+        let mut json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
+        Ok(json
+            .remove("challenge")
+            .and_then(|v| v.into_str())
+            .unwrap_or_default())
     }
 
     fn get_ac_id(&self) -> Result<i32> {
@@ -77,18 +77,17 @@ where
     }
 
     fn parse_response(t: &str) -> Result<String> {
-        let json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
-        if let JsonValue::String(error) = &json["error"] {
+        let mut json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
+        if let Some(error) = json["error"].as_str() {
             if error == "ok" {
-                Ok(json["suc_msg"]
-                    .as_str()
-                    .map(|s| s.to_string())
+                Ok(json
+                    .remove("suc_msg")
+                    .and_then(|v| v.into_str())
                     .unwrap_or_default())
             } else {
                 Err(NetHelperError::LogErr(
-                    json["error_msg"]
-                        .as_str()
-                        .map(|s| s.to_string())
+                    json.remove("error_msg")
+                        .and_then(|v| v.into_str())
                         .unwrap_or_default(),
                 ))
             }
@@ -220,5 +219,28 @@ impl AuthConnectUri for AuthConnect<'_, 6> {
     #[inline]
     fn redirect_uri() -> &'static str {
         "http://[333::3]/"
+    }
+}
+
+trait ExactString {
+    fn remove(&mut self, key: &str) -> Option<Self>
+    where
+        Self: Sized;
+    fn into_str(self) -> Option<String>;
+}
+
+impl ExactString for JsonValue {
+    fn remove(&mut self, key: &str) -> Option<Self> {
+        match self {
+            Self::Object(map) => map.remove(key),
+            _ => None,
+        }
+    }
+
+    fn into_str(self) -> Option<String> {
+        match self {
+            Self::String(s) => Some(s),
+            _ => None,
+        }
     }
 }
