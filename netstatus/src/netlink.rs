@@ -1,16 +1,17 @@
 use crate::*;
-use netlink_wi::NlSocket;
-use std::error::Error;
+use netlink_wi::{AttrParseError, NlSocket};
 
-type Result<T> = std::result::Result<T, Box<dyn Error>>;
+type Result<T> = std::result::Result<T, AttrParseError>;
 
 fn current_impl() -> Result<NetStatus> {
-    let sock = NlSocket::connect()?;
-    let interfaces = sock.list_interfaces()?;
-    for interface in interfaces {
-        let interface = interface?;
-        if let Some(ssid) = interface.ssid {
-            return Ok(NetStatus::Wlan(ssid));
+    if let Ok(sock) = NlSocket::connect() {
+        if let Ok(interfaces) = sock.list_interfaces() {
+            for interface in interfaces {
+                let interface = interface?;
+                if let Some(ssid) = interface.ssid {
+                    return Ok(NetStatus::Wlan(ssid));
+                }
+            }
         }
     }
     Ok(NetStatus::Unknown)
@@ -19,7 +20,7 @@ fn current_impl() -> Result<NetStatus> {
 pub fn current() -> NetStatus {
     current_impl().unwrap_or_else(|e| {
         if cfg!(debug_assertions) {
-            eprintln!("WARNING: {}", e.message());
+            eprintln!("WARNING: {}", e);
         }
         NetStatus::Unknown
     })
