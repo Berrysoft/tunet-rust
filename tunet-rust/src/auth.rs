@@ -73,7 +73,7 @@ where
         }
         let ac_id = self.get_ac_id()?;
         self.cred.ac_ids.push(ac_id);
-        return action(self, ac_id);
+        action(self, ac_id)
     }
 
     fn parse_response(t: &str) -> Result<String> {
@@ -163,7 +163,7 @@ where
 
     fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(Self::flux_uri()).call()?;
-        Ok(NetFlux::from_str(&res.into_string()?))
+        res.into_string()?.parse()
     }
 
     fn cred(&self) -> &NetCredential {

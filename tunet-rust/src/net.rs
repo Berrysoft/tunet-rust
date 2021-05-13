@@ -42,7 +42,7 @@ impl<'a> TUNetHelper for NetConnect<'a> {
 
     fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(NET_FLUX_URI).call()?;
-        Ok(NetFlux::from_str(&res.into_string()?))
+        res.into_string()?.parse()
     }
 
     fn cred(&self) -> &NetCredential {

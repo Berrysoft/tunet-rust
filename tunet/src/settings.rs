@@ -128,7 +128,7 @@ pub fn delete_cred() -> Result<()> {
     stdout().flush()?;
     let mut s = String::new();
     stdin().read_line(&mut s)?;
-    if s.replace(&['\n', '\r'][..], "").to_ascii_lowercase() == "y" {
+    if s.replace(&['\n', '\r'][..], "").eq_ignore_ascii_case("y") {
         reader.delete()?;
         println!("已删除");
     }

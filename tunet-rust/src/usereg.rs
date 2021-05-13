@@ -61,12 +61,11 @@ impl NetDetailOrder {
 impl std::str::FromStr for NetDetailOrder {
     type Err = NetHelperError;
     fn from_str(s: &str) -> Result<Self> {
-        let ls = s.to_lowercase();
-        if ls == "login" || ls == "logintime" {
+        if s.eq_ignore_ascii_case("login") || s.eq_ignore_ascii_case("logintime") {
             Ok(NetDetailOrder::LoginTime)
-        } else if ls == "logout" || ls == "logouttime" {
+        } else if s.eq_ignore_ascii_case("logout") || s.eq_ignore_ascii_case("logouttime") {
             Ok(NetDetailOrder::LogoutTime)
-        } else if ls == "flux" {
+        } else if s.eq_ignore_ascii_case("flux") {
             Ok(NetDetailOrder::Flux)
         } else {
             Err(NetHelperError::OrderErr)
@@ -157,9 +156,12 @@ impl<'a> UseregHelper<'a> {
             .map(|node| {
                 let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
                 NetUser::from_detail(
-                    tds[0].text().parse().unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
+                    tds[0]
+                        .text()
+                        .parse()
+                        .unwrap_or_else(|_| Ipv4Addr::new(0, 0, 0, 0)),
                     NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                        .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                        .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
                     tds[6].text().parse().ok(),
                 )
             })
@@ -222,9 +224,9 @@ impl<'a> UseregDetails<'a> {
                 } else {
                     Some(NetDetail::from_detail(
                         NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                            .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                            .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
                         NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
-                            .unwrap_or(NaiveDateTime::from_timestamp(0, 0)),
+                            .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
                         parse_flux(&tds[4].text()),
                     ))
                 }
@@ -242,17 +244,13 @@ impl Iterator for UseregDetails<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(item) = self.data.pop_front() {
             Some(Ok(item))
+        } else if self.len < USEREG_OFF {
+            None
+        } else if let Some(err) = self.load_newpage().err() {
+            self.len = 0;
+            Some(Err(err))
         } else {
-            if self.len < USEREG_OFF {
-                None
-            } else {
-                if let Some(err) = self.load_newpage().err() {
-                    self.len = 0;
-                    Some(Err(err))
-                } else {
-                    self.next()
-                }
-            }
+            self.next()
         }
     }
 }

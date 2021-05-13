@@ -15,6 +15,30 @@ mod net;
 pub mod suggest;
 pub mod usereg;
 
+#[derive(Debug, Error)]
+pub enum NetHelperError {
+    #[error(transparent)]
+    HttpErr(#[from] ureq::Error),
+    #[error(transparent)]
+    JsonErr(#[from] serde_json::error::Error),
+    #[error("无法获取 ac_id")]
+    NoAcIdErr,
+    #[error("操作失败：{0}")]
+    LogErr(String),
+    #[error("无法识别的用户信息：{0}")]
+    ParseNetFluxErr(String),
+    #[error(transparent)]
+    IoErr(#[from] std::io::Error),
+    #[error("排序方式无效")]
+    OrderErr,
+    #[error("无法确定登录方式")]
+    HostErr,
+    #[error("找不到配置文件目录")]
+    ConfigDirErr,
+}
+
+pub type Result<T> = std::result::Result<T, NetHelperError>;
+
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct NetCredential {
@@ -37,7 +61,7 @@ impl Flux {
     fn string(&self) -> String {
         let mut flux = self.0 as f64;
         if flux < 1000.0 {
-            return format!("{} B", flux);
+            return format!("{} B", self.0);
         }
         flux /= 1000.0;
         if flux < 1000.0 {
@@ -87,56 +111,26 @@ impl Default for NetFlux {
     }
 }
 
-impl NetFlux {
-    pub fn from_detail(u: String, f: Flux, t: Duration, b: Balance) -> Self {
-        NetFlux {
-            username: u,
-            flux: f,
-            online_time: t,
-            balance: b,
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
+impl std::str::FromStr for NetFlux {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> Result<Self> {
         let vec = s.split(',').collect::<Vec<_>>();
-        if vec.len() <= 1 {
-            NetFlux::default()
-        } else {
-            NetFlux::from_detail(
-                vec[0].to_string(),
-                Flux(vec[6].parse::<u64>().unwrap_or_default()),
-                Duration::seconds(
+        if vec.len() >= 12 {
+            Ok(NetFlux {
+                username: vec[0].to_string(),
+                flux: Flux(vec[6].parse::<u64>().unwrap_or_default()),
+                online_time: Duration::seconds(
                     (vec[2].parse::<i64>().unwrap_or_default()
                         - vec[1].parse::<i64>().unwrap_or_default())
                     .max(0),
                 ),
-                Balance(vec[11].parse::<f64>().unwrap_or_default()),
-            )
+                balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
+            })
+        } else {
+            Err(NetHelperError::ParseNetFluxErr(s.to_string()))
         }
     }
 }
-
-#[derive(Debug, Error)]
-pub enum NetHelperError {
-    #[error(transparent)]
-    HttpErr(#[from] ureq::Error),
-    #[error(transparent)]
-    JsonErr(#[from] serde_json::error::Error),
-    #[error("无法获取ac_id")]
-    NoAcIdErr,
-    #[error("操作失败：{0}")]
-    LogErr(String),
-    #[error(transparent)]
-    IoErr(#[from] std::io::Error),
-    #[error("排序方式无效")]
-    OrderErr,
-    #[error("无法确定登录方式")]
-    HostErr,
-    #[error("找不到配置文件目录")]
-    ConfigDirErr,
-}
-
-pub type Result<T> = std::result::Result<T, NetHelperError>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NetState {
@@ -150,14 +144,13 @@ pub enum NetState {
 impl std::str::FromStr for NetState {
     type Err = NetHelperError;
     fn from_str(s: &str) -> Result<Self> {
-        let ls = s.to_lowercase();
-        if ls == "net" {
+        if s.eq_ignore_ascii_case("net") {
             Ok(NetState::Net)
-        } else if ls == "auth4" {
+        } else if s.eq_ignore_ascii_case("auth4") {
             Ok(NetState::Auth4)
-        } else if ls == "auth6" {
+        } else if s.eq_ignore_ascii_case("auth6") {
             Ok(NetState::Auth6)
-        } else if ls == "auto" {
+        } else if s.eq_ignore_ascii_case("auto") {
             Ok(NetState::Auto)
         } else {
             Err(NetHelperError::HostErr)

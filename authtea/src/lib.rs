@@ -1,3 +1,5 @@
+#![allow(clippy::many_single_char_names)]
+
 use std::{mem::size_of, ptr::copy_nonoverlapping};
 
 pub struct AuthTea {
@@ -19,7 +21,7 @@ fn to_u32_with_len(a: &[u8]) -> Vec<u8> {
 impl AuthTea {
     pub fn new(key: &[u8]) -> Self {
         let mut k = [0; 4];
-        if key.len() > 0 {
+        if !key.is_empty() {
             unsafe {
                 copy_nonoverlapping(
                     key.as_ptr(),
