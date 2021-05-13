@@ -85,19 +85,6 @@ static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
 static USEREG_DETAIL_URI: &str = "http://usereg.tsinghua.edu.cn/user_detail_list.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
-fn parse_flux(s: &str) -> Flux {
-    let (flux, unit) = s.split_at(s.len() - 1);
-    Flux(
-        (flux.parse::<f64>().unwrap_or_default()
-            * match unit {
-                "G" => 1_000_000_000.0,
-                "M" => 1_000_000.0,
-                "K" => 1_000.0,
-                _ => 1.0,
-            }) as u64,
-    )
-}
-
 impl<'a> UseregHelper<'a> {
     pub fn new(cred: NetCredential, client: &'a HttpClient) -> Self {
         UseregHelper { cred, client }
@@ -227,7 +214,7 @@ impl<'a> UseregDetails<'a> {
                             .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
                         NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
                             .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
-                        parse_flux(&tds[4].text()),
+                        tds[4].text().parse().unwrap_or_default(),
                     ))
                 }
             })

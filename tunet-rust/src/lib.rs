@@ -82,6 +82,22 @@ impl Display for Flux {
     }
 }
 
+impl std::str::FromStr for Flux {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> Result<Self> {
+        let (flux, unit) = s.split_at(s.len() - 1);
+        Ok(Flux(
+            (flux.trim_end().parse::<f64>().unwrap_or_default()
+                * match unit {
+                    "G" => 1_000_000_000.0,
+                    "M" => 1_000_000.0,
+                    "K" => 1_000.0,
+                    _ => 1.0,
+                }) as u64,
+        ))
+    }
+}
+
 #[repr(transparent)]
 #[derive(Debug, Default)]
 pub struct Balance(pub f64);
