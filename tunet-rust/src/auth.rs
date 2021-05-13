@@ -28,7 +28,7 @@ impl<'a, const V: i32> AuthConnect<'a, V>
 where
     Self: AuthConnectUri,
 {
-    pub fn from_cred_client(cred: NetCredential, client: &'a HttpClient) -> Self {
+    pub fn new(cred: NetCredential, client: &'a HttpClient) -> Self {
         Self { cred, client }
     }
 

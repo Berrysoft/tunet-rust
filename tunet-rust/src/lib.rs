@@ -172,23 +172,15 @@ pub enum TUNetConnect<'a> {
 }
 
 impl<'a> TUNetConnect<'a> {
-    pub fn from_state_cred_client(
-        s: NetState,
-        cred: NetCredential,
-        client: &'a HttpClient,
-    ) -> Result<Self> {
+    pub fn new(s: NetState, cred: NetCredential, client: &'a HttpClient) -> Result<Self> {
         match s {
-            NetState::Net => Ok(Self::Net(net::NetConnect::from_cred_client(cred, client))),
-            NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::from_cred_client(
-                cred, client,
-            ))),
-            NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::from_cred_client(
-                cred, client,
-            ))),
+            NetState::Net => Ok(Self::Net(net::NetConnect::new(cred, client))),
+            NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::new(cred, client))),
+            NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::new(cred, client))),
             NetState::Auto => {
                 let s = suggest::suggest(client);
                 debug_assert_ne!(s, NetState::Auto);
-                Self::from_state_cred_client(s, cred, client)
+                Self::new(s, cred, client)
             }
             NetState::Unknown => Err(NetHelperError::HostErr),
         }

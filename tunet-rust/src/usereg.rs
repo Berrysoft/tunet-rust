@@ -99,7 +99,7 @@ fn parse_flux(s: &str) -> Flux {
 }
 
 impl<'a> UseregHelper<'a> {
-    pub fn from_cred_client(cred: NetCredential, client: &'a HttpClient) -> Self {
+    pub fn new(cred: NetCredential, client: &'a HttpClient) -> Self {
         UseregHelper { cred, client }
     }
 

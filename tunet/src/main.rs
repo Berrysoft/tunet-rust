@@ -93,7 +93,7 @@ impl TUNetCommand for TUNetLogin {
     fn run(&self) -> Result<()> {
         let client = create_http_client();
         let cred = read_cred()?;
-        let mut c = TUNetConnect::from_state_cred_client(self.host, cred, &client)?;
+        let mut c = TUNetConnect::new(self.host, cred, &client)?;
         let res = c.login()?;
         println!("{}", res);
         save_cred(c.cred())
@@ -111,7 +111,7 @@ impl TUNetCommand for TUNetLogout {
     fn run(&self) -> Result<()> {
         let client = create_http_client();
         let cred = read_username()?;
-        let mut c = TUNetConnect::from_state_cred_client(self.host, cred, &client)?;
+        let mut c = TUNetConnect::new(self.host, cred, &client)?;
         let res = c.logout()?;
         println!("{}", res);
         Ok(())
@@ -127,7 +127,7 @@ struct TUNetStatus {
 impl TUNetCommand for TUNetStatus {
     fn run(&self) -> Result<()> {
         let client = create_http_client();
-        let c = TUNetConnect::from_state_cred_client(self.host, NetCredential::default(), &client)?;
+        let c = TUNetConnect::new(self.host, NetCredential::default(), &client)?;
         let f = c.flux()?;
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut stdout = tco::ResetGuard::Owned(stdout);
@@ -171,7 +171,7 @@ impl TUNetCommand for TUNetOnline {
     fn run(&self) -> Result<()> {
         let client = create_http_client();
         let cred = read_cred()?;
-        let mut c = UseregHelper::from_cred_client(cred, &client);
+        let mut c = UseregHelper::new(cred, &client);
         c.login()?;
         let us = c.users()?;
         let mac_addrs = MacAddressIterator::new()
@@ -212,7 +212,7 @@ impl TUNetCommand for TUNetUseregConnect {
     fn run(&self) -> Result<()> {
         let client = create_http_client();
         let cred = read_cred()?;
-        let mut c = UseregHelper::from_cred_client(cred, &client);
+        let mut c = UseregHelper::new(cred, &client);
         c.login()?;
         let res = c.connect(self.address)?;
         println!("{}", res);
@@ -231,7 +231,7 @@ impl TUNetCommand for TUNetUseregDrop {
     fn run(&self) -> Result<()> {
         let client = create_http_client();
         let cred = read_cred()?;
-        let mut c = UseregHelper::from_cred_client(cred, &client);
+        let mut c = UseregHelper::new(cred, &client);
         c.login()?;
         let res = c.drop(self.address)?;
         println!("{}", res);
@@ -256,7 +256,7 @@ impl TUNetDetail {
     fn run_detail(&self) -> Result<()> {
         let client = create_http_client();
         let cred = read_cred()?;
-        let mut c = UseregHelper::from_cred_client(cred, &client);
+        let mut c = UseregHelper::new(cred, &client);
         c.login()?;
         let mut details = c.details(self.order, self.descending)?;
         let stdout = StandardStream::stdout(ColorChoice::Auto);
@@ -290,7 +290,7 @@ impl TUNetDetail {
     fn run_detail_grouping(&self) -> Result<()> {
         let client = create_http_client();
         let cred = read_cred()?;
-        let mut c = UseregHelper::from_cred_client(cred, &client);
+        let mut c = UseregHelper::new(cred, &client);
         c.login()?;
         let details = c
             .details(NetDetailOrder::LogoutTime, self.descending)?

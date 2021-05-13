@@ -11,7 +11,7 @@ static NET_LOG_URI: &str = "http://net.tsinghua.edu.cn/do_login.php";
 static NET_FLUX_URI: &str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl<'a> NetConnect<'a> {
-    pub fn from_cred_client(cred: NetCredential, client: &'a HttpClient) -> Self {
+    pub fn new(cred: NetCredential, client: &'a HttpClient) -> Self {
         NetConnect { cred, client }
     }
 }
