@@ -176,7 +176,7 @@ impl<'a> UseregDetails<'a> {
     pub(crate) fn new(client: &'a HttpClient, order: NetDetailOrder, des: bool) -> Self {
         Self {
             client,
-            index: 0,
+            index: 1,
             now: Local::now(),
             order,
             des,
