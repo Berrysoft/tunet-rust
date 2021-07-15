@@ -4,4 +4,11 @@ updates:
   directory: "/"
   schedule:
     interval: daily
-  open-pull-requests-limit: 10
+- package-ecosystem: cargo
+  directory: "/netstatus"
+  schedule:
+    interval: daily
+- package-ecosystem: cargo
+  directory: "/winrt-bindings"
+  schedule:
+    interval: daily
