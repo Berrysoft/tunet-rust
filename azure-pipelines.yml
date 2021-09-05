@@ -12,44 +12,51 @@ strategy:
       imageName: 'ubuntu-16.04'
       target: 'x86_64-unknown-linux-gnu'
       exeName: 'tunet'
+      publishName: 'tunet.linux.x86_64'
       rustflags: ''
       crosslib: false
     linux-arm:
       imageName: 'ubuntu-16.04'
       target: 'arm-unknown-linux-gnueabihf'
       exeName: 'tunet'
-      rustflags: ''
+      publishName: 'tunet.linux.arm'
+      rustflags: '-C linker=gcc-arm-linux-gnueabihf'
       crosslib: true
       crosslibs: 'libc6-armhf-cross gcc-arm-linux-gnueabihf'
     linux-arm64:
       imageName: 'ubuntu-16.04'
       target: 'aarch64-unknown-linux-gnu'
       exeName: 'tunet'
-      rustflags: ''
+      publishName: 'tunet.linux.aarch64'
+      rustflags: '-C linker=gcc-aarch64-linux-gnu'
       crosslib: true
       crosslibs: 'libc6-arm64-cross gcc-aarch64-linux-gnu'
     osx-x64:
       imageName: 'macOS-latest'
       target: 'x86_64-apple-darwin'
       exeName: 'tunet'
+      publishName: 'tunet.macos.x86_64'
       rustflags: ''
       crosslib: false
     osx-arm64:
       imageName: 'macOS-11'
       target: 'aarch64-apple-darwin'
       exeName: 'tunet'
+      publishName: 'tunet.macos.aarch64'
       rustflags: ''
       crosslib: false
     win-x64:
       imageName: 'windows-latest'
-      target: 'i686-pc-windows-msvc'
+      target: 'x86_64-pc-windows-msvc'
       exeName: 'tunet.exe'
+      publishName: 'tunet.win.x86_64.exe'
       rustflags: '-C target-feature=+crt-static'
       crosslib: false
     win-x86:
       imageName: 'windows-latest'
-      target: 'x86_64-pc-windows-msvc'
+      target: 'i686-pc-windows-msvc'
       exeName: 'tunet.exe'
+      publishName: 'tunet.win.i686.exe'
       rustflags: '-C target-feature=+crt-static'
       crosslib: false
 pool:
@@ -67,13 +74,8 @@ steps:
   env:
     RUSTFLAGS: $(rustflags)
 
-- task: CopyFiles@2
+- pwsh: cp target/$(target)/release/$(exeName) $(Build.ArtifactStagingDirectory)/$(publishName)
   displayName: 'Copy binaries'
-  inputs:
-    SourceFolder: 'target/$(target)/release/'
-    Contents: |
-      $(exeName)
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/$(Agent.JobName)'
 
 - task: PublishBuildArtifacts@1
   inputs:
