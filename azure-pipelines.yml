@@ -20,14 +20,14 @@ strategy:
       exeName: 'tunet'
       rustflags: ''
       crosslib: true
-      crosslibs: 'libc6-armhf-cross'
+      crosslibs: 'libc6-armhf-cross gcc-arm-linux-gnueabihf'
     linux-arm64:
       imageName: 'ubuntu-16.04'
       target: 'aarch64-unknown-linux-gnu'
       exeName: 'tunet'
       rustflags: ''
       crosslib: true
-      crosslibs: 'libc6-arm64-cross'
+      crosslibs: 'libc6-arm64-cross gcc-aarch64-linux-gnu'
     osx-x64:
       imageName: 'macOS-latest'
       target: 'x86_64-apple-darwin'
