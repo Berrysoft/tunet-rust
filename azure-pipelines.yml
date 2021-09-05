@@ -53,7 +53,7 @@ pool:
 steps:
 - script: sudo apt install $(crosslibs)
   displayName: "Install cross-compile libs"
-  condition: $(crosslib)
+  condition: eq(variables.crosslib, 'true')
 
 - script: |
     rustup target add $(target)
