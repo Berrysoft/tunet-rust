@@ -20,7 +20,7 @@ strategy:
       target: 'arm-unknown-linux-gnueabihf'
       exeName: 'tunet'
       publishName: 'tunet.linux.arm'
-      rustflags: '-C linker=gcc-arm-linux-gnueabihf'
+      rustflags: '-C linker=arm-linux-gnueabihf-gcc'
       crosslib: true
       crosslibs: 'libc6-armhf-cross gcc-arm-linux-gnueabihf'
     linux-arm64:
@@ -28,7 +28,7 @@ strategy:
       target: 'aarch64-unknown-linux-gnu'
       exeName: 'tunet'
       publishName: 'tunet.linux.aarch64'
-      rustflags: '-C linker=gcc-aarch64-linux-gnu'
+      rustflags: '-C linker=aarch64-linux-gnu-gcc'
       crosslib: true
       crosslibs: 'libc6-arm64-cross gcc-aarch64-linux-gnu'
     osx-x64:
