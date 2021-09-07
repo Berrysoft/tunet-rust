@@ -9,7 +9,9 @@ license = "MIT"
 [dependencies]
 authtea = { path = "../authtea" }
 netstatus = { path = "../netstatus", optional = true }
-ureq = { version = "2.1", features = [ "cookies", "charset" ] }
+async-trait = "0.1"
+async-stream = "0.3"
+futures-core = "0.3"
 url = "2.2"
 md-5 = "0.9"
 sha-1 = "0.9"
@@ -24,3 +26,9 @@ mac_address = "1.1"
 lazy_static = "1.4"
 regex = "1"
 thiserror = "1.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+reqwest = { version = "0.11", default-features = false, features = [ "rustls-tls", "cookies", "json" ] }
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+reqwest = { version = "0.11", features = [ "cookies", "json" ] }

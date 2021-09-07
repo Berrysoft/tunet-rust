@@ -1,11 +1,12 @@
 use crate::*;
-use chrono::{DateTime, Local};
+use async_stream::try_stream;
+use chrono::Local;
 use data_encoding::HEXLOWER;
+use futures_core::Stream;
 use mac_address::MacAddress;
 use md5::{Digest, Md5};
 use select::document::Document;
 use select::predicate::*;
-use std::collections::VecDeque;
 use std::net::Ipv4Addr;
 use url::Url;
 
@@ -73,9 +74,9 @@ impl std::str::FromStr for NetDetailOrder {
     }
 }
 
-pub struct UseregHelper<'a> {
+pub struct UseregHelper {
     cred: NetCredential,
-    client: &'a HttpClient,
+    client: HttpClient,
 }
 
 // Use HTTP because TLS1.0/1.1 aren't supported.
@@ -84,13 +85,14 @@ static USEREG_INFO_URI: &str = "http://usereg.tsinghua.edu.cn/online_user_ipv4.p
 static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
 static USEREG_DETAIL_URI: &str = "http://usereg.tsinghua.edu.cn/user_detail_list.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+const USEREG_OFF: usize = 100;
 
-impl<'a> UseregHelper<'a> {
-    pub fn new(cred: NetCredential, client: &'a HttpClient) -> Self {
+impl UseregHelper {
+    pub fn new(cred: NetCredential, client: HttpClient) -> Self {
         UseregHelper { cred, client }
     }
 
-    pub fn login(&mut self) -> Result<String> {
+    pub async fn login(&mut self) -> Result<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
             md5.update(self.cred.password.as_bytes());
@@ -101,21 +103,31 @@ impl<'a> UseregHelper<'a> {
             ("user_login_name", &self.cred.username),
             ("user_password", &HEXLOWER.encode(&password_md5)),
         ];
-        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
-        Ok(res.into_string()?)
+        let res = self
+            .client
+            .post(USEREG_LOG_URI)
+            .form(&params)
+            .send()
+            .await?;
+        Ok(res.text().await?)
     }
 
-    pub fn logout(&mut self) -> Result<String> {
+    pub async fn logout(&mut self) -> Result<String> {
         let params = [("action", "logout")];
-        let res = self.client.post(USEREG_LOG_URI).send_form(&params)?;
-        Ok(res.into_string()?)
+        let res = self
+            .client
+            .post(USEREG_LOG_URI)
+            .form(&params)
+            .send()
+            .await?;
+        Ok(res.text().await?)
     }
 
     pub fn cred(&self) -> &NetCredential {
         &self.cred
     }
 
-    pub fn connect(&self, addr: Ipv4Addr) -> Result<String> {
+    pub async fn connect(&self, addr: Ipv4Addr) -> Result<String> {
         let params = [
             ("n", "100"),
             ("is_pad", "1"),
@@ -124,25 +136,37 @@ impl<'a> UseregHelper<'a> {
             ("user_ip", &addr.to_string()),
             ("drop", "0"),
         ];
-        let res = self.client.post(USEREG_CONNECT_URI).send_form(&params)?;
-        Ok(res.into_string()?)
+        let res = self
+            .client
+            .post(USEREG_CONNECT_URI)
+            .form(&params)
+            .send()
+            .await?;
+        Ok(res.text().await?)
     }
 
-    pub fn drop(&self, addr: Ipv4Addr) -> Result<String> {
+    pub async fn drop(&self, addr: Ipv4Addr) -> Result<String> {
         let params = [("action", "drop"), ("user_ip", &addr.to_string())];
-        let res = self.client.post(USEREG_INFO_URI).send_form(&params)?;
-        Ok(res.into_string()?)
+        let res = self
+            .client
+            .post(USEREG_INFO_URI)
+            .form(&params)
+            .send()
+            .await?;
+        Ok(res.text().await?)
     }
 
-    pub fn users(&self) -> Result<Vec<NetUser>> {
-        let res = self.client.get(USEREG_INFO_URI).call()?;
-        let doc = Document::from(res.into_string()?.as_str());
-        Ok(doc
-            .find(Name("tr").descendant(Attr("align", "center")))
-            .skip(1)
-            .map(|node| {
-                let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                NetUser::from_detail(
+    pub fn users(&self) -> impl Stream<Item = Result<NetUser>> {
+        let client = self.client.clone();
+        try_stream! {
+            let res = client.get(USEREG_INFO_URI).send().await?;
+            let doc = Document::from(res.text().await?.as_str());
+            for tds in doc
+                .find(Name("tr").descendant(Attr("align", "center")))
+                .skip(1)
+                .map(|node| node.find(Name("td")).skip(1).collect::<Vec<_>>())
+            {
+                yield NetUser::from_detail(
                     tds[0]
                         .text()
                         .parse()
@@ -150,94 +174,57 @@ impl<'a> UseregHelper<'a> {
                     NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
                         .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
                     tds[6].text().parse().ok(),
-                )
-            })
-            .collect())
-    }
-
-    pub fn details(&self, o: NetDetailOrder, des: bool) -> Result<UseregDetails<'a>> {
-        Ok(UseregDetails::new(self.client, o, des))
-    }
-}
-
-const USEREG_OFF: usize = 100;
-
-pub struct UseregDetails<'a> {
-    client: &'a HttpClient,
-    index: usize,
-    now: DateTime<Local>,
-    order: NetDetailOrder,
-    des: bool,
-    len: usize,
-    data: VecDeque<NetDetail>,
-}
-
-impl<'a> UseregDetails<'a> {
-    pub(crate) fn new(client: &'a HttpClient, order: NetDetailOrder, des: bool) -> Self {
-        Self {
-            client,
-            index: 1,
-            now: Local::now(),
-            order,
-            des,
-            len: USEREG_OFF,
-            data: VecDeque::new(),
+                );
+            }
         }
     }
 
-    fn load_newpage(&mut self) -> Result<()> {
-        let uri = Url::parse_with_params(
-            USEREG_DETAIL_URI,
-            &[
-                ("action", "query"),
-                ("desc", if self.des { "DESC" } else { "" }),
-                ("order", self.order.get_query()),
-                ("start_time", &self.now.format("%Y-%m-01").to_string()),
-                ("end_time", &self.now.format("%Y-%m-%d").to_string()),
-                ("page", &self.index.to_string()),
-                ("offset", &USEREG_OFF.to_string()),
-            ],
-        )
-        .unwrap();
-        let res = self.client.request_url("GET", &uri).call()?;
-        let doc = Document::from(res.into_string()?.as_str());
-        self.data = doc
-            .find(Name("tr").descendant(Attr("align", "center")))
-            .skip(1)
-            .filter_map(|node| {
-                let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
-                if tds.is_empty() {
-                    None
-                } else {
-                    Some(NetDetail::from_detail(
-                        NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
-                            .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
-                        NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
-                            .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
-                        tds[4].text().parse().unwrap_or_default(),
-                    ))
+    pub fn details(&self, o: NetDetailOrder, des: bool) -> impl Stream<Item = Result<NetDetail>> {
+        let client = self.client.clone();
+        let now = Local::now();
+        let start_time = now.format("%Y-%m-01").to_string();
+        let end_time = now.format("%Y-%m-%d").to_string();
+        let des = if des { "DESC" } else { "" };
+        try_stream! {
+            let mut i: usize = 1;
+            loop {
+                let uri = Url::parse_with_params(
+                    USEREG_DETAIL_URI,
+                    &[
+                        ("action", "query"),
+                        ("desc", des),
+                        ("order", o.get_query()),
+                        ("start_time", &start_time),
+                        ("end_time", &end_time),
+                        ("page", &i.to_string()),
+                        ("offset", &USEREG_OFF.to_string()),
+                    ],
+                )
+                .unwrap();
+                let res = client.get(uri).send().await?;
+                let doc = Document::from(res.text().await?.as_str());
+                let mut new_len = 0;
+                for node in doc
+                    .find(Name("tr").descendant(Attr("align", "center")))
+                    .skip(1)
+                {
+                    let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
+                    if !tds.is_empty() {
+                        yield NetDetail::from_detail(
+                            NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
+                                .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
+                            NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
+                                .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
+                            tds[4].text().parse().unwrap_or_default(),
+                            );
+                        new_len += 1;
+                    }
                 }
-            })
-            .collect();
-        self.len = self.data.len();
-        self.index += 1;
-        Ok(())
-    }
-}
-
-impl Iterator for UseregDetails<'_> {
-    type Item = Result<NetDetail>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(item) = self.data.pop_front() {
-            Some(Ok(item))
-        } else if self.len < USEREG_OFF {
-            None
-        } else if let Some(err) = self.load_newpage().err() {
-            self.len = 0;
-            Some(Err(err))
-        } else {
-            self.next()
+                if new_len < USEREG_OFF {
+                    break;
+                }
+                i += 1;
+            }
         }
     }
 }

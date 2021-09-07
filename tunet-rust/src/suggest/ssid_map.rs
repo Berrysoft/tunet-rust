@@ -16,7 +16,7 @@ lazy_static! {
     };
 }
 
-pub fn suggest(client: &HttpClient) -> NetState {
+pub async fn suggest(client: &HttpClient) -> NetState {
     let state = match NetStatus::current() {
         NetStatus::Unknown => None,
         NetStatus::Wwan => Some(NetState::Unknown),
@@ -25,6 +25,6 @@ pub fn suggest(client: &HttpClient) -> NetState {
     };
     match state {
         Some(state) => state,
-        None => ping::suggest(client),
+        None => ping::suggest(client).await,
     }
 }

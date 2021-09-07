@@ -8,11 +8,12 @@ use md5::Md5;
 use regex::Regex;
 use serde_json::{self, json, Value as JsonValue};
 use sha1::{Digest, Sha1};
+use std::future::Future;
 use url::Url;
 
-pub struct AuthConnect<'a, const V: i32> {
+pub struct AuthConnect<const V: i32> {
     cred: NetCredential,
-    client: &'a HttpClient,
+    client: HttpClient,
 }
 
 const AUTH_BASE64: Encoding = new_encoding! {
@@ -24,15 +25,15 @@ lazy_static! {
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
 }
 
-impl<'a, const V: i32> AuthConnect<'a, V>
+impl<const V: i32> AuthConnect<V>
 where
     Self: AuthConnectUri,
 {
-    pub fn new(cred: NetCredential, client: &'a HttpClient) -> Self {
+    pub fn new(cred: NetCredential, client: HttpClient) -> Self {
         Self { cred, client }
     }
 
-    fn challenge(&self) -> Result<String> {
+    async fn challenge(&self) -> Result<String> {
         let uri = Url::parse_with_params(
             Self::challenge_uri(),
             &[
@@ -43,8 +44,8 @@ where
             ],
         )
         .unwrap();
-        let res = self.client.request_url("GET", &uri).call()?;
-        let t = res.into_string()?;
+        let res = self.client.get(uri).send().await?;
+        let t = res.text().await?;
         let mut json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
         Ok(json
             .remove("challenge")
@@ -52,28 +53,28 @@ where
             .unwrap_or_default())
     }
 
-    fn get_ac_id(&self) -> Result<i32> {
-        let res = self.client.get(Self::redirect_uri()).call()?;
-        let t = res.into_string()?;
+    async fn get_ac_id(&self) -> Result<i32> {
+        let res = self.client.get(Self::redirect_uri()).send().await?;
+        let t = res.text().await?;
         match AC_ID_REGEX.captures(&t) {
             Some(cap) => Ok(cap[1].parse::<i32>().unwrap_or_default()),
             _ => Err(NetHelperError::NoAcIdErr),
         }
     }
 
-    fn do_log<F>(&mut self, action: F) -> Result<String>
+    async fn do_log<'a, F, R>(&'a self, action: F) -> Result<(String, Option<i32>)>
     where
-        F: Fn(&Self, i32) -> Result<String>,
+        F: Fn(&'a Self, i32) -> R,
+        R: Future<Output = Result<String>>,
     {
         for ac_id in &self.cred.ac_ids {
-            let res = action(self, *ac_id);
-            if res.is_ok() {
-                return res;
+            let res = action(self, *ac_id).await;
+            if let Ok(res) = res {
+                return Ok((res, None));
             }
         }
-        let ac_id = self.get_ac_id()?;
-        self.cred.ac_ids.push(ac_id);
-        action(self, ac_id)
+        let ac_id = self.get_ac_id().await?;
+        Ok((action(self, ac_id).await?, Some(ac_id)))
     }
 
     fn parse_response(t: &str) -> Result<String> {
@@ -97,58 +98,65 @@ where
     }
 }
 
-impl<'a, const V: i32> TUNetHelper for AuthConnect<'a, V>
+#[async_trait]
+impl<const V: i32> TUNetHelper for AuthConnect<V>
 where
     Self: AuthConnectUri,
 {
-    fn login(&mut self) -> Result<String> {
-        self.do_log(|s, ac_id| {
-            let token = s.challenge()?;
-            let password_md5 = {
-                let mut hmacmd5 = Hmac::<Md5>::new_from_slice(&[]).unwrap();
-                hmacmd5.update(token.as_bytes());
-                hmacmd5.finalize().into_bytes()
-            };
-            let password_md5 = HEXLOWER.encode(&password_md5);
-            let encode_json = json!({
-                "username": s.cred.username,
-                "password": s.cred.password,
-                "ip": "",
-                "acid": ac_id,
-                "enc_ver": "srun_bx1"
-            });
-            let info = {
-                let tea = AuthTea::new(token.as_bytes());
-                tea.encode(encode_json.to_string().as_bytes())
-            };
-            let info = format!("{{SRBX1}}{}", AUTH_BASE64.encode(&info));
-            let chksum = {
-                let mut sha1 = Sha1::new();
-                sha1.update(format!(
-                    "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                    token, s.cred.username, password_md5, info, ac_id
-                ));
-                sha1.finalize()
-            };
-            let params = [
-                ("action", "login"),
-                ("ac_id", &ac_id.to_string()),
-                ("double_stack", "1"),
-                ("n", "200"),
-                ("type", "1"),
-                ("username", &s.cred.username),
-                ("password", &format!("{{MD5}}{}", password_md5)),
-                ("info", &info),
-                ("chksum", &HEXLOWER.encode(&chksum)),
-                ("callback", "callback"),
-            ];
-            let res = s.client.post(Self::log_uri()).send_form(&params)?;
-            let t = res.into_string()?;
-            Self::parse_response(&t)
-        })
+    async fn login(&mut self) -> Result<String> {
+        let (res, ac_id) = self
+            .do_log(async move |s, ac_id| {
+                let token = s.challenge().await?;
+                let password_md5 = {
+                    let mut hmacmd5 = Hmac::<Md5>::new_from_slice(&[]).unwrap();
+                    hmacmd5.update(token.as_bytes());
+                    hmacmd5.finalize().into_bytes()
+                };
+                let password_md5 = HEXLOWER.encode(&password_md5);
+                let encode_json = json!({
+                    "username": s.cred.username,
+                    "password": s.cred.password,
+                    "ip": "",
+                    "acid": ac_id,
+                    "enc_ver": "srun_bx1"
+                });
+                let info = {
+                    let tea = AuthTea::new(token.as_bytes());
+                    tea.encode(encode_json.to_string().as_bytes())
+                };
+                let info = format!("{{SRBX1}}{}", AUTH_BASE64.encode(&info));
+                let chksum = {
+                    let mut sha1 = Sha1::new();
+                    sha1.update(format!(
+                        "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
+                        token, s.cred.username, password_md5, info, ac_id
+                    ));
+                    sha1.finalize()
+                };
+                let params = [
+                    ("action", "login"),
+                    ("ac_id", &ac_id.to_string()),
+                    ("double_stack", "1"),
+                    ("n", "200"),
+                    ("type", "1"),
+                    ("username", &s.cred.username),
+                    ("password", &format!("{{MD5}}{}", password_md5)),
+                    ("info", &info),
+                    ("chksum", &HEXLOWER.encode(&chksum)),
+                    ("callback", "callback"),
+                ];
+                let res = s.client.post(Self::log_uri()).form(&params).send().await?;
+                let t = res.text().await?;
+                Self::parse_response(&t)
+            })
+            .await?;
+        if let Some(ac_id) = ac_id {
+            self.cred.ac_ids.push(ac_id);
+        }
+        Ok(res)
     }
 
-    fn logout(&mut self) -> Result<String> {
+    async fn logout(&mut self) -> Result<String> {
         let params = [
             ("action", "logout"),
             ("ac_id", "1"),
@@ -156,14 +164,19 @@ where
             ("username", &self.cred.username),
             ("callback", "callback"),
         ];
-        let res = self.client.post(Self::log_uri()).send_form(&params)?;
-        let t = res.into_string()?;
+        let res = self
+            .client
+            .post(Self::log_uri())
+            .form(&params)
+            .send()
+            .await?;
+        let t = res.text().await?;
         Self::parse_response(&t)
     }
 
-    fn flux(&self) -> Result<NetFlux> {
-        let res = self.client.get(Self::flux_uri()).call()?;
-        res.into_string()?.parse()
+    async fn flux(&self) -> Result<NetFlux> {
+        let res = self.client.get(Self::flux_uri()).send().await?;
+        res.text().await?.parse()
     }
 
     fn cred(&self) -> &NetCredential {
@@ -178,7 +191,7 @@ pub trait AuthConnectUri {
     fn redirect_uri() -> &'static str;
 }
 
-impl AuthConnectUri for AuthConnect<'_, 4> {
+impl AuthConnectUri for AuthConnect<4> {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
@@ -200,7 +213,7 @@ impl AuthConnectUri for AuthConnect<'_, 4> {
     }
 }
 
-impl AuthConnectUri for AuthConnect<'_, 6> {
+impl AuthConnectUri for AuthConnect<6> {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal"
