@@ -11,6 +11,8 @@ tunet-rust = { path = "../tunet-rust", features = [ "netstatus", "serde" ] }
 futures-util = "0.3"
 tokio = { version = "1.11", features = [ "macros" ] }
 serde_json = "1.0"
+async-trait = "0.1"
+trait_enum = "0.5"
 anyhow = "1.0"
 mac_address = "1.1"
 structopt = "0.3"

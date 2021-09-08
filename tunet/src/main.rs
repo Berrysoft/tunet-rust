@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use async_trait::async_trait;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
 use mac_address::MacAddressIterator;
@@ -8,6 +9,7 @@ use std::net::Ipv4Addr;
 use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
+use trait_enum::trait_enum;
 use tunet_rust::{usereg::*, *};
 
 mod settings;
@@ -16,47 +18,31 @@ mod strfmt;
 use settings::*;
 use strfmt::*;
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
-enum TUNet {
-    #[structopt(name = "login")]
-    /// 登录
-    Login(TUNetLogin),
-    #[structopt(name = "logout")]
-    /// 注销
-    Logout(TUNetLogout),
-    #[structopt(name = "status")]
-    /// 查看在线状态
-    Status(TUNetStatus),
-    #[structopt(name = "online")]
-    /// 查询在线IP
-    Online(TUNetOnline),
-    #[structopt(name = "connect")]
-    /// 上线IP
-    Connect(TUNetUseregConnect),
-    #[structopt(name = "drop")]
-    /// 下线IP
-    Drop(TUNetUseregDrop),
-    #[structopt(name = "detail")]
-    /// 流量明细
-    Detail(TUNetDetail),
-    #[structopt(name = "deletecred")]
-    /// 删除用户名和密码
-    DeleteCredential(TUNetDeleteCred),
+#[async_trait]
+trait TUNetCommand {
+    async fn run(&self) -> Result<()>;
 }
 
-impl TUNet {
-    pub async fn run(&self) -> Result<()> {
-        match self {
-            Self::Login(c) => c.run().await,
-            Self::Logout(c) => c.run().await,
-            Self::Status(c) => c.run().await,
-            Self::Online(c) => c.run().await,
-            Self::Connect(c) => c.run().await,
-            Self::Drop(c) => c.run().await,
-            Self::Detail(c) => c.run().await,
-            Self::DeleteCredential(c) => c.run().await,
-        }
+trait_enum! {
+    #[derive(Debug, StructOpt)]
+    #[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
+    enum TUNet : TUNetCommand {
+        #[structopt(name = "login", about = "登录")]
+        TUNetLogin,
+        #[structopt(name = "logout", about = "注销")]
+        TUNetLogout,
+        #[structopt(name = "status", about = "查看在线状态")]
+        TUNetStatus,
+        #[structopt(name = "online", about = "查询在线IP")]
+        TUNetOnline,
+        #[structopt(name = "connect", about = "上线IP")]
+        TUNetUseregConnect,
+        #[structopt(name = "drop", about = "下线IP")]
+        TUNetUseregDrop,
+        #[structopt(name = "detail", about = "流量明细")]
+        TUNetDetail,
+        #[structopt(name = "deletecred", about = "删除用户名和密码")]
+        TUNetDeleteCred,
     }
 }
 
@@ -85,8 +71,9 @@ struct TUNetLogin {
     host: NetState,
 }
 
-impl TUNetLogin {
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetLogin {
+    async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
         let mut c = TUNetConnect::new(self.host, cred, client).await?;
@@ -103,8 +90,9 @@ struct TUNetLogout {
     host: NetState,
 }
 
-impl TUNetLogout {
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetLogout {
+    async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_username()?;
         let mut c = TUNetConnect::new(self.host, cred, client).await?;
@@ -120,8 +108,9 @@ struct TUNetStatus {
     host: NetState,
 }
 
-impl TUNetStatus {
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetStatus {
+    async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let c = TUNetConnect::new(self.host, NetCredential::default(), client).await?;
         let f = c.flux().await?;
@@ -163,8 +152,9 @@ impl TUNetStatus {
 #[derive(Debug, StructOpt)]
 struct TUNetOnline {}
 
-impl TUNetOnline {
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetOnline {
+    async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
         let mut c = UseregHelper::new(cred, client);
@@ -206,8 +196,9 @@ struct TUNetUseregConnect {
     address: Ipv4Addr,
 }
 
-impl TUNetUseregConnect {
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetUseregConnect {
+    async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
         let mut c = UseregHelper::new(cred, client);
@@ -225,8 +216,9 @@ struct TUNetUseregDrop {
     address: Ipv4Addr,
 }
 
-impl TUNetUseregDrop {
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetUseregDrop {
+    async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
         let mut c = UseregHelper::new(cred, client);
@@ -340,8 +332,11 @@ impl TUNetDetail {
         )?;
         save_cred(c.cred())
     }
+}
 
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetDetail {
+    async fn run(&self) -> Result<()> {
         if self.grouping {
             self.run_detail_grouping().await
         } else {
@@ -353,8 +348,9 @@ impl TUNetDetail {
 #[derive(Debug, StructOpt)]
 struct TUNetDeleteCred {}
 
-impl TUNetDeleteCred {
-    pub async fn run(&self) -> Result<()> {
+#[async_trait]
+impl TUNetCommand for TUNetDeleteCred {
+    async fn run(&self) -> Result<()> {
         delete_cred()
     }
 }

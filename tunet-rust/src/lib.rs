@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use std::fmt::{Display, Formatter};
-use std::ops::{Deref, DerefMut};
 use thiserror::Error;
+use trait_enum::trait_enum;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,10 @@ mod auth;
 mod net;
 pub mod suggest;
 pub mod usereg;
+
+pub use net::NetConnect;
+pub type Auth4Connect = auth::AuthConnect<4>;
+pub type Auth6Connect = auth::AuthConnect<6>;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
@@ -173,10 +177,12 @@ pub trait TUNetHelper: Send + Sync {
     fn cred(&self) -> &NetCredential;
 }
 
-pub enum TUNetConnect {
-    Net(net::NetConnect),
-    Auth4(auth::AuthConnect<4>),
-    Auth6(auth::AuthConnect<6>),
+trait_enum! {
+    pub enum TUNetConnect : TUNetHelper {
+        NetConnect,
+        Auth4Connect,
+        Auth6Connect,
+    }
 }
 
 impl TUNetConnect {
@@ -190,32 +196,10 @@ impl TUNetConnect {
             debug_assert_ne!(s, NetState::Auto);
         }
         match s {
-            NetState::Net => Ok(Self::Net(net::NetConnect::new(cred, client))),
-            NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::new(cred, client))),
-            NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::new(cred, client))),
+            NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(cred, client))),
+            NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(cred, client))),
+            NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(cred, client))),
             _ => Err(NetHelperError::HostErr),
-        }
-    }
-}
-
-impl Deref for TUNetConnect {
-    type Target = dyn TUNetHelper;
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            Self::Net(c) => c,
-            Self::Auth4(c) => c,
-            Self::Auth6(c) => c,
-        }
-    }
-}
-
-impl DerefMut for TUNetConnect {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        match self {
-            Self::Net(c) => c,
-            Self::Auth4(c) => c,
-            Self::Auth6(c) => c,
         }
     }
 }

@@ -160,20 +160,22 @@ impl UseregHelper {
         let client = self.client.clone();
         try_stream! {
             let res = client.get(USEREG_INFO_URI).send().await?;
-            let doc = Document::from(res.text().await?.as_str());
-            for tds in doc
-                .find(Name("tr").descendant(Attr("align", "center")))
-                .skip(1)
-                .map(|node| node.find(Name("td")).skip(1).collect::<Vec<_>>())
-            {
+            let doc = {
+                let doc = Document::from(res.text().await?.as_str());
+                doc
+                    .find(Name("tr").descendant(Attr("align", "center")))
+                    .skip(1)
+                    .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>())
+                    .collect::<Vec<_>>()
+            };
+            for tds in doc {
                 yield NetUser::from_detail(
                     tds[0]
-                        .text()
                         .parse()
                         .unwrap_or_else(|_| Ipv4Addr::new(0, 0, 0, 0)),
-                    NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
+                    NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT)
                         .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
-                    tds[6].text().parse().ok(),
+                    tds[6].parse().ok(),
                 );
             }
         }
@@ -201,20 +203,23 @@ impl UseregHelper {
                 )
                 .unwrap();
                 let res = client.get(uri).send().await?;
-                let doc = Document::from(res.text().await?.as_str());
+                let doc = {
+                    let doc = Document::from(res.text().await?.as_str());
+                    doc
+                        .find(Name("tr").descendant(Attr("align", "center")))
+                        .skip(1)
+                        .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>())
+                        .collect::<Vec<_>>()
+                };
                 let mut new_len = 0;
-                for node in doc
-                    .find(Name("tr").descendant(Attr("align", "center")))
-                    .skip(1)
-                {
-                    let tds = node.find(Name("td")).skip(1).collect::<Vec<_>>();
+                for tds in doc {
                     if !tds.is_empty() {
                         yield NetDetail::from_detail(
-                            NaiveDateTime::parse_from_str(&tds[1].text(), DATE_TIME_FORMAT)
+                            NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT)
                                 .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
-                            NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
+                            NaiveDateTime::parse_from_str(&tds[2], DATE_TIME_FORMAT)
                                 .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
-                            tds[4].text().parse().unwrap_or_default(),
+                            tds[4].parse().unwrap_or_default(),
                         );
                         new_len += 1;
                     }
