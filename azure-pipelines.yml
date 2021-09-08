@@ -78,7 +78,9 @@ pool:
   vmImage: $(imageName)
 
 steps:
-- script: sudo apt install $(crosslibs)
+- script: |
+    sudo apt update
+    sudo apt install $(crosslibs)
   displayName: "Install cross-compile libs"
   condition: eq(variables.crosslib, 'true')
 
