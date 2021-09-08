@@ -1,4 +1,5 @@
 use dirs::config_dir;
+use keyring::Keyring;
 use rpassword::read_password;
 use std::fs::{remove_file, DirBuilder, File};
 use std::io::{stdin, stdout, BufReader, BufWriter, Write};
@@ -49,20 +50,25 @@ impl SettingsReader for StdioSettingsReader {
     }
 }
 
+static TUNET_CLI_NAME: &str = "TsinghuaNet.CLI";
+static TUNET_DUMMY_USER: &str = "DummyUser";
+
 struct FileSettingsReader {
     path: PathBuf,
+    keyring: Keyring<'static>,
 }
 
 impl FileSettingsReader {
     pub fn new() -> Result<Self> {
         Ok(Self {
             path: Self::file_path()?,
+            keyring: Keyring::new(TUNET_CLI_NAME, TUNET_DUMMY_USER),
         })
     }
 
     pub fn file_path() -> Result<PathBuf> {
-        let mut p = config_dir().ok_or(NetHelperError::ConfigDirErr)?;
-        p.push("TsinghuaNet.CLI");
+        let mut p = config_dir().ok_or_else(|| anyhow::anyhow!("找不到配置文件目录"))?;
+        p.push(TUNET_CLI_NAME);
         p.push("settings");
         p.set_extension("json");
         Ok(p)
@@ -78,12 +84,32 @@ impl FileSettingsReader {
         }
         let f = File::create(self.path.as_path())?;
         let writer = BufWriter::new(f);
-        serde_json::to_writer(writer, settings)?;
+        if let Err(e) = self.keyring.set_password(&settings.password) {
+            if cfg!(debug_assertions) {
+                eprintln!("WARNING: {}", e);
+            }
+            serde_json::to_writer(writer, settings)?;
+        } else {
+            // Don't write password.
+            serde_json::to_writer(
+                writer,
+                &NetCredential {
+                    username: settings.username.clone(),
+                    password: String::default(),
+                    ac_ids: settings.ac_ids.clone(),
+                },
+            )?;
+        }
         Ok(())
     }
 
     pub fn delete(&self) -> Result<()> {
-        if self.path.exists() {
+        self.keyring.delete_password().unwrap_or_else(|e| {
+            if cfg!(debug_assertions) {
+                eprintln!("WARNING: {}", e);
+            }
+        });
+        if Self::file_exists() {
             remove_file(self.path.as_path())?;
         }
         Ok(())
@@ -92,30 +118,41 @@ impl FileSettingsReader {
 
 impl SettingsReader for FileSettingsReader {
     fn read(&self) -> Result<NetCredential> {
-        self.read_with_password()
-    }
-
-    fn read_with_password(&self) -> Result<NetCredential> {
         let f = File::open(self.path.as_path())?;
         let reader = BufReader::new(f);
         Ok(serde_json::from_reader(reader)?)
     }
+
+    fn read_with_password(&self) -> Result<NetCredential> {
+        let mut settings = self.read()?;
+        match self.keyring.get_password() {
+            Ok(password) => settings.password = password,
+            Err(e) => {
+                if cfg!(debug_assertions) {
+                    eprintln!("WARNING: {}", e);
+                }
+            }
+        }
+        Ok(settings)
+    }
 }
 
 pub fn read_cred() -> Result<NetCredential> {
-    Ok(if FileSettingsReader::file_exists() {
-        FileSettingsReader::new()?.read_with_password()?
-    } else {
-        StdioSettingsReader.read_with_password()?
-    })
+    if let Ok(reader) = FileSettingsReader::new() {
+        if let Ok(cred) = reader.read_with_password() {
+            return Ok(cred);
+        }
+    }
+    StdioSettingsReader.read_with_password()
 }
 
 pub fn read_username() -> Result<NetCredential> {
-    Ok(if FileSettingsReader::file_exists() {
-        FileSettingsReader::new()?.read()?
-    } else {
-        StdioSettingsReader.read()?
-    })
+    if let Ok(reader) = FileSettingsReader::new() {
+        if let Ok(cred) = reader.read() {
+            return Ok(cred);
+        }
+    }
+    StdioSettingsReader.read()
 }
 
 pub fn save_cred(cred: &NetCredential) -> Result<()> {

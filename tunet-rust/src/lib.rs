@@ -7,6 +7,7 @@ use thiserror::Error;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+pub use anyhow::Result;
 use async_trait::async_trait;
 pub use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
 pub use reqwest::Client as HttpClient;
@@ -18,39 +19,28 @@ pub mod usereg;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
-    #[error(transparent)]
-    HttpErr(#[from] reqwest::Error),
-    #[error(transparent)]
-    JsonErr(#[from] serde_json::error::Error),
     #[error("无法获取 ac_id")]
     NoAcIdErr,
     #[error("操作失败：{0}")]
     LogErr(String),
     #[error("无法识别的用户信息：{0}")]
     ParseNetFluxErr(String),
-    #[error(transparent)]
-    IoErr(#[from] std::io::Error),
     #[error("排序方式无效")]
     OrderErr,
     #[error("无法确定登录方式")]
     HostErr,
-    #[error("找不到配置文件目录")]
-    ConfigDirErr,
 }
 
-pub type Result<T> = std::result::Result<T, NetHelperError>;
+pub type NetHelperResult<T> = std::result::Result<T, NetHelperError>;
 
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct NetCredential {
-    #[cfg_attr(feature = "serde", serde(rename = "Username"))]
-    #[cfg_attr(feature = "serde", serde(default))]
+    #[cfg_attr(feature = "serde", serde(rename = "Username", default))]
     pub username: String,
-    #[cfg_attr(feature = "serde", serde(rename = "Password"))]
-    #[cfg_attr(feature = "serde", serde(default))]
+    #[cfg_attr(feature = "serde", serde(rename = "Password", default))]
     pub password: String,
-    #[cfg_attr(feature = "serde", serde(rename = "AcIds"))]
-    #[cfg_attr(feature = "serde", serde(default))]
+    #[cfg_attr(feature = "serde", serde(rename = "AcIds", default))]
     pub ac_ids: Vec<i32>,
 }
 
@@ -85,7 +75,7 @@ impl Display for Flux {
 
 impl std::str::FromStr for Flux {
     type Err = NetHelperError;
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         let (flux, unit) = s.split_at(s.len() - 1);
         Ok(Flux(
             (flux.trim_end().parse::<f64>().unwrap_or_default()
@@ -130,7 +120,7 @@ impl Default for NetFlux {
 
 impl std::str::FromStr for NetFlux {
     type Err = NetHelperError;
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         let vec = s.split(',').collect::<Vec<_>>();
         if vec.len() >= 12 {
             Ok(NetFlux {
@@ -160,7 +150,7 @@ pub enum NetState {
 
 impl std::str::FromStr for NetState {
     type Err = NetHelperError;
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         if s.eq_ignore_ascii_case("net") {
             Ok(NetState::Net)
         } else if s.eq_ignore_ascii_case("auth4") {
@@ -190,7 +180,11 @@ pub enum TUNetConnect {
 }
 
 impl TUNetConnect {
-    pub async fn new(mut s: NetState, cred: NetCredential, client: HttpClient) -> Result<Self> {
+    pub async fn new(
+        mut s: NetState,
+        cred: NetCredential,
+        client: HttpClient,
+    ) -> NetHelperResult<Self> {
         if let NetState::Auto = s {
             s = suggest::suggest(&client).await;
             debug_assert_ne!(s, NetState::Auto);

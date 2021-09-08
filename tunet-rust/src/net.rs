@@ -43,7 +43,7 @@ impl TUNetHelper for NetConnect {
 
     async fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(NET_FLUX_URI).send().await?;
-        res.text().await?.parse()
+        Ok(res.text().await?.parse()?)
     }
 
     fn cred(&self) -> &NetCredential {

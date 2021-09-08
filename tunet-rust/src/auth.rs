@@ -57,7 +57,7 @@ where
         let t = res.text().await?;
         match AC_ID_REGEX.captures(&t) {
             Some(cap) => Ok(cap[1].parse::<i32>().unwrap_or_default()),
-            _ => Err(NetHelperError::NoAcIdErr),
+            _ => Err(NetHelperError::NoAcIdErr.into()),
         }
     }
 
@@ -124,10 +124,11 @@ where
                     json.remove("error_msg")
                         .and_then(|v| v.into_str())
                         .unwrap_or_default(),
-                ))
+                )
+                .into())
             }
         } else {
-            Err(NetHelperError::LogErr(json.to_string()))
+            Err(NetHelperError::LogErr(json.to_string()).into())
         }
     }
 }
@@ -169,7 +170,7 @@ where
 
     async fn flux(&self) -> Result<NetFlux> {
         let res = self.client.get(Self::flux_uri()).send().await?;
-        res.text().await?.parse()
+        Ok(res.text().await?.parse()?)
     }
 
     fn cred(&self) -> &NetCredential {

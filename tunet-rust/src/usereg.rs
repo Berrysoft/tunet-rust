@@ -61,7 +61,7 @@ impl NetDetailOrder {
 
 impl std::str::FromStr for NetDetailOrder {
     type Err = NetHelperError;
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         if s.eq_ignore_ascii_case("login") || s.eq_ignore_ascii_case("logintime") {
             Ok(NetDetailOrder::LoginTime)
         } else if s.eq_ignore_ascii_case("logout") || s.eq_ignore_ascii_case("logouttime") {
@@ -215,7 +215,7 @@ impl UseregHelper {
                             NaiveDateTime::parse_from_str(&tds[2].text(), DATE_TIME_FORMAT)
                                 .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
                             tds[4].text().parse().unwrap_or_default(),
-                            );
+                        );
                         new_len += 1;
                     }
                 }
