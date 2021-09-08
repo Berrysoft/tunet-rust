@@ -1,10 +1,10 @@
 #![forbid(unsafe_code)]
 
+use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
 use mac_address::MacAddressIterator;
 use std::cmp::Reverse;
 use std::net::Ipv4Addr;
-use std::ops::Deref;
 use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
@@ -15,10 +15,6 @@ mod strfmt;
 
 use settings::*;
 use strfmt::*;
-
-trait TUNetCommand {
-    fn run(&self) -> Result<()>;
-}
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
@@ -49,26 +45,26 @@ enum TUNet {
     DeleteCredential(TUNetDeleteCred),
 }
 
-impl Deref for TUNet {
-    type Target = dyn TUNetCommand;
-
-    fn deref(&self) -> &Self::Target {
+impl TUNet {
+    pub async fn run(&self) -> Result<()> {
         match self {
-            Self::Login(c) => c,
-            Self::Logout(c) => c,
-            Self::Status(c) => c,
-            Self::Online(c) => c,
-            Self::Connect(c) => c,
-            Self::Drop(c) => c,
-            Self::Detail(c) => c,
-            Self::DeleteCredential(c) => c,
+            Self::Login(c) => c.run().await,
+            Self::Logout(c) => c.run().await,
+            Self::Status(c) => c.run().await,
+            Self::Online(c) => c.run().await,
+            Self::Connect(c) => c.run().await,
+            Self::Drop(c) => c.run().await,
+            Self::Detail(c) => c.run().await,
+            Self::DeleteCredential(c) => c.run().await,
         }
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<()> {
     let opt = TUNet::from_args();
-    opt.run()
+    opt.run().await?;
+    Ok(())
 }
 
 fn get_flux_color(f: &Flux, total: bool) -> Color {
@@ -89,12 +85,12 @@ struct TUNetLogin {
     host: NetState,
 }
 
-impl TUNetCommand for TUNetLogin {
-    fn run(&self) -> Result<()> {
-        let client = create_http_client();
+impl TUNetLogin {
+    pub async fn run(&self) -> Result<()> {
+        let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = TUNetConnect::new(self.host, cred, &client)?;
-        let res = c.login()?;
+        let mut c = TUNetConnect::new(self.host, cred, client).await?;
+        let res = c.login().await?;
         println!("{}", res);
         save_cred(c.cred())
     }
@@ -107,12 +103,12 @@ struct TUNetLogout {
     host: NetState,
 }
 
-impl TUNetCommand for TUNetLogout {
-    fn run(&self) -> Result<()> {
-        let client = create_http_client();
+impl TUNetLogout {
+    pub async fn run(&self) -> Result<()> {
+        let client = create_http_client()?;
         let cred = read_username()?;
-        let mut c = TUNetConnect::new(self.host, cred, &client)?;
-        let res = c.logout()?;
+        let mut c = TUNetConnect::new(self.host, cred, client).await?;
+        let res = c.logout().await?;
         println!("{}", res);
         Ok(())
     }
@@ -124,11 +120,11 @@ struct TUNetStatus {
     host: NetState,
 }
 
-impl TUNetCommand for TUNetStatus {
-    fn run(&self) -> Result<()> {
-        let client = create_http_client();
-        let c = TUNetConnect::new(self.host, NetCredential::default(), &client)?;
-        let f = c.flux()?;
+impl TUNetStatus {
+    pub async fn run(&self) -> Result<()> {
+        let client = create_http_client()?;
+        let c = TUNetConnect::new(self.host, NetCredential::default(), client).await?;
+        let f = c.flux().await?;
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut stdout = tco::ResetGuard::Owned(stdout);
         tco::writeln!(
@@ -167,20 +163,22 @@ impl TUNetCommand for TUNetStatus {
 #[derive(Debug, StructOpt)]
 struct TUNetOnline {}
 
-impl TUNetCommand for TUNetOnline {
-    fn run(&self) -> Result<()> {
-        let client = create_http_client();
+impl TUNetOnline {
+    pub async fn run(&self) -> Result<()> {
+        let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, &client);
-        c.login()?;
-        let us = c.users()?;
+        let mut c = UseregHelper::new(cred, client);
+        c.login().await?;
+        let us = c.users();
         let mac_addrs = MacAddressIterator::new()
             .map(|it| it.collect::<Vec<_>>())
             .unwrap_or_default();
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut stdout = tco::ResetGuard::Owned(stdout);
         tco::writeln!(stdout, "    IP地址            登录时间            MAC地址")?;
-        for u in us {
+
+        pin_mut!(us);
+        while let Some(u) = us.try_next().await? {
             let is_self = mac_addrs
                 .iter()
                 .any(|it| Some(it) == u.mac_address.as_ref());
@@ -208,13 +206,13 @@ struct TUNetUseregConnect {
     address: Ipv4Addr,
 }
 
-impl TUNetCommand for TUNetUseregConnect {
-    fn run(&self) -> Result<()> {
-        let client = create_http_client();
+impl TUNetUseregConnect {
+    pub async fn run(&self) -> Result<()> {
+        let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, &client);
-        c.login()?;
-        let res = c.connect(self.address)?;
+        let mut c = UseregHelper::new(cred, client);
+        c.login().await?;
+        let res = c.connect(self.address).await?;
         println!("{}", res);
         save_cred(c.cred())
     }
@@ -227,13 +225,13 @@ struct TUNetUseregDrop {
     address: Ipv4Addr,
 }
 
-impl TUNetCommand for TUNetUseregDrop {
-    fn run(&self) -> Result<()> {
-        let client = create_http_client();
+impl TUNetUseregDrop {
+    pub async fn run(&self) -> Result<()> {
+        let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, &client);
-        c.login()?;
-        let res = c.drop(self.address)?;
+        let mut c = UseregHelper::new(cred, client);
+        c.login().await?;
+        let res = c.drop(self.address).await?;
         println!("{}", res);
         save_cred(c.cred())
     }
@@ -253,18 +251,19 @@ struct TUNetDetail {
 }
 
 impl TUNetDetail {
-    fn run_detail(&self) -> Result<()> {
-        let client = create_http_client();
+    async fn run_detail(&self) -> Result<()> {
+        let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, &client);
-        c.login()?;
-        let mut details = c.details(self.order, self.descending)?;
+        let mut c = UseregHelper::new(cred, client);
+        c.login().await?;
+        let details = c.details(self.order, self.descending);
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut stdout = tco::ResetGuard::Owned(stdout);
         tco::writeln!(stdout, "      登录时间             注销时间         流量")?;
         let mut total_flux = Flux(0);
-        for d in &mut details {
-            let d = d?;
+
+        pin_mut!(details);
+        while let Some(d) = details.try_next().await? {
             tco::writeln!(
                 stdout,
                 "{}{:20} {:20} {}{:>8}",
@@ -287,14 +286,15 @@ impl TUNetDetail {
         save_cred(c.cred())
     }
 
-    fn run_detail_grouping(&self) -> Result<()> {
-        let client = create_http_client();
+    async fn run_detail_grouping(&self) -> Result<()> {
+        let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, &client);
-        c.login()?;
+        let mut c = UseregHelper::new(cred, client);
+        c.login().await?;
         let details = c
-            .details(NetDetailOrder::LogoutTime, self.descending)?
-            .try_collect::<_, Vec<_>, _>()?;
+            .details(NetDetailOrder::LogoutTime, self.descending)
+            .try_collect::<Vec<_>>()
+            .await?;
         let mut details = details
             .into_iter()
             .group_by(|detail| detail.logout_time.date())
@@ -340,14 +340,12 @@ impl TUNetDetail {
         )?;
         save_cred(c.cred())
     }
-}
 
-impl TUNetCommand for TUNetDetail {
-    fn run(&self) -> Result<()> {
+    pub async fn run(&self) -> Result<()> {
         if self.grouping {
-            self.run_detail_grouping()
+            self.run_detail_grouping().await
         } else {
-            self.run_detail()
+            self.run_detail().await
         }
     }
 }
@@ -355,8 +353,8 @@ impl TUNetCommand for TUNetDetail {
 #[derive(Debug, StructOpt)]
 struct TUNetDeleteCred {}
 
-impl TUNetCommand for TUNetDeleteCred {
-    fn run(&self) -> Result<()> {
+impl TUNetDeleteCred {
+    pub async fn run(&self) -> Result<()> {
         delete_cred()
     }
 }

@@ -10,5 +10,7 @@ exclude = [
     "winrt-bindings"
 ]
 
+resolver = "2"
+
 [profile.release]
 lto = true

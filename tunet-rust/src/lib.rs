@@ -7,8 +7,9 @@ use thiserror::Error;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use async_trait::async_trait;
 pub use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
-pub use ureq::Agent as HttpClient;
+pub use reqwest::Client as HttpClient;
 
 mod auth;
 mod net;
@@ -18,7 +19,7 @@ pub mod usereg;
 #[derive(Debug, Error)]
 pub enum NetHelperError {
     #[error(transparent)]
-    HttpErr(#[from] ureq::Error),
+    HttpErr(#[from] reqwest::Error),
     #[error(transparent)]
     JsonErr(#[from] serde_json::error::Error),
     #[error("无法获取 ac_id")]
@@ -174,37 +175,37 @@ impl std::str::FromStr for NetState {
     }
 }
 
-pub trait TUNetHelper {
-    fn login(&mut self) -> Result<String>;
-    fn logout(&mut self) -> Result<String>;
-    fn flux(&self) -> Result<NetFlux>;
+#[async_trait]
+pub trait TUNetHelper: Send + Sync {
+    async fn login(&mut self) -> Result<String>;
+    async fn logout(&mut self) -> Result<String>;
+    async fn flux(&self) -> Result<NetFlux>;
     fn cred(&self) -> &NetCredential;
 }
 
-pub enum TUNetConnect<'a> {
-    Net(net::NetConnect<'a>),
-    Auth4(auth::AuthConnect<'a, 4>),
-    Auth6(auth::AuthConnect<'a, 6>),
+pub enum TUNetConnect {
+    Net(net::NetConnect),
+    Auth4(auth::AuthConnect<4>),
+    Auth6(auth::AuthConnect<6>),
 }
 
-impl<'a> TUNetConnect<'a> {
-    pub fn new(s: NetState, cred: NetCredential, client: &'a HttpClient) -> Result<Self> {
+impl TUNetConnect {
+    pub async fn new(mut s: NetState, cred: NetCredential, client: HttpClient) -> Result<Self> {
+        if let NetState::Auto = s {
+            s = suggest::suggest(&client).await;
+            debug_assert_ne!(s, NetState::Auto);
+        }
         match s {
             NetState::Net => Ok(Self::Net(net::NetConnect::new(cred, client))),
             NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::new(cred, client))),
             NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::new(cred, client))),
-            NetState::Auto => {
-                let s = suggest::suggest(client);
-                debug_assert_ne!(s, NetState::Auto);
-                Self::new(s, cred, client)
-            }
-            NetState::Unknown => Err(NetHelperError::HostErr),
+            _ => Err(NetHelperError::HostErr),
         }
     }
 }
 
-impl<'a> Deref for TUNetConnect<'a> {
-    type Target = dyn TUNetHelper + 'a;
+impl Deref for TUNetConnect {
+    type Target = dyn TUNetHelper;
 
     fn deref(&self) -> &Self::Target {
         match self {
@@ -215,7 +216,7 @@ impl<'a> Deref for TUNetConnect<'a> {
     }
 }
 
-impl<'a> DerefMut for TUNetConnect<'a> {
+impl DerefMut for TUNetConnect {
     fn deref_mut(&mut self) -> &mut Self::Target {
         match self {
             Self::Net(c) => c,
@@ -225,6 +226,10 @@ impl<'a> DerefMut for TUNetConnect<'a> {
     }
 }
 
-pub fn create_http_client() -> HttpClient {
-    ureq::AgentBuilder::new().redirects(0).build()
+pub fn create_http_client() -> Result<HttpClient> {
+    Ok(reqwest::ClientBuilder::new()
+        .cookie_store(true)
+        .redirect(reqwest::redirect::Policy::none())
+        .no_proxy()
+        .build()?)
 }
