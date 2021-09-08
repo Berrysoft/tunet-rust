@@ -95,7 +95,7 @@ strategy:
       rustflags: '-C linker=powerpc64le-linux-gnu-gcc'
       crosslib: true
       crosslibs: 'gcc-powerpc64le-linux-gnu'
-    linux-ppc:
+    linux-s390x:
       imageName: 'ubuntu-16.04'
       target: 's390x-unknown-linux-gnu'
       exeName: 'tunet'
