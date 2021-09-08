@@ -8,7 +8,6 @@ use md5::Md5;
 use regex::Regex;
 use serde_json::{self, json, Value as JsonValue};
 use sha1::{Digest, Sha1};
-use std::future::Future;
 use url::Url;
 
 pub struct AuthConnect<const V: i32> {
@@ -62,19 +61,54 @@ where
         }
     }
 
-    async fn do_log<'a, F, R>(&'a self, action: F) -> Result<(String, Option<i32>)>
-    where
-        F: Fn(&'a Self, i32) -> R,
-        R: Future<Output = Result<String>>,
-    {
-        for ac_id in &self.cred.ac_ids {
-            let res = action(self, *ac_id).await;
-            if let Ok(res) = res {
-                return Ok((res, None));
-            }
-        }
-        let ac_id = self.get_ac_id().await?;
-        Ok((action(self, ac_id).await?, Some(ac_id)))
+    async fn try_login(&self, ac_id: i32) -> Result<String> {
+        let token = self.challenge().await?;
+        let password_md5 = {
+            let mut hmacmd5 = Hmac::<Md5>::new_from_slice(&[]).unwrap();
+            hmacmd5.update(token.as_bytes());
+            hmacmd5.finalize().into_bytes()
+        };
+        let password_md5 = HEXLOWER.encode(&password_md5);
+        let encode_json = json!({
+            "username": self.cred.username,
+            "password": self.cred.password,
+            "ip": "",
+            "acid": ac_id,
+            "enc_ver": "srun_bx1"
+        });
+        let info = {
+            let tea = AuthTea::new(token.as_bytes());
+            tea.encode(encode_json.to_string().as_bytes())
+        };
+        let info = format!("{{SRBX1}}{}", AUTH_BASE64.encode(&info));
+        let chksum = {
+            let mut sha1 = Sha1::new();
+            sha1.update(format!(
+                "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
+                token, self.cred.username, password_md5, info, ac_id
+            ));
+            sha1.finalize()
+        };
+        let params = [
+            ("action", "login"),
+            ("ac_id", &ac_id.to_string()),
+            ("double_stack", "1"),
+            ("n", "200"),
+            ("type", "1"),
+            ("username", &self.cred.username),
+            ("password", &format!("{{MD5}}{}", password_md5)),
+            ("info", &info),
+            ("chksum", &HEXLOWER.encode(&chksum)),
+            ("callback", "callback"),
+        ];
+        let res = self
+            .client
+            .post(Self::log_uri())
+            .form(&params)
+            .send()
+            .await?;
+        let t = res.text().await?;
+        Self::parse_response(&t)
     }
 
     fn parse_response(t: &str) -> Result<String> {
@@ -104,56 +138,15 @@ where
     Self: AuthConnectUri,
 {
     async fn login(&mut self) -> Result<String> {
-        let (res, ac_id) = self
-            .do_log(async move |s, ac_id| {
-                let token = s.challenge().await?;
-                let password_md5 = {
-                    let mut hmacmd5 = Hmac::<Md5>::new_from_slice(&[]).unwrap();
-                    hmacmd5.update(token.as_bytes());
-                    hmacmd5.finalize().into_bytes()
-                };
-                let password_md5 = HEXLOWER.encode(&password_md5);
-                let encode_json = json!({
-                    "username": s.cred.username,
-                    "password": s.cred.password,
-                    "ip": "",
-                    "acid": ac_id,
-                    "enc_ver": "srun_bx1"
-                });
-                let info = {
-                    let tea = AuthTea::new(token.as_bytes());
-                    tea.encode(encode_json.to_string().as_bytes())
-                };
-                let info = format!("{{SRBX1}}{}", AUTH_BASE64.encode(&info));
-                let chksum = {
-                    let mut sha1 = Sha1::new();
-                    sha1.update(format!(
-                        "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                        token, s.cred.username, password_md5, info, ac_id
-                    ));
-                    sha1.finalize()
-                };
-                let params = [
-                    ("action", "login"),
-                    ("ac_id", &ac_id.to_string()),
-                    ("double_stack", "1"),
-                    ("n", "200"),
-                    ("type", "1"),
-                    ("username", &s.cred.username),
-                    ("password", &format!("{{MD5}}{}", password_md5)),
-                    ("info", &info),
-                    ("chksum", &HEXLOWER.encode(&chksum)),
-                    ("callback", "callback"),
-                ];
-                let res = s.client.post(Self::log_uri()).form(&params).send().await?;
-                let t = res.text().await?;
-                Self::parse_response(&t)
-            })
-            .await?;
-        if let Some(ac_id) = ac_id {
-            self.cred.ac_ids.push(ac_id);
+        for ac_id in &self.cred.ac_ids {
+            let res = self.try_login(*ac_id).await;
+            if res.is_ok() {
+                return res;
+            }
         }
-        Ok(res)
+        let ac_id = self.get_ac_id().await?;
+        self.cred.ac_ids.push(ac_id);
+        Ok(self.try_login(ac_id).await?)
     }
 
     async fn logout(&mut self) -> Result<String> {

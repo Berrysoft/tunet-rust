@@ -1,5 +1,4 @@
 #![forbid(unsafe_code)]
-#![feature(async_closure)]
 
 use std::fmt::{Display, Formatter};
 use std::ops::{Deref, DerefMut};
