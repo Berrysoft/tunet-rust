@@ -45,6 +45,13 @@ strategy:
       publishName: 'tunet.macos.aarch64'
       rustflags: ''
       crosslib: false
+    win-x86:
+      imageName: 'windows-latest'
+      target: 'i686-pc-windows-msvc'
+      exeName: 'tunet.exe'
+      publishName: 'tunet.win.i686.exe'
+      rustflags: '-C target-feature=+crt-static'
+      crosslib: false
     win-x64:
       imageName: 'windows-latest'
       target: 'x86_64-pc-windows-msvc'
@@ -52,11 +59,11 @@ strategy:
       publishName: 'tunet.win.x86_64.exe'
       rustflags: '-C target-feature=+crt-static'
       crosslib: false
-    win-x86:
+    win-arm64:
       imageName: 'windows-latest'
-      target: 'i686-pc-windows-msvc'
+      target: 'aarch64-pc-windows-msvc'
       exeName: 'tunet.exe'
-      publishName: 'tunet.win.i686.exe'
+      publishName: 'tunet.win.aarch64.exe'
       rustflags: '-C target-feature=+crt-static'
       crosslib: false
 pool:
