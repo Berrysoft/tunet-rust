@@ -8,6 +8,14 @@ trigger:
 
 strategy:
   matrix:
+    linux-x86:
+      imageName: 'ubuntu-16.04'
+      target: 'i686-unknown-linux-gnu'
+      exeName: 'tunet'
+      publishName: 'tunet.linux.i686'
+      rustflags: '-C linker=i686-linux-gnu-gcc'
+      crosslib: true
+      crosslibs: 'gcc-i686-linux-gnu'
     linux-x64:
       imageName: 'ubuntu-16.04'
       target: 'x86_64-unknown-linux-gnu'
@@ -22,7 +30,7 @@ strategy:
       publishName: 'tunet.linux.arm'
       rustflags: '-C linker=arm-linux-gnueabihf-gcc'
       crosslib: true
-      crosslibs: 'libc6-armhf-cross gcc-arm-linux-gnueabihf'
+      crosslibs: 'gcc-arm-linux-gnueabihf'
     linux-arm64:
       imageName: 'ubuntu-16.04'
       target: 'aarch64-unknown-linux-gnu'
@@ -30,7 +38,7 @@ strategy:
       publishName: 'tunet.linux.aarch64'
       rustflags: '-C linker=aarch64-linux-gnu-gcc'
       crosslib: true
-      crosslibs: 'libc6-arm64-cross gcc-aarch64-linux-gnu'
+      crosslibs: 'gcc-aarch64-linux-gnu'
     osx-x64:
       imageName: 'macOS-latest'
       target: 'x86_64-apple-darwin'
