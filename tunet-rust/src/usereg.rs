@@ -186,8 +186,7 @@ impl UseregHelper {
         let end_time = now.format("%Y-%m-%d").to_string();
         let des = if des { "DESC" } else { "" };
         try_stream! {
-            let mut i: usize = 1;
-            loop {
+            for i in 1usize.. {
                 let uri = Url::parse_with_params(
                     USEREG_DETAIL_URI,
                     &[
@@ -223,7 +222,6 @@ impl UseregHelper {
                 if new_len < USEREG_OFF {
                     break;
                 }
-                i += 1;
             }
         }
     }
