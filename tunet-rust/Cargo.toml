@@ -27,8 +27,11 @@ lazy_static = "1.4"
 regex = "1"
 thiserror = "1.0"
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(all(target_os = "linux", any(target_arch = "i686", target_arch = "x86_64", target_arch = "arm", target_arch = "aarch64")))'.dependencies]
 reqwest = { version = "0.11", default-features = false, features = [ "rustls-tls", "cookies", "json" ] }
+
+[target.'cfg(all(target_os = "linux", not(any(target_arch = "i686", target_arch = "x86_64", target_arch = "arm", target_arch = "aarch64"))))'.dependencies]
+reqwest = { version = "0.11", features = [ "native-tls-vendored", "cookies", "json" ] }
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
 reqwest = { version = "0.11", features = [ "cookies", "json" ] }
