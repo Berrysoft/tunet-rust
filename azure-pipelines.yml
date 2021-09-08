@@ -13,9 +13,9 @@ strategy:
       target: 'i686-unknown-linux-gnu'
       exeName: 'tunet'
       publishName: 'tunet.linux.i686'
-      rustflags: '-C linker=i686-linux-gnu-gcc'
+      rustflags: ''
       crosslib: true
-      crosslibs: 'gcc-i686-linux-gnu'
+      crosslibs: 'gcc-multilib'
     linux-x64:
       imageName: 'ubuntu-16.04'
       target: 'x86_64-unknown-linux-gnu'
