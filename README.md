@@ -25,21 +25,6 @@
 * aarch64-pc-windows-msvc
 
 ## tunet
-### 安全性
-用户名和密码在第一次登录时根据提示输入，不同平台管理密码方法如下：
-
-|平台|方法|
-|-|-|
-|Windows|[Windows Credential Manager](https://docs.microsoft.com/en-us/windows/win32/api/wincred/)|
-|Linux|[Keyrings](https://man7.org/linux/man-pages/man7/keyrings.7.html)|
-|macOS|[Keychain](https://developer.apple.com/documentation/security/keychain_services)|
-
-对于不支持密码管理的 Linux 发行版，会回退到**明文**密码。
-
-请不要在不信任的电脑上保存密码。可以使用如下命令删除：
-``` bash
-./tunet deletecred
-```
 ### 登录/注销
 ``` bash
 # 使用默认（自动判断）方式登录
@@ -79,7 +64,23 @@
 ./tunet detail -o flux -dg
 ```
 
-## 自动判断方式说明
+## keyring
+用户名和密码在第一次登录时根据提示输入，不同平台管理密码方法如下：
+
+|平台|方法|
+|-|-|
+|Windows|[Windows Credential Manager](https://docs.microsoft.com/en-us/windows/win32/api/wincred/)|
+|Linux|[Keyrings](https://man7.org/linux/man-pages/man7/keyrings.7.html)|
+|macOS|[Keychain](https://developer.apple.com/documentation/security/keychain_services)|
+
+对于不支持密码管理的 Linux 发行版，会回退到**明文**密码。
+
+请不要在不信任的电脑上保存密码。可以使用如下命令删除：
+``` bash
+./tunet deletecred
+```
+
+## netstatus
 针对 Windows, Linux, macOS 使用了平台特定的方式尝试获得当前的网络连接方式，如果是无线网连接还会获取 SSID。
 如果无法获取，则尝试连接特定的网址来判断。
 
