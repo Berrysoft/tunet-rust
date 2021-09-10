@@ -164,7 +164,7 @@ jobs:
     inputs:
       ArtifactName: 'publish'
 
-- job: Create fat binary
+- job: FatBinary
   dependsOn: Build
   condition: succeeded('Build')
   pool:
