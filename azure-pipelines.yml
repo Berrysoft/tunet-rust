@@ -6,158 +6,174 @@
 trigger:
 - master
 
-strategy:
-  matrix:
-    linux-x86:
-      imageName: 'ubuntu-16.04'
-      target: 'i686-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.i686'
-      rustflags: ''
-      crosslib: true
-      crosslibs: 'gcc-multilib'
-    linux-x64:
-      imageName: 'ubuntu-16.04'
-      target: 'x86_64-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.x86_64'
-      rustflags: ''
-      crosslib: false
-    linux-arm:
-      imageName: 'ubuntu-16.04'
-      target: 'arm-unknown-linux-gnueabihf'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.arm'
-      rustflags: '-C linker=arm-linux-gnueabihf-gcc'
-      crosslib: true
-      crosslibs: 'gcc-arm-linux-gnueabihf'
-    linux-arm64:
-      imageName: 'ubuntu-16.04'
-      target: 'aarch64-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.aarch64'
-      rustflags: '-C linker=aarch64-linux-gnu-gcc'
-      crosslib: true
-      crosslibs: 'gcc-aarch64-linux-gnu'
-    linux-riscv64:
-      imageName: 'ubuntu-18.04'
-      target: 'riscv64gc-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.riscv64gc'
-      rustflags: '-C linker=riscv64-linux-gnu-gcc'
-      crosslib: true
-      crosslibs: 'gcc-riscv64-linux-gnu'
-    linux-mips:
-      imageName: 'ubuntu-16.04'
-      target: 'mips-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.mips'
-      rustflags: '-C linker=mips-linux-gnu-gcc'
-      crosslib: true
-      crosslibs: 'gcc-mips-linux-gnu'
-    linux-mipsel:
-      imageName: 'ubuntu-16.04'
-      target: 'mipsel-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.mipsel'
-      rustflags: '-C linker=mipsel-linux-gnu-gcc'
-      crosslib: true
-      crosslibs: 'gcc-mipsel-linux-gnu'
-    linux-mips64:
-      imageName: 'ubuntu-18.04'
-      target: 'mips64-unknown-linux-gnuabi64'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.mips64'
-      rustflags: '-C linker=mips64-linux-gnuabi64-gcc'
-      crosslib: true
-      crosslibs: 'gcc-mips64-linux-gnuabi64'
-    linux-mips64el:
-      imageName: 'ubuntu-18.04'
-      target: 'mips64el-unknown-linux-gnuabi64'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.mips64el'
-      rustflags: '-C linker=mips64el-linux-gnuabi64-gcc'
-      crosslib: true
-      crosslibs: 'gcc-mips64el-linux-gnuabi64'
-    linux-ppc:
-      imageName: 'ubuntu-16.04'
-      target: 'powerpc-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.powerpc'
-      rustflags: '-C linker=powerpc-linux-gnu-gcc'
-      crosslib: true
-      crosslibs: 'gcc-powerpc-linux-gnu'
-    linux-ppc64le:
-      imageName: 'ubuntu-16.04'
-      target: 'powerpc64le-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.powerpc64le'
-      rustflags: '-C linker=powerpc64le-linux-gnu-gcc'
-      crosslib: true
-      crosslibs: 'gcc-powerpc64le-linux-gnu'
-    linux-s390x:
-      imageName: 'ubuntu-16.04'
-      target: 's390x-unknown-linux-gnu'
-      exeName: 'tunet'
-      publishName: 'tunet.linux.s390x'
-      rustflags: '-C linker=s390x-linux-gnu-gcc'
-      crosslib: true
-      crosslibs: 'gcc-s390x-linux-gnu'
-    osx-x64:
-      imageName: 'macOS-latest'
-      target: 'x86_64-apple-darwin'
-      exeName: 'tunet'
-      publishName: 'tunet.macos.x86_64'
-      rustflags: ''
-      crosslib: false
-    osx-arm64:
-      imageName: 'macOS-11'
-      target: 'aarch64-apple-darwin'
-      exeName: 'tunet'
-      publishName: 'tunet.macos.aarch64'
-      rustflags: ''
-      crosslib: false
-    win-x86:
-      imageName: 'windows-latest'
-      target: 'i686-pc-windows-msvc'
-      exeName: 'tunet.exe'
-      publishName: 'tunet.win.i686.exe'
-      rustflags: '-C target-feature=+crt-static'
-      crosslib: false
-    win-x64:
-      imageName: 'windows-latest'
-      target: 'x86_64-pc-windows-msvc'
-      exeName: 'tunet.exe'
-      publishName: 'tunet.win.x86_64.exe'
-      rustflags: '-C target-feature=+crt-static'
-      crosslib: false
-    win-arm64:
-      imageName: 'windows-latest'
-      target: 'aarch64-pc-windows-msvc'
-      exeName: 'tunet.exe'
-      publishName: 'tunet.win.aarch64.exe'
-      rustflags: '-C target-feature=+crt-static'
-      crosslib: false
-pool:
-  vmImage: $(imageName)
+jobs:
+- job: Build
+  strategy:
+    matrix:
+      linux-x86:
+        imageName: 'ubuntu-16.04'
+        target: 'i686-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.i686'
+        rustflags: ''
+        crosslib: true
+        crosslibs: 'gcc-multilib'
+      linux-x64:
+        imageName: 'ubuntu-16.04'
+        target: 'x86_64-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.x86_64'
+        rustflags: ''
+        crosslib: false
+      linux-arm:
+        imageName: 'ubuntu-16.04'
+        target: 'arm-unknown-linux-gnueabihf'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.arm'
+        rustflags: '-C linker=arm-linux-gnueabihf-gcc'
+        crosslib: true
+        crosslibs: 'gcc-arm-linux-gnueabihf'
+      linux-arm64:
+        imageName: 'ubuntu-16.04'
+        target: 'aarch64-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.aarch64'
+        rustflags: '-C linker=aarch64-linux-gnu-gcc'
+        crosslib: true
+        crosslibs: 'gcc-aarch64-linux-gnu'
+      linux-riscv64:
+        imageName: 'ubuntu-18.04'
+        target: 'riscv64gc-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.riscv64gc'
+        rustflags: '-C linker=riscv64-linux-gnu-gcc'
+        crosslib: true
+        crosslibs: 'gcc-riscv64-linux-gnu'
+      linux-mips:
+        imageName: 'ubuntu-16.04'
+        target: 'mips-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.mips'
+        rustflags: '-C linker=mips-linux-gnu-gcc'
+        crosslib: true
+        crosslibs: 'gcc-mips-linux-gnu'
+      linux-mipsel:
+        imageName: 'ubuntu-16.04'
+        target: 'mipsel-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.mipsel'
+        rustflags: '-C linker=mipsel-linux-gnu-gcc'
+        crosslib: true
+        crosslibs: 'gcc-mipsel-linux-gnu'
+      linux-mips64:
+        imageName: 'ubuntu-18.04'
+        target: 'mips64-unknown-linux-gnuabi64'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.mips64'
+        rustflags: '-C linker=mips64-linux-gnuabi64-gcc'
+        crosslib: true
+        crosslibs: 'gcc-mips64-linux-gnuabi64'
+      linux-mips64el:
+        imageName: 'ubuntu-18.04'
+        target: 'mips64el-unknown-linux-gnuabi64'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.mips64el'
+        rustflags: '-C linker=mips64el-linux-gnuabi64-gcc'
+        crosslib: true
+        crosslibs: 'gcc-mips64el-linux-gnuabi64'
+      linux-ppc:
+        imageName: 'ubuntu-16.04'
+        target: 'powerpc-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.powerpc'
+        rustflags: '-C linker=powerpc-linux-gnu-gcc'
+        crosslib: true
+        crosslibs: 'gcc-powerpc-linux-gnu'
+      linux-ppc64le:
+        imageName: 'ubuntu-16.04'
+        target: 'powerpc64le-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.powerpc64le'
+        rustflags: '-C linker=powerpc64le-linux-gnu-gcc'
+        crosslib: true
+        crosslibs: 'gcc-powerpc64le-linux-gnu'
+      linux-s390x:
+        imageName: 'ubuntu-16.04'
+        target: 's390x-unknown-linux-gnu'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.s390x'
+        rustflags: '-C linker=s390x-linux-gnu-gcc'
+        crosslib: true
+        crosslibs: 'gcc-s390x-linux-gnu'
+      osx-x64:
+        imageName: 'macOS-latest'
+        target: 'x86_64-apple-darwin'
+        exeName: 'tunet'
+        publishName: 'tunet.macos.x86_64'
+        rustflags: ''
+        crosslib: false
+      osx-arm64:
+        imageName: 'macOS-11'
+        target: 'aarch64-apple-darwin'
+        exeName: 'tunet'
+        publishName: 'tunet.macos.aarch64'
+        rustflags: ''
+        crosslib: false
+      win-x86:
+        imageName: 'windows-latest'
+        target: 'i686-pc-windows-msvc'
+        exeName: 'tunet.exe'
+        publishName: 'tunet.win.i686.exe'
+        rustflags: '-C target-feature=+crt-static'
+        crosslib: false
+      win-x64:
+        imageName: 'windows-latest'
+        target: 'x86_64-pc-windows-msvc'
+        exeName: 'tunet.exe'
+        publishName: 'tunet.win.x86_64.exe'
+        rustflags: '-C target-feature=+crt-static'
+        crosslib: false
+      win-arm64:
+        imageName: 'windows-latest'
+        target: 'aarch64-pc-windows-msvc'
+        exeName: 'tunet.exe'
+        publishName: 'tunet.win.aarch64.exe'
+        rustflags: '-C target-feature=+crt-static'
+        crosslib: false
+  pool:
+    vmImage: $(imageName)
 
-steps:
-- script: |
-    sudo apt update
-    sudo apt install $(crosslibs)
-  displayName: "Install cross-compile libs"
-  condition: eq(variables.crosslib, 'true')
+  steps:
+  - script: |
+      sudo apt update
+      sudo apt install $(crosslibs)
+    displayName: "Install cross-compile libs"
+    condition: eq(variables.crosslib, 'true')
 
-- script: |
-    rustup target add $(target)
-    cargo build --release --target $(target)
-  displayName: 'Build'
-  env:
-    RUSTFLAGS: $(rustflags)
+  - script: |
+      rustup target add $(target)
+      cargo build --release --target $(target)
+    displayName: 'Build'
+    env:
+      RUSTFLAGS: $(rustflags)
 
-- pwsh: cp target/$(target)/release/$(exeName) $(Build.ArtifactStagingDirectory)/$(publishName)
-  displayName: 'Copy binaries'
+  - pwsh: cp target/$(target)/release/$(exeName) $(Build.ArtifactStagingDirectory)/$(publishName)
+    displayName: 'Copy binaries'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    ArtifactName: 'publish'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
+
+- job: Create fat binary
+  dependsOn: Build
+  condition: succeeded('Build')
+  pool:
+    vmImage: 'macOS-11'
+  
+  steps:
+  - script: lipo -create $(Build.ArtifactStagingDirectory)/tunet.macos.x86_64 $(Build.ArtifactStagingDirectory)/tunet.macos.aarch64 -output $(Build.ArtifactStagingDirectory)/tunet.macos
+    displayName: "Create fat binary"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
