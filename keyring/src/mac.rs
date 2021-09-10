@@ -19,7 +19,7 @@ impl Keyring {
         let (password_bytes, _) = self
             .keychain
             .find_generic_password(&self.key, TUNET_DUMMY_USERNAME)?;
-        Ok(String::from_utf8_unchecked(password_bytes.to_vec()))
+        Ok(unsafe { String::from_utf8_unchecked(password_bytes.to_vec()) })
     }
 
     pub fn set(&self, value: &str) -> Result<()> {
