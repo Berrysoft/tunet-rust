@@ -51,18 +51,17 @@ impl SettingsReader for StdioSettingsReader {
 }
 
 static TUNET_CLI_NAME: &str = "TsinghuaNet.CLI";
-static TUNET_DUMMY_USER: &str = "DummyUser";
 
 struct FileSettingsReader {
     path: PathBuf,
-    keyring: Keyring<'static>,
+    keyring: Keyring,
 }
 
 impl FileSettingsReader {
     pub fn new() -> Result<Self> {
         Ok(Self {
             path: Self::file_path()?,
-            keyring: Keyring::new(TUNET_CLI_NAME, TUNET_DUMMY_USER),
+            keyring: Keyring::new(TUNET_CLI_NAME),
         })
     }
 
@@ -84,7 +83,7 @@ impl FileSettingsReader {
         }
         let f = File::create(self.path.as_path())?;
         let writer = BufWriter::new(f);
-        if let Err(e) = self.keyring.set_password(&settings.password) {
+        if let Err(e) = self.keyring.set(&settings.password) {
             if cfg!(debug_assertions) {
                 eprintln!("WARNING: {}", e);
             }
@@ -104,7 +103,7 @@ impl FileSettingsReader {
     }
 
     pub fn delete(&self) -> Result<()> {
-        self.keyring.delete_password().unwrap_or_else(|e| {
+        self.keyring.delete().unwrap_or_else(|e| {
             if cfg!(debug_assertions) {
                 eprintln!("WARNING: {}", e);
             }
@@ -125,7 +124,7 @@ impl SettingsReader for FileSettingsReader {
 
     fn read_with_password(&self) -> Result<NetCredential> {
         let mut settings = self.read()?;
-        match self.keyring.get_password() {
+        match self.keyring.get() {
             Ok(password) => settings.password = password,
             Err(e) => {
                 if cfg!(debug_assertions) {
