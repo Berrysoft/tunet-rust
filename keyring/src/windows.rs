@@ -11,10 +11,10 @@ pub struct Keyring {
 }
 
 impl Keyring {
-    pub fn new(key: &str) -> Self {
-        Self {
+    pub fn new(key: &str) -> Result<Self> {
+        Ok(Self {
             key: unsafe { U16CString::from_str_unchecked(key) },
-        }
+        })
     }
 
     pub fn get(&self) -> Result<String> {

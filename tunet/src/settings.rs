@@ -61,7 +61,7 @@ impl FileSettingsReader {
     pub fn new() -> Result<Self> {
         Ok(Self {
             path: Self::file_path()?,
-            keyring: Keyring::new(TUNET_CLI_NAME),
+            keyring: Keyring::new(TUNET_CLI_NAME)?,
         })
     }
 

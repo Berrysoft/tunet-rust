@@ -8,11 +8,11 @@ pub struct Keyring {
 }
 
 impl Keyring {
-    pub fn new(key: &str) -> Self {
-        Self {
-            keychain: SecKeychain::default(),
+    pub fn new(key: &str) -> Result<Self> {
+        Ok(Self {
+            keychain: SecKeychain::default()?,
             key: key.to_owned(),
-        }
+        })
     }
 
     pub fn get(&self) -> Result<String> {
