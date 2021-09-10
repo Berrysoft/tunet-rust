@@ -1,4 +1,4 @@
-use keyutils::{Keyring as LinuxKeyring, Result, SpecialKeyring};
+use keyutils::{keytypes::User, Keyring as LinuxKeyring, Result, SpecialKeyring};
 
 pub struct Keyring {
     keyring: LinuxKeyring,
@@ -14,17 +14,20 @@ impl Keyring {
     }
 
     pub fn get(&self) -> Result<String> {
-        let key = self.keyring.search_for_key(&self.key, None)?;
+        let key = self
+            .keyring
+            .search_for_key::<User, _, _>(self.key.as_str(), None)?;
         let value = key.read()?;
         Ok(unsafe { String::from_utf8_unchecked(value) })
     }
 
-    pub fn set(&self, value: &str) -> Result<()> {
-        self.keyring.add_key(&self.key, value.as_bytes())?;
+    pub fn set(&mut self, value: &str) -> Result<()> {
+        self.keyring
+            .add_key::<User, _, _>(self.key.as_str(), value.as_bytes())?;
         Ok(())
     }
 
-    pub fn delete(&self) -> Result<()> {
+    pub fn delete(&mut self) -> Result<()> {
         self.keyring.clear()
     }
 }

@@ -77,7 +77,7 @@ impl FileSettingsReader {
         Self::file_path().map(|p| p.exists()).unwrap_or(false)
     }
 
-    pub fn save(&self, settings: &NetCredential) -> Result<()> {
+    pub fn save(&mut self, settings: &NetCredential) -> Result<()> {
         if let Some(p) = self.path.parent() {
             DirBuilder::new().recursive(true).create(p)?;
         }
@@ -102,7 +102,7 @@ impl FileSettingsReader {
         Ok(())
     }
 
-    pub fn delete(&self) -> Result<()> {
+    pub fn delete(&mut self) -> Result<()> {
         self.keyring.delete().unwrap_or_else(|e| {
             if cfg!(debug_assertions) {
                 eprintln!("WARNING: {}", e);
@@ -159,7 +159,7 @@ pub fn save_cred(cred: &NetCredential) -> Result<()> {
 }
 
 pub fn delete_cred() -> Result<()> {
-    let reader = FileSettingsReader::new()?;
+    let mut reader = FileSettingsReader::new()?;
     print!("是否删除设置文件？[y/N]");
     stdout().flush()?;
     let mut s = String::new();
