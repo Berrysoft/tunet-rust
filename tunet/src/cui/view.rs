@@ -17,4 +17,24 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         Paragraph::new("Fetching...")
     };
     f.render_widget(graph, chunks[0]);
+
+    let table = Table::new(
+        m.details
+            .iter()
+            .map(|d| {
+                Row::new(vec![
+                    FmtDateTime(d.login_time).to_string(),
+                    FmtDateTime(d.logout_time).to_string(),
+                    d.flux.to_string(),
+                ])
+            })
+            .collect::<Vec<_>>(),
+    )
+    .header(Row::new(vec!["登录时间", "注销时间", "流量"]))
+    .widths(&[
+        Constraint::Ratio(1, 3),
+        Constraint::Ratio(1, 3),
+        Constraint::Ratio(1, 3),
+    ]);
+    f.render_widget(table, chunks[1]);
 }

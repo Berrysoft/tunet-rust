@@ -10,6 +10,7 @@ use select::predicate::*;
 use std::net::Ipv4Addr;
 use url::Url;
 
+#[derive(Debug, Clone, Copy)]
 pub struct NetUser {
     pub address: Ipv4Addr,
     pub login_time: NaiveDateTime,
@@ -26,6 +27,7 @@ impl NetUser {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct NetDetail {
     pub login_time: NaiveDateTime,
     pub logout_time: NaiveDateTime,

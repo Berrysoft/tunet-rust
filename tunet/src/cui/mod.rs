@@ -1,9 +1,8 @@
 use crate::{settings::*, strfmt::*};
 use anyhow::*;
 use crossterm::{terminal::*, ExecutableCommand};
-use std::sync::Arc;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
-use tunet_rust::*;
+use tunet_rust::{usereg::UseregHelper, *};
 
 mod event;
 mod model;
@@ -25,9 +24,10 @@ pub async fn run() -> Result<()> {
     terminal.clear()?;
 
     let client = create_http_client()?;
-    let client = Arc::new(TUNetConnect::new(NetState::Auto, cred, client).await?);
+    let usereg = UseregHelper::new(cred.clone(), client.clone());
+    let client = TUNetConnect::new(NetState::Auto, cred, client).await?;
 
-    let mut event = Event::new(client.clone());
+    let mut event = Event::new(client, usereg);
     let mut model = Model::default();
 
     let mut res = Ok(());
@@ -53,8 +53,6 @@ pub async fn run() -> Result<()> {
     stdout.execute(LeaveAlternateScreen)?;
 
     res?;
-
-    save_cred(client.cred())?;
 
     Ok(())
 }
