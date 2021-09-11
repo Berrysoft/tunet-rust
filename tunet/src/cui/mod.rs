@@ -1,3 +1,4 @@
+use crate::{settings::*, strfmt::*};
 use anyhow::*;
 use crossterm::{event::Event as TerminalEvent, event::*, terminal::*, ExecutableCommand};
 use tokio::sync::mpsc;
@@ -10,8 +11,7 @@ enum Event {
     Tick,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+pub async fn run() -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = std::io::stdout();
     stdout.execute(EnterAlternateScreen)?;
@@ -22,7 +22,8 @@ async fn main() -> Result<()> {
     terminal.clear()?;
 
     let client = create_http_client()?;
-    let client = TUNetConnect::new(NetState::Auto, NetCredential::default(), client).await?;
+    let cred = read_cred()?;
+    let client = TUNetConnect::new(NetState::Auto, cred, client).await?;
 
     let (tx, mut rx) = mpsc::channel::<Result<Event>>(10);
 
@@ -82,7 +83,7 @@ async fn main() -> Result<()> {
                 Paragraph::new(vec![
                     Spans::from(format!("用户 {}", flux.username)),
                     Spans::from(format!("流量 {}", flux.flux)),
-                    Spans::from(format!("时长 {}", flux.online_time)),
+                    Spans::from(format!("时长 {}", FmtDuration(flux.online_time))),
                     Spans::from(format!("余额 {}", flux.balance)),
                 ])
             } else {

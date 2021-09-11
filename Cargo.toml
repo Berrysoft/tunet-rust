@@ -2,8 +2,7 @@
 members = [
     "authtea",
     "tunet-rust",
-    "tunet",
-    "tunet-tui"
+    "tunet"
 ]
 
 exclude = [

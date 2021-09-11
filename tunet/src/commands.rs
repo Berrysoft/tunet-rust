@@ -47,6 +47,9 @@ trait_enum! {
         Detail,
         #[structopt(name = "deletecred", about = "删除用户名和密码")]
         DeleteCred,
+        #[cfg(feature = "cui")]
+        #[structopt(name = "cui", about = "显示富控制台界面")]
+        Cui
     }
 }
 
@@ -338,5 +341,17 @@ pub struct DeleteCred {}
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
         delete_cred()
+    }
+}
+
+#[cfg(feature = "cui")]
+#[derive(Debug, StructOpt)]
+pub struct Cui {}
+
+#[cfg(feature = "cui")]
+#[async_trait]
+impl TUNetCommand for Cui {
+    async fn run(&self) -> Result<()> {
+        crate::cui::run().await
     }
 }
