@@ -53,6 +53,22 @@ trait_enum! {
     }
 }
 
+impl TUNet {
+    #[cfg(feature = "cui")]
+    pub fn is_cui(&self) -> bool {
+        if let Self::Cui(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
+    #[cfg(not(feature = "cui"))]
+    pub fn is_cui(&self) -> bool {
+        false
+    }
+}
+
 #[derive(Debug, StructOpt)]
 pub struct Login {
     #[structopt(long, short = "s", default_value = "auto")]

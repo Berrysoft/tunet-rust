@@ -9,22 +9,21 @@ mod cui;
 
 use commands::TUNet;
 use structopt::StructOpt;
+use tokio::runtime::Builder as RuntimeBuilder;
 use tunet_rust::Result;
 
 async fn main_async() -> Result<()> {
     TUNet::from_args().run().await
 }
 
-#[cfg(feature = "cui")]
-fn builder() -> tokio::runtime::Builder {
-    tokio::runtime::Builder::new_multi_thread()
-}
-
-#[cfg(not(feature = "cui"))]
-fn builder() -> tokio::runtime::Builder {
-    tokio::runtime::Builder::new_current_thread()
-}
-
 fn main() -> Result<()> {
-    builder().enable_all().build()?.block_on(main_async())
+    let opt = TUNet::from_args();
+    if opt.is_cui() {
+        RuntimeBuilder::new_multi_thread()
+    } else {
+        RuntimeBuilder::new_current_thread()
+    }
+    .enable_all()
+    .build()?
+    .block_on(main_async())
 }
