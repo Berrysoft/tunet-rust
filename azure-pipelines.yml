@@ -171,10 +171,10 @@ jobs:
     vmImage: 'macOS-11'
   
   steps:
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifact: 'publish'
-    path: $(Build.SourcesDirectory)/publish
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: 'publish'
+      path: $(Build.SourcesDirectory)/publish
 
   - script: lipo -create $(Build.SourcesDirectory)/publish/tunet.macos.x86_64 $(Build.SourcesDirectory)/publish/tunet.macos.aarch64 -output $(Build.ArtifactStagingDirectory)/tunet.macos
     displayName: "Create fat binary"
