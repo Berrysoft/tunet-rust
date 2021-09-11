@@ -37,7 +37,7 @@ pub enum NetHelperError {
 
 pub type NetHelperResult<T> = std::result::Result<T, NetHelperError>;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct NetCredential {
     #[cfg_attr(feature = "serde", serde(rename = "Username", default))]
@@ -178,6 +178,7 @@ pub trait TUNetHelper: Send + Sync {
 }
 
 trait_enum! {
+    #[derive(Clone)]
     pub enum TUNetConnect : TUNetHelper {
         NetConnect,
         Auth4Connect,

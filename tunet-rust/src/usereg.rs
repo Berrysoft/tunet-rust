@@ -74,6 +74,7 @@ impl std::str::FromStr for NetDetailOrder {
     }
 }
 
+#[derive(Clone)]
 pub struct UseregHelper {
     cred: NetCredential,
     client: HttpClient,

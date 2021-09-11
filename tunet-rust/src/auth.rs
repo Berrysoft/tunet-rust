@@ -10,6 +10,7 @@ use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use url::Url;
 
+#[derive(Clone)]
 pub struct AuthConnect<const V: i32> {
     cred: NetCredential,
     client: HttpClient,

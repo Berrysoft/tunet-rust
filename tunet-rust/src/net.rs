@@ -2,6 +2,7 @@ use crate::*;
 use data_encoding::HEXLOWER;
 use md5::{Digest, Md5};
 
+#[derive(Clone)]
 pub struct NetConnect {
     cred: NetCredential,
     client: HttpClient,
