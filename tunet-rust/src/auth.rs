@@ -6,7 +6,7 @@ use hmac::{Hmac, Mac, NewMac};
 use lazy_static::lazy_static;
 use md5::Md5;
 use regex::Regex;
-use serde_json::{self, json, Value as JsonValue};
+use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use url::Url;
 
