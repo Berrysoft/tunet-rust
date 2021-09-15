@@ -1,6 +1,7 @@
 use crate::{settings::*, strfmt::*};
 use anyhow::*;
-use crossterm::{terminal::*, ExecutableCommand};
+use crossterm::{execute, terminal::*};
+use futures_util::TryStreamExt;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
 use tunet_rust::{usereg::UseregHelper, *};
 
@@ -15,10 +16,17 @@ pub async fn run() -> Result<()> {
     let cred = read_cred()?;
 
     enable_raw_mode()?;
-    let mut stdout = std::io::stdout();
-    stdout.execute(EnterAlternateScreen)?;
+    execute!(std::io::stdout(), EnterAlternateScreen)?;
 
-    let backend = CrosstermBackend::new(stdout);
+    let res = main_loop(cred).await;
+
+    execute!(std::io::stdout(), LeaveAlternateScreen)?;
+    disable_raw_mode()?;
+    res
+}
+
+async fn main_loop(cred: NetCredential) -> Result<()> {
+    let backend = CrosstermBackend::new(std::io::stdout());
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
     terminal.clear()?;
@@ -30,29 +38,15 @@ pub async fn run() -> Result<()> {
     let mut event = Event::new(client, usereg);
     let mut model = Model::default();
 
-    let mut res = Ok(());
-
     loop {
         terminal.draw(|f| view::draw(&model, f))?;
 
-        if let Some(m) = event.next().await {
-            match m {
-                Ok(m) => {
-                    if !model.handle(m) {
-                        break;
-                    }
-                }
-                Err(e) => {
-                    res = Err(e);
-                }
+        if let Some(m) = event.try_next().await? {
+            if !model.handle(m) {
+                break;
             }
         }
     }
-
-    let mut stdout = std::io::stdout();
-    stdout.execute(LeaveAlternateScreen)?;
-
-    res?;
 
     Ok(())
 }

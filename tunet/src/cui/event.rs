@@ -1,5 +1,6 @@
 pub use crossterm::event::Event as TerminalEvent;
-use futures_util::{pin_mut, StreamExt};
+use futures_util::{pin_mut, Stream, StreamExt};
+use std::future::Future;
 use tokio::sync::mpsc::*;
 use tunet_rust::{usereg::*, *};
 
@@ -17,7 +18,7 @@ pub struct Event {
 
 impl Event {
     pub fn new(client: TUNetConnect, usereg: UseregHelper) -> Self {
-        let (tx, rx) = channel(10);
+        let (tx, rx) = channel(32);
 
         {
             let tx = tx.clone();
@@ -77,8 +78,17 @@ impl Event {
 
         Self { rx }
     }
+}
 
-    pub async fn next(&mut self) -> Option<Result<EventType>> {
-        self.rx.recv().await
+impl Stream for Event {
+    type Item = Result<EventType>;
+
+    fn poll_next(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        let f = self.rx.recv();
+        pin_mut!(f);
+        f.poll(cx)
     }
 }
