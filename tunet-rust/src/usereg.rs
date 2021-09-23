@@ -88,7 +88,7 @@ static USEREG_INFO_URI: &str = "http://usereg.tsinghua.edu.cn/online_user_ipv4.p
 static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
 static USEREG_DETAIL_URI: &str = "http://usereg.tsinghua.edu.cn/user_detail_list.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
-const USEREG_OFF: usize = 100;
+const USEREG_OFF: usize = 1000;
 
 impl UseregHelper {
     pub fn new(cred: NetCredential, client: HttpClient) -> Self {
