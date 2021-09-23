@@ -48,6 +48,8 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             })
             .collect::<Vec<_>>(),
     )
+    .header(Row::new(vec!["IP地址", "登录时间", "MAC地址"]))
+    .column_spacing(2)
     .widths(&[
         Constraint::Length(15),
         Constraint::Length(20),
@@ -81,7 +83,8 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         .map(|f| f.flux.0 as f64 / GIGABYTES)
         .unwrap_or_default()
         .max(flux_g)
-        .max(1.0) as usize;
+        .max(1.0) as usize
+        + 10;
 
     let dataset = Dataset::default()
         .marker(tui::symbols::Marker::Dot)
