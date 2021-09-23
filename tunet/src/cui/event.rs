@@ -1,7 +1,7 @@
 pub use crossterm::event::Event as TerminalEvent;
 use futures_util::{pin_mut, Stream, StreamExt};
-use std::future::Future;
 use tokio::sync::mpsc::*;
+use tokio_stream::wrappers::*;
 use tunet_rust::{usereg::*, *};
 
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub enum EventType {
 }
 
 pub struct Event {
-    rx: Receiver<Result<EventType>>,
+    rx: ReceiverStream<Result<EventType>>,
 }
 
 impl Event {
@@ -25,32 +25,28 @@ impl Event {
             let tx = tx.clone();
             tokio::spawn(async move {
                 loop {
-                    let res = tx
-                        .send(
-                            crossterm::event::read()
-                                .map(EventType::TerminalEvent)
-                                .map_err(anyhow::Error::from),
-                        )
-                        .await;
-                    if res.is_err() {
-                        break;
-                    }
+                    tx.send(
+                        crossterm::event::read()
+                            .map(EventType::TerminalEvent)
+                            .map_err(anyhow::Error::from),
+                    )
+                    .await?;
                 }
+                #[allow(unreachable_code)]
+                Ok::<_, anyhow::Error>(())
             });
         }
 
         {
             let tx = tx.clone();
             tokio::spawn(async move {
-                let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
-                loop {
-                    interval.tick().await;
-                    if tx.is_closed() {
-                        break;
-                    }
-                    let tx = tx.clone();
-                    tokio::spawn(async move { tx.send(Ok(EventType::Tick)).await });
+                let interval =
+                    IntervalStream::new(tokio::time::interval(std::time::Duration::from_secs(1)));
+                pin_mut!(interval);
+                while let Some(_) = interval.next().await {
+                    tx.send(Ok(EventType::Tick)).await?;
                 }
+                Ok::<_, anyhow::Error>(())
             });
         }
 
@@ -91,7 +87,9 @@ impl Event {
             });
         }
 
-        Self { rx }
+        Self {
+            rx: ReceiverStream::new(rx),
+        }
     }
 }
 
@@ -102,8 +100,6 @@ impl Stream for Event {
         mut self: std::pin::Pin<&mut Self>,
         cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Option<Self::Item>> {
-        let f = self.rx.recv();
-        pin_mut!(f);
-        f.poll(cx)
+        self.rx.poll_next_unpin(cx)
     }
 }
