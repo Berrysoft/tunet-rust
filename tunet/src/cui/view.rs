@@ -3,11 +3,27 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use tui::{backend::Backend, style::*, Frame};
 
+fn get_flux_color(flux: u64, total: bool) -> Color {
+    if flux == 0 {
+        Color::LightCyan
+    } else if flux < if total { 20_000_000_000 } else { 2_000_000_000 } {
+        Color::LightYellow
+    } else {
+        Color::LightMagenta
+    }
+}
+
+const GIGABYTES: f64 = 1_000_000_000.0;
+
 pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(6), Constraint::Percentage(100)])
         .split(f.size());
+    let title_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(chunks[0]);
     let graph = if let Some(flux) = &m.flux {
         Paragraph::new(vec![
             Spans::from(format!("用户 {}", flux.username)),
@@ -16,9 +32,28 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             Spans::from(format!("余额 {}", flux.balance)),
         ])
     } else {
-        Paragraph::new("Fetching...")
+        Paragraph::new("加载中...")
     };
-    f.render_widget(graph, chunks[0]);
+    f.render_widget(graph, title_chunks[0]);
+
+    let table = Table::new(
+        m.users
+            .iter()
+            .map(|u| {
+                Row::new(vec![
+                    u.address.to_string(),
+                    FmtDateTime(u.login_time).to_string(),
+                    u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
+                ])
+            })
+            .collect::<Vec<_>>(),
+    )
+    .widths(&[
+        Constraint::Length(15),
+        Constraint::Length(20),
+        Constraint::Length(14),
+    ]);
+    f.render_widget(table, title_chunks[1]);
 
     let details_group = m
         .details
@@ -31,31 +66,30 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let max_day = Local::now().day();
 
     let mut details = vec![];
-    let mut flux = 0.0;
+    let mut flux = 0u64;
     for d in 1u32..max_day {
         if let Some(f) = details_group.get(&d) {
-            flux += *f as f64 / 1_000_000_000.0;
+            flux += *f;
         }
-        details.push((d as f64, flux));
+        details.push((d as f64, flux as f64 / GIGABYTES));
     }
-
-    let dataset = Dataset::default()
-        .name("Detail")
-        .marker(tui::symbols::Marker::Dot)
-        .graph_type(GraphType::Line)
-        .style(Style::default().fg(Color::White))
-        .data(&details);
+    let flux_g = flux as f64 / GIGABYTES;
 
     let max_flux = m
         .flux
         .as_ref()
-        .map(|f| f.flux.0 as f64 / 1_000_000_000.0)
+        .map(|f| f.flux.0 as f64 / GIGABYTES)
         .unwrap_or_default()
-        .max(flux)
+        .max(flux_g)
         .max(1.0) as usize;
 
+    let dataset = Dataset::default()
+        .marker(tui::symbols::Marker::Dot)
+        .graph_type(GraphType::Line)
+        .style(Style::default().fg(get_flux_color(flux, true)))
+        .data(&details);
+
     let chart = Chart::new(vec![dataset])
-        .style(Style::default().fg(Color::White))
         .x_axis(
             Axis::default()
                 .title(Span::from("日期"))

@@ -5,6 +5,7 @@ use tunet_rust::{usereg::*, *};
 #[derive(Debug, Default)]
 pub struct Model {
     pub flux: Option<NetFlux>,
+    pub users: Vec<NetUser>,
     pub details: Vec<NetDetail>,
 }
 
@@ -25,6 +26,9 @@ impl Model {
                 if let Some(flux) = &mut self.flux {
                     flux.online_time = flux.online_time + Duration::seconds(1);
                 }
+            }
+            EventType::AddOnline(u) => {
+                self.users.push(u);
             }
             EventType::AddDetail(d) => {
                 self.details.push(d);

@@ -9,6 +9,7 @@ pub enum EventType {
     TerminalEvent(TerminalEvent),
     Tick,
     Flux(NetFlux),
+    AddOnline(NetUser),
     AddDetail(NetDetail),
 }
 
@@ -59,6 +60,20 @@ impl Event {
             tokio::spawn(async move {
                 let flux = client.flux().await;
                 tx.send(flux.map(EventType::Flux)).await
+            });
+        }
+
+        {
+            let tx = tx.clone();
+            let mut usereg = usereg.clone();
+            tokio::spawn(async move {
+                usereg.login().await?;
+                let users = usereg.users();
+                pin_mut!(users);
+                while let Some(u) = users.next().await {
+                    tx.send(u.map(EventType::AddOnline)).await?;
+                }
+                Ok::<_, anyhow::Error>(())
             });
         }
 
