@@ -18,7 +18,7 @@ const GIGABYTES: f64 = 1_000_000_000.0;
 pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(20), Constraint::Percentage(80)])
+        .constraints([Constraint::Length(32), Constraint::Percentage(100)])
         .split(f.size());
     let title_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -62,31 +62,39 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     .block(Block::default().title("基础信息").borders(Borders::all()));
     f.render_widget(graph, title_chunks[0]);
 
-    let table = Table::new(
+    let table = List::new(
         m.users
             .iter()
             .map(|u| {
-                Row::new(vec![
-                    Text::styled(u.address.to_string(), Style::default().fg(Color::Yellow)),
-                    Text::styled(
-                        FmtDateTime(u.login_time).to_string(),
-                        Style::default().fg(Color::Green),
-                    ),
-                    Text::styled(
-                        u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
-                        Style::default().fg(Color::Cyan),
-                    ),
-                ])
+                ListItem::new(Text::from(vec![
+                    Spans::from(vec![
+                        Span::styled("IP 地址  ", Style::default().fg(Color::Cyan)),
+                        Span::styled(
+                            u.address.to_string(),
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                    ]),
+                    Spans::from(vec![
+                        Span::styled("登录时间 ", Style::default().fg(Color::Cyan)),
+                        Span::styled(
+                            FmtDateTime(u.login_time).to_string(),
+                            Style::default().fg(Color::Green),
+                        ),
+                    ]),
+                    Spans::from(vec![
+                        Span::styled("MAC 地址 ", Style::default().fg(Color::Cyan)),
+                        Span::styled(
+                            u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
+                            Style::default().fg(Color::LightCyan),
+                        ),
+                    ]),
+                    Spans::from(vec![]),
+                ]))
             })
             .collect::<Vec<_>>(),
     )
-    .header(Row::new(vec!["IP地址", "登录时间", "MAC地址"]))
-    .column_spacing(2)
-    .widths(&[
-        Constraint::Length(15),
-        Constraint::Length(20),
-        Constraint::Length(14),
-    ])
     .block(Block::default().title("连接详情").borders(Borders::all()));
     f.render_widget(table, title_chunks[1]);
 
