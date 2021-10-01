@@ -362,12 +362,16 @@ impl TUNetCommand for DeleteCred {
 
 #[cfg(feature = "cui")]
 #[derive(Debug, StructOpt)]
-pub struct Cui {}
+pub struct Cui {
+    #[structopt(long, short = "s", default_value = "auto")]
+    /// 连接方式
+    host: NetState,
+}
 
 #[cfg(feature = "cui")]
 #[async_trait]
 impl TUNetCommand for Cui {
     async fn run(&self) -> Result<()> {
-        crate::cui::run().await
+        crate::cui::run(self.host).await
     }
 }

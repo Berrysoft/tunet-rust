@@ -17,23 +17,49 @@ const GIGABYTES: f64 = 1_000_000_000.0;
 
 pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(6), Constraint::Percentage(100)])
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(20), Constraint::Percentage(80)])
         .split(f.size());
     let title_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(6), Constraint::Percentage(100)])
         .split(chunks[0]);
     let graph = if let Some(flux) = &m.flux {
         Paragraph::new(vec![
-            Spans::from(format!("用户 {}", flux.username)),
-            Spans::from(format!("流量 {}", flux.flux)),
-            Spans::from(format!("时长 {}", FmtDuration(flux.online_time))),
-            Spans::from(format!("余额 {}", flux.balance)),
+            Spans::from(vec![
+                Span::styled("用户 ", Style::default().fg(Color::Cyan)),
+                Span::styled(
+                    &flux.username,
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
+                ),
+            ]),
+            Spans::from(vec![
+                Span::styled("流量 ", Style::default().fg(Color::Cyan)),
+                Span::styled(
+                    flux.flux.to_string(),
+                    Style::default()
+                        .fg(get_flux_color(flux.flux.0, true))
+                        .add_modifier(Modifier::BOLD),
+                ),
+            ]),
+            Spans::from(vec![
+                Span::styled("时长 ", Style::default().fg(Color::Cyan)),
+                Span::styled(
+                    FmtDuration(flux.online_time).to_string(),
+                    Style::default().fg(Color::Green),
+                ),
+            ]),
+            Spans::from(vec![
+                Span::styled("余额 ", Style::default().fg(Color::Cyan)),
+                Span::styled(flux.balance.to_string(), Style::default().fg(Color::Yellow)),
+            ]),
         ])
     } else {
         Paragraph::new("加载中...")
-    };
+    }
+    .block(Block::default().title("基础信息").borders(Borders::all()));
     f.render_widget(graph, title_chunks[0]);
 
     let table = Table::new(
@@ -41,9 +67,15 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             .iter()
             .map(|u| {
                 Row::new(vec![
-                    u.address.to_string(),
-                    FmtDateTime(u.login_time).to_string(),
-                    u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
+                    Text::styled(u.address.to_string(), Style::default().fg(Color::Yellow)),
+                    Text::styled(
+                        FmtDateTime(u.login_time).to_string(),
+                        Style::default().fg(Color::Green),
+                    ),
+                    Text::styled(
+                        u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
+                        Style::default().fg(Color::Cyan),
+                    ),
                 ])
             })
             .collect::<Vec<_>>(),
@@ -54,7 +86,8 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         Constraint::Length(15),
         Constraint::Length(20),
         Constraint::Length(14),
-    ]);
+    ])
+    .block(Block::default().title("连接详情").borders(Borders::all()));
     f.render_widget(table, title_chunks[1]);
 
     let details_group = m
@@ -115,6 +148,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                         .map(|f| Span::from((max_flux as f64 / 2.0 * f as f64).to_string()))
                         .collect(),
                 ),
-        );
+        )
+        .block(Block::default().title("流量详情").borders(Borders::all()));
     f.render_widget(chart, chunks[1]);
 }
