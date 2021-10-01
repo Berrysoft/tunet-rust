@@ -21,7 +21,7 @@ itertools = "0.10"
 termcolor = "1.1"
 termcolor_output = { git = "https://github.com/Berrysoft/termcolor_output.git" }
 rpassword = "5.0"
-dirs = "3.0"
+dirs = "4.0"
 
 crossterm = { version = "0.20", optional = true }
 tui = { version = "0.16", default-features = false, features = ['crossterm'], optional = true }
