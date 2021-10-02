@@ -12,7 +12,7 @@ use url::Url;
 
 #[derive(Clone)]
 pub struct AuthConnect<const V: i32> {
-    cred: NetCredential,
+    cred: Arc<NetCredential>,
     client: HttpClient,
 }
 
@@ -29,7 +29,7 @@ impl<const V: i32> AuthConnect<V>
 where
     Self: AuthConnectUri,
 {
-    pub fn new(cred: NetCredential, client: HttpClient) -> Self {
+    pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {
         Self { cred, client }
     }
 
@@ -174,8 +174,8 @@ where
         Ok(res.text().await?.parse()?)
     }
 
-    fn cred(&self) -> &NetCredential {
-        &self.cred
+    fn cred(&self) -> Arc<NetCredential> {
+        self.cred.clone()
     }
 }
 

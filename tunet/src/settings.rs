@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::{remove_file, DirBuilder, File};
 use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
+use std::sync::Arc;
 use tunet_rust::*;
 
 #[derive(Deserialize, Serialize)]
@@ -79,7 +80,7 @@ impl FileSettingsReader {
         Self::file_path().map(|p| p.exists()).unwrap_or(false)
     }
 
-    pub async fn save(&mut self, settings: &NetCredential) -> Result<()> {
+    pub async fn save(&mut self, settings: Arc<NetCredential>) -> Result<()> {
         if let Some(p) = self.path.parent() {
             DirBuilder::new().recursive(true).create(p)?;
         }
@@ -139,25 +140,25 @@ impl FileSettingsReader {
     }
 }
 
-pub fn read_cred() -> Result<NetCredential> {
+pub fn read_cred() -> Result<Arc<NetCredential>> {
     if let Ok(reader) = FileSettingsReader::new() {
         if let Ok(cred) = reader.read_with_password() {
-            return Ok(cred);
+            return Ok(Arc::new(cred));
         }
     }
-    StdioSettingsReader.read_with_password()
+    Ok(Arc::new(StdioSettingsReader.read_with_password()?))
 }
 
-pub fn read_username() -> Result<NetCredential> {
+pub fn read_username() -> Result<Arc<NetCredential>> {
     if let Ok(reader) = FileSettingsReader::new() {
         if let Ok(cred) = reader.read() {
-            return Ok(cred);
+            return Ok(Arc::new(cred));
         }
     }
-    StdioSettingsReader.read()
+    Ok(Arc::new(StdioSettingsReader.read()?))
 }
 
-pub async fn save_cred(cred: &NetCredential) -> Result<()> {
+pub async fn save_cred(cred: Arc<NetCredential>) -> Result<()> {
     FileSettingsReader::new()?.save(cred).await
 }
 

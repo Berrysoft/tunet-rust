@@ -2,6 +2,7 @@ use crate::{settings::*, strfmt::*};
 use anyhow::*;
 use crossterm::{execute, terminal::*};
 use futures_util::TryStreamExt;
+use std::sync::Arc;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
 use tunet_rust::{usereg::UseregHelper, *};
 
@@ -25,7 +26,7 @@ pub async fn run(state: NetState) -> Result<()> {
     res
 }
 
-async fn main_loop(state: NetState, cred: NetCredential) -> Result<()> {
+async fn main_loop(state: NetState, cred: Arc<NetCredential>) -> Result<()> {
     let backend = CrosstermBackend::new(std::io::stdout());
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;

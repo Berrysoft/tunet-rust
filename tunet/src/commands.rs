@@ -5,6 +5,7 @@ use itertools::Itertools;
 use mac_address::MacAddressIterator;
 use std::cmp::Reverse;
 use std::net::Ipv4Addr;
+use std::sync::Arc;
 use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
@@ -117,7 +118,7 @@ pub struct Status {
 impl TUNetCommand for Status {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let c = TUNetConnect::new(self.host, NetCredential::default(), client).await?;
+        let c = TUNetConnect::new(self.host, Arc::new(NetCredential::default()), client).await?;
         let f = c.flux().await?;
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut stdout = tco::ResetGuard::Owned(stdout);

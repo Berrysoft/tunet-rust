@@ -36,11 +36,11 @@ pub enum NetHelperError {
 
 pub type NetHelperResult<T> = std::result::Result<T, NetHelperError>;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 pub struct NetCredential {
     pub username: String,
     pub password: String,
-    pub ac_ids: Arc<RwLock<Vec<i32>>>,
+    pub ac_ids: RwLock<Vec<i32>>,
 }
 
 impl NetCredential {
@@ -48,7 +48,7 @@ impl NetCredential {
         Self {
             username,
             password,
-            ac_ids: Arc::new(RwLock::new(ac_ids)),
+            ac_ids: RwLock::new(ac_ids),
         }
     }
 }
@@ -179,7 +179,7 @@ pub trait TUNetHelper: Send + Sync {
     async fn login(&self) -> Result<String>;
     async fn logout(&self) -> Result<String>;
     async fn flux(&self) -> Result<NetFlux>;
-    fn cred(&self) -> &NetCredential;
+    fn cred(&self) -> Arc<NetCredential>;
 }
 
 trait_enum! {
@@ -194,7 +194,7 @@ trait_enum! {
 impl TUNetConnect {
     pub async fn new(
         mut s: NetState,
-        cred: NetCredential,
+        cred: Arc<NetCredential>,
         client: HttpClient,
     ) -> NetHelperResult<Self> {
         if let NetState::Auto = s {

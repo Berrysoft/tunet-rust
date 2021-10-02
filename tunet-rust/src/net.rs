@@ -4,7 +4,7 @@ use md5::{Digest, Md5};
 
 #[derive(Clone)]
 pub struct NetConnect {
-    cred: NetCredential,
+    cred: Arc<NetCredential>,
     client: HttpClient,
 }
 
@@ -12,7 +12,7 @@ static NET_LOG_URI: &str = "http://net.tsinghua.edu.cn/do_login.php";
 static NET_FLUX_URI: &str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl NetConnect {
-    pub fn new(cred: NetCredential, client: HttpClient) -> Self {
+    pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {
         NetConnect { cred, client }
     }
 }
@@ -47,7 +47,7 @@ impl TUNetHelper for NetConnect {
         Ok(res.text().await?.parse()?)
     }
 
-    fn cred(&self) -> &NetCredential {
-        &self.cred
+    fn cred(&self) -> Arc<NetCredential> {
+        self.cred.clone()
     }
 }
