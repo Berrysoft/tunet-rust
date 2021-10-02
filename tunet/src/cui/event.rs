@@ -61,7 +61,7 @@ impl Event {
 
         {
             let tx = tx.clone();
-            let mut usereg = usereg.clone();
+            let usereg = usereg.clone();
             tokio::spawn(async move {
                 usereg.login().await?;
                 let users = usereg.users();
@@ -75,7 +75,7 @@ impl Event {
 
         {
             let tx = tx.clone();
-            let mut usereg = usereg.clone();
+            let usereg = usereg.clone();
             tokio::spawn(async move {
                 usereg.login().await?;
                 let details = usereg.details(NetDetailOrder::LogoutTime, false);

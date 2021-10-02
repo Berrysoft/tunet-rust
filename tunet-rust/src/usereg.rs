@@ -95,7 +95,7 @@ impl UseregHelper {
         UseregHelper { cred, client }
     }
 
-    pub async fn login(&mut self) -> Result<String> {
+    pub async fn login(&self) -> Result<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
             md5.update(self.cred.password.as_bytes());
@@ -115,7 +115,7 @@ impl UseregHelper {
         Ok(res.text().await?)
     }
 
-    pub async fn logout(&mut self) -> Result<String> {
+    pub async fn logout(&self) -> Result<String> {
         let params = [("action", "logout")];
         let res = self
             .client

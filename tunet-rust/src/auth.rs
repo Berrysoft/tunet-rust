@@ -139,19 +139,19 @@ impl<const V: i32> TUNetHelper for AuthConnect<V>
 where
     Self: AuthConnectUri,
 {
-    async fn login(&mut self) -> Result<String> {
-        for ac_id in &self.cred.ac_ids {
+    async fn login(&self) -> Result<String> {
+        for ac_id in self.cred.ac_ids.read().await.iter() {
             let res = self.try_login(*ac_id).await;
             if res.is_ok() {
                 return res;
             }
         }
         let ac_id = self.get_ac_id().await?;
-        self.cred.ac_ids.push(ac_id);
+        self.cred.ac_ids.write().await.push(ac_id);
         Ok(self.try_login(ac_id).await?)
     }
 
-    async fn logout(&mut self) -> Result<String> {
+    async fn logout(&self) -> Result<String> {
         let params = [
             ("action", "logout"),
             ("ac_id", "1"),

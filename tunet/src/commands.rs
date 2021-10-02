@@ -81,10 +81,10 @@ impl TUNetCommand for Login {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = TUNetConnect::new(self.host, cred, client).await?;
+        let c = TUNetConnect::new(self.host, cred, client).await?;
         let res = c.login().await?;
         println!("{}", res);
-        save_cred(c.cred())
+        save_cred(c.cred()).await
     }
 }
 
@@ -100,7 +100,7 @@ impl TUNetCommand for Logout {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_username()?;
-        let mut c = TUNetConnect::new(self.host, cred, client).await?;
+        let c = TUNetConnect::new(self.host, cred, client).await?;
         let res = c.logout().await?;
         println!("{}", res);
         Ok(())
@@ -162,7 +162,7 @@ impl TUNetCommand for Online {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, client);
+        let c = UseregHelper::new(cred, client);
         c.login().await?;
         let us = c.users();
         let mac_addrs = MacAddressIterator::new()
@@ -190,7 +190,7 @@ impl TUNetCommand for Online {
                 if is_self { "*" } else { "" }
             )?;
         }
-        save_cred(c.cred())
+        save_cred(c.cred()).await
     }
 }
 
@@ -206,11 +206,11 @@ impl TUNetCommand for UseregConnect {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, client);
+        let c = UseregHelper::new(cred, client);
         c.login().await?;
         let res = c.connect(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred())
+        save_cred(c.cred()).await
     }
 }
 
@@ -226,11 +226,11 @@ impl TUNetCommand for UseregDrop {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, client);
+        let c = UseregHelper::new(cred, client);
         c.login().await?;
         let res = c.drop(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred())
+        save_cred(c.cred()).await
     }
 }
 
@@ -251,7 +251,7 @@ impl Detail {
     async fn run_detail(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, client);
+        let c = UseregHelper::new(cred, client);
         c.login().await?;
         let details = c.details(self.order, self.descending);
         let stdout = StandardStream::stdout(ColorChoice::Auto);
@@ -280,13 +280,13 @@ impl Detail {
             bold!(true),
             total_flux
         )?;
-        save_cred(c.cred())
+        save_cred(c.cred()).await
     }
 
     async fn run_detail_grouping(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
-        let mut c = UseregHelper::new(cred, client);
+        let c = UseregHelper::new(cred, client);
         c.login().await?;
         let details = c
             .details(NetDetailOrder::LogoutTime, self.descending)
@@ -335,7 +335,7 @@ impl Detail {
             bold!(true),
             total_flux
         )?;
-        save_cred(c.cred())
+        save_cred(c.cred()).await
     }
 }
 

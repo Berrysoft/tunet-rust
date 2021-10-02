@@ -1,14 +1,13 @@
 #![forbid(unsafe_code)]
 
+use async_trait::async_trait;
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use thiserror::Error;
+use tokio::sync::RwLock;
 use trait_enum::trait_enum;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 pub use anyhow::Result;
-use async_trait::async_trait;
 pub use chrono::{Datelike, Duration, Local, NaiveDate, NaiveDateTime, Timelike};
 pub use reqwest::Client as HttpClient;
 
@@ -38,14 +37,20 @@ pub enum NetHelperError {
 pub type NetHelperResult<T> = std::result::Result<T, NetHelperError>;
 
 #[derive(Debug, Default, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct NetCredential {
-    #[cfg_attr(feature = "serde", serde(rename = "Username", default))]
     pub username: String,
-    #[cfg_attr(feature = "serde", serde(rename = "Password", default))]
     pub password: String,
-    #[cfg_attr(feature = "serde", serde(rename = "AcIds", default))]
-    pub ac_ids: Vec<i32>,
+    pub ac_ids: Arc<RwLock<Vec<i32>>>,
+}
+
+impl NetCredential {
+    pub fn new(username: String, password: String, ac_ids: Vec<i32>) -> Self {
+        Self {
+            username,
+            password,
+            ac_ids: Arc::new(RwLock::new(ac_ids)),
+        }
+    }
 }
 
 #[repr(transparent)]
@@ -171,8 +176,8 @@ impl std::str::FromStr for NetState {
 
 #[async_trait]
 pub trait TUNetHelper: Send + Sync {
-    async fn login(&mut self) -> Result<String>;
-    async fn logout(&mut self) -> Result<String>;
+    async fn login(&self) -> Result<String>;
+    async fn logout(&self) -> Result<String>;
     async fn flux(&self) -> Result<NetFlux>;
     fn cred(&self) -> &NetCredential;
 }
