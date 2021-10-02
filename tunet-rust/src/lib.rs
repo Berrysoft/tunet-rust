@@ -16,9 +16,8 @@ mod net;
 pub mod suggest;
 pub mod usereg;
 
+pub use auth::{Auth4Connect, Auth6Connect};
 pub use net::NetConnect;
-pub type Auth4Connect = auth::AuthConnect<4>;
-pub type Auth6Connect = auth::AuthConnect<6>;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
