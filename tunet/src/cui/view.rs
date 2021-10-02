@@ -16,10 +16,14 @@ fn get_flux_color(flux: u64, total: bool) -> Color {
 const GIGABYTES: f64 = 1_000_000_000.0;
 
 pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
+    let global_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(f.size().height - 1), Constraint::Min(1)])
+        .split(f.size());
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Length(32), Constraint::Percentage(100)])
-        .split(f.size());
+        .split(global_chunks[0]);
     let title_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(6), Constraint::Percentage(100)])
@@ -159,4 +163,8 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         )
         .block(Block::default().title("流量详情").borders(Borders::all()));
     f.render_widget(chart, chunks[1]);
+
+    let status = Paragraph::new(m.login.as_ref().map(|s| s.as_str()).unwrap_or(""))
+        .block(Block::default().style(Style::default().bg(Color::White).fg(Color::Black)));
+    f.render_widget(status, global_chunks[1]);
 }

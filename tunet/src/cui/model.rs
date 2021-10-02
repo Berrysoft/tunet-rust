@@ -4,6 +4,7 @@ use tunet_rust::{usereg::*, *};
 
 #[derive(Debug, Default)]
 pub struct Model {
+    pub login: Option<String>,
     pub flux: Option<NetFlux>,
     pub users: Vec<NetUser>,
     pub details: Vec<NetDetail>,
@@ -19,6 +20,9 @@ impl Model {
                 },
                 _ => {}
             },
+            EventType::Login(m) => {
+                self.login = Some(m);
+            }
             EventType::Flux(f) => {
                 self.flux = Some(f);
             }

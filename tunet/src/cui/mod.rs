@@ -19,7 +19,13 @@ pub async fn run(state: NetState) -> Result<()> {
     enable_raw_mode()?;
     execute!(std::io::stdout(), EnterAlternateScreen)?;
 
-    let res = main_loop(state, cred).await;
+    let res = main_loop(state, cred.clone()).await;
+
+    let res = if let Ok(()) = res {
+        save_cred(cred).await
+    } else {
+        res
+    };
 
     execute!(std::io::stdout(), LeaveAlternateScreen)?;
     disable_raw_mode()?;

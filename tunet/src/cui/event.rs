@@ -8,6 +8,7 @@ use tunet_rust::{usereg::*, *};
 pub enum EventType {
     TerminalEvent(TerminalEvent),
     Tick,
+    Login(String),
     Flux(NetFlux),
     AddOnline(NetUser),
     AddDetail(NetDetail),
@@ -54,8 +55,11 @@ impl Event {
             let tx = tx.clone();
             let client = client.clone();
             tokio::spawn(async move {
+                let res = client.login().await;
+                tx.send(res.map(EventType::Login)).await?;
                 let flux = client.flux().await;
-                tx.send(flux.map(EventType::Flux)).await
+                tx.send(flux.map(EventType::Flux)).await?;
+                Ok::<_, anyhow::Error>(())
             });
         }
 
