@@ -25,13 +25,11 @@ impl Event {
         {
             let tx = tx.clone();
             tokio::spawn(async move {
-                loop {
-                    tx.send(
-                        crossterm::event::read()
-                            .map(EventType::TerminalEvent)
-                            .map_err(anyhow::Error::from),
-                    )
-                    .await?;
+                let stream = crossterm::event::EventStream::new();
+                pin_mut!(stream);
+                while let Some(e) = stream.next().await {
+                    tx.send(e.map(EventType::TerminalEvent).map_err(anyhow::Error::from))
+                        .await?;
                 }
                 #[allow(unreachable_code)]
                 Ok::<_, anyhow::Error>(())
