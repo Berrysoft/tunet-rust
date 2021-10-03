@@ -24,10 +24,11 @@ termcolor_output = { git = "https://github.com/Berrysoft/termcolor_output.git" }
 rpassword = "5.0"
 dirs = "4.0"
 
-crossterm = { version = "0.20", optional = true, features = [ "event-stream" ] }
+crossterm = { version = "0.20", optional = true }
 tui = { version = "0.16", default-features = false, features = [ "crossterm" ], optional = true }
 tokio-stream = { version = "0.1", optional = true }
+async-stream = { version = "0.3", optional = true }
 
 [features]
 default = [ "cui" ]
-cui = [ "tui", "crossterm", "tokio/rt-multi-thread", "tokio/time", "tokio-stream" ]
+cui = [ "tui", "crossterm", "tokio/rt-multi-thread", "tokio/time", "tokio-stream", "async-stream" ]
