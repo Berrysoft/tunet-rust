@@ -7,7 +7,6 @@ use std::{
     task::{Context, Poll},
 };
 use tokio::sync::mpsc::*;
-use tokio_stream::wrappers::*;
 use tunet_rust::{usereg::*, *};
 
 #[derive(Debug)]
@@ -21,7 +20,7 @@ pub enum EventType {
 }
 
 pub struct Event {
-    rx: ReceiverStream<Result<EventType>>,
+    rx: Receiver<Result<EventType>>,
 }
 
 impl Event {
@@ -45,12 +44,12 @@ impl Event {
         {
             let tx = tx.clone();
             tokio::spawn(async move {
-                let interval =
-                    IntervalStream::new(tokio::time::interval(std::time::Duration::from_secs(1)));
-                pin_mut!(interval);
-                while let Some(_) = interval.next().await {
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
+                loop {
+                    interval.tick().await;
                     tx.send(Ok(EventType::Tick)).await?;
                 }
+                #[allow(unreachable_code)]
                 Ok::<_, anyhow::Error>(())
             });
         }
@@ -95,9 +94,7 @@ impl Event {
             });
         }
 
-        Self {
-            rx: ReceiverStream::new(rx),
-        }
+        Self { rx }
     }
 }
 
@@ -108,7 +105,7 @@ impl Stream for Event {
         mut self: std::pin::Pin<&mut Self>,
         cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Option<Self::Item>> {
-        self.rx.poll_next_unpin(cx)
+        self.rx.poll_recv(cx)
     }
 }
 
