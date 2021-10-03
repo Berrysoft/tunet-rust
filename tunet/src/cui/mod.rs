@@ -45,12 +45,19 @@ async fn main_loop(state: NetState, cred: Arc<NetCredential>) -> Result<()> {
     let mut event = Event::new(client, usereg);
     let mut model = Model::default();
 
-    loop {
-        terminal.draw(|f| view::draw(&model, f))?;
+    let mut interval = tokio::time::interval(std::time::Duration::from_micros(100));
 
-        if let Some(m) = event.try_next().await? {
-            if !model.handle(m) {
-                break;
+    loop {
+        tokio::select! {
+            _ = interval.tick() => {
+                terminal.draw(|f| view::draw(&model, f))?;
+            }
+            m = event.try_next() => {
+                if let Some(m) = m? {
+                    if !model.handle(m) {
+                        break;
+                    }
+                }
             }
         }
     }
