@@ -1,8 +1,6 @@
-use async_stream::try_stream;
 pub use crossterm::event::Event as TerminalEvent;
 use futures_util::{pin_mut, Stream, StreamExt};
 use std::{
-    future::Future,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -30,7 +28,7 @@ impl Event {
         {
             let tx = tx.clone();
             tokio::spawn(async move {
-                let stream = event_stream();
+                let stream = crossterm::event::EventStream::new();
                 pin_mut!(stream);
                 while let Some(e) = stream.next().await {
                     tx.send(e.map(EventType::TerminalEvent).map_err(anyhow::Error::from))
@@ -103,35 +101,5 @@ impl Stream for Event {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.rx.poll_recv(cx)
-    }
-}
-
-#[derive(Debug, Default)]
-struct CrosstermReadFuture;
-
-impl Future for CrosstermReadFuture {
-    type Output = std::io::Result<TerminalEvent>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        match crossterm::event::poll(std::time::Duration::from_secs(0)) {
-            Ok(true) => Poll::Ready(crossterm::event::read()),
-            Ok(false) => {
-                cx.waker().clone().wake();
-                Poll::Pending
-            }
-            Err(e) => Poll::Ready(Err(e)),
-        }
-    }
-}
-
-// Simple replacement for `EventStream`.
-fn event_stream() -> impl Stream<Item = std::io::Result<TerminalEvent>> {
-    try_stream! {
-        let f = CrosstermReadFuture::default();
-        pin_mut!(f);
-        loop {
-            let e = f.as_mut().await?;
-            yield e;
-        }
     }
 }
