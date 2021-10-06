@@ -19,7 +19,9 @@ async fn main_async() -> Result<()> {
 fn main() -> Result<()> {
     let opt = TUNet::from_args();
     if opt.is_cui() {
-        RuntimeBuilder::new_multi_thread()
+        let mut builder = RuntimeBuilder::new_multi_thread();
+        builder.worker_threads(4);
+        builder
     } else {
         RuntimeBuilder::new_current_thread()
     }
