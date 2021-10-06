@@ -24,7 +24,7 @@ select = "0.5"
 chrono = { version = "0.4", default-features = false, features = [ "clock", "std" ] }
 mac_address = "1.1"
 lazy_static = "1.4"
-regex = "1"
+regex = { version = "1", default-features = false, features = [ "std" ] }
 thiserror = "1.0"
 trait_enum = "0.5"
 anyhow = "1.0"

@@ -60,7 +60,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         let res = self.client.get(U::redirect_uri()).send().await?;
         let t = res.text().await?;
         match AC_ID_REGEX.captures(&t) {
-            Some(cap) => Ok(cap[1].parse::<i32>().unwrap_or_default()),
+            Some(cap) => Ok(cap[1].parse::<i32>()?),
             _ => Err(NetHelperError::NoAcIdErr.into()),
         }
     }
