@@ -165,8 +165,13 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     f.render_widget(chart, chunks[1]);
 
     let status = Paragraph::new(Spans::from(vec![
-        Span::raw("F1 登录  F2 注销  F3 刷新流量  F4 刷新在线  F5 刷新图表    "),
-        Span::raw(m.log.as_ref().map(|s| s.as_str()).unwrap_or("")),
+        Span::raw("F1 登录  F2 注销  F3 刷新流量  F4 刷新在线  F5 刷新图表"),
+        Span::raw("    "),
+        Span::raw(m.log.as_ref().map(|s| s.as_ref()).unwrap_or("")),
+        Span::raw("    "),
+        Span::raw(if m.online { "正在刷新在线" } else { "" }),
+        Span::raw("    "),
+        Span::raw(if m.detail { "正在刷新图表" } else { "" }),
     ]))
     .block(Block::default().style(Style::default().bg(Color::White).fg(Color::Black)));
     f.render_widget(status, global_chunks[1]);

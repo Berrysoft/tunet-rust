@@ -15,10 +15,22 @@ use tunet_rust::{usereg::*, *};
 pub enum EventType {
     TerminalEvent(TerminalEvent),
     Tick,
-    Log(String),
+    Log(LogType),
+    LogDone(LogType),
     Flux(NetFlux),
+    ClearOnline,
     AddOnline(NetUser),
+    ClearDetail,
     AddDetail(NetDetail),
+}
+
+#[derive(Debug)]
+pub enum LogType {
+    Login(Option<String>),
+    Logout(Option<String>),
+    Flux,
+    Online,
+    Detail,
 }
 
 pub struct Event {
@@ -85,8 +97,10 @@ impl Event {
             let client = self.client.clone();
             tokio::spawn(async move {
                 let _lock = lock;
+                tx.send(Ok(EventType::Log(LogType::Login(None)))).await?;
                 let res = client.login().await;
-                tx.send(res.map(EventType::Log)).await?;
+                tx.send(res.map(|res| EventType::LogDone(LogType::Login(Some(res)))))
+                    .await?;
                 let flux = client.flux().await;
                 tx.send(flux.map(EventType::Flux)).await?;
                 Ok::<_, anyhow::Error>(())
@@ -101,8 +115,10 @@ impl Event {
             let client = self.client.clone();
             tokio::spawn(async move {
                 let _lock = lock;
+                tx.send(Ok(EventType::Log(LogType::Logout(None)))).await?;
                 let res = client.logout().await;
-                tx.send(res.map(EventType::Log)).await?;
+                tx.send(res.map(|res| EventType::LogDone(LogType::Logout(Some(res)))))
+                    .await?;
                 Ok::<_, anyhow::Error>(())
             });
         }
@@ -115,8 +131,10 @@ impl Event {
             let client = self.client.clone();
             tokio::spawn(async move {
                 let _lock = lock;
+                tx.send(Ok(EventType::Log(LogType::Flux))).await?;
                 let flux = client.flux().await;
                 tx.send(flux.map(EventType::Flux)).await?;
+                tx.send(Ok(EventType::LogDone(LogType::Flux))).await?;
                 Ok::<_, anyhow::Error>(())
             });
         }
@@ -129,12 +147,15 @@ impl Event {
             let usereg = self.usereg.clone();
             tokio::spawn(async move {
                 let _lock = lock;
+                tx.send(Ok(EventType::Log(LogType::Online))).await?;
+                tx.send(Ok(EventType::ClearOnline)).await?;
                 usereg.login().await?;
                 let users = usereg.users();
                 pin_mut!(users);
                 while let Some(u) = users.next().await {
                     tx.send(u.map(EventType::AddOnline)).await?;
                 }
+                tx.send(Ok(EventType::LogDone(LogType::Online))).await?;
                 Ok::<_, anyhow::Error>(())
             });
         }
@@ -147,12 +168,15 @@ impl Event {
             let usereg = self.usereg.clone();
             tokio::spawn(async move {
                 let _lock = lock;
+                tx.send(Ok(EventType::Log(LogType::Detail))).await?;
+                tx.send(Ok(EventType::ClearDetail)).await?;
                 usereg.login().await?;
                 let details = usereg.details(NetDetailOrder::LogoutTime, false);
                 pin_mut!(details);
                 while let Some(d) = details.next().await {
                     tx.send(d.map(EventType::AddDetail)).await?;
                 }
+                tx.send(Ok(EventType::LogDone(LogType::Detail))).await?;
                 Ok::<_, anyhow::Error>(())
             });
         }
