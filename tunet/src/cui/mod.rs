@@ -54,7 +54,7 @@ async fn main_loop(state: NetState, cred: Arc<NetCredential>) -> Result<()> {
             }
             m = event.try_next() => {
                 if let Some(m) = m? {
-                    if !model.handle(m) {
+                    if !model.handle(&event, m) {
                         break;
                     }
                 }

@@ -12,10 +12,6 @@ use structopt::StructOpt;
 use tokio::runtime::Builder as RuntimeBuilder;
 use tunet_rust::Result;
 
-async fn main_async() -> Result<()> {
-    TUNet::from_args().run().await
-}
-
 fn main() -> Result<()> {
     let opt = TUNet::from_args();
     if opt.is_cui() {
@@ -27,5 +23,5 @@ fn main() -> Result<()> {
     }
     .enable_all()
     .build()?
-    .block_on(main_async())
+    .block_on(TUNet::from_args().run())
 }

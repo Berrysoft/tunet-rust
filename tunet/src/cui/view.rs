@@ -61,7 +61,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             ]),
         ])
     } else {
-        Paragraph::new("加载中...")
+        Paragraph::new("")
     }
     .block(Block::default().title("基础信息").borders(Borders::all()));
     f.render_widget(graph, title_chunks[0]);
@@ -122,14 +122,14 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     }
     let flux_g = flux as f64 / GIGABYTES;
 
-    let max_flux = m
+    let max_flux = (m
         .flux
         .as_ref()
         .map(|f| f.flux.0 as f64 / GIGABYTES)
         .unwrap_or_default()
         .max(flux_g)
-        .max(1.0) as usize
-        + 10;
+        .max(1.0)
+        * 1.1) as usize;
 
     let dataset = Dataset::default()
         .marker(tui::symbols::Marker::Dot)
@@ -164,7 +164,10 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         .block(Block::default().title("流量详情").borders(Borders::all()));
     f.render_widget(chart, chunks[1]);
 
-    let status = Paragraph::new(m.login.as_ref().map(|s| s.as_str()).unwrap_or(""))
-        .block(Block::default().style(Style::default().bg(Color::White).fg(Color::Black)));
+    let status = Paragraph::new(Spans::from(vec![
+        Span::raw("F1 登录  F2 注销  F3 刷新流量  F4 刷新在线  F5 刷新图表    "),
+        Span::raw(m.log.as_ref().map(|s| s.as_str()).unwrap_or("")),
+    ]))
+    .block(Block::default().style(Style::default().bg(Color::White).fg(Color::Black)));
     f.render_widget(status, global_chunks[1]);
 }
