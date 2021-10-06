@@ -164,7 +164,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
 
     let key_style = Style::default().bg(Color::Black).fg(Color::White);
 
-    let status = Paragraph::new(Spans::from(vec![
+    let mut spans = vec![
         Span::styled("F1", key_style),
         Span::raw("登录"),
         Span::styled("F2", key_style),
@@ -175,11 +175,24 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         Span::raw("刷新在线"),
         Span::styled("F5", key_style),
         Span::raw("刷新图表"),
-        Span::styled("    ", key_style),
-        Span::raw(m.log.as_ref().map(|s| s.as_ref()).unwrap_or("")),
-        Span::raw(if m.online { "|正在刷新在线" } else { "" }),
-        Span::raw(if m.detail { "|正在刷新图表" } else { "" }),
-    ]))
-    .block(Block::default().style(Style::default().bg(Color::LightCyan).fg(Color::Black)));
+        Span::styled("Qq", key_style),
+        Span::raw("退出"),
+    ];
+
+    if let Some(log) = &m.log {
+        spans.push(Span::styled("  ", key_style));
+        spans.push(Span::raw(log.as_ref()));
+    }
+    if m.online {
+        spans.push(Span::styled("  ", key_style));
+        spans.push(Span::raw("正在刷新在线"));
+    }
+    if m.detail {
+        spans.push(Span::styled("  ", key_style));
+        spans.push(Span::raw("正在刷新图表"));
+    }
+
+    let status = Paragraph::new(Spans::from(spans))
+        .block(Block::default().style(Style::default().bg(Color::LightCyan).fg(Color::Black)));
     f.render_widget(status, global_chunks[1]);
 }

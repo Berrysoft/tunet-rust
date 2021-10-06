@@ -18,7 +18,7 @@ impl Model {
         match e {
             EventType::TerminalEvent(e) => match e {
                 TerminalEvent::Key(k) => match k.code {
-                    KeyCode::Char('q') => return false,
+                    KeyCode::Char('q') | KeyCode::Char('Q') => return false,
                     KeyCode::F(1) => event.spawn_login(),
                     KeyCode::F(2) => event.spawn_logout(),
                     KeyCode::F(3) => event.spawn_flux(),
