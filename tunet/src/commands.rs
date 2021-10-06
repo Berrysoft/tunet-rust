@@ -5,11 +5,11 @@ use itertools::Itertools;
 use mac_address::MacAddressIterator;
 use std::cmp::Reverse;
 use std::net::Ipv4Addr;
+use std::ops::Deref;
 use std::sync::Arc;
 use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
-use trait_enum::trait_enum;
 use tunet_rust::{usereg::*, *};
 
 fn get_flux_color(f: &Flux, total: bool) -> Color {
@@ -28,29 +28,46 @@ pub trait TUNetCommand {
     async fn run(&self) -> Result<()>;
 }
 
-trait_enum! {
-    #[derive(Debug, StructOpt)]
-    #[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
-    pub enum TUNet : TUNetCommand {
-        #[structopt(name = "login", about = "登录")]
-        Login,
-        #[structopt(name = "logout", about = "注销")]
-        Logout,
-        #[structopt(name = "status", about = "查看在线状态")]
-        Status,
-        #[structopt(name = "online", about = "查询在线IP")]
-        Online,
-        #[structopt(name = "connect", about = "上线IP")]
-        UseregConnect,
-        #[structopt(name = "drop", about = "下线IP")]
-        UseregDrop,
-        #[structopt(name = "detail", about = "流量明细")]
-        Detail,
-        #[structopt(name = "deletecred", about = "删除用户名和密码")]
-        DeleteCred,
-        #[cfg(feature = "cui")]
-        #[structopt(name = "cui", about = "显示富控制台界面")]
-        Cui
+#[derive(Debug, StructOpt)]
+#[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
+pub enum TUNet {
+    #[structopt(name = "login", about = "登录")]
+    Login(Login),
+    #[structopt(name = "logout", about = "注销")]
+    Logout(Logout),
+    #[structopt(name = "status", about = "查看在线状态")]
+    Status(Status),
+    #[structopt(name = "online", about = "查询在线IP")]
+    Online(Online),
+    #[structopt(name = "connect", about = "上线IP")]
+    UseregConnect(UseregConnect),
+    #[structopt(name = "drop", about = "下线IP")]
+    UseregDrop(UseregDrop),
+    #[structopt(name = "detail", about = "流量明细")]
+    Detail(Detail),
+    #[structopt(name = "deletecred", about = "删除用户名和密码")]
+    DeleteCred(DeleteCred),
+    #[cfg(feature = "cui")]
+    #[structopt(name = "cui", about = "显示富控制台界面")]
+    Cui(Cui),
+}
+
+impl Deref for TUNet {
+    type Target = dyn TUNetCommand;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Login(c) => c,
+            Self::Logout(c) => c,
+            Self::Status(c) => c,
+            Self::Online(c) => c,
+            Self::UseregConnect(c) => c,
+            Self::UseregDrop(c) => c,
+            Self::Detail(c) => c,
+            Self::DeleteCred(c) => c,
+            #[cfg(feature = "cui")]
+            Self::Cui(c) => c,
+        }
     }
 }
 
