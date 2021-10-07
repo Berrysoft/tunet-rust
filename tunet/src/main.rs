@@ -29,7 +29,7 @@ fn runtime_builder(_cui: bool) -> RuntimeBuilder {
 }
 
 fn main() -> Result<()> {
-    let opt = TUNet::from_args();
+    let opt = TUNet::from_args_safe()?;
     runtime_builder(opt.is_cui())
         .enable_all()
         .build()?

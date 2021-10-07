@@ -113,7 +113,8 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
         .collect::<HashMap<_, _>>();
 
-    let max_day = Local::now().day();
+    let now = Local::now();
+    let max_day = now.day();
 
     let mut details = vec![];
     let mut flux = 0u64;
@@ -125,15 +126,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     }
     let flux_g = flux as f64 / GIGABYTES;
 
-    let max_flux = (m
-        .flux
-        .as_ref()
-        .map(|f| f.flux.0 as f64 / GIGABYTES)
-        .unwrap_or_default()
-        .max(flux_g)
-        .max(1.0)
-        * 1.1)
-        .ceil() as usize;
+    let max_flux = (flux_g * 1.1).ceil().max(1.0) as u64;
 
     let dataset = Dataset::default()
         .marker(tui::symbols::Marker::Dot)
@@ -144,7 +137,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let chart = Chart::new(vec![dataset])
         .x_axis(
             Axis::default()
-                .title(Span::from("日期"))
+                .title(Span::from(format!("日期/{}月", now.month())))
                 .bounds([1.0, max_day as f64])
                 .labels(
                     (1..=max_day)
@@ -155,7 +148,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         )
         .y_axis(
             Axis::default()
-                .title(Span::from("流量"))
+                .title(Span::from("流量/GB"))
                 .bounds([0.0, max_flux as f64])
                 .labels((0..=max_flux).map(|f| Span::from(f.to_string())).collect()),
         )
