@@ -1,6 +1,10 @@
 use crate::{settings::*, strfmt::*};
 use anyhow::*;
-use crossterm::{execute, terminal::*};
+use crossterm::{
+    event::{DisableMouseCapture, EnableMouseCapture},
+    execute,
+    terminal::*,
+};
 use futures_util::TryStreamExt;
 use std::sync::Arc;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
@@ -17,7 +21,7 @@ pub async fn run(state: NetState) -> Result<()> {
     let cred = read_cred()?;
 
     enable_raw_mode()?;
-    execute!(std::io::stdout(), EnterAlternateScreen)?;
+    execute!(std::io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
 
     let res = main_loop(state, cred.clone()).await;
 
@@ -27,7 +31,7 @@ pub async fn run(state: NetState) -> Result<()> {
         res
     };
 
-    execute!(std::io::stdout(), LeaveAlternateScreen)?;
+    execute!(std::io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
     disable_raw_mode()?;
     res
 }
@@ -52,9 +56,9 @@ async fn main_loop(state: NetState, cred: Arc<NetCredential>) -> Result<()> {
             _ = interval.tick() => {
                 terminal.draw(|f| view::draw(&model, f))?;
             }
-            m = event.try_next() => {
-                if let Some(m) = m? {
-                    if !model.handle(&event, m) {
+            e = event.try_next() => {
+                if let Some(e) = e? {
+                    if !model.handle(&event, e, terminal.size()?) {
                         break;
                     }
                 }

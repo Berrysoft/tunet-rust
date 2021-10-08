@@ -1,6 +1,7 @@
 use crate::cui::event::*;
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
 use std::borrow::Cow;
+use tui::layout::Rect;
 use tunet_rust::{usereg::*, *};
 
 #[derive(Debug, Default)]
@@ -14,18 +15,27 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn handle(&mut self, event: &Event, e: EventType) -> bool {
+    pub fn handle(&mut self, event: &Event, e: EventType, rect: Rect) -> bool {
         match e {
             EventType::TerminalEvent(e) => match e {
                 TerminalEvent::Key(k) => match k.code {
                     KeyCode::Char('q') | KeyCode::Char('Q') => return false,
-                    KeyCode::F(1) => event.spawn_login(),
-                    KeyCode::F(2) => event.spawn_logout(),
-                    KeyCode::F(3) => event.spawn_flux(),
-                    KeyCode::F(4) => event.spawn_online(),
-                    KeyCode::F(5) => event.spawn_details(),
+                    KeyCode::F(func) => {
+                        if !self.handle_functions(event, func) {
+                            return false;
+                        }
+                    }
                     _ => {}
                 },
+                TerminalEvent::Mouse(m) => {
+                    if m.kind == MouseEventKind::Up(MouseButton::Left) {
+                        if m.row == (rect.height - 1) {
+                            if !self.handle_functions(event, (m.column / 10 + 1) as u8) {
+                                return false;
+                            }
+                        }
+                    }
+                }
                 _ => {}
             },
             EventType::Log(t) => match t {
@@ -63,6 +73,19 @@ impl Model {
                 self.details.push(d);
             }
         }
+        true
+    }
+
+    fn handle_functions(&self, event: &Event, func: u8) -> bool {
+        match func {
+            1 => event.spawn_login(),
+            2 => event.spawn_logout(),
+            3 => event.spawn_flux(),
+            4 => event.spawn_online(),
+            5 => event.spawn_details(),
+            6 => return false,
+            _ => {}
+        };
         true
     }
 }

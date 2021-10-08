@@ -159,17 +159,17 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
 
     let mut spans = vec![
         Span::styled("F1", key_style),
-        Span::raw("登录"),
+        Span::raw("登录    "),
         Span::styled("F2", key_style),
-        Span::raw("注销"),
+        Span::raw("注销    "),
         Span::styled("F3", key_style),
         Span::raw("刷新流量"),
         Span::styled("F4", key_style),
         Span::raw("刷新在线"),
         Span::styled("F5", key_style),
         Span::raw("刷新图表"),
-        Span::styled("Qq", key_style),
-        Span::raw("退出"),
+        Span::styled("F6", key_style),
+        Span::raw("退出    "),
     ];
 
     if let Some(log) = &m.log {
