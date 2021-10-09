@@ -1,10 +1,11 @@
 use crate::cui::event::*;
 use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
+use mac_address::*;
 use std::borrow::Cow;
 use tui::layout::Rect;
 use tunet_rust::{usereg::*, *};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Model {
     pub log: Option<Cow<'static, str>>,
     pub online: bool,
@@ -12,9 +13,25 @@ pub struct Model {
     pub flux: Option<NetFlux>,
     pub users: Vec<NetUser>,
     pub details: Vec<NetDetail>,
+    mac_addrs: Vec<MacAddress>,
 }
 
 impl Model {
+    pub fn new() -> Self {
+        let mac_addrs = MacAddressIterator::new()
+            .map(|it| it.collect::<Vec<_>>())
+            .unwrap_or_default();
+        Self {
+            log: None,
+            online: false,
+            detail: false,
+            flux: None,
+            users: Vec::new(),
+            details: Vec::new(),
+            mac_addrs,
+        }
+    }
+
     pub fn handle(&mut self, event: &Event, e: EventType, rect: Rect) -> bool {
         match e {
             EventType::TerminalEvent(e) => match e {
@@ -87,5 +104,9 @@ impl Model {
             _ => {}
         };
         true
+    }
+
+    pub fn mac_addrs(&self) -> &[MacAddress] {
+        &self.mac_addrs
     }
 }

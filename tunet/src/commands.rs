@@ -197,7 +197,7 @@ impl TUNetCommand for Online {
                 .any(|it| Some(it) == u.mac_address.as_ref());
             tco::writeln!(
                 stdout,
-                "{}{:15} {}{:20} {}{}{}{}",
+                "{}{:15} {}{:20} {}{} {}{}",
                 fg!(Some(Color::Yellow)),
                 u.address,
                 fg!(Some(Color::Green)),
@@ -205,7 +205,7 @@ impl TUNetCommand for Online {
                 fg!(Some(Color::Cyan)),
                 u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
                 fg!(Some(Color::Magenta)),
-                if is_self { "*" } else { "" }
+                if is_self { "本机" } else { "" }
             )?;
         }
         save_cred(c.cred()).await

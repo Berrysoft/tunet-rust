@@ -22,7 +22,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         .split(f.size());
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Length(32), Constraint::Percentage(100)])
+        .constraints([Constraint::Length(34), Constraint::Percentage(100)])
         .split(global_chunks[0]);
     let title_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -90,14 +90,24 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                             Style::default().fg(Color::Green),
                         ),
                     ]),
-                    Spans::from(vec![
-                        Span::styled("MAC 地址 ", subtitle_style),
-                        Span::styled(
-                            u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
-                            Style::default().fg(Color::LightCyan),
-                        ),
-                    ]),
-                    Spans::from(vec![]),
+                    Spans::from({
+                        let mut spans = vec![
+                            Span::styled("MAC 地址 ", subtitle_style),
+                            Span::styled(
+                                u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
+                                Style::default().fg(Color::LightCyan),
+                            ),
+                        ];
+                        let is_self = m
+                            .mac_addrs()
+                            .iter()
+                            .any(|it| Some(it) == u.mac_address.as_ref());
+                        if is_self {
+                            spans.push(Span::styled(" 本机", Style::default().fg(Color::Magenta)));
+                        }
+                        spans
+                    }),
+                    Spans::default(),
                 ]))
             })
             .collect::<Vec<_>>(),

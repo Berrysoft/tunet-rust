@@ -47,7 +47,7 @@ async fn main_loop(state: NetState, cred: Arc<NetCredential>) -> Result<()> {
     let client = TUNetConnect::new(state, cred, client).await?;
 
     let mut event = Event::new(client, usereg);
-    let mut model = Model::default();
+    let mut model = Model::new();
 
     let mut interval = tokio::time::interval(std::time::Duration::from_micros(100));
 
