@@ -147,7 +147,10 @@ impl Event {
         tx.send(Ok(EventType::Flux(None))).await?;
         let flux = client.flux().await;
         match flux {
-            Ok(flux) => tx.send(Ok(EventType::Flux(Some(flux)))).await?,
+            Ok(flux) => {
+                tx.send(Ok(EventType::Flux(Some(flux)))).await?;
+                tx.send(Ok(EventType::LogDone(LogType::Flux(None)))).await?;
+            }
             Err(err) => {
                 tx.send(Ok(EventType::LogDone(LogType::Flux(Some(err.to_string())))))
                     .await?
