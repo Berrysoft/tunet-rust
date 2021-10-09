@@ -17,7 +17,7 @@ pub enum EventType {
     Tick,
     Log(LogType),
     LogDone(LogType),
-    Flux(NetFlux),
+    Flux(Option<NetFlux>),
     ClearOnline,
     AddOnline(NetUser),
     ClearDetail,
@@ -28,7 +28,7 @@ pub enum EventType {
 pub enum LogType {
     Login(Option<String>),
     Logout(Option<String>),
-    Flux,
+    Flux(Option<String>),
     Online,
     Detail,
 }
@@ -99,10 +99,12 @@ impl Event {
                 let _lock = lock;
                 tx.send(Ok(EventType::Log(LogType::Login(None)))).await?;
                 let res = client.login().await;
+                let ok = res.is_ok();
                 tx.send(res.map(|res| EventType::LogDone(LogType::Login(Some(res)))))
                     .await?;
-                let flux = client.flux().await;
-                tx.send(flux.map(EventType::Flux)).await?;
+                if ok {
+                    Self::flux_impl(client, tx).await?;
+                }
                 Ok::<_, anyhow::Error>(())
             });
         }
@@ -117,8 +119,12 @@ impl Event {
                 let _lock = lock;
                 tx.send(Ok(EventType::Log(LogType::Logout(None)))).await?;
                 let res = client.logout().await;
+                let ok = res.is_ok();
                 tx.send(res.map(|res| EventType::LogDone(LogType::Logout(Some(res)))))
                     .await?;
+                if ok {
+                    Self::flux_impl(client, tx).await?;
+                }
                 Ok::<_, anyhow::Error>(())
             });
         }
@@ -131,13 +137,23 @@ impl Event {
             let client = self.client.clone();
             tokio::spawn(async move {
                 let _lock = lock;
-                tx.send(Ok(EventType::Log(LogType::Flux))).await?;
-                let flux = client.flux().await;
-                tx.send(flux.map(EventType::Flux)).await?;
-                tx.send(Ok(EventType::LogDone(LogType::Flux))).await?;
-                Ok::<_, anyhow::Error>(())
+                Self::flux_impl(client, tx).await
             });
         }
+    }
+
+    async fn flux_impl(client: TUNetConnect, tx: Sender<Result<EventType>>) -> Result<()> {
+        tx.send(Ok(EventType::Log(LogType::Flux(None)))).await?;
+        tx.send(Ok(EventType::Flux(None))).await?;
+        let flux = client.flux().await;
+        match flux {
+            Ok(flux) => tx.send(Ok(EventType::Flux(Some(flux)))).await?,
+            Err(err) => {
+                tx.send(Ok(EventType::LogDone(LogType::Flux(Some(err.to_string())))))
+                    .await?
+            }
+        }
+        Ok(())
     }
 
     pub fn spawn_online(&self) {

@@ -25,8 +25,10 @@ pub enum NetHelperError {
     NoAcIdErr,
     #[error("操作失败：{0}")]
     LogErr(String),
+    #[error("登录状态异常")]
+    NoFluxErr,
     #[error("无法识别的用户信息：{0}")]
-    ParseNetFluxErr(String),
+    ParseFluxErr(String),
     #[error("排序方式无效")]
     OrderErr,
     #[error("无法确定登录方式")]
@@ -142,7 +144,11 @@ impl std::str::FromStr for NetFlux {
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
         } else {
-            Err(NetHelperError::ParseNetFluxErr(s.to_string()))
+            if s.is_empty() {
+                Err(NetHelperError::NoFluxErr)
+            } else {
+                Err(NetHelperError::ParseFluxErr(s.to_string()))
+            }
         }
     }
 }

@@ -41,19 +41,19 @@ impl Model {
             EventType::Log(t) => match t {
                 LogType::Login(_) => self.log = Some("正在登录".into()),
                 LogType::Logout(_) => self.log = Some("正在注销".into()),
-                LogType::Flux => self.log = Some("正在刷新流量".into()),
+                LogType::Flux(_) => self.log = Some("正在刷新流量".into()),
                 LogType::Online => self.online = true,
                 LogType::Detail => self.detail = true,
             },
             EventType::LogDone(t) => match t {
                 LogType::Login(s) => self.log = s.map(Cow::from),
                 LogType::Logout(s) => self.log = s.map(Cow::from),
-                LogType::Flux => self.log = None,
+                LogType::Flux(s) => self.log = s.map(Cow::from),
                 LogType::Online => self.online = false,
                 LogType::Detail => self.detail = false,
             },
             EventType::Flux(f) => {
-                self.flux = Some(f);
+                self.flux = f;
             }
             EventType::Tick => {
                 if let Some(flux) = &mut self.flux {
