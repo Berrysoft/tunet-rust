@@ -1,5 +1,5 @@
 pub use crossterm::event::Event as TerminalEvent;
-use futures_util::{pin_mut, Stream, StreamExt};
+use futures_util::{pin_mut, Stream, StreamExt, TryStreamExt};
 use std::{
     pin::Pin,
     sync::{
@@ -21,7 +21,7 @@ pub enum EventType {
     ClearOnline,
     AddOnline(NetUser),
     ClearDetail,
-    AddDetail(NetDetail),
+    Detail(Vec<NetDetail>),
 }
 
 #[derive(Debug)]
@@ -192,9 +192,8 @@ impl Event {
                 usereg.login().await?;
                 let details = usereg.details(NetDetailOrder::LogoutTime, false);
                 pin_mut!(details);
-                while let Some(d) = details.next().await {
-                    tx.send(d.map(EventType::AddDetail)).await?;
-                }
+                tx.send(details.try_collect().await.map(EventType::Detail))
+                    .await?;
                 tx.send(Ok(EventType::LogDone(LogType::Detail))).await?;
                 Ok::<_, anyhow::Error>(())
             });

@@ -8,7 +8,7 @@ use tokio::sync::RwLock;
 use trait_enum::trait_enum;
 
 pub use anyhow::Result;
-pub use chrono::{Datelike, Duration, Local, NaiveDate, NaiveDateTime, Timelike};
+pub use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, NaiveDateTime, Timelike};
 pub use reqwest::Client as HttpClient;
 
 mod auth;

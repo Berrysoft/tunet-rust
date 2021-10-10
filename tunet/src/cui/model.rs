@@ -1,19 +1,23 @@
 use crate::cui::event::*;
 use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
+use itertools::Itertools;
 use mac_address::*;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use tui::layout::Rect;
 use tunet_rust::{usereg::*, *};
 
 #[derive(Debug)]
 pub struct Model {
+    pub now: DateTime<Local>,
     pub log: Option<Cow<'static, str>>,
     pub online: bool,
     pub detail: bool,
     pub flux: Option<NetFlux>,
     pub users: Vec<NetUser>,
-    pub details: Vec<NetDetail>,
-    mac_addrs: Vec<MacAddress>,
+    pub details: Vec<(f64, f64)>,
+    pub max_flux: Flux,
+    pub mac_addrs: Vec<MacAddress>,
 }
 
 impl Model {
@@ -22,12 +26,14 @@ impl Model {
             .map(|it| it.collect::<Vec<_>>())
             .unwrap_or_default();
         Self {
+            now: Local::now(),
             log: None,
             online: false,
             detail: false,
             flux: None,
             users: Vec::new(),
             details: Vec::new(),
+            max_flux: Flux(0),
             mac_addrs,
         }
     }
@@ -86,8 +92,22 @@ impl Model {
             EventType::ClearDetail => {
                 self.details.clear();
             }
-            EventType::AddDetail(d) => {
-                self.details.push(d);
+            EventType::Detail(ds) => {
+                const GIGABYTES: f64 = 1_000_000_000.0;
+
+                let details_group = ds
+                    .into_iter()
+                    .group_by(|d| d.logout_time.date())
+                    .into_iter()
+                    .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
+                    .collect::<HashMap<_, _>>();
+                for d in 1u32..=self.now.day() {
+                    if let Some(f) = details_group.get(&d) {
+                        self.max_flux.0 += *f;
+                    }
+                    self.details
+                        .push((d as f64, self.max_flux.0 as f64 / GIGABYTES));
+                }
             }
         }
         true
@@ -104,9 +124,5 @@ impl Model {
             _ => {}
         };
         true
-    }
-
-    pub fn mac_addrs(&self) -> &[MacAddress] {
-        &self.mac_addrs
     }
 }

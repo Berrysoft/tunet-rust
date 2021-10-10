@@ -1,6 +1,4 @@
 use crate::cui::*;
-use itertools::Itertools;
-use std::collections::HashMap;
 use tui::{backend::Backend, style::*, Frame};
 
 fn get_flux_color(flux: u64, total: bool) -> Color {
@@ -99,7 +97,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                             ),
                         ];
                         let is_self = m
-                            .mac_addrs()
+                            .mac_addrs
                             .iter()
                             .any(|it| Some(it) == u.mac_address.as_ref());
                         if is_self {
@@ -115,42 +113,21 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     .block(Block::default().title("连接详情").borders(Borders::all()));
     f.render_widget(table, title_chunks[1]);
 
-    let details_group = m
-        .details
-        .iter()
-        .group_by(|d| d.logout_time.date())
-        .into_iter()
-        .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
-        .collect::<HashMap<_, _>>();
-
-    let now = Local::now();
-    let max_day = now.day();
-
-    let mut details = vec![];
-    let mut flux = 0u64;
-    for d in 1u32..=max_day {
-        if let Some(f) = details_group.get(&d) {
-            flux += *f;
-        }
-        details.push((d as f64, flux as f64 / GIGABYTES));
-    }
-    let flux_g = flux as f64 / GIGABYTES;
-
-    let max_flux = (flux_g * 1.1).ceil().max(1.0) as u64;
+    let max_flux = (m.max_flux.0 as f64 / GIGABYTES * 1.1).ceil().max(1.0) as u64;
 
     let dataset = Dataset::default()
         .marker(tui::symbols::Marker::Dot)
         .graph_type(GraphType::Line)
-        .style(Style::default().fg(get_flux_color(flux, true)))
-        .data(&details);
+        .style(Style::default().fg(get_flux_color(m.max_flux.0, true)))
+        .data(&m.details);
 
     let chart = Chart::new(vec![dataset])
         .x_axis(
             Axis::default()
-                .title(Span::from(format!("日期/{}月", now.month())))
-                .bounds([1.0, max_day as f64])
+                .title(Span::from(format!("日期/{}月", m.now.month())))
+                .bounds([1.0, m.now.day() as f64])
                 .labels(
-                    (1..=max_day)
+                    (1..=m.now.day())
                         .into_iter()
                         .map(|d| Span::from(d.to_string()))
                         .collect(),
