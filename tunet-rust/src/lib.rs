@@ -1,15 +1,14 @@
 #![forbid(unsafe_code)]
 
+use async_trait::async_trait;
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 use thiserror::Error;
+use tokio::sync::RwLock;
 use trait_enum::trait_enum;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 pub use anyhow::Result;
-use async_trait::async_trait;
-pub use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
+pub use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, NaiveDateTime, Timelike};
 pub use reqwest::Client as HttpClient;
 
 mod auth;
@@ -17,9 +16,8 @@ mod net;
 pub mod suggest;
 pub mod usereg;
 
+pub use auth::{Auth4Connect, Auth6Connect};
 pub use net::NetConnect;
-pub type Auth4Connect = auth::AuthConnect<4>;
-pub type Auth6Connect = auth::AuthConnect<6>;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
@@ -27,8 +25,10 @@ pub enum NetHelperError {
     NoAcIdErr,
     #[error("操作失败：{0}")]
     LogErr(String),
+    #[error("登录状态异常")]
+    NoFluxErr,
     #[error("无法识别的用户信息：{0}")]
-    ParseNetFluxErr(String),
+    ParseFluxErr(String),
     #[error("排序方式无效")]
     OrderErr,
     #[error("无法确定登录方式")]
@@ -38,14 +38,20 @@ pub enum NetHelperError {
 pub type NetHelperResult<T> = std::result::Result<T, NetHelperError>;
 
 #[derive(Debug, Default)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct NetCredential {
-    #[cfg_attr(feature = "serde", serde(rename = "Username", default))]
     pub username: String,
-    #[cfg_attr(feature = "serde", serde(rename = "Password", default))]
     pub password: String,
-    #[cfg_attr(feature = "serde", serde(rename = "AcIds", default))]
-    pub ac_ids: Vec<i32>,
+    pub ac_ids: RwLock<Vec<i32>>,
+}
+
+impl NetCredential {
+    pub fn new(username: String, password: String, ac_ids: Vec<i32>) -> Self {
+        Self {
+            username,
+            password,
+            ac_ids: RwLock::new(ac_ids),
+        }
+    }
 }
 
 #[repr(transparent)]
@@ -138,7 +144,11 @@ impl std::str::FromStr for NetFlux {
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
         } else {
-            Err(NetHelperError::ParseNetFluxErr(s.to_string()))
+            if s.is_empty() {
+                Err(NetHelperError::NoFluxErr)
+            } else {
+                Err(NetHelperError::ParseFluxErr(s.to_string()))
+            }
         }
     }
 }
@@ -171,13 +181,14 @@ impl std::str::FromStr for NetState {
 
 #[async_trait]
 pub trait TUNetHelper: Send + Sync {
-    async fn login(&mut self) -> Result<String>;
-    async fn logout(&mut self) -> Result<String>;
+    async fn login(&self) -> Result<String>;
+    async fn logout(&self) -> Result<String>;
     async fn flux(&self) -> Result<NetFlux>;
-    fn cred(&self) -> &NetCredential;
+    fn cred(&self) -> Arc<NetCredential>;
 }
 
 trait_enum! {
+    #[derive(Clone)]
     pub enum TUNetConnect : TUNetHelper {
         NetConnect,
         Auth4Connect,
@@ -188,7 +199,7 @@ trait_enum! {
 impl TUNetConnect {
     pub async fn new(
         mut s: NetState,
-        cred: NetCredential,
+        cred: Arc<NetCredential>,
         client: HttpClient,
     ) -> NetHelperResult<Self> {
         if let NetState::Auto = s {

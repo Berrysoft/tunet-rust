@@ -10,6 +10,7 @@ use select::predicate::*;
 use std::net::Ipv4Addr;
 use url::Url;
 
+#[derive(Debug, Clone, Copy)]
 pub struct NetUser {
     pub address: Ipv4Addr,
     pub login_time: NaiveDateTime,
@@ -26,6 +27,7 @@ impl NetUser {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct NetDetail {
     pub login_time: NaiveDateTime,
     pub logout_time: NaiveDateTime,
@@ -74,8 +76,9 @@ impl std::str::FromStr for NetDetailOrder {
     }
 }
 
+#[derive(Clone)]
 pub struct UseregHelper {
-    cred: NetCredential,
+    cred: Arc<NetCredential>,
     client: HttpClient,
 }
 
@@ -85,14 +88,14 @@ static USEREG_INFO_URI: &str = "http://usereg.tsinghua.edu.cn/online_user_ipv4.p
 static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
 static USEREG_DETAIL_URI: &str = "http://usereg.tsinghua.edu.cn/user_detail_list.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
-const USEREG_OFF: usize = 100;
+const USEREG_OFF: usize = 1000;
 
 impl UseregHelper {
-    pub fn new(cred: NetCredential, client: HttpClient) -> Self {
+    pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {
         UseregHelper { cred, client }
     }
 
-    pub async fn login(&mut self) -> Result<String> {
+    pub async fn login(&self) -> Result<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
             md5.update(self.cred.password.as_bytes());
@@ -112,7 +115,7 @@ impl UseregHelper {
         Ok(res.text().await?)
     }
 
-    pub async fn logout(&mut self) -> Result<String> {
+    pub async fn logout(&self) -> Result<String> {
         let params = [("action", "logout")];
         let res = self
             .client
@@ -123,8 +126,8 @@ impl UseregHelper {
         Ok(res.text().await?)
     }
 
-    pub fn cred(&self) -> &NetCredential {
-        &self.cred
+    pub fn cred(&self) -> Arc<NetCredential> {
+        self.cred.clone()
     }
 
     pub async fn connect(&self, addr: Ipv4Addr) -> Result<String> {

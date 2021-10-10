@@ -2,8 +2,9 @@ use crate::*;
 use data_encoding::HEXLOWER;
 use md5::{Digest, Md5};
 
+#[derive(Clone)]
 pub struct NetConnect {
-    cred: NetCredential,
+    cred: Arc<NetCredential>,
     client: HttpClient,
 }
 
@@ -11,14 +12,14 @@ static NET_LOG_URI: &str = "http://net.tsinghua.edu.cn/do_login.php";
 static NET_FLUX_URI: &str = "http://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl NetConnect {
-    pub fn new(cred: NetCredential, client: HttpClient) -> Self {
+    pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {
         NetConnect { cred, client }
     }
 }
 
 #[async_trait]
 impl TUNetHelper for NetConnect {
-    async fn login(&mut self) -> Result<String> {
+    async fn login(&self) -> Result<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
             md5.update(self.cred.password.as_bytes());
@@ -35,7 +36,7 @@ impl TUNetHelper for NetConnect {
         Ok(res.text().await?)
     }
 
-    async fn logout(&mut self) -> Result<String> {
+    async fn logout(&self) -> Result<String> {
         let params = [("action", "logout")];
         let res = self.client.post(NET_LOG_URI).form(&params).send().await?;
         Ok(res.text().await?)
@@ -46,7 +47,7 @@ impl TUNetHelper for NetConnect {
         Ok(res.text().await?.parse()?)
     }
 
-    fn cred(&self) -> &NetCredential {
-        &self.cred
+    fn cred(&self) -> Arc<NetCredential> {
+        self.cred.clone()
     }
 }

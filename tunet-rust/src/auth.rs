@@ -8,11 +8,14 @@ use md5::Md5;
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
+use std::marker::PhantomData;
 use url::Url;
 
-pub struct AuthConnect<const V: i32> {
-    cred: NetCredential,
+#[derive(Clone)]
+pub struct AuthConnect<U: AuthConnectUri + Send + Sync> {
+    cred: Arc<NetCredential>,
     client: HttpClient,
+    _p: PhantomData<U>,
 }
 
 const AUTH_BASE64: Encoding = new_encoding! {
@@ -24,17 +27,18 @@ lazy_static! {
     static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
 }
 
-impl<const V: i32> AuthConnect<V>
-where
-    Self: AuthConnectUri,
-{
-    pub fn new(cred: NetCredential, client: HttpClient) -> Self {
-        Self { cred, client }
+impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
+    pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {
+        Self {
+            cred,
+            client,
+            _p: PhantomData::default(),
+        }
     }
 
     async fn challenge(&self) -> Result<String> {
         let uri = Url::parse_with_params(
-            Self::challenge_uri(),
+            U::challenge_uri(),
             &[
                 ("username", self.cred.username.as_ref()),
                 ("double_stack", "1"),
@@ -53,10 +57,10 @@ where
     }
 
     async fn get_ac_id(&self) -> Result<i32> {
-        let res = self.client.get(Self::redirect_uri()).send().await?;
+        let res = self.client.get(U::redirect_uri()).send().await?;
         let t = res.text().await?;
         match AC_ID_REGEX.captures(&t) {
-            Some(cap) => Ok(cap[1].parse::<i32>().unwrap_or_default()),
+            Some(cap) => Ok(cap[1].parse::<i32>()?),
             _ => Err(NetHelperError::NoAcIdErr.into()),
         }
     }
@@ -101,12 +105,7 @@ where
             ("chksum", &HEXLOWER.encode(&chksum)),
             ("callback", "callback"),
         ];
-        let res = self
-            .client
-            .post(Self::log_uri())
-            .form(&params)
-            .send()
-            .await?;
+        let res = self.client.post(U::log_uri()).form(&params).send().await?;
         let t = res.text().await?;
         Self::parse_response(&t)
     }
@@ -134,23 +133,20 @@ where
 }
 
 #[async_trait]
-impl<const V: i32> TUNetHelper for AuthConnect<V>
-where
-    Self: AuthConnectUri,
-{
-    async fn login(&mut self) -> Result<String> {
-        for ac_id in &self.cred.ac_ids {
+impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
+    async fn login(&self) -> Result<String> {
+        for ac_id in self.cred.ac_ids.read().await.iter() {
             let res = self.try_login(*ac_id).await;
             if res.is_ok() {
                 return res;
             }
         }
         let ac_id = self.get_ac_id().await?;
-        self.cred.ac_ids.push(ac_id);
+        self.cred.ac_ids.write().await.push(ac_id);
         Ok(self.try_login(ac_id).await?)
     }
 
-    async fn logout(&mut self) -> Result<String> {
+    async fn logout(&self) -> Result<String> {
         let params = [
             ("action", "logout"),
             ("ac_id", "1"),
@@ -158,23 +154,18 @@ where
             ("username", &self.cred.username),
             ("callback", "callback"),
         ];
-        let res = self
-            .client
-            .post(Self::log_uri())
-            .form(&params)
-            .send()
-            .await?;
+        let res = self.client.post(U::log_uri()).form(&params).send().await?;
         let t = res.text().await?;
         Self::parse_response(&t)
     }
 
     async fn flux(&self) -> Result<NetFlux> {
-        let res = self.client.get(Self::flux_uri()).send().await?;
+        let res = self.client.get(U::flux_uri()).send().await?;
         Ok(res.text().await?.parse()?)
     }
 
-    fn cred(&self) -> &NetCredential {
-        &self.cred
+    fn cred(&self) -> Arc<NetCredential> {
+        self.cred.clone()
     }
 }
 
@@ -185,7 +176,10 @@ pub trait AuthConnectUri {
     fn redirect_uri() -> &'static str;
 }
 
-impl AuthConnectUri for AuthConnect<4> {
+#[derive(Debug, Clone, Copy)]
+pub struct Auth4Uri;
+
+impl AuthConnectUri for Auth4Uri {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
@@ -207,7 +201,10 @@ impl AuthConnectUri for AuthConnect<4> {
     }
 }
 
-impl AuthConnectUri for AuthConnect<6> {
+#[derive(Debug, Clone, Copy)]
+pub struct Auth6Uri;
+
+impl AuthConnectUri for Auth6Uri {
     #[inline]
     fn log_uri() -> &'static str {
         "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal"
@@ -251,3 +248,6 @@ impl ExactString for JsonValue {
         }
     }
 }
+
+pub type Auth4Connect = AuthConnect<Auth4Uri>;
+pub type Auth6Connect = AuthConnect<Auth6Uri>;

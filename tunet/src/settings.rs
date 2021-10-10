@@ -1,14 +1,27 @@
 use dirs::config_dir;
 use keyring::Keyring;
 use rpassword::read_password;
+use serde::{Deserialize, Serialize};
 use std::fs::{remove_file, DirBuilder, File};
 use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
+use std::sync::Arc;
 use tunet_rust::*;
 
-trait SettingsReader {
-    fn read(&self) -> Result<NetCredential>;
-    fn read_with_password(&self) -> Result<NetCredential>;
+#[derive(Deserialize, Serialize)]
+struct Settings {
+    #[serde(rename = "Username", default)]
+    pub username: String,
+    #[serde(rename = "Password", default)]
+    pub password: String,
+    #[serde(rename = "AcIds", default)]
+    pub ac_ids: Vec<i32>,
+}
+
+impl Into<NetCredential> for Settings {
+    fn into(self) -> NetCredential {
+        NetCredential::new(self.username, self.password, self.ac_ids)
+    }
 }
 
 struct StdioSettingsReader;
@@ -27,26 +40,16 @@ impl StdioSettingsReader {
         stdout().flush()?;
         Ok(read_password()?)
     }
-}
 
-impl SettingsReader for StdioSettingsReader {
-    fn read(&self) -> Result<NetCredential> {
+    pub fn read(&self) -> Result<NetCredential> {
         let u = self.read_username()?;
-        Ok(NetCredential {
-            username: u,
-            password: String::new(),
-            ac_ids: Vec::new(),
-        })
+        Ok(NetCredential::new(u, String::new(), Vec::new()))
     }
 
-    fn read_with_password(&self) -> Result<NetCredential> {
+    pub fn read_with_password(&self) -> Result<NetCredential> {
         let u = self.read_username()?;
         let p = self.read_password()?;
-        Ok(NetCredential {
-            username: u,
-            password: p,
-            ac_ids: Vec::new(),
-        })
+        Ok(NetCredential::new(u, p, Vec::new()))
     }
 }
 
@@ -77,28 +80,30 @@ impl FileSettingsReader {
         Self::file_path().map(|p| p.exists()).unwrap_or(false)
     }
 
-    pub fn save(&mut self, settings: &NetCredential) -> Result<()> {
+    pub async fn save(&mut self, settings: Arc<NetCredential>) -> Result<()> {
         if let Some(p) = self.path.parent() {
             DirBuilder::new().recursive(true).create(p)?;
         }
         let f = File::create(self.path.as_path())?;
         let writer = BufWriter::new(f);
-        if let Err(e) = self.keyring.set(&settings.password) {
+        let c = if let Err(e) = self.keyring.set(&settings.password) {
             if cfg!(debug_assertions) {
                 eprintln!("WARNING: {}", e);
             }
-            serde_json::to_writer(writer, settings)?;
+            Settings {
+                username: settings.username.clone(),
+                password: settings.password.clone(),
+                ac_ids: settings.ac_ids.read().await.clone(),
+            }
         } else {
             // Don't write password.
-            serde_json::to_writer(
-                writer,
-                &NetCredential {
-                    username: settings.username.clone(),
-                    password: String::default(),
-                    ac_ids: settings.ac_ids.clone(),
-                },
-            )?;
-        }
+            Settings {
+                username: settings.username.clone(),
+                password: String::default(),
+                ac_ids: settings.ac_ids.read().await.clone(),
+            }
+        };
+        serde_json::to_writer(writer, &c)?;
         Ok(())
     }
 
@@ -113,16 +118,15 @@ impl FileSettingsReader {
         }
         Ok(())
     }
-}
 
-impl SettingsReader for FileSettingsReader {
-    fn read(&self) -> Result<NetCredential> {
+    pub fn read(&self) -> Result<NetCredential> {
         let f = File::open(self.path.as_path())?;
         let reader = BufReader::new(f);
-        Ok(serde_json::from_reader(reader)?)
+        let c: Settings = serde_json::from_reader(reader)?;
+        Ok(c.into())
     }
 
-    fn read_with_password(&self) -> Result<NetCredential> {
+    pub fn read_with_password(&self) -> Result<NetCredential> {
         let mut settings = self.read()?;
         match self.keyring.get() {
             Ok(password) => settings.password = password,
@@ -136,26 +140,26 @@ impl SettingsReader for FileSettingsReader {
     }
 }
 
-pub fn read_cred() -> Result<NetCredential> {
+pub fn read_cred() -> Result<Arc<NetCredential>> {
     if let Ok(reader) = FileSettingsReader::new() {
         if let Ok(cred) = reader.read_with_password() {
-            return Ok(cred);
+            return Ok(Arc::new(cred));
         }
     }
-    StdioSettingsReader.read_with_password()
+    Ok(Arc::new(StdioSettingsReader.read_with_password()?))
 }
 
-pub fn read_username() -> Result<NetCredential> {
+pub fn read_username() -> Result<Arc<NetCredential>> {
     if let Ok(reader) = FileSettingsReader::new() {
         if let Ok(cred) = reader.read() {
-            return Ok(cred);
+            return Ok(Arc::new(cred));
         }
     }
-    StdioSettingsReader.read()
+    Ok(Arc::new(StdioSettingsReader.read()?))
 }
 
-pub fn save_cred(cred: &NetCredential) -> Result<()> {
-    FileSettingsReader::new()?.save(cred)
+pub async fn save_cred(cred: Arc<NetCredential>) -> Result<()> {
+    FileSettingsReader::new()?.save(cred).await
 }
 
 pub fn delete_cred() -> Result<()> {
