@@ -101,6 +101,7 @@ impl Model {
                     .into_iter()
                     .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
                     .collect::<HashMap<_, _>>();
+                self.max_flux = Flux(0);
                 for d in 1u32..=self.now.day() {
                     if let Some(f) = details_group.get(&d) {
                         self.max_flux.0 += *f;
