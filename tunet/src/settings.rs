@@ -2,6 +2,7 @@ use dirs::config_dir;
 use keyring::Keyring;
 use rpassword::read_password;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::fs::{remove_file, DirBuilder, File};
 use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
@@ -9,18 +10,22 @@ use std::sync::Arc;
 use tunet_rust::*;
 
 #[derive(Deserialize, Serialize)]
-struct Settings {
+struct Settings<'a> {
     #[serde(rename = "Username", default)]
-    pub username: String,
+    pub username: Cow<'a, str>,
     #[serde(rename = "Password", default)]
-    pub password: String,
+    pub password: Cow<'a, str>,
     #[serde(rename = "AcIds", default)]
-    pub ac_ids: Vec<i32>,
+    pub ac_ids: Cow<'a, [i32]>,
 }
 
-impl Into<NetCredential> for Settings {
+impl Into<NetCredential> for Settings<'_> {
     fn into(self) -> NetCredential {
-        NetCredential::new(self.username, self.password, self.ac_ids)
+        NetCredential::new(
+            self.username.into_owned(),
+            self.password.into_owned(),
+            self.ac_ids.into_owned(),
+        )
     }
 }
 
@@ -86,21 +91,22 @@ impl FileSettingsReader {
         }
         let f = File::create(self.path.as_path())?;
         let writer = BufWriter::new(f);
+        let ac_ids = settings.ac_ids.read().await;
         let c = if let Err(e) = self.keyring.set(&settings.password) {
             if cfg!(debug_assertions) {
                 eprintln!("WARNING: {}", e);
             }
             Settings {
-                username: settings.username.clone(),
-                password: settings.password.clone(),
-                ac_ids: settings.ac_ids.read().await.clone(),
+                username: Cow::Borrowed(&settings.username),
+                password: Cow::Borrowed(&settings.password),
+                ac_ids: Cow::Borrowed(ac_ids.as_ref()),
             }
         } else {
             // Don't write password.
             Settings {
-                username: settings.username.clone(),
-                password: String::default(),
-                ac_ids: settings.ac_ids.read().await.clone(),
+                username: Cow::Borrowed(&settings.username),
+                password: Cow::default(),
+                ac_ids: Cow::Borrowed(ac_ids.as_ref()),
             }
         };
         serde_json::to_writer(writer, &c)?;
