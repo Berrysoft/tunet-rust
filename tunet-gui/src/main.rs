@@ -67,21 +67,30 @@ impl Widgets<MainModel, ()> for MainWidgets {
                 set_margin_all: 5,
                 set_spacing: 5,
 
-                append = &gtk::Label {
-                    set_margin_all: 5,
-                    set_label: watch! { &format!("用户：{}", model.flux.username) },
-                },
-                append = &gtk::Label {
-                    set_margin_all: 5,
-                    set_label: watch! { &format!("流量：{}", model.flux.flux) },
-                },
-                append = &gtk::Label {
-                    set_margin_all: 5,
-                    set_label: watch! { &format!("时长：{}", model.flux.online_time) },
-                },
-                append = &gtk::Label {
-                    set_margin_all: 5,
-                    set_label: watch! { &format!("余额：{}", model.flux.balance) },
+                append = &gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_halign: gtk::Align::Center,
+
+                    append = &gtk::Label {
+                        set_xalign: 0.,
+                        set_margin_all: 5,
+                        set_label: watch! { &format!("用户：{}", model.flux.username) },
+                    },
+                    append = &gtk::Label {
+                        set_xalign: 0.,
+                        set_margin_all: 5,
+                        set_label: watch! { &format!("流量：{}", model.flux.flux) },
+                    },
+                    append = &gtk::Label {
+                        set_xalign: 0.,
+                        set_margin_all: 5,
+                        set_label: watch! { &format!("时长：{}", model.flux.online_time) },
+                    },
+                    append = &gtk::Label {
+                        set_xalign: 0.,
+                        set_margin_all: 5,
+                        set_label: watch! { &format!("余额：{}", model.flux.balance) },
+                    },
                 },
 
                 append = &gtk::Button {
