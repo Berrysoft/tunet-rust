@@ -1,20 +1,35 @@
+use anyhow::anyhow;
 use gtk::prelude::*;
+use once_cell::sync::OnceCell;
 use relm4::*;
-use tunet_rust::*;
+use std::sync::Arc;
+use tunet_rust::{usereg::*, *};
 
 #[tokio::main(worker_threads = 4)]
-async fn main() {
+async fn main() -> Result<()> {
+    let cred = Arc::new(NetCredential::default());
+    let client = create_http_client()?;
+    HTTP_CLIENT
+        .set(client.clone())
+        .map_err(|_| anyhow!("Cannot set HTTP client."))?;
+    let usereg = UseregHelper::new(cred.clone(), client.clone());
+    USEREG_CLIENT
+        .set(usereg)
+        .map_err(|_| anyhow!("Cannot set usereg client."))?;
+    let client = TUNetConnect::new(NetState::Net, cred, client).await?;
+    TUNET_CLIENT
+        .set(client)
+        .map_err(|_| anyhow!("Cannot set tunet client."))?;
+
     let model = MainModel::default();
     let app = RelmApp::new(model);
     app.run();
+    Ok(())
 }
 
-#[allow(dead_code)]
-struct MainWidgets {
-    window: gtk::ApplicationWindow,
-    vbox: gtk::Box,
-    label: gtk::Label,
-}
+static HTTP_CLIENT: OnceCell<HttpClient> = OnceCell::new();
+static TUNET_CLIENT: OnceCell<TUNetConnect> = OnceCell::new();
+static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
 
 enum MainMsg {
     Flux(NetFlux),
@@ -40,44 +55,47 @@ impl AppUpdate for MainModel {
     }
 }
 
+#[relm4_macros::widget]
 impl Widgets<MainModel, ()> for MainWidgets {
-    type Root = gtk::ApplicationWindow;
+    view! {
+        gtk::ApplicationWindow {
+            set_title: Some("清华校园网"),
+            set_default_width: 300,
+            set_default_height: 400,
+            set_child = Some(&gtk::Box) {
+                set_orientation: gtk::Orientation::Vertical,
+                set_margin_all: 5,
+                set_spacing: 5,
 
-    fn init_view(_model: &MainModel, _parent_widgets: &(), sender: Sender<MainMsg>) -> Self {
-        let window = gtk::ApplicationWindow::builder()
-            .title("清华校园网")
-            .default_width(600)
-            .default_height(800)
-            .build();
-        let vbox = gtk::Box::builder()
-            .orientation(gtk::Orientation::Vertical)
-            .spacing(5)
-            .build();
-        vbox.set_margin_all(5);
-        let label = gtk::Label::new(None);
-        label.set_margin_all(5);
+                append = &gtk::Label {
+                    set_margin_all: 5,
+                    set_label: watch! { &format!("用户：{}", model.flux.username) },
+                },
+                append = &gtk::Label {
+                    set_margin_all: 5,
+                    set_label: watch! { &format!("流量：{}", model.flux.flux) },
+                },
+                append = &gtk::Label {
+                    set_margin_all: 5,
+                    set_label: watch! { &format!("时长：{}", model.flux.online_time) },
+                },
+                append = &gtk::Label {
+                    set_margin_all: 5,
+                    set_label: watch! { &format!("余额：{}", model.flux.balance) },
+                },
 
-        window.set_child(Some(&vbox));
-        vbox.append(&label);
-
-        tokio::spawn(async move {
-            let mut flux = NetFlux::default();
-            flux.username = "test".to_owned();
-            sender.send(MainMsg::Flux(flux))
-        });
-
-        Self {
-            window,
-            vbox,
-            label,
+                append = &gtk::Button {
+                    set_label: "刷新",
+                    connect_clicked(sender) => move |_| {
+                        let sender = sender.clone();
+                        tokio::spawn(async move {
+                            let flux = TUNET_CLIENT.get().unwrap().flux().await?;
+                            sender.send(MainMsg::Flux(flux))?;
+                            Ok::<_, anyhow::Error>(())
+                        });
+                    },
+                }
+            },
         }
-    }
-
-    fn root_widget(&self) -> Self::Root {
-        self.window.clone()
-    }
-
-    fn view(&mut self, model: &MainModel, _sender: Sender<MainMsg>) {
-        self.label.set_text(&format!("{}", model.flux.username));
     }
 }
