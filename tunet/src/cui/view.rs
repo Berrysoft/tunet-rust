@@ -83,10 +83,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                     ]),
                     Spans::from(vec![
                         Span::styled("登录时间 ", subtitle_style),
-                        Span::styled(
-                            FmtDateTime(u.login_time).to_string(),
-                            Style::default().fg(Color::Green),
-                        ),
+                        Span::styled(u.login_time.to_string(), Style::default().fg(Color::Green)),
                     ]),
                     Spans::from({
                         let mut spans = vec![

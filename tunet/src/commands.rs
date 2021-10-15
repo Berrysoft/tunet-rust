@@ -1,4 +1,4 @@
-use crate::{settings::*, strfmt::*};
+use crate::settings::*;
 use async_trait::async_trait;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
@@ -201,7 +201,7 @@ impl TUNetCommand for Online {
                 fg!(Some(Color::Yellow)),
                 u.address,
                 fg!(Some(Color::Green)),
-                FmtDateTime(u.login_time),
+                u.login_time,
                 fg!(Some(Color::Cyan)),
                 u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
                 fg!(Some(Color::Magenta)),
@@ -283,8 +283,8 @@ impl Detail {
                 stdout,
                 "{}{:20} {:20} {}{:>8}",
                 fg!(Some(Color::Green)),
-                FmtDateTime(d.login_time),
-                FmtDateTime(d.logout_time),
+                d.login_time,
+                d.logout_time,
                 fg!(Some(get_flux_color(&d.flux, false))),
                 d.flux
             )?;
