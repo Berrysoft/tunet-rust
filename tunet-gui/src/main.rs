@@ -89,7 +89,6 @@ impl Widgets<MainModel, ()> for MainWidgets {
 
             set_child = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
-                set_margin_all: 5,
                 set_spacing: 5,
 
                 append = &gtk::Overlay {
@@ -97,27 +96,24 @@ impl Widgets<MainModel, ()> for MainWidgets {
 
                     add_overlay = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
+                        set_spacing: 5,
                         set_halign: gtk::Align::Center,
                         set_valign: gtk::Align::Center,
 
                         append = &gtk::Label {
                             set_xalign: 0.,
-                            set_margin_all: 5,
                             set_label: watch! { &format!("用户：{}", model.flux.username) },
                         },
                         append = &gtk::Label {
                             set_xalign: 0.,
-                            set_margin_all: 5,
                             set_label: watch! { &format!("流量：{}", model.flux.flux) },
                         },
                         append = &gtk::Label {
                             set_xalign: 0.,
-                            set_margin_all: 5,
                             set_label: watch! { &format!("时长：{}", model.flux.online_time) },
                         },
                         append = &gtk::Label {
                             set_xalign: 0.,
-                            set_margin_all: 5,
                             set_label: watch! { &format!("余额：{}", model.flux.balance) },
                         },
                     },
@@ -186,6 +182,7 @@ impl ComponentUpdate<MainModel> for FluxAreaModel {
 struct FluxAreaWidgets {
     area: gtk::DrawingArea,
 }
+
 impl Widgets<FluxAreaModel, MainModel> for FluxAreaWidgets {
     type Root = gtk::DrawingArea;
 
@@ -216,15 +213,15 @@ impl Widgets<FluxAreaModel, MainModel> for FluxAreaWidgets {
         let mut handler = DrawHandler::new().unwrap();
         handler.init(&self.area);
         let context = handler.get_context().unwrap();
-        context.set_line_width(radius * 0.15);
+        context.set_line_width(radius * 0.2);
 
         let max_flux = model.flux.balance.0 + 50.;
 
-        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.5);
+        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.3);
         context.arc(width / 2., height / 2., radius, 0., PI * 2.);
         context.stroke().unwrap();
 
-        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.75);
+        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.6);
         context.arc(
             width / 2.,
             height / 2.,
