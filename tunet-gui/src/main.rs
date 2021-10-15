@@ -81,7 +81,9 @@ impl Widgets<MainModel, ()> for MainWidgets {
         gtk::ApplicationWindow {
             set_title: Some("清华校园网"),
             set_default_width: 300,
-            set_default_height: 400,
+            set_default_height: 300,
+            set_resizable: false,
+
             set_child = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
                 set_margin_all: 5,
