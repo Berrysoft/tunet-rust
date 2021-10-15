@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use gtk::prelude::*;
 use once_cell::sync::OnceCell;
-use relm4::*;
+use relm4::{drawing::*, *};
 use std::sync::Arc;
 use tunet_rust::{usereg::*, *};
 
@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
         .set(client)
         .map_err(|_| anyhow!("Cannot set tunet client."))?;
 
-    let model = MainModel::default();
+    let model = MainModel::new();
     let app = RelmApp::new(model);
     app.run();
     Ok(())
@@ -30,51 +30,40 @@ static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
 enum MainMsg {
     Log(String),
     Flux(NetFlux),
+    ChooseState(NetState),
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct MainModel {
     pub log: String,
     pub flux: NetFlux,
+    pub state: NetState,
+}
+
+impl MainModel {
+    pub fn new() -> Self {
+        Self {
+            log: String::default(),
+            flux: NetFlux::default(),
+            state: NetState::Auto,
+        }
+    }
 }
 
 impl Model for MainModel {
     type Msg = MainMsg;
     type Widgets = MainWidgets;
-    type Components = MainComponents;
+    type Components = ();
 }
 
 impl AppUpdate for MainModel {
-    fn update(
-        &mut self,
-        msg: MainMsg,
-        components: &MainComponents,
-        _sender: Sender<MainMsg>,
-    ) -> bool {
+    fn update(&mut self, msg: MainMsg, _components: &(), _sender: Sender<MainMsg>) -> bool {
         match msg {
             MainMsg::Log(s) => self.log = s,
-            MainMsg::Flux(f) => {
-                self.flux = f.clone();
-                components.flux_area.send(FluxAreaMsg::Flux(f)).unwrap();
-            }
+            MainMsg::Flux(f) => self.flux = f,
+            MainMsg::ChooseState(s) => self.state = s,
         }
         true
-    }
-}
-
-struct MainComponents {
-    flux_area: RelmComponent<FluxAreaModel, MainModel>,
-}
-
-impl Components<MainModel> for MainComponents {
-    fn init_components(
-        parent_model: &MainModel,
-        parent_widgets: &MainWidgets,
-        parent_sender: Sender<MainMsg>,
-    ) -> Self {
-        Self {
-            flux_area: RelmComponent::new(parent_model, parent_widgets, parent_sender),
-        }
     }
 }
 
@@ -118,7 +107,37 @@ impl Widgets<MainModel, ()> for MainWidgets {
                         },
                     },
 
-                    set_child: component!(Some(components.flux_area.root_widget())),
+                    set_child: area = Some(&gtk::DrawingArea) {
+                        set_vexpand: true,
+                        set_hexpand: true,
+                    }
+                },
+
+                append = &gtk::ComboBoxText {
+                    append_text: "Net",
+                    append_text: "Auth4",
+                    append_text: "Auth6",
+
+                    set_active: watch! {
+                        match model.state {
+                            NetState::Net => Some(0),
+                            NetState::Auth4 => Some(1),
+                            NetState::Auth6 => Some(2),
+                            _ => None
+                        }
+                    },
+
+                    connect_changed(sender) => move |c| {
+                        send!(sender, MainMsg::ChooseState(match c.active() {
+                            Some(i) => match i {
+                                0 => NetState::Net,
+                                1 => NetState::Auth4,
+                                2 => NetState::Auth6,
+                                _ => unreachable!(),
+                            },
+                            None => NetState::Unknown,
+                        }));
+                    }
                 },
 
                 append = &gtk::Label {
@@ -131,8 +150,8 @@ impl Widgets<MainModel, ()> for MainWidgets {
                         let sender = sender.clone();
                         tokio::spawn(async move {
                             match TUNET_CLIENT.get().unwrap().flux().await {
-                                Ok(flux) => sender.send(MainMsg::Flux(flux)).unwrap(),
-                                Err(e) => sender.send(MainMsg::Log(e.to_string())).unwrap()
+                                Ok(flux) => send!(sender, MainMsg::Flux(flux)),
+                                Err(e) => send!(sender, MainMsg::Log(e.to_string())),
                             }
                         });
                     },
@@ -140,69 +159,17 @@ impl Widgets<MainModel, ()> for MainWidgets {
             },
         }
     }
-}
 
-enum FluxAreaMsg {
-    Flux(NetFlux),
-}
-
-#[derive(Debug, Default)]
-struct FluxAreaModel {
-    pub flux: NetFlux,
-}
-
-impl Model for FluxAreaModel {
-    type Msg = FluxAreaMsg;
-    type Widgets = FluxAreaWidgets;
-    type Components = ();
-}
-
-impl ComponentUpdate<MainModel> for FluxAreaModel {
-    fn init_model(parent_model: &MainModel) -> Self {
-        Self {
-            flux: parent_model.flux.clone(),
-        }
+    additional_fields! {
+        handler: DrawHandler,
     }
 
-    fn update(
-        &mut self,
-        msg: FluxAreaMsg,
-        _components: &(),
-        _sender: Sender<FluxAreaMsg>,
-        _parent_sender: Sender<MainMsg>,
-    ) {
-        match msg {
-            FluxAreaMsg::Flux(f) => {
-                self.flux = f;
-            }
-        }
-    }
-}
-
-struct FluxAreaWidgets {
-    area: gtk::DrawingArea,
-}
-
-impl Widgets<FluxAreaModel, MainModel> for FluxAreaWidgets {
-    type Root = gtk::DrawingArea;
-
-    fn init_view(
-        _model: &FluxAreaModel,
-        _parent_widgets: &MainWidgets,
-        _sender: Sender<FluxAreaMsg>,
-    ) -> Self {
-        let area = gtk::DrawingArea::default();
-        area.set_valign(gtk::Align::Fill);
-        area.set_halign(gtk::Align::Fill);
-        Self { area }
+    fn post_init() {
+        let mut handler = DrawHandler::new().unwrap();
+        handler.init(&area);
     }
 
-    fn root_widget(&self) -> Self::Root {
-        self.area.clone()
-    }
-
-    fn view(&mut self, model: &FluxAreaModel, _sender: Sender<FluxAreaMsg>) {
-        use relm4::drawing::*;
+    fn manual_view() {
         use std::f64::consts::PI;
 
         let width = self.area.width() as f64;
@@ -210,9 +177,7 @@ impl Widgets<FluxAreaModel, MainModel> for FluxAreaWidgets {
 
         let radius = width.min(height) * 0.4;
 
-        let mut handler = DrawHandler::new().unwrap();
-        handler.init(&self.area);
-        let context = handler.get_context().unwrap();
+        let context = self.handler.get_context().unwrap();
         context.set_line_width(radius * 0.2);
 
         let max_flux = model.flux.balance.0 + 50.;
