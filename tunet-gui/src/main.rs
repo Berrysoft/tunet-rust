@@ -28,11 +28,13 @@ static TUNET_CLIENT: OnceCell<TUNetConnect> = OnceCell::new();
 static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
 
 enum MainMsg {
+    Log(String),
     Flux(NetFlux),
 }
 
 #[derive(Debug, Default)]
 struct MainModel {
+    pub log: String,
     pub flux: NetFlux,
 }
 
@@ -50,6 +52,7 @@ impl AppUpdate for MainModel {
         _sender: Sender<MainMsg>,
     ) -> bool {
         match msg {
+            MainMsg::Log(s) => self.log = s,
             MainMsg::Flux(f) => {
                 self.flux = f.clone();
                 components.flux_area.send(FluxAreaMsg::Flux(f)).unwrap();
@@ -122,14 +125,19 @@ impl Widgets<MainModel, ()> for MainWidgets {
                     set_child: component!(Some(components.flux_area.root_widget())),
                 },
 
+                append = &gtk::Label {
+                    set_label: watch! { &model.log },
+                },
+
                 append = &gtk::Button {
                     set_label: "刷新",
                     connect_clicked(sender) => move |_| {
                         let sender = sender.clone();
                         tokio::spawn(async move {
-                            let flux = TUNET_CLIENT.get().unwrap().flux().await?;
-                            sender.send(MainMsg::Flux(flux))?;
-                            Ok::<_, anyhow::Error>(())
+                            match TUNET_CLIENT.get().unwrap().flux().await {
+                                Ok(flux) => sender.send(MainMsg::Flux(flux)).unwrap(),
+                                Err(e) => sender.send(MainMsg::Log(e.to_string())).unwrap()
+                            }
                         });
                     },
                 },
