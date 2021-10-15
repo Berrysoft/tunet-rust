@@ -61,6 +61,14 @@ impl NetCredential {
 pub struct Flux(pub u64);
 
 impl Flux {
+    pub fn from_gb(f: f64) -> Self {
+        Self((f * 1_000_000_000.) as u64)
+    }
+
+    pub fn to_gb(self) -> f64 {
+        self.0 as f64 / 1_000_000_000.
+    }
+
     fn string(&self) -> String {
         let mut flux = self.0 as f64;
         if flux < 1000.0 {

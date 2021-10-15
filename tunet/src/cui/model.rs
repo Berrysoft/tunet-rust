@@ -93,8 +93,6 @@ impl Model {
                 self.details.clear();
             }
             EventType::Detail(ds) => {
-                const GIGABYTES: f64 = 1_000_000_000.0;
-
                 let details_group = ds
                     .into_iter()
                     .group_by(|d| d.logout_time.date())
@@ -106,8 +104,7 @@ impl Model {
                     if let Some(f) = details_group.get(&d) {
                         self.max_flux.0 += *f;
                     }
-                    self.details
-                        .push((d as f64, self.max_flux.0 as f64 / GIGABYTES));
+                    self.details.push((d as f64, self.max_flux.to_gb()));
                 }
             }
         }

@@ -11,8 +11,6 @@ fn get_flux_color(flux: u64, total: bool) -> Color {
     }
 }
 
-const GIGABYTES: f64 = 1_000_000_000.0;
-
 pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let global_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -110,7 +108,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     .block(Block::default().title("连接详情").borders(Borders::all()));
     f.render_widget(table, title_chunks[1]);
 
-    let max_flux = (m.max_flux.0 as f64 / GIGABYTES * 1.1).ceil().max(1.0) as u64;
+    let max_flux = (m.max_flux.to_gb() * 1.1).ceil().max(1.0) as u64;
 
     let dataset = Dataset::default()
         .marker(tui::symbols::Marker::Dot)

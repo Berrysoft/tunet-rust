@@ -206,7 +206,7 @@ impl Widgets<FluxAreaModel, MainModel> for FluxAreaWidgets {
         let mut handler = DrawHandler::new().unwrap();
         handler.init(&self.area);
         let context = handler.get_context().unwrap();
-        context.set_line_width(radius * 0.1);
+        context.set_line_width(radius * 0.15);
 
         let max_flux = model.flux.balance.0 + 50.;
 
@@ -230,9 +230,7 @@ impl Widgets<FluxAreaModel, MainModel> for FluxAreaWidgets {
             height / 2.,
             radius,
             PI / 2.,
-            PI / 2.
-                + (model.flux.flux.0 as f64 / 1_000_000_000. / max_flux * 2. * PI)
-                    .min(PI * 2. - 0.001),
+            PI / 2. + (model.flux.flux.to_gb() / max_flux * 2. * PI).min(PI * 2. - 0.001),
         );
         context.stroke().unwrap();
     }
