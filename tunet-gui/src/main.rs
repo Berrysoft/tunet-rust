@@ -9,9 +9,6 @@ use tunet_rust::{usereg::*, *};
 async fn main() -> Result<()> {
     let cred = Arc::new(NetCredential::default());
     let client = create_http_client()?;
-    HTTP_CLIENT
-        .set(client.clone())
-        .map_err(|_| anyhow!("Cannot set HTTP client."))?;
     let usereg = UseregHelper::new(cred.clone(), client.clone());
     USEREG_CLIENT
         .set(usereg)
@@ -27,7 +24,6 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-static HTTP_CLIENT: OnceCell<HttpClient> = OnceCell::new();
 static TUNET_CLIENT: OnceCell<TUNetConnect> = OnceCell::new();
 static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
 

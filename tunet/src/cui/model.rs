@@ -80,7 +80,7 @@ impl Model {
             }
             EventType::Tick => {
                 if let Some(flux) = &mut self.flux {
-                    flux.online_time = flux.online_time + Duration::seconds(1);
+                    flux.online_time = Duration(flux.online_time.0 + NaiveDuration::seconds(1));
                 }
             }
             EventType::ClearOnline => {

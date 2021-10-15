@@ -159,7 +159,7 @@ impl TUNetCommand for Status {
             "{}时长 {}{}",
             fg!(Some(Color::Cyan)),
             fg!(Some(Color::Green)),
-            FmtDuration(f.online_time)
+            f.online_time
         )?;
         tco::writeln!(
             stdout,

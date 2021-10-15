@@ -52,7 +52,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             Spans::from(vec![
                 Span::styled("时长 ", subtitle_style),
                 Span::styled(
-                    FmtDuration(flux.online_time).to_string(),
+                    flux.online_time.to_string(),
                     Style::default().fg(Color::Green),
                 ),
             ]),
