@@ -101,7 +101,7 @@ impl std::str::FromStr for Flux {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Duration(pub NaiveDuration);
 
 impl Default for Duration {
@@ -126,7 +126,7 @@ impl Display for Duration {
 }
 
 #[repr(transparent)]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, PartialOrd, Clone, Copy)]
 pub struct Balance(pub f64);
 
 impl Display for Balance {
@@ -135,7 +135,7 @@ impl Display for Balance {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NetFlux {
     pub username: String,
     pub flux: Flux,

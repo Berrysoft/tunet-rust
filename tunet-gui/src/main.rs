@@ -39,15 +39,39 @@ struct MainModel {
 impl Model for MainModel {
     type Msg = MainMsg;
     type Widgets = MainWidgets;
-    type Components = ();
+    type Components = MainComponents;
 }
 
 impl AppUpdate for MainModel {
-    fn update(&mut self, msg: MainMsg, _components: &(), _sender: Sender<MainMsg>) -> bool {
+    fn update(
+        &mut self,
+        msg: MainMsg,
+        components: &MainComponents,
+        _sender: Sender<MainMsg>,
+    ) -> bool {
         match msg {
-            MainMsg::Flux(f) => self.flux = f,
+            MainMsg::Flux(f) => {
+                self.flux = f.clone();
+                components.flux_area.send(FluxAreaMsg::Flux(f)).unwrap();
+            }
         }
         true
+    }
+}
+
+struct MainComponents {
+    flux_area: RelmComponent<FluxAreaModel, MainModel>,
+}
+
+impl Components<MainModel> for MainComponents {
+    fn init_components(
+        parent_model: &MainModel,
+        parent_widgets: &MainWidgets,
+        parent_sender: Sender<MainMsg>,
+    ) -> Self {
+        Self {
+            flux_area: RelmComponent::new(parent_model, parent_widgets, parent_sender),
+        }
     }
 }
 
@@ -63,30 +87,37 @@ impl Widgets<MainModel, ()> for MainWidgets {
                 set_margin_all: 5,
                 set_spacing: 5,
 
-                append = &gtk::Box {
-                    set_orientation: gtk::Orientation::Vertical,
-                    set_halign: gtk::Align::Center,
+                append = &gtk::Overlay {
+                    set_height_request: 300,
 
-                    append = &gtk::Label {
-                        set_xalign: 0.,
-                        set_margin_all: 5,
-                        set_label: watch! { &format!("用户：{}", model.flux.username) },
+                    add_overlay = &gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_halign: gtk::Align::Center,
+                        set_valign: gtk::Align::Center,
+
+                        append = &gtk::Label {
+                            set_xalign: 0.,
+                            set_margin_all: 5,
+                            set_label: watch! { &format!("用户：{}", model.flux.username) },
+                        },
+                        append = &gtk::Label {
+                            set_xalign: 0.,
+                            set_margin_all: 5,
+                            set_label: watch! { &format!("流量：{}", model.flux.flux) },
+                        },
+                        append = &gtk::Label {
+                            set_xalign: 0.,
+                            set_margin_all: 5,
+                            set_label: watch! { &format!("时长：{}", model.flux.online_time) },
+                        },
+                        append = &gtk::Label {
+                            set_xalign: 0.,
+                            set_margin_all: 5,
+                            set_label: watch! { &format!("余额：{}", model.flux.balance) },
+                        },
                     },
-                    append = &gtk::Label {
-                        set_xalign: 0.,
-                        set_margin_all: 5,
-                        set_label: watch! { &format!("流量：{}", model.flux.flux) },
-                    },
-                    append = &gtk::Label {
-                        set_xalign: 0.,
-                        set_margin_all: 5,
-                        set_label: watch! { &format!("时长：{}", model.flux.online_time) },
-                    },
-                    append = &gtk::Label {
-                        set_xalign: 0.,
-                        set_margin_all: 5,
-                        set_label: watch! { &format!("余额：{}", model.flux.balance) },
-                    },
+
+                    set_child: component!(Some(components.flux_area.root_widget())),
                 },
 
                 append = &gtk::Button {
@@ -99,8 +130,110 @@ impl Widgets<MainModel, ()> for MainWidgets {
                             Ok::<_, anyhow::Error>(())
                         });
                     },
-                }
+                },
             },
         }
+    }
+}
+
+enum FluxAreaMsg {
+    Flux(NetFlux),
+}
+
+#[derive(Debug, Default)]
+struct FluxAreaModel {
+    pub flux: NetFlux,
+}
+
+impl Model for FluxAreaModel {
+    type Msg = FluxAreaMsg;
+    type Widgets = FluxAreaWidgets;
+    type Components = ();
+}
+
+impl ComponentUpdate<MainModel> for FluxAreaModel {
+    fn init_model(parent_model: &MainModel) -> Self {
+        Self {
+            flux: parent_model.flux.clone(),
+        }
+    }
+
+    fn update(
+        &mut self,
+        msg: FluxAreaMsg,
+        _components: &(),
+        _sender: Sender<FluxAreaMsg>,
+        _parent_sender: Sender<MainMsg>,
+    ) {
+        match msg {
+            FluxAreaMsg::Flux(f) => {
+                self.flux = f;
+            }
+        }
+    }
+}
+
+struct FluxAreaWidgets {
+    area: gtk::DrawingArea,
+}
+impl Widgets<FluxAreaModel, MainModel> for FluxAreaWidgets {
+    type Root = gtk::DrawingArea;
+
+    fn init_view(
+        _model: &FluxAreaModel,
+        _parent_widgets: &MainWidgets,
+        _sender: Sender<FluxAreaMsg>,
+    ) -> Self {
+        let area = gtk::DrawingArea::default();
+        area.set_valign(gtk::Align::Fill);
+        area.set_halign(gtk::Align::Fill);
+        Self { area }
+    }
+
+    fn root_widget(&self) -> Self::Root {
+        self.area.clone()
+    }
+
+    fn view(&mut self, model: &FluxAreaModel, _sender: Sender<FluxAreaMsg>) {
+        use relm4::drawing::*;
+        use std::f64::consts::PI;
+
+        let width = self.area.width() as f64;
+        let height = self.area.height() as f64;
+
+        let radius = width.min(height) * 0.4;
+
+        let mut handler = DrawHandler::new().unwrap();
+        handler.init(&self.area);
+        let context = handler.get_context().unwrap();
+        context.set_line_width(radius * 0.1);
+
+        let max_flux = model.flux.balance.0 + 50.;
+
+        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.5);
+        context.arc(width / 2., height / 2., radius, 0., PI * 2.);
+        context.stroke().unwrap();
+
+        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.75);
+        context.arc(
+            width / 2.,
+            height / 2.,
+            radius,
+            PI / 2.,
+            PI / 2. + (50. / max_flux * 2. * PI).min(PI * 2. - 0.001),
+        );
+        context.stroke().unwrap();
+
+        context.set_source_rgb(0., 120. / 255., 215. / 255.);
+        context.arc(
+            width / 2.,
+            height / 2.,
+            radius,
+            PI / 2.,
+            PI / 2.
+                + (model.flux.flux.0 as f64 / 1_000_000_000. / max_flux * 2. * PI)
+                    .min(PI * 2. - 0.001),
+        );
+        context.stroke().unwrap();
     }
 }
