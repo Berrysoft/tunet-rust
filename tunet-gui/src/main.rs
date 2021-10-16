@@ -6,7 +6,7 @@ use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
 use relm4::{drawing::*, *};
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::{sync::Mutex, task::JoinHandle};
 use tunet_rust::{usereg::*, *};
 
 #[tokio::main(worker_threads = 4)]
@@ -60,6 +60,7 @@ enum MainMsg {
     Log(String),
     Flux(NetFlux),
     StartFlux,
+    Tick,
     ChooseState(NetState),
 }
 
@@ -68,6 +69,8 @@ struct MainModel {
     pub log: String,
     pub flux: NetFlux,
     pub state: NetState,
+
+    timer: Option<JoinHandle<()>>,
 }
 
 impl MainModel {
@@ -76,6 +79,7 @@ impl MainModel {
             log: String::default(),
             flux: NetFlux::default(),
             state: NetState::Auto,
+            timer: None,
         }
     }
 
@@ -99,11 +103,36 @@ impl Model for MainModel {
 impl AppUpdate for MainModel {
     fn update(&mut self, msg: MainMsg, _components: &(), sender: Sender<MainMsg>) -> bool {
         match msg {
-            MainMsg::Refresh => {}
+            MainMsg::Refresh => {
+                if self.state == NetState::Auto {
+                    tokio::spawn(async move {
+                        let state = tunet_rust::suggest::suggest(&HTTP_CLIENT).await;
+                        send!(sender, MainMsg::ChooseState(state));
+                    });
+                }
+            }
             MainMsg::Log(s) => self.log = s,
-            MainMsg::Flux(f) => self.flux = f,
+            MainMsg::Flux(f) => {
+                self.flux = f.clone();
+                if let Some(h) = self.timer.take() {
+                    h.abort();
+                }
+                if !f.username.is_empty() {
+                    self.timer = Some(tokio::spawn(async move {
+                        let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
+                        loop {
+                            interval.tick().await;
+                            send!(sender, MainMsg::Tick);
+                        }
+                    }));
+                }
+            }
             MainMsg::StartFlux => {
                 tokio::spawn(Self::fetch_flux(sender));
+            }
+            MainMsg::Tick => {
+                self.flux.online_time =
+                    Duration(self.flux.online_time.0 + NaiveDuration::seconds(1));
             }
             MainMsg::ChooseState(s) => {
                 self.state = s;
@@ -122,8 +151,8 @@ impl Widgets<MainModel, ()> for MainWidgets {
     view! {
         gtk::ApplicationWindow {
             set_title: Some("清华校园网"),
-            set_default_width: 300,
-            set_default_height: 300,
+            set_default_width: 400,
+            set_default_height: 400,
 
             set_child = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
