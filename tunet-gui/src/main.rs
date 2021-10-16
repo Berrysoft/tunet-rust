@@ -2,23 +2,23 @@
 
 use anyhow::anyhow;
 use gtk::prelude::*;
+use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
 use relm4::{drawing::*, *};
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use tunet_rust::{usereg::*, *};
 
 #[tokio::main(worker_threads = 4)]
 async fn main() -> Result<()> {
     let cred = Arc::new(NetCredential::default());
-    let client = create_http_client()?;
-    let usereg = UseregHelper::new(cred.clone(), client.clone());
+    CREDENTIAL
+        .set(cred.clone())
+        .map_err(|_| anyhow!("Cannot set CREDENTIAL."))?;
+    let usereg = UseregHelper::new(cred, HTTP_CLIENT.clone());
     USEREG_CLIENT
         .set(usereg)
-        .map_err(|_| anyhow!("Cannot set usereg client."))?;
-    let client = TUNetConnect::new(NetState::Net, cred, client).await?;
-    TUNET_CLIENT
-        .set(client)
-        .map_err(|_| anyhow!("Cannot set tunet client."))?;
+        .map_err(|_| anyhow!("Cannot set USEREG_CLIENT."))?;
 
     let model = MainModel::new();
     let app = RelmApp::new(model);
@@ -26,8 +26,34 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-static TUNET_CLIENT: OnceCell<TUNetConnect> = OnceCell::new();
+static CREDENTIAL: OnceCell<Arc<NetCredential>> = OnceCell::new();
 static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
+
+lazy_static! {
+    static ref HTTP_CLIENT: HttpClient = create_http_client().unwrap();
+    static ref TUNET_CLIENT: Mutex<Option<TUNetConnect>> = Mutex::new(None);
+}
+
+async fn tunet_replace(s: NetState) {
+    *TUNET_CLIENT.lock().await = Some(match s {
+        NetState::Net | NetState::Auth4 | NetState::Auth6 => {
+            TUNetConnect::new(s, CREDENTIAL.get().unwrap().clone(), HTTP_CLIENT.clone())
+                .await
+                .unwrap()
+        }
+        _ => unreachable!(),
+    });
+}
+
+async fn tunet_flux() -> Result<NetFlux> {
+    TUNET_CLIENT
+        .lock()
+        .await
+        .as_ref()
+        .ok_or_else(|| anyhow!("请选择连接方式"))?
+        .flux()
+        .await
+}
 
 enum MainMsg {
     Log(String),
@@ -59,11 +85,20 @@ impl Model for MainModel {
 }
 
 impl AppUpdate for MainModel {
-    fn update(&mut self, msg: MainMsg, _components: &(), _sender: Sender<MainMsg>) -> bool {
+    fn update(&mut self, msg: MainMsg, _components: &(), sender: Sender<MainMsg>) -> bool {
         match msg {
             MainMsg::Log(s) => self.log = s,
             MainMsg::Flux(f) => self.flux = f,
-            MainMsg::ChooseState(s) => self.state = s,
+            MainMsg::ChooseState(s) => {
+                self.state = s;
+                tokio::spawn(async move {
+                    tunet_replace(s).await;
+                    match tunet_flux().await {
+                        Ok(flux) => send!(sender, MainMsg::Flux(flux)),
+                        Err(e) => send!(sender, MainMsg::Log(e.to_string())),
+                    }
+                });
+            }
         }
         true
     }
@@ -164,7 +199,7 @@ impl Widgets<MainModel, ()> for MainWidgets {
                         connect_clicked(sender) => move |_| {
                             let sender = sender.clone();
                             tokio::spawn(async move {
-                                match TUNET_CLIENT.get().unwrap().flux().await {
+                                match tunet_flux().await {
                                     Ok(flux) => send!(sender, MainMsg::Flux(flux)),
                                     Err(e) => send!(sender, MainMsg::Log(e.to_string())),
                                 }
