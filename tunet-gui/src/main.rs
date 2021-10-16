@@ -182,28 +182,20 @@ impl Widgets<MainModel, ()> for MainWidgets {
 
         let max_flux = model.flux.balance.0 + 50.;
 
-        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.3);
-        context.arc(width / 2., height / 2., radius, 0., PI * 2.);
+        let flux_angle =
+            PI / 2. + (model.flux.flux.to_gb() / max_flux * 2. * PI).min(PI * 2. - 0.001);
+        let free_angle = PI / 2. + (50. / max_flux * 2. * PI).min(PI * 2. - 0.001);
+
+        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.55);
+        context.arc(width / 2., height / 2., radius, free_angle, PI / 2.);
         context.stroke().unwrap();
 
-        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.6);
-        context.arc(
-            width / 2.,
-            height / 2.,
-            radius,
-            PI / 2.,
-            PI / 2. + (50. / max_flux * 2. * PI).min(PI * 2. - 0.001),
-        );
+        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.75);
+        context.arc(width / 2., height / 2., radius, flux_angle, free_angle);
         context.stroke().unwrap();
 
         context.set_source_rgb(0., 120. / 255., 215. / 255.);
-        context.arc(
-            width / 2.,
-            height / 2.,
-            radius,
-            PI / 2.,
-            PI / 2. + (model.flux.flux.to_gb() / max_flux * 2. * PI).min(PI * 2. - 0.001),
-        );
+        context.arc(width / 2., height / 2., radius, PI / 2., flux_angle);
         context.stroke().unwrap();
     }
 }
