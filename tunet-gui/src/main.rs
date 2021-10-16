@@ -56,8 +56,10 @@ async fn tunet_flux() -> Result<NetFlux> {
 }
 
 enum MainMsg {
+    Refresh,
     Log(String),
     Flux(NetFlux),
+    StartFlux,
     ChooseState(NetState),
 }
 
@@ -76,6 +78,16 @@ impl MainModel {
             state: NetState::Auto,
         }
     }
+
+    async fn fetch_flux(s: Sender<MainMsg>) {
+        match tunet_flux().await {
+            Ok(flux) => {
+                send!(s, MainMsg::Flux(flux));
+                send!(s, MainMsg::Log(String::new()));
+            }
+            Err(e) => send!(s, MainMsg::Log(e.to_string())),
+        }
+    }
 }
 
 impl Model for MainModel {
@@ -87,16 +99,17 @@ impl Model for MainModel {
 impl AppUpdate for MainModel {
     fn update(&mut self, msg: MainMsg, _components: &(), sender: Sender<MainMsg>) -> bool {
         match msg {
+            MainMsg::Refresh => {}
             MainMsg::Log(s) => self.log = s,
             MainMsg::Flux(f) => self.flux = f,
+            MainMsg::StartFlux => {
+                tokio::spawn(Self::fetch_flux(sender));
+            }
             MainMsg::ChooseState(s) => {
                 self.state = s;
                 tokio::spawn(async move {
                     tunet_replace(s).await;
-                    match tunet_flux().await {
-                        Ok(flux) => send!(sender, MainMsg::Flux(flux)),
-                        Err(e) => send!(sender, MainMsg::Log(e.to_string())),
-                    }
+                    send!(sender, MainMsg::StartFlux);
                 });
             }
         }
@@ -111,7 +124,6 @@ impl Widgets<MainModel, ()> for MainWidgets {
             set_title: Some("清华校园网"),
             set_default_width: 300,
             set_default_height: 300,
-            set_resizable: false,
 
             set_child = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
@@ -148,6 +160,10 @@ impl Widgets<MainModel, ()> for MainWidgets {
                     set_child: area = Some(&gtk::DrawingArea) {
                         set_vexpand: true,
                         set_hexpand: true,
+
+                        connect_resize(sender) => move |_, _, _| {
+                            send!(sender, MainMsg::Refresh);
+                        },
                     }
                 },
 
@@ -166,7 +182,7 @@ impl Widgets<MainModel, ()> for MainWidgets {
                     },
 
                     connect_changed(sender) => move |c| {
-                        send!(sender, MainMsg::ChooseState(match c.active() {
+                        let state = match c.active() {
                             Some(i) => match i {
                                 0 => NetState::Net,
                                 1 => NetState::Auth4,
@@ -174,11 +190,13 @@ impl Widgets<MainModel, ()> for MainWidgets {
                                 _ => unreachable!(),
                             },
                             None => NetState::Unknown,
-                        }));
+                        };
+                        send!(sender, MainMsg::ChooseState(state));
                     }
                 },
 
                 append = &gtk::Label {
+                    set_wrap: true,
                     set_label: watch! { &model.log },
                 },
 
@@ -197,13 +215,7 @@ impl Widgets<MainModel, ()> for MainWidgets {
                     append = &gtk::Button {
                         set_label: "刷新",
                         connect_clicked(sender) => move |_| {
-                            let sender = sender.clone();
-                            tokio::spawn(async move {
-                                match tunet_flux().await {
-                                    Ok(flux) => send!(sender, MainMsg::Flux(flux)),
-                                    Err(e) => send!(sender, MainMsg::Log(e.to_string())),
-                                }
-                            });
+                            send!(sender, MainMsg::StartFlux);
                         },
                     },
                 },
