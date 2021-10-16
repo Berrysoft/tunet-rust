@@ -25,15 +25,16 @@ pub fn init() -> Result<()> {
     Ok(())
 }
 
-pub async fn replace_state(s: NetState) {
+pub async fn replace_state(s: NetState) -> Result<()> {
     *TUNET_CLIENT.lock().await = Some(match s {
         NetState::Net | NetState::Auth4 | NetState::Auth6 => {
             TUNetConnect::new(s, CREDENTIAL.get().unwrap().clone(), HTTP_CLIENT.clone())
                 .await
                 .unwrap()
         }
-        _ => unreachable!(),
+        _ => return Err(anyhow!("无法判断连接方式")),
     });
+    Ok(())
 }
 
 pub async fn tunet() -> Result<TUNetConnect> {

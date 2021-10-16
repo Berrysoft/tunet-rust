@@ -92,8 +92,10 @@ impl ComponentUpdate<MainModel> for InfoModel {
             InfoMsg::State(s) => {
                 self.state = s;
                 tokio::spawn(async move {
-                    clients::replace_state(s).await;
-                    send!(sender, InfoMsg::FetchFlux);
+                    match clients::replace_state(s).await {
+                        Ok(()) => send!(sender, InfoMsg::FetchFlux),
+                        Err(e) => send!(sender, InfoMsg::Log(e.to_string())),
+                    }
                 });
             }
         }
@@ -145,32 +147,42 @@ impl Widgets<InfoModel, MainModel> for InfoWidgets {
                 }
             },
 
-            append = &gtk::ComboBoxText {
-                append_text: "Net",
-                append_text: "Auth4",
-                append_text: "Auth6",
+            append = &gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                set_spacing: 5,
+                set_halign: gtk::Align::Center,
 
-                set_active: watch! {
-                    match model.state {
-                        NetState::Net => Some(0),
-                        NetState::Auth4 => Some(1),
-                        NetState::Auth6 => Some(2),
-                        _ => None
+                append = &gtk::Label {
+                    set_label: "连接方式",
+                },
+                append = &gtk::ComboBoxText {
+
+                    append_text: "Net",
+                    append_text: "Auth4",
+                    append_text: "Auth6",
+
+                    set_active: watch! {
+                        match model.state {
+                            NetState::Net => Some(0),
+                            NetState::Auth4 => Some(1),
+                            NetState::Auth6 => Some(2),
+                            _ => None
+                        }
+                    },
+
+                    connect_changed(sender) => move |c| {
+                        let state = match c.active() {
+                            Some(i) => match i {
+                                0 => NetState::Net,
+                                1 => NetState::Auth4,
+                                2 => NetState::Auth6,
+                                _ => unreachable!(),
+                            },
+                            None => NetState::Unknown,
+                        };
+                        send!(sender, InfoMsg::State(state));
                     }
                 },
-
-                connect_changed(sender) => move |c| {
-                    let state = match c.active() {
-                        Some(i) => match i {
-                            0 => NetState::Net,
-                            1 => NetState::Auth4,
-                            2 => NetState::Auth6,
-                            _ => unreachable!(),
-                        },
-                        None => NetState::Unknown,
-                    };
-                    send!(sender, InfoMsg::State(state));
-                }
             },
 
             append = &gtk::Label {
