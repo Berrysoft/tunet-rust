@@ -1,58 +1,20 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use anyhow::anyhow;
 use gtk::prelude::*;
-use lazy_static::lazy_static;
-use once_cell::sync::OnceCell;
 use relm4::{drawing::*, *};
-use std::sync::Arc;
-use tokio::{sync::Mutex, task::JoinHandle};
-use tunet_rust::{usereg::*, *};
+use tokio::task::JoinHandle;
+use tunet_rust::*;
+
+mod clients;
 
 #[tokio::main(worker_threads = 4)]
 async fn main() -> Result<()> {
-    let cred = Arc::new(NetCredential::default());
-    CREDENTIAL
-        .set(cred.clone())
-        .map_err(|_| anyhow!("Cannot set CREDENTIAL."))?;
-    let usereg = UseregHelper::new(cred, HTTP_CLIENT.clone());
-    USEREG_CLIENT
-        .set(usereg)
-        .map_err(|_| anyhow!("Cannot set USEREG_CLIENT."))?;
+    clients::init()?;
 
     let model = MainModel::new();
     let app = RelmApp::new(model);
     app.run();
     Ok(())
-}
-
-static CREDENTIAL: OnceCell<Arc<NetCredential>> = OnceCell::new();
-static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
-
-lazy_static! {
-    static ref HTTP_CLIENT: HttpClient = create_http_client().unwrap();
-    static ref TUNET_CLIENT: Mutex<Option<TUNetConnect>> = Mutex::new(None);
-}
-
-async fn tunet_replace(s: NetState) {
-    *TUNET_CLIENT.lock().await = Some(match s {
-        NetState::Net | NetState::Auth4 | NetState::Auth6 => {
-            TUNetConnect::new(s, CREDENTIAL.get().unwrap().clone(), HTTP_CLIENT.clone())
-                .await
-                .unwrap()
-        }
-        _ => unreachable!(),
-    });
-}
-
-async fn tunet_flux() -> Result<NetFlux> {
-    TUNET_CLIENT
-        .lock()
-        .await
-        .as_ref()
-        .ok_or_else(|| anyhow!("请选择连接方式"))?
-        .flux()
-        .await
 }
 
 enum MainMsg {
@@ -84,7 +46,11 @@ impl MainModel {
     }
 
     async fn fetch_flux(s: Sender<MainMsg>) {
-        match tunet_flux().await {
+        async fn fetch() -> Result<NetFlux> {
+            clients::tunet().await?.flux().await
+        }
+
+        match fetch().await {
             Ok(flux) => {
                 send!(s, MainMsg::Flux(flux));
                 send!(s, MainMsg::Log(String::new()));
@@ -106,7 +72,7 @@ impl AppUpdate for MainModel {
             MainMsg::Refresh => {
                 if self.state == NetState::Auto {
                     tokio::spawn(async move {
-                        let state = tunet_rust::suggest::suggest(&HTTP_CLIENT).await;
+                        let state = tunet_rust::suggest::suggest(&clients::HTTP_CLIENT).await;
                         send!(sender, MainMsg::ChooseState(state));
                     });
                 }
@@ -137,7 +103,7 @@ impl AppUpdate for MainModel {
             MainMsg::ChooseState(s) => {
                 self.state = s;
                 tokio::spawn(async move {
-                    tunet_replace(s).await;
+                    clients::replace_state(s).await;
                     send!(sender, MainMsg::StartFlux);
                 });
             }
