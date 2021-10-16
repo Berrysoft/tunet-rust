@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use anyhow::anyhow;
 use gtk::prelude::*;
 use once_cell::sync::OnceCell;
