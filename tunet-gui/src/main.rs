@@ -5,6 +5,7 @@ use relm4::{drawing::*, *};
 use tunet_rust::*;
 
 mod clients;
+mod header;
 mod info;
 
 #[tokio::main(worker_threads = 4)]
@@ -17,14 +18,24 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-enum MainMsg {}
+enum MainMode {
+    Info,
+    About,
+}
 
-#[derive(Debug)]
-struct MainModel {}
+enum MainMsg {
+    Mode(MainMode),
+}
+
+struct MainModel {
+    mode: MainMode,
+}
 
 impl MainModel {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            mode: MainMode::Info,
+        }
     }
 }
 
@@ -39,8 +50,11 @@ impl AppUpdate for MainModel {
         &mut self,
         msg: MainMsg,
         _components: &MainComponents,
-        sender: Sender<MainMsg>,
+        _sender: Sender<MainMsg>,
     ) -> bool {
+        match msg {
+            MainMsg::Mode(m) => self.mode = m,
+        }
         true
     }
 }
@@ -53,12 +67,14 @@ impl Widgets<MainModel, ()> for MainWidgets {
             set_default_width: 400,
             set_default_height: 400,
 
+            set_titlebar: component!(Some(components.header.root_widget())),
             set_child: component!(Some(components.info.root_widget())),
         }
     }
 }
 
 struct MainComponents {
+    header: RelmComponent<header::HeaderModel, MainModel>,
     info: RelmComponent<info::InfoModel, MainModel>,
 }
 
@@ -69,6 +85,7 @@ impl Components<MainModel> for MainComponents {
         parent_sender: Sender<MainMsg>,
     ) -> Self {
         Self {
+            header: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
             info: RelmComponent::new(parent_model, parent_widgets, parent_sender),
         }
     }

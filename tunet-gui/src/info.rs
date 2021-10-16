@@ -41,7 +41,7 @@ impl Model for InfoModel {
 }
 
 impl ComponentUpdate<MainModel> for InfoModel {
-    fn init_model(parent_model: &MainModel) -> Self {
+    fn init_model(_parent_model: &MainModel) -> Self {
         Self {
             log: String::default(),
             flux: NetFlux::default(),
@@ -53,9 +53,9 @@ impl ComponentUpdate<MainModel> for InfoModel {
     fn update(
         &mut self,
         msg: InfoMsg,
-        components: &(),
+        _components: &(),
         sender: Sender<InfoMsg>,
-        parent_sender: Sender<MainMsg>,
+        _parent_sender: Sender<MainMsg>,
     ) {
         match msg {
             InfoMsg::Refresh => {
