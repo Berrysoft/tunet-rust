@@ -78,6 +78,7 @@ impl Widgets<MainModel, ()> for MainWidgets {
 
             set_child = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
+                set_margin_all: 5,
                 set_spacing: 5,
 
                 append = &gtk::Overlay {
@@ -144,16 +145,29 @@ impl Widgets<MainModel, ()> for MainWidgets {
                     set_label: watch! { &model.log },
                 },
 
-                append = &gtk::Button {
-                    set_label: "刷新",
-                    connect_clicked(sender) => move |_| {
-                        let sender = sender.clone();
-                        tokio::spawn(async move {
-                            match TUNET_CLIENT.get().unwrap().flux().await {
-                                Ok(flux) => send!(sender, MainMsg::Flux(flux)),
-                                Err(e) => send!(sender, MainMsg::Log(e.to_string())),
-                            }
-                        });
+                append = &gtk::Box {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_spacing: 5,
+                    set_homogeneous: true,
+                    set_halign: gtk::Align::Fill,
+
+                    append = &gtk::Button {
+                        set_label: "登录",
+                    },
+                    append = &gtk::Button {
+                        set_label: "注销",
+                    },
+                    append = &gtk::Button {
+                        set_label: "刷新",
+                        connect_clicked(sender) => move |_| {
+                            let sender = sender.clone();
+                            tokio::spawn(async move {
+                                match TUNET_CLIENT.get().unwrap().flux().await {
+                                    Ok(flux) => send!(sender, MainMsg::Flux(flux)),
+                                    Err(e) => send!(sender, MainMsg::Log(e.to_string())),
+                                }
+                            });
+                        },
                     },
                 },
             },
@@ -178,13 +192,18 @@ impl Widgets<MainModel, ()> for MainWidgets {
         let radius = width.min(height) * 0.4;
 
         let context = self.handler.get_context().unwrap();
+
+        context.save().unwrap();
+        context.set_operator(gtk::cairo::Operator::Clear);
+        context.paint().unwrap();
+        context.restore().unwrap();
+
         context.set_line_width(radius * 0.2);
 
         let max_flux = model.flux.balance.0 + 50.;
 
-        let flux_angle =
-            PI / 2. + (model.flux.flux.to_gb() / max_flux * 2. * PI).min(PI * 2. - 0.001);
-        let free_angle = PI / 2. + (50. / max_flux * 2. * PI).min(PI * 2. - 0.001);
+        let flux_angle = PI / 2. + (model.flux.flux.to_gb() / max_flux * 2. * PI).min(PI * 2.);
+        let free_angle = PI / 2. + (50. / max_flux * 2. * PI).min(PI * 2.);
 
         context.set_source_rgba(0., 120. / 255., 215. / 255., 0.55);
         context.arc(width / 2., height / 2., radius, free_angle, PI / 2.);
