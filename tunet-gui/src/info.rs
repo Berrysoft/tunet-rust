@@ -6,6 +6,8 @@ pub enum InfoMsg {
     Refresh,
     Log(String),
     Flux(NetFlux),
+    Login,
+    Logout,
     FetchFlux,
     Tick,
     State(NetState),
@@ -20,18 +22,33 @@ pub struct InfoModel {
 }
 
 impl InfoModel {
-    async fn fetch_flux(s: Sender<InfoMsg>) {
-        async fn fetch() -> Result<NetFlux> {
-            clients::tunet().await?.flux().await
-        }
-
-        match fetch().await {
-            Ok(flux) => {
+    fn send_flux(s: Sender<InfoMsg>, r: Result<(String, NetFlux)>) {
+        match r {
+            Ok((res, flux)) => {
                 send!(s, InfoMsg::Flux(flux));
-                send!(s, InfoMsg::Log(String::new()));
+                send!(s, InfoMsg::Log(res));
             }
             Err(e) => send!(s, InfoMsg::Log(e.to_string())),
         }
+    }
+
+    async fn fetch_flux() -> Result<(String, NetFlux)> {
+        let flux = clients::tunet().await?.flux().await?;
+        Ok((String::new(), flux))
+    }
+
+    async fn fetch_login() -> Result<(String, NetFlux)> {
+        let client = clients::tunet().await?;
+        let res = client.login().await?;
+        let flux = client.flux().await?;
+        Ok((res, flux))
+    }
+
+    async fn fetch_logout() -> Result<(String, NetFlux)> {
+        let client = clients::tunet().await?;
+        let res = client.logout().await?;
+        let flux = client.flux().await?;
+        Ok((res, flux))
     }
 }
 
@@ -83,8 +100,14 @@ impl ComponentUpdate<MainModel> for InfoModel {
                     }));
                 }
             }
+            InfoMsg::Login => {
+                tokio::spawn(async move { Self::send_flux(sender, Self::fetch_login().await) });
+            }
+            InfoMsg::Logout => {
+                tokio::spawn(async move { Self::send_flux(sender, Self::fetch_logout().await) });
+            }
             InfoMsg::FetchFlux => {
-                tokio::spawn(Self::fetch_flux(sender));
+                tokio::spawn(async move { Self::send_flux(sender, Self::fetch_flux().await) });
             }
             InfoMsg::Tick => {
                 self.flux.online_time =
@@ -199,9 +222,15 @@ impl Widgets<InfoModel, MainModel> for InfoWidgets {
 
                 append = &gtk::Button {
                     set_label: "登录",
+                    connect_clicked(sender) => move |_| {
+                        send!(sender, InfoMsg::Login);
+                    },
                 },
                 append = &gtk::Button {
                     set_label: "注销",
+                    connect_clicked(sender) => move|_| {
+                        send!(sender, InfoMsg::Logout);
+                    },
                 },
                 append = &gtk::Button {
                     set_label: "刷新",
