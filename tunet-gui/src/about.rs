@@ -40,6 +40,36 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
             append = &gtk::Label {
                 set_label: "版权所有 © 2021 Berrysoft",
             },
+
+            append = &gtk::Label {
+                set_margin_top: 10,
+                set_markup: "<big>使用的开源库</big>",
+            },
+            append = &gtk::TreeView {
+                append_column: col0 = &gtk::TreeViewColumn {
+                    set_expand: true,
+                    set_title: "项目",
+                    pack_start(true): renderer0 = &gtk::CellRendererText {},
+                },
+                append_column: col1 = &gtk::TreeViewColumn {
+                    set_expand: true,
+                    set_title: "许可证",
+                    pack_start(true): renderer1 = &gtk::CellRendererText {},
+                },
+
+                set_model: Some(&get_project_store()),
+            }
         }
     }
+
+    fn post_connect_components() {
+        self.col0.add_attribute(&self.renderer0, "text", 0);
+        self.col1.add_attribute(&self.renderer1, "text", 1);
+    }
+}
+
+fn get_project_store() -> gtk::ListStore {
+    let store = gtk::ListStore::new(&[String::static_type(), String::static_type()]);
+    store.set(&store.append(), &[(0, &"tokio"), (1, &"MIT")]);
+    store
 }
