@@ -18,6 +18,7 @@ pub struct InfoModel {
     pub flux: NetFlux,
     pub state: NetState,
 
+    fetch_state: Option<JoinHandle<()>>,
     timer: Option<JoinHandle<()>>,
 }
 
@@ -64,6 +65,7 @@ impl ComponentUpdate<MainModel> for InfoModel {
             log: String::default(),
             flux: NetFlux::default(),
             state: NetState::Auto,
+            fetch_state: None,
             timer: None,
         }
     }
@@ -77,11 +79,11 @@ impl ComponentUpdate<MainModel> for InfoModel {
     ) {
         match msg {
             InfoMsg::Refresh => {
-                if self.state == NetState::Auto {
-                    tokio::spawn(async move {
+                if self.state == NetState::Auto && self.fetch_state.is_none() {
+                    self.fetch_state = Some(tokio::spawn(async move {
                         let state = tunet_rust::suggest::suggest(&clients::HTTP_CLIENT).await;
                         send!(sender, InfoMsg::State(state));
-                    });
+                    }));
                 }
             }
             InfoMsg::Log(s) => self.log = s,
