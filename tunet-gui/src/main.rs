@@ -1,8 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use gtk::prelude::*;
-use once_cell::unsync::OnceCell;
-use relm4::{drawing::*, *};
+use relm4::*;
 use tunet_rust::*;
 
 mod about;
@@ -30,14 +29,12 @@ enum MainMsg {
 }
 
 struct MainModel {
-    mode: MainMode,
+    child: Option<gtk::Box>,
 }
 
 impl MainModel {
     pub fn new() -> Self {
-        Self {
-            mode: MainMode::Info,
-        }
+        Self { child: None }
     }
 }
 
@@ -51,11 +48,14 @@ impl AppUpdate for MainModel {
     fn update(
         &mut self,
         msg: MainMsg,
-        _components: &MainComponents,
+        components: &MainComponents,
         _sender: Sender<MainMsg>,
     ) -> bool {
         match msg {
-            MainMsg::Mode(m) => self.mode = m,
+            MainMsg::Mode(m) => match m {
+                MainMode::Info => self.child = Some(components.info.root_widget().clone()),
+                MainMode::About => self.child = Some(components.about.root_widget().clone()),
+            },
         }
         true
     }
@@ -70,38 +70,12 @@ impl Widgets<MainModel, ()> for MainWidgets {
             set_default_height: 400,
 
             set_titlebar: component!(Some(components.header.root_widget())),
+            set_child: watch!{ model.child.as_ref() },
         }
-    }
-
-    additional_fields! {
-        info_widget: OnceCell<gtk::Box>,
-        about_widget: OnceCell<gtk::Box>,
-    }
-
-    fn post_init() {
-        let info_widget = OnceCell::new();
-        let about_widget = OnceCell::new();
     }
 
     fn post_connect_components() {
-        self.info_widget
-            .set(components.info.root_widget().clone())
-            .unwrap();
-        self.about_widget
-            .set(components.about.root_widget().clone())
-            .unwrap();
-        self.wnd.set_child(Some(self.info_widget.get().unwrap()));
-    }
-
-    fn manual_view() {
-        match model.mode {
-            MainMode::Info => {
-                self.wnd.set_child(Some(self.info_widget.get().unwrap()));
-            }
-            MainMode::About => {
-                self.wnd.set_child(Some(self.about_widget.get().unwrap()));
-            }
-        }
+        self.wnd.set_child(Some(components.info.root_widget()));
     }
 }
 
