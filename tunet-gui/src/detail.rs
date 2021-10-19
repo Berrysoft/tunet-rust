@@ -8,7 +8,7 @@ pub enum DetailMsg {
 }
 
 pub struct DetailModel {
-    details: Option<gtk::ListStore>,
+    details: gtk::ListStore,
 }
 
 impl Model for DetailModel {
@@ -19,7 +19,13 @@ impl Model for DetailModel {
 
 impl ComponentUpdate<MainModel> for DetailModel {
     fn init_model(_parent_model: &MainModel) -> Self {
-        Self { details: None }
+        Self {
+            details: gtk::ListStore::new(&[
+                String::static_type(),
+                String::static_type(),
+                String::static_type(),
+            ]),
+        }
     }
 
     fn update(
@@ -31,11 +37,6 @@ impl ComponentUpdate<MainModel> for DetailModel {
     ) {
         match msg {
             DetailMsg::Show => {
-                self.details = Some(gtk::ListStore::new(&[
-                    String::static_type(),
-                    String::static_type(),
-                    String::static_type(),
-                ]));
                 tokio::spawn(async move {
                     let usereg = clients::usereg();
                     usereg.login().await?;
@@ -48,16 +49,14 @@ impl ComponentUpdate<MainModel> for DetailModel {
                 });
             }
             DetailMsg::AddDetail(d) => {
-                if let Some(ref store) = self.details {
-                    store.set(
-                        &store.append(),
-                        &[
-                            (0, &d.login_time.to_string()),
-                            (1, &d.logout_time.to_string()),
-                            (2, &d.flux.to_string()),
-                        ],
-                    );
-                }
+                self.details.set(
+                    &self.details.append(),
+                    &[
+                        (0, &d.login_time.to_string()),
+                        (1, &d.logout_time.to_string()),
+                        (2, &d.flux.to_string()),
+                    ],
+                );
             }
         }
     }
@@ -87,7 +86,7 @@ impl Widgets<DetailModel, MainModel> for DetailWidgets {
                     pack_start(true): renderer2 = &gtk::CellRendererText {},
                 },
 
-                set_model: watch! { model.details.as_ref() },
+                set_model: Some(&model.details),
             },
         }
     }

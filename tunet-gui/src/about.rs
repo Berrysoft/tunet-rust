@@ -1,6 +1,8 @@
 use crate::*;
 
-pub struct AboutModel {}
+pub struct AboutModel {
+    libs: gtk::ListStore,
+}
 
 impl Model for AboutModel {
     type Msg = ();
@@ -10,7 +12,9 @@ impl Model for AboutModel {
 
 impl ComponentUpdate<MainModel> for AboutModel {
     fn init_model(_parent_model: &MainModel) -> Self {
-        Self {}
+        let libs = gtk::ListStore::new(&[String::static_type(), String::static_type()]);
+        libs.set(&libs.append(), &[(0, &"tokio"), (1, &"MIT")]);
+        Self { libs }
     }
 
     fn update(
@@ -57,9 +61,7 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
                     pack_start(true): renderer1 = &gtk::CellRendererText {},
                 },
 
-                set_model: store = Some(&gtk::ListStore::new(&[String::static_type(), String::static_type()])) {
-                    set: args!(&store.append(), &[(0, &"tokio"), (1, &"MIT")]),
-                },
+                set_model: Some(&model.libs),
             }
         }
     }
