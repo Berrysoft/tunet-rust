@@ -19,9 +19,22 @@ async fn main() -> Result<()> {
     clients::init()?;
 
     gtk::init()?;
-    let app = gtk::Application::builder().build();
 
-    let model = MainModel::new(app.clone());
+    #[cfg(windows)]
+    let factor = win32::get_scale_factor();
+    #[cfg(not(windows))]
+    let factor = 1.0;
+
+    let style = gtk::CssProvider::new();
+    style.load_from_data(format!("*{{font-size:{}px;}}", 16.0 * factor).as_bytes());
+    gtk::StyleContext::add_provider_for_display(
+        &gtk::gdk::Display::default().unwrap(),
+        &style,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+
+    let model = MainModel::new();
+    let app = gtk::Application::builder().build();
     let app = RelmApp::with_app(model, app);
     app.run();
     Ok(())
@@ -35,26 +48,16 @@ enum MainMode {
 
 enum MainMsg {
     Show,
-    Resize,
     Mode(MainMode),
 }
 
-#[allow(dead_code)]
 struct MainModel {
-    dpi: f64,
-    style: gtk::CssProvider,
-    app: gtk::Application,
     child: Option<gtk::Box>,
 }
 
 impl MainModel {
-    pub fn new(app: gtk::Application) -> Self {
-        Self {
-            dpi: 1.0,
-            style: gtk::CssProvider::new(),
-            app,
-            child: None,
-        }
+    pub fn new() -> Self {
+        Self { child: None }
     }
 }
 
@@ -76,27 +79,6 @@ impl AppUpdate for MainModel {
                 send!(sender, MainMsg::Mode(MainMode::Info));
                 components.info.send(info::InfoMsg::Show).unwrap();
                 components.detail.send(detail::DetailMsg::Show).unwrap();
-            }
-            MainMsg::Resize =>
-            {
-                #[cfg(windows)]
-                if let Some(window) = self.app.active_window() {
-                    let factor = win32::get_scale_factor(window);
-                    if self.dpi != factor {
-                        self.dpi = factor;
-                        let display = gtk::gdk::Display::default().unwrap();
-                        gtk::StyleContext::remove_provider_for_display(&display, &self.style);
-                        self.style = gtk::CssProvider::new();
-                        self.style.load_from_data(
-                            format!("*{{font-size:{}px;}}", 16.0 * factor).as_bytes(),
-                        );
-                        gtk::StyleContext::add_provider_for_display(
-                            &display,
-                            &self.style,
-                            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-                        );
-                    }
-                }
             }
             MainMsg::Mode(m) => match m {
                 MainMode::Info => self.child = Some(components.info.root_widget().clone()),
@@ -121,12 +103,6 @@ impl Widgets<MainModel, ()> for MainWidgets {
 
             connect_show(sender) => move |_| {
                 send!(sender, MainMsg::Show);
-            },
-            connect_default_width_notify(sender) => move |_| {
-                send!(sender, MainMsg::Resize);
-            },
-            connect_default_height_notify(sender) => move |_| {
-                send!(sender, MainMsg::Resize);
             },
         }
     }
