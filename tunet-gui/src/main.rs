@@ -25,6 +25,7 @@ enum MainMode {
 }
 
 enum MainMsg {
+    Show,
     Mode(MainMode),
 }
 
@@ -49,9 +50,13 @@ impl AppUpdate for MainModel {
         &mut self,
         msg: MainMsg,
         components: &MainComponents,
-        _sender: Sender<MainMsg>,
+        sender: Sender<MainMsg>,
     ) -> bool {
         match msg {
+            MainMsg::Show => {
+                send!(sender, MainMsg::Mode(MainMode::Info));
+                components.info.send(info::InfoMsg::Show).unwrap();
+            }
             MainMsg::Mode(m) => match m {
                 MainMode::Info => self.child = Some(components.info.root_widget().clone()),
                 MainMode::About => self.child = Some(components.about.root_widget().clone()),
@@ -70,12 +75,16 @@ impl Widgets<MainModel, ()> for MainWidgets {
             set_default_height: 400,
 
             set_titlebar: component!(Some(components.header.root_widget())),
-            set_child: watch!{ model.child.as_ref() },
+            set_child: component!(Some(components.info.root_widget())),
+
+            connect_show(sender) => move |_| {
+                send!(sender, MainMsg::Show);
+            },
         }
     }
 
-    fn post_connect_components() {
-        self.wnd.set_child(Some(components.info.root_widget()));
+    fn manual_view() {
+        self.wnd.set_child(model.child.as_ref());
     }
 }
 

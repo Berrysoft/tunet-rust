@@ -3,6 +3,7 @@ use relm4::drawing::*;
 use tokio::task::JoinHandle;
 
 pub enum InfoMsg {
+    Show,
     Refresh,
     Log(String),
     Flux(NetFlux),
@@ -18,7 +19,6 @@ pub struct InfoModel {
     pub flux: NetFlux,
     pub state: NetState,
 
-    fetch_state: Option<JoinHandle<()>>,
     timer: Option<JoinHandle<()>>,
 }
 
@@ -65,7 +65,6 @@ impl ComponentUpdate<MainModel> for InfoModel {
             log: String::default(),
             flux: NetFlux::default(),
             state: NetState::Auto,
-            fetch_state: None,
             timer: None,
         }
     }
@@ -78,14 +77,15 @@ impl ComponentUpdate<MainModel> for InfoModel {
         _parent_sender: Sender<MainMsg>,
     ) {
         match msg {
-            InfoMsg::Refresh => {
-                if self.state == NetState::Auto && self.fetch_state.is_none() {
-                    self.fetch_state = Some(tokio::spawn(async move {
+            InfoMsg::Show => {
+                if self.state == NetState::Auto {
+                    tokio::spawn(async move {
                         let state = tunet_rust::suggest::suggest(&clients::HTTP_CLIENT).await;
                         send!(sender, InfoMsg::State(state));
-                    }));
+                    });
                 }
             }
+            InfoMsg::Refresh => {}
             InfoMsg::Log(s) => self.log = s,
             InfoMsg::Flux(f) => {
                 self.flux = f.clone();
