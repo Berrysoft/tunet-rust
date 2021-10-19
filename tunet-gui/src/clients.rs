@@ -1,9 +1,9 @@
+use crate::*;
 use anyhow::anyhow;
-use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tunet_rust::{usereg::*, *};
+use tunet_rust::usereg::*;
 
 static CREDENTIAL: OnceCell<Arc<NetCredential>> = OnceCell::new();
 static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();

@@ -17,3 +17,6 @@ anyhow = "1.0"
 gtk = { version = "0.3", package = "gtk4" }
 relm4 = "0.2"
 relm4-macros = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+libloading = "0.7"
