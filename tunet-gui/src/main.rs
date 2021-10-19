@@ -14,8 +14,17 @@ mod info;
 async fn main() -> Result<()> {
     clients::init()?;
 
+    gtk::init()?;
+    let style = gtk::CssProvider::new();
+    style.load_from_data(b"*{font-size:16px;}");
+    gtk::StyleContext::add_provider_for_display(
+        &gtk::gdk::Display::default().unwrap(),
+        &style,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+
     let model = MainModel::new();
-    let app = RelmApp::new(model);
+    let app = RelmApp::with_app(model, gtk::Application::builder().build());
     app.run();
     Ok(())
 }
