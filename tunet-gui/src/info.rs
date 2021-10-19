@@ -179,7 +179,7 @@ impl Widgets<InfoModel, MainModel> for InfoWidgets {
                 set_halign: gtk::Align::Center,
 
                 append = &gtk::Label {
-                    set_label: "连接方式",
+                    set_label: "连接方式：",
                 },
                 append = &gtk::ComboBoxText {
 
