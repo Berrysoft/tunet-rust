@@ -2,6 +2,7 @@ use crate::*;
 
 pub enum HeaderMsg {
     Info,
+    Detail,
     About,
 }
 
@@ -25,14 +26,12 @@ impl ComponentUpdate<MainModel> for HeaderModel {
         _sender: Sender<HeaderMsg>,
         parent_sender: Sender<MainMsg>,
     ) {
-        match msg {
-            HeaderMsg::Info => {
-                send!(parent_sender, MainMsg::Mode(MainMode::Info));
-            }
-            HeaderMsg::About => {
-                send!(parent_sender, MainMsg::Mode(MainMode::About));
-            }
-        }
+        let mode = match msg {
+            HeaderMsg::Info => MainMode::Info,
+            HeaderMsg::Detail => MainMode::Detail,
+            HeaderMsg::About => MainMode::About,
+        };
+        send!(parent_sender, MainMsg::Mode(mode));
     }
 }
 
@@ -54,6 +53,15 @@ impl Widgets<HeaderModel, MainModel> for HeaderWidgets {
                     connect_toggled(sender) => move |btn| {
                         if btn.is_active() {
                             send!(sender, HeaderMsg::Info);
+                        }
+                    },
+                },
+                append = &gtk::ToggleButton {
+                    set_label: "明细",
+                    set_group: Some(&group),
+                    connect_toggled(sender) => move |btn| {
+                        if btn.is_active() {
+                            send!(sender, HeaderMsg::Detail);
                         }
                     },
                 },

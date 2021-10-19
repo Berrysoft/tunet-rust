@@ -5,12 +5,12 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tunet_rust::{usereg::*, *};
 
-pub static CREDENTIAL: OnceCell<Arc<NetCredential>> = OnceCell::new();
-pub static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
+static CREDENTIAL: OnceCell<Arc<NetCredential>> = OnceCell::new();
+static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
 
 lazy_static! {
-    pub static ref HTTP_CLIENT: HttpClient = create_http_client().unwrap();
-    pub static ref TUNET_CLIENT: Mutex<Option<TUNetConnect>> = Mutex::new(None);
+    static ref HTTP_CLIENT: HttpClient = create_http_client().unwrap();
+    static ref TUNET_CLIENT: Mutex<Option<TUNetConnect>> = Mutex::new(None);
 }
 
 pub fn init() -> Result<()> {
@@ -44,4 +44,12 @@ pub async fn tunet() -> Result<TUNetConnect> {
         .as_ref()
         .ok_or_else(|| anyhow!("请选择连接方式"))?
         .clone())
+}
+
+pub async fn suggest() -> NetState {
+    suggest::suggest(&HTTP_CLIENT).await
+}
+
+pub fn usereg() -> UseregHelper {
+    USEREG_CLIENT.get().unwrap().clone()
 }

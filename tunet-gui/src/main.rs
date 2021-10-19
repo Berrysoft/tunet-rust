@@ -6,6 +6,7 @@ use tunet_rust::*;
 
 mod about;
 mod clients;
+mod detail;
 mod header;
 mod info;
 
@@ -21,6 +22,7 @@ async fn main() -> Result<()> {
 
 enum MainMode {
     Info,
+    Detail,
     About,
 }
 
@@ -56,9 +58,11 @@ impl AppUpdate for MainModel {
             MainMsg::Show => {
                 send!(sender, MainMsg::Mode(MainMode::Info));
                 components.info.send(info::InfoMsg::Show).unwrap();
+                components.detail.send(detail::DetailMsg::Show).unwrap();
             }
             MainMsg::Mode(m) => match m {
                 MainMode::Info => self.child = Some(components.info.root_widget().clone()),
+                MainMode::Detail => self.child = Some(components.detail.root_widget().clone()),
                 MainMode::About => self.child = Some(components.about.root_widget().clone()),
             },
         }
@@ -91,6 +95,7 @@ impl Widgets<MainModel, ()> for MainWidgets {
 struct MainComponents {
     header: RelmComponent<header::HeaderModel, MainModel>,
     info: RelmComponent<info::InfoModel, MainModel>,
+    detail: RelmComponent<detail::DetailModel, MainModel>,
     about: RelmComponent<about::AboutModel, MainModel>,
 }
 
@@ -103,6 +108,7 @@ impl Components<MainModel> for MainComponents {
         Self {
             header: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
             info: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
+            detail: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
             about: RelmComponent::new(parent_model, parent_widgets, parent_sender),
         }
     }

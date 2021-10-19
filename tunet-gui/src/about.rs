@@ -57,7 +57,9 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
                     pack_start(true): renderer1 = &gtk::CellRendererText {},
                 },
 
-                set_model: Some(&get_project_store()),
+                set_model: store = Some(&gtk::ListStore::new(&[String::static_type(), String::static_type()])) {
+                    set: args!(&store.append(), &[(0, &"tokio"), (1, &"MIT")]),
+                },
             }
         }
     }
@@ -66,10 +68,4 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
         self.col0.add_attribute(&self.renderer0, "text", 0);
         self.col1.add_attribute(&self.renderer1, "text", 1);
     }
-}
-
-fn get_project_store() -> gtk::ListStore {
-    let store = gtk::ListStore::new(&[String::static_type(), String::static_type()]);
-    store.set(&store.append(), &[(0, &"tokio"), (1, &"MIT")]);
-    store
 }

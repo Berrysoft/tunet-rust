@@ -80,7 +80,7 @@ impl ComponentUpdate<MainModel> for InfoModel {
             InfoMsg::Show => {
                 if self.state == NetState::Auto {
                     tokio::spawn(async move {
-                        let state = tunet_rust::suggest::suggest(&clients::HTTP_CLIENT).await;
+                        let state = clients::suggest().await;
                         send!(sender, InfoMsg::State(state));
                     });
                 }
