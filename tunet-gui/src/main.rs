@@ -5,8 +5,7 @@ use lazy_static::lazy_static;
 use relm4::*;
 use tunet_rust::*;
 
-#[cfg(windows)]
-mod win32;
+mod dpi;
 
 mod about;
 mod clients;
@@ -20,11 +19,7 @@ async fn main() -> Result<()> {
 
     gtk::init()?;
 
-    #[cfg(windows)]
-    let factor = win32::get_scale_factor();
-    #[cfg(not(windows))]
-    let factor = 1.0;
-
+    let factor = dpi::get_scale_factor();
     let style = gtk::CssProvider::new();
     style
         .load_from_data(format!("*{{font-size:{}px;}}", 16.0 * factor / factor.floor()).as_bytes());
