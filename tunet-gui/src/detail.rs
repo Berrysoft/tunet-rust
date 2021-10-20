@@ -69,24 +69,29 @@ impl Widgets<DetailModel, MainModel> for DetailWidgets {
             set_orientation: gtk::Orientation::Vertical,
             set_margin_all: 5,
 
-            append = &gtk::TreeView {
-                append_column: col0 = &gtk::TreeViewColumn {
-                    set_expand: true,
-                    set_title: "登录时间",
-                    pack_start(true): renderer0 = &gtk::CellRendererText {},
-                },
-                append_column: col1 = &gtk::TreeViewColumn {
-                    set_expand: true,
-                    set_title: "注销时间",
-                    pack_start(true): renderer1 = &gtk::CellRendererText {},
-                },
-                append_column: col2 = &gtk::TreeViewColumn {
-                    set_expand: true,
-                    set_title: "流量",
-                    pack_start(true): renderer2 = &gtk::CellRendererText {},
-                },
+            append = &gtk::ScrolledWindow {
+                set_hexpand: true,
+                set_vexpand: true,
 
-                set_model: Some(&model.details),
+                set_child = Some(&gtk::TreeView) {
+                    append_column: col0 = &gtk::TreeViewColumn {
+                        set_expand: true,
+                        set_title: "登录时间",
+                        pack_start(true): renderer0 = &gtk::CellRendererText {},
+                    },
+                    append_column: col1 = &gtk::TreeViewColumn {
+                        set_expand: true,
+                        set_title: "注销时间",
+                        pack_start(true): renderer1 = &gtk::CellRendererText {},
+                    },
+                    append_column: col2 = &gtk::TreeViewColumn {
+                        set_expand: true,
+                        set_title: "流量",
+                        pack_start(true): renderer2 = &gtk::CellRendererText {},
+                    },
+
+                    set_model: Some(&model.details),
+                },
             },
         }
     }

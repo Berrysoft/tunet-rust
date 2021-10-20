@@ -10,10 +10,61 @@ impl Model for AboutModel {
     type Components = ();
 }
 
+static LIBS: &[(&str, &str)] = &[
+    ("anyhow", "MIT"),
+    ("async-stream", "MIT"),
+    ("async-trait", "MIT"),
+    ("cairo (C)", "LGPLv2.1"),
+    ("chrono", "MIT"),
+    ("crossterm", "MIT"),
+    ("data-encoding", "MIT"),
+    ("data-encoding-macro", "MIT"),
+    ("dirs", "MIT"),
+    ("futures-core", "MIT"),
+    ("futures-util", "MIT"),
+    ("glib (C)", "LGPLv2.1"),
+    ("gtk (C)", "LGPLv2.1"),
+    ("gtk4", "MIT"),
+    ("hmac", "MIT"),
+    ("itertools", "MIT"),
+    ("keyutils", "BSD-3-Clause"),
+    ("lazy_static", "MIT"),
+    ("libc", "MIT"),
+    ("libloading", "ISC"),
+    ("mac_address", "MIT"),
+    ("md-5", "MIT"),
+    ("netlink_wi", "MIT"),
+    ("objc", "MIT"),
+    ("once_cell", "MIT"),
+    ("regex", "MIT"),
+    ("relm4", "MIT"),
+    ("relm4_macros", "MIT"),
+    ("reqwest", "MIT"),
+    ("rpassword", "Apache-2.0"),
+    ("security-framework", "MIT"),
+    ("select", "MIT"),
+    ("serde", "MIT"),
+    ("serde_json", "MIT"),
+    ("sha-1", "MIT"),
+    ("structopt", "MIT"),
+    ("termcolor", "MIT"),
+    ("termcolor_output", "MIT"),
+    ("thiserror", "MIT"),
+    ("tokio", "MIT"),
+    ("trait_enum", "MIT"),
+    ("tui", "MIT"),
+    ("url", "MIT"),
+    ("wide-literials", "Unlicense"),
+    ("widestring", "MIT"),
+    ("windows", "MIT"),
+];
+
 impl ComponentUpdate<MainModel> for AboutModel {
     fn init_model(_parent_model: &MainModel) -> Self {
         let libs = gtk::ListStore::new(&[String::static_type(), String::static_type()]);
-        libs.set(&libs.append(), &[(0, &"tokio"), (1, &"MIT")]);
+        for lib in LIBS {
+            libs.set(&libs.append(), &[(0, &lib.0), (1, &lib.1)]);
+        }
         Self { libs }
     }
 
@@ -49,20 +100,25 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
                 set_margin_top: 10,
                 set_markup: "<big>使用的开源库</big>",
             },
-            append = &gtk::TreeView {
-                append_column: col0 = &gtk::TreeViewColumn {
-                    set_expand: true,
-                    set_title: "项目",
-                    pack_start(true): renderer0 = &gtk::CellRendererText {},
-                },
-                append_column: col1 = &gtk::TreeViewColumn {
-                    set_expand: true,
-                    set_title: "许可证",
-                    pack_start(true): renderer1 = &gtk::CellRendererText {},
-                },
+            append = &gtk::ScrolledWindow {
+                set_hexpand: true,
+                set_vexpand: true,
 
-                set_model: Some(&model.libs),
-            }
+                set_child = Some(&gtk::TreeView) {
+                    append_column: col0 = &gtk::TreeViewColumn {
+                        set_expand: true,
+                        set_title: "项目",
+                        pack_start(true): renderer0 = &gtk::CellRendererText {},
+                    },
+                    append_column: col1 = &gtk::TreeViewColumn {
+                        set_expand: true,
+                        set_title: "许可证",
+                        pack_start(true): renderer1 = &gtk::CellRendererText {},
+                    },
+
+                    set_model: Some(&model.libs),
+                },
+            },
         }
     }
 
