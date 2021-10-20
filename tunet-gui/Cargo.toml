@@ -18,6 +18,9 @@ gtk = { version = "0.3", package = "gtk4" }
 relm4 = "0.2"
 relm4-macros = "0.2"
 
-[target.'cfg(windows)'.dependencies]
+[target.'cfg(target_os = "windows")'.dependencies]
 libloading = "0.7"
 winrt-bindings = { path = "../winrt-bindings" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
