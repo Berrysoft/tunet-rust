@@ -1,4 +1,5 @@
 use crate::*;
+use color_accent::*;
 use relm4::drawing::*;
 use tokio::task::JoinHandle;
 
@@ -18,6 +19,7 @@ pub struct InfoModel {
     pub log: String,
     pub flux: NetFlux,
     pub state: NetState,
+    pub accent: CairoColor,
 
     timer: Option<JoinHandle<()>>,
 }
@@ -65,6 +67,7 @@ impl ComponentUpdate<MainModel> for InfoModel {
             log: String::default(),
             flux: NetFlux::default(),
             state: NetState::Auto,
+            accent: CairoColor::accent(),
             timer: None,
         }
     }
@@ -275,15 +278,17 @@ impl Widgets<InfoModel, MainModel> for InfoWidgets {
         let flux_angle = PI / 2. + (model.flux.flux.to_gb() / max_flux * 2. * PI).min(PI * 2.);
         let free_angle = PI / 2. + (50. / max_flux * 2. * PI).min(PI * 2.);
 
-        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.55);
+        let accent = model.accent;
+
+        context.set_source_rgba(accent.0, accent.1, accent.2, 0.55);
         context.arc(width / 2., height / 2., radius, free_angle, PI / 2.);
         context.stroke().unwrap();
 
-        context.set_source_rgba(0., 120. / 255., 215. / 255., 0.75);
+        context.set_source_rgba(accent.0, accent.1, accent.2, 0.75);
         context.arc(width / 2., height / 2., radius, flux_angle, free_angle);
         context.stroke().unwrap();
 
-        context.set_source_rgb(0., 120. / 255., 215. / 255.);
+        context.set_source_rgb(accent.0, accent.1, accent.2);
         context.arc(width / 2., height / 2., radius, PI / 2., flux_angle);
         context.stroke().unwrap();
     }

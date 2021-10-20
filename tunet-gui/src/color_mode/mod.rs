@@ -18,6 +18,7 @@ mod platform {
     pub use super::stub::*;
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum ColorMode {
     Light,
     Dark,

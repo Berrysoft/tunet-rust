@@ -5,6 +5,7 @@ use lazy_static::lazy_static;
 use relm4::*;
 use tunet_rust::*;
 
+mod color_accent;
 mod color_mode;
 mod dpi;
 
