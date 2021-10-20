@@ -96,11 +96,10 @@ impl Widgets<MainModel, ()> for MainWidgets {
     view! {
         wnd = gtk::ApplicationWindow {
             set_title: Some("清华校园网"),
-            set_default_width: 400,
-            set_default_height: 400,
+            set_default_width: 500,
+            set_default_height: 500,
 
             set_titlebar: component!(Some(components.header.root_widget())),
-            set_child: component!(Some(components.info.root_widget())),
 
             connect_show(sender) => move |_| {
                 send!(sender, MainMsg::Show);
