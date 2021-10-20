@@ -4,6 +4,7 @@ use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tunet_rust::usereg::*;
+use tunet_settings::*;
 
 static CREDENTIAL: OnceCell<Arc<NetCredential>> = OnceCell::new();
 static USEREG_CLIENT: OnceCell<UseregHelper> = OnceCell::new();
@@ -14,7 +15,7 @@ lazy_static! {
 }
 
 pub fn init() -> Result<()> {
-    let cred = Arc::new(NetCredential::default());
+    let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
     CREDENTIAL
         .set(cred.clone())
         .map_err(|_| anyhow!("Cannot set CREDENTIAL."))?;
