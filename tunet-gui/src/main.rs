@@ -5,6 +5,7 @@ use lazy_static::lazy_static;
 use relm4::*;
 use tunet_rust::*;
 
+mod color_mode;
 mod dpi;
 
 mod about;
@@ -18,16 +19,21 @@ async fn main() -> Result<()> {
     clients::init()?;
 
     gtk::init()?;
+    let display = gtk::gdk::Display::default().unwrap();
 
     let factor = dpi::get_scale_factor();
     let style = gtk::CssProvider::new();
     style
         .load_from_data(format!("*{{font-size:{}px;}}", 16.0 * factor / factor.floor()).as_bytes());
     gtk::StyleContext::add_provider_for_display(
-        &gtk::gdk::Display::default().unwrap(),
+        &display,
         &style,
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
+
+    let mode = color_mode::ColorMode::preferred();
+    let settings = gtk::Settings::for_display(&display);
+    settings.set_gtk_application_prefer_dark_theme(mode.is_dark());
 
     let model = MainModel::new();
     let app = gtk::Application::builder().build();

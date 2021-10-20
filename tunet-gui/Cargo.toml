@@ -20,3 +20,4 @@ relm4-macros = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 libloading = "0.7"
+winrt-bindings = { path = "../winrt-bindings" }
