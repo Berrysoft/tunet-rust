@@ -26,7 +26,8 @@ async fn main() -> Result<()> {
     let factor = 1.0;
 
     let style = gtk::CssProvider::new();
-    style.load_from_data(format!("*{{font-size:{}px;}}", 16.0 * factor).as_bytes());
+    style
+        .load_from_data(format!("*{{font-size:{}px;}}", 16.0 * factor / factor.floor()).as_bytes());
     gtk::StyleContext::add_provider_for_display(
         &gtk::gdk::Display::default().unwrap(),
         &style,
