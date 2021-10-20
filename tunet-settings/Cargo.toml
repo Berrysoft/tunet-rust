@@ -1,0 +1,15 @@
+[package]
+name = "tunet-settings"
+version = "0.1.0"
+authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
+edition = "2018"
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+tunet-rust = { path = "../tunet-rust" }
+keyring = { path = "../keyring" }
+anyhow = "1.0"
+serde = "1.0"
+serde_json = "1.0"
+dirs = "4.0"

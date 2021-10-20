@@ -2,14 +2,15 @@
 members = [
     "authtea",
     "tunet-rust",
+    "tunet-settings",
     "tunet",
-    "tunet-gui"
+    "tunet-gui",
 ]
 
 exclude = [
     "netstatus",
     "keyring",
-    "winrt-bindings"
+    "winrt-bindings",
 ]
 
 resolver = "2"
