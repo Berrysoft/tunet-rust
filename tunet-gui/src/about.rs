@@ -108,11 +108,13 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
                     append_column: col0 = &gtk::TreeViewColumn {
                         set_expand: true,
                         set_title: "项目",
+                        set_sort_column_id: 0,
                         pack_start(true): renderer0 = &gtk::CellRendererText {},
                     },
                     append_column: col1 = &gtk::TreeViewColumn {
                         set_expand: true,
                         set_title: "许可证",
+                        set_sort_column_id: 1,
                         pack_start(true): renderer1 = &gtk::CellRendererText {},
                     },
 

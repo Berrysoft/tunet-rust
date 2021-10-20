@@ -77,11 +77,13 @@ impl Widgets<DetailModel, MainModel> for DetailWidgets {
                     append_column: col0 = &gtk::TreeViewColumn {
                         set_expand: true,
                         set_title: "登录时间",
+                        set_sort_column_id: 0,
                         pack_start(true): renderer0 = &gtk::CellRendererText {},
                     },
                     append_column: col1 = &gtk::TreeViewColumn {
                         set_expand: true,
                         set_title: "注销时间",
+                        set_sort_column_id: 1,
                         pack_start(true): renderer1 = &gtk::CellRendererText {},
                     },
                     append_column: col2 = &gtk::TreeViewColumn {
