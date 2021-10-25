@@ -8,6 +8,7 @@ license = "MIT"
 
 [dependencies]
 tunet-rust = { path = "../tunet-rust", features = [ "netstatus" ] }
+netstatus = { path = "../netstatus" }
 tunet-settings = { path = "../tunet-settings" }
 futures-util = "0.3"
 tokio = { version = "1.11", features = [ "macros" ] }

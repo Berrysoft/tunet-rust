@@ -1,5 +1,6 @@
 use crate::*;
 use anyhow::anyhow;
+use netstatus::*;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -47,8 +48,12 @@ pub async fn tunet() -> Result<TUNetConnect> {
         .clone())
 }
 
-pub async fn suggest() -> NetState {
-    suggest::suggest(&HTTP_CLIENT).await
+pub fn status() -> NetStatus {
+    NetStatus::current()
+}
+
+pub async fn suggest(s: NetStatus) -> NetState {
+    suggest::suggest_with_status(&HTTP_CLIENT, s).await
 }
 
 pub fn usereg() -> UseregHelper {

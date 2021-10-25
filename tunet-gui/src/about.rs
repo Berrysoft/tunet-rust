@@ -87,7 +87,7 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
             set_spacing: 5,
 
             append = &gtk::Label {
-                set_markup: "<big>清华大学校园网客户端</big>",
+                set_markup: "<big><b>清华大学校园网客户端</b></big>",
             },
             append = &gtk::Label {
                 set_label: "tunet-gui 0.1.0",
@@ -98,7 +98,7 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
 
             append = &gtk::Label {
                 set_margin_top: 10,
-                set_markup: "<big>使用的开源库</big>",
+                set_markup: "<big><b>使用的开源库</b></big>",
             },
             append = &gtk::ScrolledWindow {
                 set_hexpand: true,

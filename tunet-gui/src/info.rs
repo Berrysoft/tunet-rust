@@ -83,7 +83,7 @@ impl ComponentUpdate<MainModel> for InfoModel {
             InfoMsg::Show => {
                 if self.state == NetState::Auto {
                     tokio::spawn(async move {
-                        let state = clients::suggest().await;
+                        let state = clients::suggest(clients::status()).await;
                         send!(sender, InfoMsg::State(state));
                     });
                 }

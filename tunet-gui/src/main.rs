@@ -14,6 +14,7 @@ mod clients;
 mod detail;
 mod header;
 mod info;
+mod settings;
 
 #[tokio::main(worker_threads = 4)]
 async fn main() -> Result<()> {
@@ -46,6 +47,7 @@ async fn main() -> Result<()> {
 enum MainMode {
     Info,
     Detail,
+    Settings,
     About,
 }
 
@@ -82,10 +84,15 @@ impl AppUpdate for MainModel {
                 send!(sender, MainMsg::Mode(MainMode::Info));
                 components.info.send(info::InfoMsg::Show).unwrap();
                 components.detail.send(detail::DetailMsg::Show).unwrap();
+                components
+                    .settings
+                    .send(settings::SettingsMsg::Show)
+                    .unwrap();
             }
             MainMsg::Mode(m) => match m {
                 MainMode::Info => self.child = Some(components.info.root_widget().clone()),
                 MainMode::Detail => self.child = Some(components.detail.root_widget().clone()),
+                MainMode::Settings => self.child = Some(components.settings.root_widget().clone()),
                 MainMode::About => self.child = Some(components.about.root_widget().clone()),
             },
         }
@@ -118,6 +125,7 @@ struct MainComponents {
     header: RelmComponent<header::HeaderModel, MainModel>,
     info: RelmComponent<info::InfoModel, MainModel>,
     detail: RelmComponent<detail::DetailModel, MainModel>,
+    settings: RelmComponent<settings::SettingsModel, MainModel>,
     about: RelmComponent<about::AboutModel, MainModel>,
 }
 
@@ -131,6 +139,7 @@ impl Components<MainModel> for MainComponents {
             header: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
             info: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
             detail: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
+            settings: RelmComponent::new(parent_model, parent_widgets, parent_sender.clone()),
             about: RelmComponent::new(parent_model, parent_widgets, parent_sender),
         }
     }

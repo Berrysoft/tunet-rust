@@ -3,6 +3,7 @@ use crate::*;
 pub enum HeaderMsg {
     Info,
     Detail,
+    Settings,
     About,
 }
 
@@ -29,6 +30,7 @@ impl ComponentUpdate<MainModel> for HeaderModel {
         let mode = match msg {
             HeaderMsg::Info => MainMode::Info,
             HeaderMsg::Detail => MainMode::Detail,
+            HeaderMsg::Settings => MainMode::Settings,
             HeaderMsg::About => MainMode::About,
         };
         send!(parent_sender, MainMsg::Mode(mode));
@@ -64,6 +66,15 @@ impl Widgets<HeaderModel, MainModel> for HeaderWidgets {
                         connect_toggled(sender) => move |btn| {
                             if btn.is_active() {
                                 send!(sender, HeaderMsg::Detail);
+                            }
+                        },
+                    },
+                    append = &gtk::ToggleButton {
+                        set_label: "设置",
+                        set_group: Some(&group),
+                        connect_toggled(sender) => move |btn| {
+                            if btn.is_active() {
+                                send!(sender, HeaderMsg::Settings);
                             }
                         },
                     },
