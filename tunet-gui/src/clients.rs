@@ -27,6 +27,10 @@ pub fn init() -> Result<()> {
     Ok(())
 }
 
+pub fn cred() -> Arc<NetCredential> {
+    CREDENTIAL.get().unwrap().clone()
+}
+
 pub async fn replace_state(s: NetState) -> Result<()> {
     *TUNET_CLIENT.lock().await = Some(match s {
         NetState::Net | NetState::Auth4 | NetState::Auth6 => {
