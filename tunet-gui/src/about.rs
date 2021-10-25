@@ -105,27 +105,18 @@ impl Widgets<AboutModel, MainModel> for AboutWidgets {
                 set_vexpand: true,
 
                 set_child = Some(&gtk::TreeView) {
-                    append_column: col0 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("项目", &gtk::CellRendererText::new(), &[("text", 0)]) {
                         set_expand: true,
-                        set_title: "项目",
                         set_sort_column_id: 0,
-                        pack_start(true): renderer0 = &gtk::CellRendererText {},
                     },
-                    append_column: col1 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("许可证", &gtk::CellRendererText::new(), &[("text", 1)]) {
                         set_expand: true,
-                        set_title: "许可证",
                         set_sort_column_id: 1,
-                        pack_start(true): renderer1 = &gtk::CellRendererText {},
                     },
 
                     set_model: Some(&model.libs),
                 },
             },
         }
-    }
-
-    fn post_connect_components() {
-        self.col0.add_attribute(&self.renderer0, "text", 0);
-        self.col1.add_attribute(&self.renderer1, "text", 1);
     }
 }

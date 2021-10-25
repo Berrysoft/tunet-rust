@@ -74,35 +74,23 @@ impl Widgets<DetailModel, MainModel> for DetailWidgets {
                 set_vexpand: true,
 
                 set_child = Some(&gtk::TreeView) {
-                    append_column: col0 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("登录时间", &gtk::CellRendererText::new(), &[("text", 0)]) {
                         set_expand: true,
-                        set_title: "登录时间",
                         set_sort_column_id: 0,
-                        pack_start(true): renderer0 = &gtk::CellRendererText {},
                     },
-                    append_column: col1 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("注销时间", &gtk::CellRendererText::new(), &[("text", 1)]) {
                         set_expand: true,
-                        set_title: "注销时间",
                         set_sort_column_id: 1,
-                        pack_start(true): renderer1 = &gtk::CellRendererText {},
                     },
-                    append_column: col2 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("流量", &renderer::CellRendererFlux::new(), &[("value", 2)]) {
                         set_expand: true,
-                        set_title: "流量",
                         set_sort_column_id: 2,
-                        pack_start(true): renderer2 = &renderer::CellRendererFlux {},
                     },
 
                     set_model: Some(&model.details),
                 },
             },
         }
-    }
-
-    fn post_connect_components() {
-        self.col0.add_attribute(&self.renderer0, "text", 0);
-        self.col1.add_attribute(&self.renderer1, "text", 1);
-        self.col2.add_attribute(&self.renderer2, "value", 2);
     }
 }
 

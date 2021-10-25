@@ -93,31 +93,19 @@ impl Widgets<SettingsModel, MainModel> for SettingsWidgets {
                 set_vexpand: true,
 
                 set_child = Some(&gtk::TreeView) {
-                    append_column: col0 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("IP地址", &gtk::CellRendererText::new(), &[("text", 0)]) {
                         set_expand: true,
-                        set_title: "IP地址",
-                        pack_start(true): renderer0 = &gtk::CellRendererText {},
                     },
-                    append_column: col1 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("登录时间", &gtk::CellRendererText::new(), &[("text", 1)]) {
                         set_expand: true,
-                        set_title: "登录时间",
-                        pack_start(true): renderer1 = &gtk::CellRendererText {},
                     },
-                    append_column: col2 = &gtk::TreeViewColumn {
+                    append_column = &gtk::TreeViewColumn::with_attributes("MAC地址", &gtk::CellRendererText::new(), &[("text", 2)]) {
                         set_expand: true,
-                        set_title: "MAC地址",
-                        pack_start(true): renderer2 = &gtk::CellRendererText {},
                     },
 
                     set_model: Some(&model.online),
                 },
             },
         }
-    }
-
-    fn post_connect_components() {
-        self.col0.add_attribute(&self.renderer0, "text", 0);
-        self.col1.add_attribute(&self.renderer1, "text", 1);
-        self.col2.add_attribute(&self.renderer2, "text", 2);
     }
 }

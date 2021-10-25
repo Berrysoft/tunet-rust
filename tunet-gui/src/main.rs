@@ -144,3 +144,28 @@ impl Components<MainModel> for MainComponents {
         }
     }
 }
+
+// Temp patch for unimplemented rust wrapper
+trait TreeViewColumnAttrExt {
+    fn with_attributes(
+        title: &str,
+        cell: &impl IsA<gtk::CellRenderer>,
+        attrs: &[(&str, i32)],
+    ) -> Self;
+}
+
+impl TreeViewColumnAttrExt for gtk::TreeViewColumn {
+    fn with_attributes(
+        title: &str,
+        cell: &impl IsA<gtk::CellRenderer>,
+        attrs: &[(&str, i32)],
+    ) -> Self {
+        let col = Self::new();
+        col.set_title(title);
+        col.pack_start(cell, true);
+        for &(attr, id) in attrs {
+            col.add_attribute(cell, attr, id);
+        }
+        col
+    }
+}
