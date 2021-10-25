@@ -31,10 +31,6 @@ impl ColorMode {
     }
 
     pub fn is_dark(&self) -> bool {
-        if let Self::Dark = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Dark)
     }
 }

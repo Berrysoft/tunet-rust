@@ -74,11 +74,7 @@ impl Deref for TUNet {
 impl TUNet {
     #[cfg(feature = "cui")]
     pub fn is_cui(&self) -> bool {
-        if let Self::Cui(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Cui(_))
     }
 
     #[cfg(not(feature = "cui"))]

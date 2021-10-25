@@ -166,12 +166,10 @@ impl std::str::FromStr for NetFlux {
                 )),
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
+        } else if s.is_empty() {
+            Err(NetHelperError::NoFluxErr)
         } else {
-            if s.is_empty() {
-                Err(NetHelperError::NoFluxErr)
-            } else {
-                Err(NetHelperError::ParseFluxErr(s.to_string()))
-            }
+            Err(NetHelperError::ParseFluxErr(s.to_string()))
         }
     }
 }

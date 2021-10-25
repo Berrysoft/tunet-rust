@@ -18,12 +18,12 @@ struct Settings<'a> {
     pub ac_ids: Cow<'a, [i32]>,
 }
 
-impl Into<NetCredential> for Settings<'_> {
-    fn into(self) -> NetCredential {
-        NetCredential::new(
-            self.username.into_owned(),
-            self.password.into_owned(),
-            self.ac_ids.into_owned(),
+impl From<Settings<'_>> for NetCredential {
+    fn from(s: Settings) -> Self {
+        Self::new(
+            s.username.into_owned(),
+            s.password.into_owned(),
+            s.ac_ids.into_owned(),
         )
     }
 }

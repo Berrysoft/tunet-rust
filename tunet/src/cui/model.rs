@@ -51,12 +51,11 @@ impl Model {
                     _ => {}
                 },
                 TerminalEvent::Mouse(m) => {
-                    if m.kind == MouseEventKind::Up(MouseButton::Left) {
-                        if m.row == (rect.height - 1) {
-                            if !self.handle_functions(event, (m.column / 10 + 1) as u8) {
-                                return false;
-                            }
-                        }
+                    if m.kind == MouseEventKind::Up(MouseButton::Left)
+                        && m.row == (rect.height - 1)
+                        && !self.handle_functions(event, (m.column / 10 + 1) as u8)
+                    {
+                        return false;
                     }
                 }
                 _ => {}
