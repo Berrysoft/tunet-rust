@@ -23,7 +23,7 @@ impl ComponentUpdate<MainModel> for DetailModel {
             details: gtk::ListStore::new(&[
                 String::static_type(),
                 String::static_type(),
-                String::static_type(),
+                u64::static_type(),
             ]),
         }
     }
@@ -54,7 +54,7 @@ impl ComponentUpdate<MainModel> for DetailModel {
                     &[
                         (0, &d.login_time.to_string()),
                         (1, &d.logout_time.to_string()),
-                        (2, &d.flux.to_string()),
+                        (2, &d.flux.0),
                     ],
                 );
             }
@@ -89,7 +89,8 @@ impl Widgets<DetailModel, MainModel> for DetailWidgets {
                     append_column: col2 = &gtk::TreeViewColumn {
                         set_expand: true,
                         set_title: "流量",
-                        pack_start(true): renderer2 = &gtk::CellRendererText {},
+                        set_sort_column_id: 2,
+                        pack_start(true): renderer2 = &renderer::CellRendererFlux {},
                     },
 
                     set_model: Some(&model.details),
@@ -101,6 +102,124 @@ impl Widgets<DetailModel, MainModel> for DetailWidgets {
     fn post_connect_components() {
         self.col0.add_attribute(&self.renderer0, "text", 0);
         self.col1.add_attribute(&self.renderer1, "text", 1);
-        self.col2.add_attribute(&self.renderer2, "text", 2);
+        self.col2.add_attribute(&self.renderer2, "value", 2);
+    }
+}
+
+mod renderer {
+    use gtk::glib;
+    use gtk::prelude::*;
+    use gtk::subclass::prelude::*;
+
+    mod imp {
+        use super::*;
+        use std::sync::atomic::{AtomicU64, Ordering};
+
+        #[derive(Debug, Default)]
+        pub struct CellRendererFlux {
+            value: AtomicU64,
+            r: gtk::CellRendererText,
+        }
+
+        #[glib::object_subclass]
+        impl ObjectSubclass for CellRendererFlux {
+            const NAME: &'static str = "CellRendererFlux";
+
+            const ABSTRACT: bool = false;
+
+            type Type = super::CellRendererFlux;
+
+            type ParentType = gtk::CellRenderer;
+
+            fn new() -> Self {
+                Self {
+                    value: AtomicU64::default(),
+                    r: gtk::CellRendererText::new(),
+                }
+            }
+        }
+
+        impl ObjectImpl for CellRendererFlux {
+            fn properties() -> &'static [glib::ParamSpec] {
+                lazy_static::lazy_static! {
+                    static ref PROPS: [glib::ParamSpec; 1] = [glib::ParamSpec::new_uint64(
+                        "value",
+                        "Value",
+                        "Flux byte value",
+                        0,
+                        u64::MAX,
+                        0,
+                        glib::ParamFlags::READWRITE,
+                    )];
+                }
+
+                &*PROPS
+            }
+
+            fn property(
+                &self,
+                _obj: &Self::Type,
+                _id: usize,
+                pspec: &glib::ParamSpec,
+            ) -> glib::Value {
+                match pspec.name() {
+                    "value" => self.value.load(Ordering::Acquire).to_value(),
+                    _ => unreachable!(),
+                }
+            }
+
+            fn set_property(
+                &self,
+                _obj: &Self::Type,
+                _id: usize,
+                value: &glib::Value,
+                pspec: &glib::ParamSpec,
+            ) {
+                match pspec.name() {
+                    "value" => self
+                        .value
+                        .store(value.get::<u64>().unwrap(), Ordering::Release),
+                    _ => unreachable!(),
+                }
+            }
+        }
+
+        impl CellRendererImpl for CellRendererFlux {
+            fn snapshot<P: gtk::prelude::IsA<gtk::Widget>>(
+                &self,
+                _renderer: &Self::Type,
+                snapshot: &gtk::Snapshot,
+                widget: &P,
+                background_area: &gtk::gdk::Rectangle,
+                cell_area: &gtk::gdk::Rectangle,
+                flags: gtk::CellRendererState,
+            ) {
+                self.r
+                    .set_property(
+                        "text",
+                        tunet_rust::Flux(self.value.load(Ordering::Acquire)).to_string(),
+                    )
+                    .unwrap();
+                self.r
+                    .snapshot(snapshot, widget, background_area, cell_area, flags)
+            }
+        }
+    }
+
+    glib::wrapper! {
+        pub struct CellRendererFlux(ObjectSubclass<imp::CellRendererFlux>)
+            @extends gtk::CellRenderer;
+    }
+
+    impl CellRendererFlux {
+        pub fn new() -> Self {
+            glib::Object::new(&[]).unwrap()
+        }
+    }
+
+    impl Default for CellRendererFlux {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 }
