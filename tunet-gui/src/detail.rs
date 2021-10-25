@@ -176,9 +176,13 @@ mod renderer {
                 pspec: &glib::ParamSpec,
             ) {
                 match pspec.name() {
-                    "value" => self
-                        .value
-                        .store(value.get::<u64>().unwrap(), Ordering::Release),
+                    "value" => {
+                        let value = value.get::<u64>().unwrap();
+                        self.value.store(value, Ordering::Release);
+                        self.r
+                            .set_property("text", tunet_rust::Flux(value).to_string())
+                            .unwrap();
+                    }
                     _ => unreachable!(),
                 }
             }
@@ -194,12 +198,6 @@ mod renderer {
                 cell_area: &gtk::gdk::Rectangle,
                 flags: gtk::CellRendererState,
             ) {
-                self.r
-                    .set_property(
-                        "text",
-                        tunet_rust::Flux(self.value.load(Ordering::Acquire)).to_string(),
-                    )
-                    .unwrap();
                 self.r
                     .snapshot(snapshot, widget, background_area, cell_area, flags)
             }
