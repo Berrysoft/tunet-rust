@@ -31,6 +31,7 @@ impl ComponentUpdate<MainModel> for SettingsModel {
             online: gtk::ListStore::new(&[
                 String::static_type(),
                 String::static_type(),
+                u64::static_type(),
                 String::static_type(),
                 String::static_type(),
             ]),
@@ -68,8 +69,9 @@ impl ComponentUpdate<MainModel> for SettingsModel {
                     &[
                         (0, &u.address.to_string()),
                         (1, &u.login_time.to_string()),
-                        (2, &u.mac_address.map(|a| a.to_string()).unwrap_or_default()),
-                        (3, &(if is_self { "本机" } else { "" })),
+                        (2, &u.flux.0),
+                        (3, &u.mac_address.map(|a| a.to_string()).unwrap_or_default()),
+                        (4, &(if is_self { "本机" } else { "" })),
                     ],
                 );
             }
@@ -114,11 +116,14 @@ impl Widgets<SettingsModel, MainModel> for SettingsWidgets {
                         set_expand: true,
                         set_sort_column_id: 1,
                     },
-                    append_column = &gtk::TreeViewColumn::with_attributes("MAC地址", &gtk::CellRendererText::new(), &[("text", 2)]) {
+                    append_column = &gtk::TreeViewColumn::with_attributes("流量", &renderer::CellRendererFlux::new(), &[("value", 2)]) {
                         set_expand: true,
                         set_sort_column_id: 2,
                     },
-                    append_column = &gtk::TreeViewColumn::with_attributes("备注", &gtk::CellRendererText::new(), &[("text", 3)]) {
+                    append_column = &gtk::TreeViewColumn::with_attributes("MAC地址", &gtk::CellRendererText::new(), &[("text", 3)]) {
+                        set_expand: true,
+                    },
+                    append_column = &gtk::TreeViewColumn::with_attributes("备注", &gtk::CellRendererText::new(), &[("text", 4)]) {
                         set_expand: true,
                     },
 

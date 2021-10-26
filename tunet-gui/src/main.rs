@@ -14,6 +14,7 @@ mod clients;
 mod detail;
 mod header;
 mod info;
+mod renderer;
 mod settings;
 
 #[tokio::main(worker_threads = 4)]
