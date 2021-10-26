@@ -83,6 +83,13 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                         Span::styled("登录时间 ", subtitle_style),
                         Span::styled(u.login_time.to_string(), Style::default().fg(Color::Green)),
                     ]),
+                    Spans::from(vec![
+                        Span::styled("流量     ", subtitle_style),
+                        Span::styled(
+                            u.flux.to_string(),
+                            Style::default().fg(get_flux_color(u.flux.0, true)),
+                        ),
+                    ]),
                     Spans::from({
                         let mut spans = vec![
                             Span::styled("MAC 地址 ", subtitle_style),
