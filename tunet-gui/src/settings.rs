@@ -1,5 +1,6 @@
 use crate::*;
 use futures_util::{pin_mut, TryStreamExt};
+use mac_address::{MacAddress, MacAddressIterator};
 use netstatus::*;
 use tunet_rust::usereg::*;
 
@@ -10,6 +11,7 @@ pub enum SettingsMsg {
 
 pub struct SettingsModel {
     status: NetStatus,
+    mac_addrs: Vec<MacAddress>,
     online: gtk::ListStore,
 }
 
@@ -23,7 +25,11 @@ impl ComponentUpdate<MainModel> for SettingsModel {
     fn init_model(_parent_model: &MainModel) -> Self {
         Self {
             status: NetStatus::Unknown,
+            mac_addrs: MacAddressIterator::new()
+                .map(|it| it.collect::<Vec<_>>())
+                .unwrap_or_default(),
             online: gtk::ListStore::new(&[
+                String::static_type(),
                 String::static_type(),
                 String::static_type(),
                 String::static_type(),
@@ -52,14 +58,21 @@ impl ComponentUpdate<MainModel> for SettingsModel {
                     Ok::<_, anyhow::Error>(())
                 });
             }
-            SettingsMsg::AddOnline(u) => self.online.set(
-                &self.online.append(),
-                &[
-                    (0, &u.address.to_string()),
-                    (1, &u.login_time.to_string()),
-                    (2, &u.mac_address.map(|a| a.to_string()).unwrap_or_default()),
-                ],
-            ),
+            SettingsMsg::AddOnline(u) => {
+                let is_self = self
+                    .mac_addrs
+                    .iter()
+                    .any(|it| Some(it) == u.mac_address.as_ref());
+                self.online.set(
+                    &self.online.append(),
+                    &[
+                        (0, &u.address.to_string()),
+                        (1, &u.login_time.to_string()),
+                        (2, &u.mac_address.map(|a| a.to_string()).unwrap_or_default()),
+                        (3, &(if is_self { "本机" } else { "" })),
+                    ],
+                );
+            }
         }
     }
 }
@@ -95,11 +108,17 @@ impl Widgets<SettingsModel, MainModel> for SettingsWidgets {
                 set_child = Some(&gtk::TreeView) {
                     append_column = &gtk::TreeViewColumn::with_attributes("IP地址", &gtk::CellRendererText::new(), &[("text", 0)]) {
                         set_expand: true,
+                        set_sort_column_id: 0,
                     },
                     append_column = &gtk::TreeViewColumn::with_attributes("登录时间", &gtk::CellRendererText::new(), &[("text", 1)]) {
                         set_expand: true,
+                        set_sort_column_id: 1,
                     },
                     append_column = &gtk::TreeViewColumn::with_attributes("MAC地址", &gtk::CellRendererText::new(), &[("text", 2)]) {
+                        set_expand: true,
+                        set_sort_column_id: 2,
+                    },
+                    append_column = &gtk::TreeViewColumn::with_attributes("备注", &gtk::CellRendererText::new(), &[("text", 3)]) {
                         set_expand: true,
                     },
 
