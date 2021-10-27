@@ -1,28 +1,29 @@
 use futures_util::{pin_mut, TryStreamExt};
+use mac_address::*;
 use std::borrow::Cow;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
+    Arc,
 };
 use tokio::sync::mpsc::*;
 use tunet_rust::{usereg::*, *};
-use tunet_settings::*;
 
-pub type UpdateCallback = Box<dyn Fn(UpdateMsg) + 'static>;
+pub type UpdateCallback = Box<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
 
 pub struct Model {
     update: Option<UpdateCallback>,
     tx: Sender<Action>,
-    pub cred: Mutex<Arc<NetCredential>>,
+    pub cred: Arc<NetCredential>,
     pub http: HttpClient,
     pub state: NetState,
-    pub log: Mutex<Cow<'static, str>>,
+    pub log: Cow<'static, str>,
     pub log_busy: Arc<AtomicBool>,
     pub online_busy: Arc<AtomicBool>,
     pub detail_busy: Arc<AtomicBool>,
-    pub flux: Mutex<NetFlux>,
-    pub users: Mutex<Vec<NetUser>>,
-    pub details: Mutex<Vec<NetDetail>>,
+    pub flux: NetFlux,
+    pub users: Vec<NetUser>,
+    pub details: Vec<NetDetail>,
+    pub mac_addrs: Vec<MacAddress>,
 }
 
 impl Model {
@@ -35,64 +36,80 @@ impl Model {
     }
 
     fn new_impl(update: Option<UpdateCallback>, tx: Sender<Action>) -> Result<Self> {
-        let cred = FileSettingsReader::new()
-            .and_then(|reader| reader.read_with_password())
-            .unwrap_or_default();
         let http = create_http_client()?;
+
+        let mac_addrs = MacAddressIterator::new()
+            .map(|it| it.collect::<Vec<_>>())
+            .unwrap_or_default();
 
         Ok(Self {
             update,
             tx,
-            cred: Mutex::new(Arc::new(cred)),
+            cred: Arc::new(NetCredential::default()),
             http,
             state: NetState::Unknown,
-            log: Mutex::new(Cow::default()),
+            log: Cow::default(),
             log_busy: Arc::new(AtomicBool::new(false)),
             online_busy: Arc::new(AtomicBool::new(false)),
             detail_busy: Arc::new(AtomicBool::new(false)),
-            flux: Mutex::new(NetFlux::default()),
-            users: Mutex::new(Vec::default()),
-            details: Mutex::new(Vec::default()),
+            flux: NetFlux::default(),
+            users: Vec::default(),
+            details: Vec::default(),
+            mac_addrs,
         })
     }
 
-    pub fn handle(&self, action: Action) {
+    pub fn queue(&self, action: Action) {
+        let tx = self.tx.clone();
+        tokio::spawn(async move { tx.send(action).await.ok() });
+    }
+
+    pub fn handle(&mut self, action: Action) {
         match action {
+            Action::Timer => {
+                self.spawn_timer();
+            }
+            Action::Tick => {
+                if !self.flux.username.is_empty() {
+                    self.flux.online_time =
+                        Duration(self.flux.online_time.0 + NaiveDuration::seconds(1));
+                }
+            }
             Action::Login => {
-                *self.log.lock().unwrap() = "正在登录".into();
+                self.log = "正在登录".into();
                 self.spawn_login();
             }
             Action::Logout => {
-                *self.log.lock().unwrap() = "正在注销".into();
+                self.log = "正在注销".into();
                 self.spawn_logout();
             }
             Action::Flux => {
-                *self.log.lock().unwrap() = "正在刷新流量".into();
+                self.log = "正在刷新流量".into();
                 self.spawn_flux();
             }
             Action::LoginDone(s) | Action::LogoutDone(s) => {
-                *self.log.lock().unwrap() = s.into();
+                self.log = s.into();
                 self.update(UpdateMsg::Log);
             }
             Action::FluxDone(f, s) => {
-                *self.log.lock().unwrap() = s.into();
+                self.log = s.into();
                 self.update(UpdateMsg::Log);
-                *self.flux.lock().unwrap() = f;
+                self.flux = f;
                 self.update(UpdateMsg::Flux);
             }
             Action::Online => {
                 self.spawn_online();
             }
             Action::OnlineDone(us) => {
-                *self.users.lock().unwrap() = us;
+                self.users = us;
                 self.update(UpdateMsg::Online);
             }
-            Action::Detail => {
+            Action::Details => {
                 self.spawn_details();
             }
-            Action::DetailDone(ds) => {
-                *self.details.lock().unwrap() = ds;
-                self.update(UpdateMsg::Detail);
+            Action::DetailsDone(ds) => {
+                self.details = ds;
+                self.update(UpdateMsg::Details);
             }
         }
     }
@@ -103,17 +120,25 @@ impl Model {
         }
     }
 
+    fn spawn_timer(&self) {
+        let tx = self.tx.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
+            loop {
+                interval.tick().await;
+                tx.send(Action::Tick).await?;
+            }
+            #[allow(unreachable_code)]
+            Ok::<_, anyhow::Error>(())
+        });
+    }
+
     fn client(&self) -> Option<TUNetConnect> {
-        TUNetConnect::new_nosuggest(
-            self.state,
-            self.cred.lock().unwrap().clone(),
-            self.http.clone(),
-        )
-        .ok()
+        TUNetConnect::new_nosuggest(self.state, self.cred.clone(), self.http.clone()).ok()
     }
 
     fn usereg(&self) -> UseregHelper {
-        UseregHelper::new(self.cred.lock().unwrap().clone(), self.http.clone())
+        UseregHelper::new(self.cred.clone(), self.http.clone())
     }
 
     fn spawn_login(&self) {
@@ -210,16 +235,30 @@ impl Model {
                 usereg.login().await?;
                 let details = usereg.details(NetDetailOrder::LogoutTime, false);
                 pin_mut!(details);
-                tx.send(Action::DetailDone(details.try_collect().await?))
+                tx.send(Action::DetailsDone(details.try_collect().await?))
                     .await?;
                 Ok::<_, anyhow::Error>(())
             });
         }
     }
+
+    pub fn log_busy(&self) -> bool {
+        self.log_busy.load(Ordering::Acquire)
+    }
+
+    pub fn online_busy(&self) -> bool {
+        self.online_busy.load(Ordering::Acquire)
+    }
+
+    pub fn detail_busy(&self) -> bool {
+        self.detail_busy.load(Ordering::Acquire)
+    }
 }
 
 #[derive(Debug)]
 pub enum Action {
+    Timer,
+    Tick,
     Login,
     LoginDone(String),
     Logout,
@@ -228,15 +267,15 @@ pub enum Action {
     FluxDone(NetFlux, String),
     Online,
     OnlineDone(Vec<NetUser>),
-    Detail,
-    DetailDone(Vec<NetDetail>),
+    Details,
+    DetailsDone(Vec<NetDetail>),
 }
 
 pub enum UpdateMsg {
     Log,
     Flux,
     Online,
-    Detail,
+    Details,
 }
 
 struct BusyGuard {

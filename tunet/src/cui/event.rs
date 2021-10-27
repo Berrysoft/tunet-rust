@@ -1,66 +1,43 @@
 pub use crossterm::event::Event as TerminalEvent;
-use futures_util::{pin_mut, Stream, StreamExt, TryStreamExt};
+use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
+use futures_util::{pin_mut, Stream, StreamExt};
 use std::{
     pin::Pin,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
     task::{Context, Poll},
 };
 use tokio::sync::mpsc::*;
-use tunet_rust::{usereg::*, *};
+use tui::layout::Rect;
+use tunet_model::*;
+use tunet_rust::*;
 
 #[derive(Debug)]
 pub enum EventType {
     TerminalEvent(TerminalEvent),
-    Tick,
-    Log(LogType),
-    LogDone(LogType),
-    Flux(Option<NetFlux>),
-    ClearOnline,
-    AddOnline(NetUser),
-    ClearDetail,
-    Detail(Vec<NetDetail>),
-}
-
-#[derive(Debug)]
-pub enum LogType {
-    Login(Option<String>),
-    Logout(Option<String>),
-    Flux(Option<String>),
-    Online,
-    Detail,
+    ModelAction(Action),
 }
 
 pub struct Event {
-    client: TUNetConnect,
-    usereg: UseregHelper,
-    log_busy: Arc<AtomicBool>,
-    online_busy: Arc<AtomicBool>,
-    detail_busy: Arc<AtomicBool>,
+    pub model: Model,
     tx: Sender<Result<EventType>>,
     rx: Receiver<Result<EventType>>,
 }
 
 impl Event {
-    pub fn new(client: TUNetConnect, usereg: UseregHelper) -> Self {
+    pub fn new() -> Result<Self> {
         let (tx, rx) = channel(32);
+        let (mtx, mrx) = channel(32);
         let e = Self {
-            client,
-            usereg,
-            log_busy: Arc::new(AtomicBool::new(false)),
-            online_busy: Arc::new(AtomicBool::new(false)),
-            detail_busy: Arc::new(AtomicBool::new(false)),
+            model: Model::new(mtx)?,
             tx,
             rx,
         };
         e.spawn_terminal_event();
+        e.spawn_model_action(mrx);
         e.spawn_timer();
         e.spawn_login();
         e.spawn_online();
         e.spawn_details();
-        e
+        Ok(e)
     }
 
     fn spawn_terminal_event(&self) {
@@ -77,127 +54,80 @@ impl Event {
         });
     }
 
-    fn spawn_timer(&self) {
+    fn spawn_model_action(&self, mut mrx: Receiver<Action>) {
         let tx = self.tx.clone();
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
-            loop {
-                interval.tick().await;
-                tx.send(Ok(EventType::Tick)).await?;
+            while let Some(a) = mrx.recv().await {
+                tx.send(Ok(EventType::ModelAction(a))).await?;
             }
-            #[allow(unreachable_code)]
             Ok::<_, anyhow::Error>(())
         });
     }
 
+    fn spawn_timer(&self) {
+        self.model.queue(Action::Timer);
+    }
+
     pub fn spawn_login(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone());
-        if lock.lock() {
-            let tx = self.tx.clone();
-            let client = self.client.clone();
-            tokio::spawn(async move {
-                let _lock = lock;
-                tx.send(Ok(EventType::Log(LogType::Login(None)))).await?;
-                let res = client.login().await;
-                let ok = res.is_ok();
-                tx.send(res.map(|res| EventType::LogDone(LogType::Login(Some(res)))))
-                    .await?;
-                if ok {
-                    Self::flux_impl(client, tx).await?;
-                }
-                Ok::<_, anyhow::Error>(())
-            });
-        }
+        self.model.queue(Action::Login);
     }
 
     pub fn spawn_logout(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone());
-        if lock.lock() {
-            let tx = self.tx.clone();
-            let client = self.client.clone();
-            tokio::spawn(async move {
-                let _lock = lock;
-                tx.send(Ok(EventType::Log(LogType::Logout(None)))).await?;
-                let res = client.logout().await;
-                let ok = res.is_ok();
-                tx.send(res.map(|res| EventType::LogDone(LogType::Logout(Some(res)))))
-                    .await?;
-                if ok {
-                    Self::flux_impl(client, tx).await?;
-                }
-                Ok::<_, anyhow::Error>(())
-            });
-        }
+        self.model.queue(Action::Logout);
     }
 
     pub fn spawn_flux(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone());
-        if lock.lock() {
-            let tx = self.tx.clone();
-            let client = self.client.clone();
-            tokio::spawn(async move {
-                let _lock = lock;
-                Self::flux_impl(client, tx).await
-            });
-        }
-    }
-
-    async fn flux_impl(client: TUNetConnect, tx: Sender<Result<EventType>>) -> Result<()> {
-        tx.send(Ok(EventType::Log(LogType::Flux(None)))).await?;
-        tx.send(Ok(EventType::Flux(None))).await?;
-        let flux = client.flux().await;
-        match flux {
-            Ok(flux) => {
-                tx.send(Ok(EventType::Flux(Some(flux)))).await?;
-                tx.send(Ok(EventType::LogDone(LogType::Flux(None)))).await?;
-            }
-            Err(err) => {
-                tx.send(Ok(EventType::LogDone(LogType::Flux(Some(err.to_string())))))
-                    .await?
-            }
-        }
-        Ok(())
+        self.model.queue(Action::Flux);
     }
 
     pub fn spawn_online(&self) {
-        let mut lock = BusyGuard::new(self.online_busy.clone());
-        if lock.lock() {
-            let tx = self.tx.clone();
-            let usereg = self.usereg.clone();
-            tokio::spawn(async move {
-                let _lock = lock;
-                tx.send(Ok(EventType::Log(LogType::Online))).await?;
-                tx.send(Ok(EventType::ClearOnline)).await?;
-                usereg.login().await?;
-                let users = usereg.users();
-                pin_mut!(users);
-                while let Some(u) = users.next().await {
-                    tx.send(u.map(EventType::AddOnline)).await?;
-                }
-                tx.send(Ok(EventType::LogDone(LogType::Online))).await?;
-                Ok::<_, anyhow::Error>(())
-            });
-        }
+        self.model.queue(Action::Online);
     }
 
     pub fn spawn_details(&self) {
-        let mut lock = BusyGuard::new(self.detail_busy.clone());
-        if lock.lock() {
-            let tx = self.tx.clone();
-            let usereg = self.usereg.clone();
-            tokio::spawn(async move {
-                let _lock = lock;
-                tx.send(Ok(EventType::Log(LogType::Detail))).await?;
-                tx.send(Ok(EventType::ClearDetail)).await?;
-                usereg.login().await?;
-                let details = usereg.details(NetDetailOrder::LogoutTime, false);
-                pin_mut!(details);
-                tx.send(details.try_collect().await.map(EventType::Detail))
-                    .await?;
-                tx.send(Ok(EventType::LogDone(LogType::Detail))).await?;
-                Ok::<_, anyhow::Error>(())
-            });
+        self.model.queue(Action::Details);
+    }
+
+    pub fn handle(&mut self, e: EventType, rect: Rect) -> bool {
+        match e {
+            EventType::TerminalEvent(e) => match e {
+                TerminalEvent::Key(k) => match k.code {
+                    KeyCode::Char('q') | KeyCode::Char('Q') => return false,
+                    KeyCode::F(func) => {
+                        if !self.handle_functions(func) {
+                            return false;
+                        }
+                    }
+                    _ => {}
+                },
+                TerminalEvent::Mouse(m) => {
+                    if m.kind == MouseEventKind::Up(MouseButton::Left)
+                        && m.row == (rect.height - 1)
+                        && !self.handle_functions((m.column / 10 + 1) as u8)
+                    {
+                        return false;
+                    }
+                }
+                _ => {}
+            },
+            EventType::ModelAction(a) => {
+                self.model.handle(a);
+            }
         }
+        true
+    }
+
+    fn handle_functions(&self, func: u8) -> bool {
+        match func {
+            1 => self.spawn_login(),
+            2 => self.spawn_logout(),
+            3 => self.spawn_flux(),
+            4 => self.spawn_online(),
+            5 => self.spawn_details(),
+            6 => return false,
+            _ => {}
+        };
+        true
     }
 }
 
@@ -206,36 +136,5 @@ impl Stream for Event {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.rx.poll_recv(cx)
-    }
-}
-
-#[derive(Debug)]
-struct BusyGuard {
-    lock: Arc<AtomicBool>,
-    locked: bool,
-}
-
-impl BusyGuard {
-    pub fn new(lock: Arc<AtomicBool>) -> Self {
-        Self {
-            lock,
-            locked: false,
-        }
-    }
-
-    pub fn lock(&mut self) -> bool {
-        self.locked = self
-            .lock
-            .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
-            .is_ok();
-        self.locked
-    }
-}
-
-impl Drop for BusyGuard {
-    fn drop(&mut self) {
-        if self.locked {
-            self.lock.store(false, Ordering::Release);
-        }
     }
 }
