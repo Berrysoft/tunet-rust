@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use futures_util::{pin_mut, TryStreamExt};
 use mac_address::*;
 use netstatus::*;
@@ -292,6 +294,7 @@ pub enum Action {
     DetailsDone(Vec<NetDetail>),
 }
 
+#[repr(i32)]
 pub enum UpdateMsg {
     Log,
     Flux,

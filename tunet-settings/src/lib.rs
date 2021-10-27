@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use dirs::config_dir;
 use keyring::Keyring;
 use serde::{Deserialize, Serialize};

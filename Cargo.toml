@@ -1,16 +1,17 @@
 [workspace]
 members = [
     "authtea",
+    "netstatus",
+    "keyring",
     "tunet-rust",
     "tunet-settings",
     "tunet-model",
+    "tunet-model-native",
     "tunet",
     "tunet-gui",
 ]
 
 exclude = [
-    "netstatus",
-    "keyring",
     "winrt-bindings",
 ]
 
