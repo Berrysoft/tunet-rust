@@ -227,6 +227,14 @@ impl TUNetConnect {
             s = suggest::suggest(&client).await;
             debug_assert_ne!(s, NetState::Auto);
         }
+        Self::new_nosuggest(s, cred, client)
+    }
+
+    pub fn new_nosuggest(
+        s: NetState,
+        cred: Arc<NetCredential>,
+        client: HttpClient,
+    ) -> NetHelperResult<TUNetConnect> {
         match s {
             NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(cred, client))),
             NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(cred, client))),
