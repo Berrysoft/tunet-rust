@@ -1,5 +1,6 @@
 use futures_util::{pin_mut, TryStreamExt};
 use mac_address::*;
+use netstatus::*;
 use std::borrow::Cow;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -16,6 +17,7 @@ pub struct Model {
     pub cred: Arc<NetCredential>,
     pub http: HttpClient,
     pub state: NetState,
+    pub status: NetStatus,
     pub log: Cow<'static, str>,
     pub log_busy: Arc<AtomicBool>,
     pub online_busy: Arc<AtomicBool>,
@@ -48,6 +50,7 @@ impl Model {
             cred: Arc::new(NetCredential::default()),
             http,
             state: NetState::Unknown,
+            status: NetStatus::current(),
             log: Cow::default(),
             log_busy: Arc::new(AtomicBool::new(false)),
             online_busy: Arc::new(AtomicBool::new(false)),
@@ -66,6 +69,22 @@ impl Model {
 
     pub fn handle(&mut self, action: Action) {
         match action {
+            Action::Credential(cred) => self.cred = cred,
+            Action::State(s) => {
+                let s = s.unwrap_or(NetState::Auto);
+                match s {
+                    NetState::Auto => {
+                        let tx = self.tx.clone();
+                        let http = self.http.clone();
+                        let status = self.status.clone();
+                        tokio::spawn(async move {
+                            let state = suggest::suggest_with_status(&http, status).await;
+                            tx.send(Action::State(Some(state))).await.ok()
+                        });
+                    }
+                    _ => self.state = s,
+                };
+            }
             Action::Timer => {
                 self.spawn_timer();
             }
@@ -257,6 +276,8 @@ impl Model {
 
 #[derive(Debug)]
 pub enum Action {
+    Credential(Arc<NetCredential>),
+    State(Option<NetState>),
     Timer,
     Tick,
     Login,

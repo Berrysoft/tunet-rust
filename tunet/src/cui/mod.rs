@@ -7,6 +7,7 @@ use crossterm::{
 };
 use futures_util::TryStreamExt;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
+use tunet_model::Action;
 use tunet_rust::*;
 
 mod event;
@@ -17,11 +18,9 @@ use event::*;
 pub async fn run(state: NetState) -> Result<()> {
     let mut event = Event::new()?;
 
-    event.model.cred = read_cred()?;
-    event.model.state = match state {
-        NetState::Auto => suggest::suggest(&event.model.http).await,
-        _ => state,
-    };
+    event.model.queue(Action::Credential(read_cred()?));
+    event.model.queue(Action::State(Some(state)));
+    event.start();
 
     enable_raw_mode()?;
     execute!(std::io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;

@@ -26,7 +26,7 @@ mod platform {
     pub use super::stub::*;
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NetStatus {
     Unknown,
     Wwan,

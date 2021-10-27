@@ -33,11 +33,14 @@ impl Event {
         };
         e.spawn_terminal_event();
         e.spawn_model_action(mrx);
-        e.spawn_timer();
-        e.spawn_login();
-        e.spawn_online();
-        e.spawn_details();
         Ok(e)
+    }
+
+    pub fn start(&self) {
+        self.spawn_timer();
+        self.spawn_login();
+        self.spawn_online();
+        self.spawn_details();
     }
 
     fn spawn_terminal_event(&self) {
