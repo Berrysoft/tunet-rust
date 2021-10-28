@@ -98,14 +98,17 @@ impl Model {
             }
             Action::Login => {
                 self.log = "正在登录".into();
+                self.update(UpdateMsg::Log);
                 self.spawn_login();
             }
             Action::Logout => {
                 self.log = "正在注销".into();
+                self.update(UpdateMsg::Log);
                 self.spawn_logout();
             }
             Action::Flux => {
                 self.log = "正在刷新流量".into();
+                self.update(UpdateMsg::Log);
                 self.spawn_flux();
             }
             Action::LoginDone(s) | Action::LogoutDone(s) => {

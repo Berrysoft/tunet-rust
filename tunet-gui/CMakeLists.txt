@@ -31,5 +31,9 @@ target_include_directories(tunet-gui
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_directories(tunet-gui PUBLIC ${LIB_DIR})
-target_link_libraries(tunet-gui PUBLIC Qt6::Widgets tunet-model-native)
+target_link_libraries(tunet-gui PUBLIC Qt6::Widgets tunet_model_native)
 add_dependencies(tunet-gui tunet-model)
+
+if(WIN32)
+    target_link_libraries(tunet-gui PUBLIC ntdll WS2_32 Bcrypt Crypt32 Ncrypt Secur32 Iphlpapi)
+endif()

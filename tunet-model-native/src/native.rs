@@ -1,5 +1,6 @@
 use std::{ffi::c_void, sync::Mutex};
 use tunet_model::UpdateMsg;
+use tunet_rust::NetState;
 
 #[repr(i32)]
 pub enum Action {
@@ -26,6 +27,26 @@ impl From<Action> for tunet_model::Action {
     }
 }
 
+#[repr(i32)]
+pub enum State {
+    Auto,
+    Net,
+    Auth4,
+    Auth6,
+}
+
+impl From<State> for NetState {
+    fn from(s: State) -> Self {
+        match s {
+            State::Auto => Self::Auto,
+            State::Net => Self::Net,
+            State::Auth4 => Self::Auth4,
+            State::Auth6 => Self::Auth6,
+        }
+    }
+}
+
+pub type MainCallback = Option<extern "C" fn()>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
 
 pub fn wrap_callback(

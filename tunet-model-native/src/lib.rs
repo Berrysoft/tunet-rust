@@ -1,31 +1,29 @@
-use once_cell::sync::OnceCell;
 use std::ffi::c_void;
 use std::ptr::null_mut;
 use std::sync::{Arc, Mutex};
-use tokio::runtime::{Builder, Runtime};
+use tokio::runtime::Builder;
 use tokio::sync::mpsc::*;
 use tunet_model::*;
 use tunet_rust::*;
 
 mod native;
 
-static RUNTIME: OnceCell<Runtime> = OnceCell::new();
-
-fn tunet_runtime_init_impl(val: usize) -> Result<()> {
-    RUNTIME
-        .set(
-            Builder::new_multi_thread()
-                .worker_threads(val)
-                .enable_all()
-                .build()?,
-        )
-        .map_err(|_| anyhow::anyhow!("Failed to set RUNTIME"))?;
+fn tunet_runtime_init_impl(val: usize, main: native::MainCallback) -> Result<()> {
+    let runtime = Builder::new_multi_thread()
+        .worker_threads(val)
+        .enable_all()
+        .build()?;
+    runtime.block_on(async move {
+        if let Some(main) = main {
+            main();
+        }
+    });
     Ok(())
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_runtime_init(val: usize) -> bool {
-    tunet_runtime_init_impl(val).is_ok()
+pub extern "C" fn tunet_runtime_init(val: usize, main: native::MainCallback) -> bool {
+    tunet_runtime_init_impl(val, main).is_ok()
 }
 
 fn tunet_model_new_impl(
@@ -66,6 +64,12 @@ pub unsafe extern "C" fn tunet_model_unref(model: native::Model) {
 pub unsafe extern "C" fn tunet_model_queue(model: native::Model, action: native::Action) {
     let model = model.as_ref().unwrap().lock().unwrap();
     model.queue(action.into());
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_set_state(model: native::Model, state: native::State) {
+    let mut model = model.as_ref().unwrap().lock().unwrap();
+    model.state = state.into();
 }
 
 #[no_mangle]
