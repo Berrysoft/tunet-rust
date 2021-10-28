@@ -4,6 +4,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ENABLE_IPO OUTPUT output)
+if(ENABLE_IPO)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+    message(STATUS "LTO is enabled for Release")
+endif()
+
 set(PROJECT_DIR "${CMAKE_CURRENT_LIST_DIR}/..")
 set(TARGET_DIR "${PROJECT_DIR}/target")
 
