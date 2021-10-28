@@ -26,7 +26,7 @@ void main_impl()
         std::unique_lock lock{ mtx };
         model.queue(tunet::action::flux);
         cd.wait(lock);
-        std::cout << model.flux_flux() << std::endl;
+        std::cout << model.flux_flux() / 1000000000.0 << std::endl;
     }
 }
 
