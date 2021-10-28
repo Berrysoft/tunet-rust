@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(PROJECT_DIR "${CMAKE_CURRENT_LIST_DIR}/..")
 set(TARGET_DIR "${PROJECT_DIR}/target")
 
-if(CMAKE_BUILD_TYPE MATCHES "[Rr]elease")
+if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
     set(LIB_DIR "${TARGET_DIR}/release")
     set(CARGO_FLAGS "--release")
 else()
