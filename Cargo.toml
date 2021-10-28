@@ -8,7 +8,6 @@ members = [
     "tunet-model",
     "tunet-model-native",
     "tunet",
-    "tunet-gui",
 ]
 
 exclude = [
