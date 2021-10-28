@@ -71,3 +71,19 @@ pub fn wrap_callback(
 }
 
 pub type Model = *const Mutex<tunet_model::Model>;
+
+#[repr(C)]
+pub struct StringView {
+    data: *const u8,
+    size: usize,
+}
+
+impl StringView {
+    pub fn new(s: &str) -> Self {
+        let span = s.as_bytes();
+        Self {
+            data: span.as_ptr(),
+            size: span.len(),
+        }
+    }
+}

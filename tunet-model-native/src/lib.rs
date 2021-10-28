@@ -57,7 +57,9 @@ pub extern "C" fn tunet_model_new(
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_unref(model: native::Model) {
-    let _ = Arc::from_raw(model);
+    if !model.is_null() {
+        let _ = Arc::from_raw(model);
+    }
 }
 
 #[no_mangle]
@@ -73,7 +75,25 @@ pub unsafe extern "C" fn tunet_model_set_state(model: native::Model, state: nati
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tunet_model_flux_username(model: native::Model) -> native::StringView {
+    let model = model.as_ref().unwrap().lock().unwrap();
+    native::StringView::new(&model.flux.username)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_flux(model: native::Model) -> u64 {
     let model = model.as_ref().unwrap().lock().unwrap();
     model.flux.flux.0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_flux_online_time(model: native::Model) -> i64 {
+    let model = model.as_ref().unwrap().lock().unwrap();
+    model.flux.online_time.0.num_seconds()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_flux_balance(model: native::Model) -> f64 {
+    let model = model.as_ref().unwrap().lock().unwrap();
+    model.flux.balance.0
 }

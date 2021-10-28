@@ -15,9 +15,15 @@ else()
     set(CARGO_FLAGS "")
 endif()
 
+add_custom_command(
+    OUTPUT __always_rebuild
+    COMMAND cmake -E echo
+)
+
 add_custom_target(tunet-model
     COMMAND cargo build --lib ${CARGO_FLAGS}
     WORKING_DIRECTORY ${PROJECT_DIR}
+    DEPENDS __always_rebuild
 )
 
 find_package(Qt6 COMPONENTS Core Gui Widgets)

@@ -20,17 +20,21 @@ void main_impl()
         }
     };
 
-    model.state(tunet::state::net);
+    model.set_state(tunet::state::net);
 
     {
         std::unique_lock lock{ mtx };
         model.queue(tunet::action::flux);
         cd.wait(lock);
-        std::cout << model.flux_flux() / 1000000000.0 << std::endl;
+        auto flux = model.get_flux();
+        std::cout << flux.username << std::endl;
+        std::cout << flux.flux / 1000000000.0 << std::endl;
+        std::cout << flux.online_time.count() << std::endl;
+        std::cout << flux.balance << std::endl;
     }
 }
 
 int main()
 {
-    tunet::init(4, main_impl);
+    tunet::start(4, main_impl);
 }
