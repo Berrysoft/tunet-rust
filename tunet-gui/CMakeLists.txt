@@ -43,4 +43,7 @@ add_dependencies(tunet-gui tunet-model)
 
 if(WIN32)
     target_link_libraries(tunet-gui PUBLIC ntdll WS2_32 Bcrypt Crypt32 Ncrypt Secur32 Iphlpapi)
+    if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
+        set_target_properties(tunet-gui PROPERTIES WIN32_EXECUTABLE ON)
+    endif()
 endif()

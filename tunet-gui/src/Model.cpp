@@ -1,5 +1,4 @@
 #include <Model.hpp>
-#include <functional>
 
 extern "C"
 {
@@ -24,19 +23,23 @@ extern "C"
     double tunet_model_flux_balance(NativeModel m);
 }
 
-using init_callback = std::function<int()>;
+struct init_data
+{
+    int (*main)(int, char**);
+    int argc;
+    char** argv;
+};
 
 static int fn_init_callback(void* data)
 {
-    auto func = reinterpret_cast<init_callback*>(data);
-    return (*func)();
+    auto d = reinterpret_cast<init_data*>(data);
+    return (d->main)(d->argc, d->argv);
 }
 
 bool tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char** argv)
 {
-    init_callback callback = [main, argc, argv]()
-    { return main(argc, argv); };
-    return tunet_runtime_init(threads, fn_init_callback, &callback);
+    init_data data{ main, argc, argv };
+    return tunet_runtime_init(threads, fn_init_callback, &data);
 }
 
 static void fn_update_callback(UpdateMsg m, void* data)
