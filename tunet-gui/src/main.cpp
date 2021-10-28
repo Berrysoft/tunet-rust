@@ -1,42 +1,18 @@
-#include <condition_variable>
-#include <iostream>
-#include <mutex>
-#include <tunet.hpp>
+#include <MainWnd.hpp>
+#include <Model.hpp>
+#include <QApplication>
 
-int main_impl()
+int main_impl(int argc, char** argv)
 {
-    std::mutex mtx{};
-    std::condition_variable cd{};
+    QApplication app{ argc, argv };
 
-    tunet::model model{
-        [&cd](tunet::update_msg msg)
-        {
-            switch (msg)
-            {
-            case tunet::update_msg::flux:
-                cd.notify_one();
-                break;
-            }
-        }
-    };
+    MainWnd wnd{};
+    wnd.show();
 
-    model.set_state(tunet::state::net);
-
-    {
-        std::unique_lock lock{ mtx };
-        model.queue(tunet::action::flux);
-        cd.wait(lock);
-        auto flux = model.get_flux();
-        std::cout << flux.username << std::endl;
-        std::cout << flux.flux / 1000000000.0 << std::endl;
-        std::cout << flux.online_time.count() << std::endl;
-        std::cout << flux.balance << std::endl;
-    }
-
-    return 0;
+    return app.exec();
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    return tunet::start(4, main_impl);
+    return tunet_start(4, main_impl, argc, argv);
 }

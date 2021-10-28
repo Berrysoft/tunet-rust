@@ -8,14 +8,18 @@ use tunet_rust::*;
 
 mod native;
 
-fn tunet_runtime_init_impl(val: usize, main: native::MainCallback) -> Result<i32> {
+fn tunet_runtime_init_impl(
+    val: usize,
+    main: native::MainCallback,
+    data: *mut c_void,
+) -> Result<i32> {
     let runtime = Builder::new_multi_thread()
         .worker_threads(val)
         .enable_all()
         .build()?;
     let res = runtime.block_on(async move {
         if let Some(main) = main {
-            main()
+            main(data)
         } else {
             1
         }
@@ -24,8 +28,12 @@ fn tunet_runtime_init_impl(val: usize, main: native::MainCallback) -> Result<i32
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_runtime_init(val: usize, main: native::MainCallback) -> i32 {
-    tunet_runtime_init_impl(val, main).unwrap_or(1)
+pub extern "C" fn tunet_runtime_init(
+    val: usize,
+    main: native::MainCallback,
+    data: *mut c_void,
+) -> i32 {
+    tunet_runtime_init_impl(val, main, data).unwrap_or(1)
 }
 
 fn tunet_model_new_impl(
@@ -74,8 +82,8 @@ pub unsafe extern "C" fn tunet_model_queue(model: native::Model, action: native:
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tunet_model_set_state(model: native::Model, state: native::State) {
-    lock_model(model).state = state.into();
+pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: native::State) {
+    lock_model(model).queue(Action::State(Some(state.into())));
 }
 
 #[no_mangle]

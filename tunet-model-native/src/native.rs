@@ -46,7 +46,7 @@ impl From<State> for NetState {
     }
 }
 
-pub type MainCallback = Option<extern "C" fn() -> i32>;
+pub type MainCallback = Option<extern "C" fn(*mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
 
 pub fn wrap_callback(
