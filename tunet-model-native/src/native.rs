@@ -1,4 +1,4 @@
-use std::ffi::c_void;
+use std::{ffi::c_void, sync::Mutex};
 use tunet_model::UpdateMsg;
 
 #[repr(i32)]
@@ -10,6 +10,20 @@ pub enum Action {
     Flux,
     Online,
     Details,
+}
+
+impl From<Action> for tunet_model::Action {
+    fn from(a: Action) -> Self {
+        match a {
+            Action::Timer => Self::Timer,
+            Action::Tick => Self::Tick,
+            Action::Login => Self::Login,
+            Action::Logout => Self::Logout,
+            Action::Flux => Self::Flux,
+            Action::Online => Self::Online,
+            Action::Details => Self::Details,
+        }
+    }
 }
 
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
@@ -30,7 +44,9 @@ pub fn wrap_callback(
 
     Box::new(move |m| {
         if let Some(func) = wrapper.func {
-            unsafe { func(m, wrapper.data) }
+            func(m, wrapper.data)
         }
     })
 }
+
+pub type Model = *const Mutex<tunet_model::Model>;
