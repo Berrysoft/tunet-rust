@@ -15,20 +15,21 @@ else()
     set(CARGO_FLAGS "")
 endif()
 
-add_custom_target(tunet-model-native
+add_custom_target(tunet-model
     COMMAND cargo build --lib ${CARGO_FLAGS}
     WORKING_DIRECTORY ${PROJECT_DIR}
 )
 
 find_package(Qt6 COMPONENTS Core Gui Widgets)
 
-find(GLOB HEADERS "include/*.hpp")
-find(GLOB SOURCES "src/*.cpp")
+file(GLOB HEADERS "include/*.hpp")
+file(GLOB SOURCES "src/*.cpp")
 
 add_executable(tunet-gui ${SOURCES})
 target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_directories(tunet_gui PUBLIC ${LIB_DIR})
+target_link_directories(tunet-gui PUBLIC ${LIB_DIR})
 target_link_libraries(tunet-gui PUBLIC Qt6::Widgets tunet-model-native)
+add_dependencies(tunet-gui tunet-model)
