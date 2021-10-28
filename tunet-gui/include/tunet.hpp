@@ -34,7 +34,7 @@ namespace tunet
         auth6
     };
 
-    using main_callback = void (*)();
+    using main_callback = int (*)();
 
     using model_handle = void const*;
 

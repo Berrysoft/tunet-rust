@@ -3,7 +3,7 @@
 #include <mutex>
 #include <tunet.hpp>
 
-void main_impl()
+int main_impl()
 {
     std::mutex mtx{};
     std::condition_variable cd{};
@@ -32,9 +32,11 @@ void main_impl()
         std::cout << flux.online_time.count() << std::endl;
         std::cout << flux.balance << std::endl;
     }
+
+    return 0;
 }
 
 int main()
 {
-    tunet::start(4, main_impl);
+    return tunet::start(4, main_impl);
 }

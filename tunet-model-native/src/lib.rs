@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 use std::ptr::null_mut;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use tokio::runtime::Builder;
 use tokio::sync::mpsc::*;
 use tunet_model::*;
@@ -8,22 +8,24 @@ use tunet_rust::*;
 
 mod native;
 
-fn tunet_runtime_init_impl(val: usize, main: native::MainCallback) -> Result<()> {
+fn tunet_runtime_init_impl(val: usize, main: native::MainCallback) -> Result<i32> {
     let runtime = Builder::new_multi_thread()
         .worker_threads(val)
         .enable_all()
         .build()?;
-    runtime.block_on(async move {
+    let res = runtime.block_on(async move {
         if let Some(main) = main {
-            main();
+            main()
+        } else {
+            1
         }
     });
-    Ok(())
+    Ok(res)
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_runtime_init(val: usize, main: native::MainCallback) -> bool {
-    tunet_runtime_init_impl(val, main).is_ok()
+pub extern "C" fn tunet_runtime_init(val: usize, main: native::MainCallback) -> i32 {
+    tunet_runtime_init_impl(val, main).unwrap_or(1)
 }
 
 fn tunet_model_new_impl(
@@ -62,38 +64,36 @@ pub unsafe extern "C" fn tunet_model_unref(model: native::Model) {
     }
 }
 
+unsafe fn lock_model<'a>(model: native::Model) -> MutexGuard<'a, Model> {
+    model.as_ref().unwrap().lock().unwrap()
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_queue(model: native::Model, action: native::Action) {
-    let model = model.as_ref().unwrap().lock().unwrap();
-    model.queue(action.into());
+    lock_model(model).queue(action.into());
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_set_state(model: native::Model, state: native::State) {
-    let mut model = model.as_ref().unwrap().lock().unwrap();
-    model.state = state.into();
+    lock_model(model).state = state.into();
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_username(model: native::Model) -> native::StringView {
-    let model = model.as_ref().unwrap().lock().unwrap();
-    native::StringView::new(&model.flux.username)
+    native::StringView::new(&lock_model(model).flux.username)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_flux(model: native::Model) -> u64 {
-    let model = model.as_ref().unwrap().lock().unwrap();
-    model.flux.flux.0
+    lock_model(model).flux.flux.0
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_online_time(model: native::Model) -> i64 {
-    let model = model.as_ref().unwrap().lock().unwrap();
-    model.flux.online_time.0.num_seconds()
+    lock_model(model).flux.online_time.0.num_seconds()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_balance(model: native::Model) -> f64 {
-    let model = model.as_ref().unwrap().lock().unwrap();
-    model.flux.balance.0
+    lock_model(model).flux.balance.0
 }
