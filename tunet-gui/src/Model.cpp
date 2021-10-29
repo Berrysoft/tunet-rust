@@ -1,4 +1,5 @@
 #include <Model.hpp>
+#include <cmath>
 
 extern "C"
 {
@@ -7,7 +8,7 @@ extern "C"
 
     struct StringView
     {
-        const char* data;
+        const char8_t* data;
         std::size_t size;
     };
 
@@ -42,6 +43,48 @@ bool tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char**
     return tunet_runtime_init(threads, fn_init_callback, &data);
 }
 
+QString tunet_format(std::u8string_view str)
+{
+    return QString::fromUtf8(str.data(), str.size());
+}
+
+QString tunet_format_flux(std::uint64_t f)
+{
+    double flux = f;
+    if (flux < 1000.0)
+    {
+        return QString("%1 B").arg(f);
+    }
+    flux /= 1000.0;
+    if (flux < 1000.0)
+    {
+        return QString("%1 K").arg(flux, 0, 'f', 2);
+    }
+    flux /= 1000.0;
+    if (flux < 1000.0)
+    {
+        return QString("%1 M").arg(flux, 0, 'f', 2);
+    }
+    flux /= 1000.0;
+    return QString("%1 G").arg(flux, 0, 'f', 2);
+}
+
+QString tunet_format_duration(std::chrono::seconds s)
+{
+    auto total_sec = s.count();
+    auto [total_min, sec] = std::div(total_sec, 60ll);
+    auto [total_h, min] = std::div(total_min, 60ll);
+    auto [day, h] = std::div(total_h, 60ll);
+    if (day)
+    {
+        return QString("%1.%2:%3:%4").arg(day).arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+    }
+    else
+    {
+        return QString("%1:%2:%3").arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+    }
+}
+
 static void fn_update_callback(UpdateMsg m, void* data)
 {
     auto model = reinterpret_cast<Model*>(data);
@@ -74,5 +117,5 @@ NetFlux Model::flux() const
     auto f = tunet_model_flux_flux(m_handle);
     auto online = tunet_model_flux_online_time(m_handle);
     auto balance = tunet_model_flux_balance(m_handle);
-    return NetFlux{ std::string_view{ username.data, username.size }, f, std::chrono::seconds{ online }, balance };
+    return NetFlux{ std::u8string_view{ username.data, username.size }, f, std::chrono::seconds{ online }, balance };
 }

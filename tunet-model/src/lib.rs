@@ -94,6 +94,7 @@ impl Model {
                 if !self.flux.username.is_empty() {
                     self.flux.online_time =
                         Duration(self.flux.online_time.0 + NaiveDuration::seconds(1));
+                    self.update(UpdateMsg::Flux);
                 }
             }
             Action::Login => {

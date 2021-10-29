@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QString>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -38,11 +39,15 @@ bool tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char**
 
 struct NetFlux
 {
-    std::string_view username;
+    std::u8string_view username;
     std::uint64_t flux;
     std::chrono::seconds online_time;
     double balance;
 };
+
+QString tunet_format(std::u8string_view str);
+QString tunet_format_flux(std::uint64_t flux);
+QString tunet_format_duration(std::chrono::seconds sec);
 
 struct Model : QObject
 {
