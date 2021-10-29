@@ -54,7 +54,6 @@ struct Model : QObject
 
 public:
     Model();
-
     ~Model();
 
     QString log() const;

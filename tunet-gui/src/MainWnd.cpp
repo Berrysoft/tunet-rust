@@ -11,6 +11,7 @@ MainWnd::MainWnd() : QMainWindow()
     m_flux_layout.addStretch();
     m_flux_widget.setLayout(&m_flux_layout);
 
+    m_info_layout.addWidget(&m_flux_circle, 0, 0);
     m_info_layout.addWidget(&m_flux_widget, 0, 0, Qt::AlignCenter);
 
     m_root_layout.addLayout(&m_info_layout, 1);
@@ -69,4 +70,5 @@ void MainWnd::update_flux()
     m_flux_label.setText(QString(u8"流量：%1").arg(tunet_format_flux(flux.flux)));
     m_online_time_label.setText(QString(u8"时长：%1").arg(tunet_format_duration(flux.online_time)));
     m_balance_label.setText(QString(u8"余额：￥%1").arg(flux.balance));
+    m_flux_circle.update_flux(flux.flux, flux.balance);
 }

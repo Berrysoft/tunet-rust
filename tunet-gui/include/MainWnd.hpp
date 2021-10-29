@@ -1,5 +1,6 @@
 #pragma once
 
+#include <FluxCircle.hpp>
 #include <Model.hpp>
 #include <QGridLayout>
 #include <QLabel>
@@ -13,7 +14,6 @@ struct MainWnd : QMainWindow
 
 public:
     MainWnd();
-
     ~MainWnd() override;
 
 public slots:
@@ -29,6 +29,8 @@ private:
     QWidget m_root_widget{};
     QVBoxLayout m_root_layout{};
     QGridLayout m_info_layout{};
+
+    FluxCircle m_flux_circle{};
 
     QWidget m_flux_widget{};
     QVBoxLayout m_flux_layout{};
