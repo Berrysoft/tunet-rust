@@ -32,14 +32,6 @@ pub struct Model {
 
 impl Model {
     pub fn new(tx: Sender<Action>) -> Result<Self> {
-        Self::new_impl(None, tx)
-    }
-
-    pub fn with_callback(update: UpdateCallback, tx: Sender<Action>) -> Result<Self> {
-        Self::new_impl(Some(update), tx)
-    }
-
-    fn new_impl(update: Option<UpdateCallback>, tx: Sender<Action>) -> Result<Self> {
         let http = create_http_client()?;
 
         let mac_addrs = MacAddressIterator::new()
@@ -47,7 +39,7 @@ impl Model {
             .unwrap_or_default();
 
         Ok(Self {
-            update,
+            update: None,
             tx,
             cred: Arc::new(NetCredential::default()),
             http,
@@ -62,6 +54,10 @@ impl Model {
             details: Vec::default(),
             mac_addrs,
         })
+    }
+
+    pub fn set_callback(&mut self, update: Option<UpdateCallback>) {
+        self.update = update;
     }
 
     pub fn queue(&self, action: Action) {

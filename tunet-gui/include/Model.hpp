@@ -35,7 +35,7 @@ enum class State : std::int32_t
 
 using NativeModel = const void*;
 
-bool tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char** argv);
+std::int32_t tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char** argv);
 
 struct NetFlux
 {

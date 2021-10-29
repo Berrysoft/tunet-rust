@@ -41,10 +41,11 @@ fn tunet_model_new_impl(
     data: *mut c_void,
 ) -> Result<native::Model> {
     let (tx, mut rx) = channel(32);
-    let model = Arc::new(Mutex::new(Model::with_callback(
-        native::wrap_callback(update, data),
-        tx,
-    )?));
+    let model = Arc::new(Mutex::new({
+        let mut model = Model::new(tx)?;
+        model.set_callback(Some(native::wrap_callback(update, data)));
+        model
+    }));
     {
         let model = model.clone();
         tokio::spawn(async move {
@@ -67,9 +68,8 @@ pub extern "C" fn tunet_model_new(
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_unref(model: native::Model) {
-    if !model.is_null() {
-        let _ = Arc::from_raw(model);
-    }
+    let model = Arc::from_raw(model);
+    model.lock().unwrap().set_callback(None);
 }
 
 unsafe fn lock_model<'a>(model: native::Model) -> MutexGuard<'a, Model> {

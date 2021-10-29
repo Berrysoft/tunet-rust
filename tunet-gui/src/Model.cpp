@@ -12,7 +12,7 @@ extern "C"
         std::size_t size;
     };
 
-    bool tunet_runtime_init(std::size_t val, MainCallback main, void* data);
+    std::int32_t tunet_runtime_init(std::size_t val, MainCallback main, void* data);
 
     NativeModel tunet_model_new(UpdateCallback update, void* data);
     void tunet_model_unref(NativeModel m);
@@ -38,7 +38,7 @@ static int fn_init_callback(void* data)
     return (d->main)(d->argc, d->argv);
 }
 
-bool tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char** argv)
+std::int32_t tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char** argv)
 {
     init_data data{ main, argc, argv };
     return tunet_runtime_init(threads, fn_init_callback, &data);
