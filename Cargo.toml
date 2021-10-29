@@ -2,6 +2,7 @@
 members = [
     "authtea",
     "netstatus",
+    "color-theme",
     "keyring",
     "tunet-rust",
     "tunet-settings",

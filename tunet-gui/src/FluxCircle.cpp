@@ -1,4 +1,5 @@
 #include <FluxCircle.hpp>
+#include <Model.hpp>
 #include <QPainter>
 #include <QPainterPath>
 #include <algorithm>
@@ -48,6 +49,6 @@ void FluxCircle::paintEvent(QPaintEvent* event)
     QPainter painter{ this };
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QPen pen{ QColor::fromRgba(0xFF000000), line_width };
+    QPen pen{ tunet_accent(), line_width };
     draw_arc(painter, pen, center, radius, 90, 360);
 }

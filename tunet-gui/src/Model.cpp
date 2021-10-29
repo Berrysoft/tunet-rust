@@ -14,6 +14,15 @@ extern "C"
 
     std::int32_t tunet_runtime_init(std::size_t val, MainCallback main, void* data);
 
+    struct ThemeColor
+    {
+        std::uint8_t r;
+        std::uint8_t g;
+        std::uint8_t b;
+    };
+
+    ThemeColor tunet_color_accent();
+
     NativeModel tunet_model_new(UpdateCallback update, void* data);
     void tunet_model_unref(NativeModel m);
     void tunet_model_queue(NativeModel m, Action a);
@@ -42,6 +51,12 @@ std::int32_t tunet_start(std::size_t threads, int (*main)(int, char**), int argc
 {
     init_data data{ main, argc, argv };
     return tunet_runtime_init(threads, fn_init_callback, &data);
+}
+
+QColor tunet_accent()
+{
+    auto color = tunet_color_accent();
+    return QColor::fromRgb(color.r, color.g, color.b);
 }
 
 QString tunet_format_flux(std::uint64_t f)

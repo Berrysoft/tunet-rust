@@ -36,6 +36,11 @@ pub extern "C" fn tunet_runtime_init(
     tunet_runtime_init_impl(val, main, data).unwrap_or(1)
 }
 
+#[no_mangle]
+pub extern "C" fn tunet_color_accent() -> color_theme::Color {
+    color_theme::Color::accent()
+}
+
 fn tunet_model_new_impl(
     update: native::UpdateCallback,
     data: *mut c_void,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QColor>
 #include <QObject>
 #include <QString>
 #include <chrono>
@@ -36,6 +37,8 @@ enum class State : std::int32_t
 using NativeModel = const void*;
 
 std::int32_t tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char** argv);
+
+QColor tunet_accent();
 
 struct NetFlux
 {
