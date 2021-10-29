@@ -16,8 +16,11 @@ MainWnd::MainWnd() : QMainWindow()
     m_root_layout.addLayout(&m_info_layout);
 
     m_login_button.setText(u8"登录");
+    QObject::connect(&m_login_button, &QPushButton::clicked, this, &MainWnd::spawn_login);
     m_logout_button.setText(u8"注销");
+    QObject::connect(&m_logout_button, &QPushButton::clicked, this, &MainWnd::spawn_logout);
     m_flux_button.setText(u8"刷新");
+    QObject::connect(&m_flux_button, &QPushButton::clicked, this, &MainWnd::spawn_flux);
 
     m_command_layout.addWidget(&m_login_button);
     m_command_layout.addWidget(&m_logout_button);
@@ -34,6 +37,21 @@ MainWnd::MainWnd() : QMainWindow()
 }
 
 MainWnd::~MainWnd() {}
+
+void MainWnd::spawn_login()
+{
+    m_model.queue(Action::Login);
+}
+
+void MainWnd::spawn_logout()
+{
+    m_model.queue(Action::Logout);
+}
+
+void MainWnd::spawn_flux()
+{
+    m_model.queue(Action::Flux);
+}
 
 void MainWnd::update_flux()
 {

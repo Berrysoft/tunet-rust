@@ -17,6 +17,10 @@ public:
     ~MainWnd() override;
 
 public slots:
+    void spawn_login();
+    void spawn_logout();
+    void spawn_flux();
+
     void update_flux();
 
 private:
