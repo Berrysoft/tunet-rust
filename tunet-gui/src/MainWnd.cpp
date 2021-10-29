@@ -1,4 +1,5 @@
 #include <MainWnd.hpp>
+#include <QScreen>
 
 MainWnd::MainWnd() : QMainWindow()
 {
@@ -33,6 +34,9 @@ MainWnd::MainWnd() : QMainWindow()
 
     m_root_widget.setLayout(&m_root_layout);
     setCentralWidget(&m_root_widget);
+
+    resize(400, 400);
+    move(screen()->geometry().center() - rect().center());
 
     m_model.queue_state(State::Net);
     QObject::connect(&m_model, &Model::log_changed, this, &MainWnd::update_log);

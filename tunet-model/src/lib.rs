@@ -80,7 +80,10 @@ impl Model {
                             tx.send(Action::State(Some(state))).await.ok()
                         });
                     }
-                    _ => self.state = s,
+                    _ => {
+                        self.state = s;
+                        self.update(UpdateMsg::State);
+                    }
                 };
             }
             Action::Timer => {
@@ -104,8 +107,6 @@ impl Model {
                 self.spawn_logout();
             }
             Action::Flux => {
-                self.log = "正在刷新流量".into();
-                self.update(UpdateMsg::Log);
                 self.spawn_flux();
             }
             Action::LoginDone(s) | Action::LogoutDone(s) => {
@@ -113,8 +114,10 @@ impl Model {
                 self.update(UpdateMsg::Log);
             }
             Action::FluxDone(f, s) => {
-                self.log = s.into();
-                self.update(UpdateMsg::Log);
+                if let Some(s) = s {
+                    self.log = s.into();
+                    self.update(UpdateMsg::Log);
+                }
                 self.flux = f;
                 self.update(UpdateMsg::Flux);
             }
@@ -219,10 +222,10 @@ impl Model {
         let flux = client.flux().await;
         match flux {
             Ok(flux) => {
-                tx.send(Action::FluxDone(flux, String::default())).await?;
+                tx.send(Action::FluxDone(flux, None)).await?;
             }
             Err(err) => {
-                tx.send(Action::FluxDone(NetFlux::default(), err.to_string()))
+                tx.send(Action::FluxDone(NetFlux::default(), Some(err.to_string())))
                     .await?
             }
         }
@@ -287,7 +290,7 @@ pub enum Action {
     Logout,
     LogoutDone(String),
     Flux,
-    FluxDone(NetFlux, String),
+    FluxDone(NetFlux, Option<String>),
     Online,
     OnlineDone(Vec<NetUser>),
     Details,
@@ -296,6 +299,7 @@ pub enum Action {
 
 #[repr(i32)]
 pub enum UpdateMsg {
+    State,
     Log,
     Flux,
     Online,

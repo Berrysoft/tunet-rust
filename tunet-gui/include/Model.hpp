@@ -20,6 +20,7 @@ enum class Action : std::int32_t
 
 enum class UpdateMsg : std::int32_t
 {
+    State,
     Log,
     Flux,
     Online,
