@@ -9,7 +9,9 @@ license = "MIT"
 [dependencies]
 
 [target.'cfg(target_os = "windows")'.dependencies]
-winrt-bindings = { path = "../winrt-bindings" }
+windows = { version = "0.23", features = [
+    "UI_ViewManagement",
+] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = "0.2"

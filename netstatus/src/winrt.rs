@@ -1,5 +1,5 @@
 use crate::*;
-use winrt_bindings::{windows::Result, Windows::Networking::Connectivity::*};
+use windows::{runtime::*, Networking::Connectivity::*};
 
 fn current_impl() -> Result<NetStatus> {
     let profile = NetworkInformation::GetInternetConnectionProfile()?;

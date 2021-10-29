@@ -1,5 +1,5 @@
 use super::*;
-use winrt_bindings::{windows::Result, Windows::UI::ViewManagement::*};
+use windows::{runtime::*, UI::ViewManagement::*};
 
 fn accent_impl() -> Result<Color> {
     let settings = UISettings::new()?;

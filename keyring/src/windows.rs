@@ -1,9 +1,9 @@
 use std::ptr::null_mut;
 use wide_literals::*;
 use widestring::U16CString;
-use winrt_bindings::{
-    windows::Result,
-    Windows::Win32::{Foundation::*, Security::Credentials::*},
+use windows::{
+    runtime::*,
+    Win32::{Foundation::*, Security::Credentials::*},
 };
 
 pub struct Keyring {

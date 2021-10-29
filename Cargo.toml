@@ -11,10 +11,6 @@ members = [
     "tunet",
 ]
 
-exclude = [
-    "winrt-bindings",
-]
-
 resolver = "2"
 
 [profile.release]
