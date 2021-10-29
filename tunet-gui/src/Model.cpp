@@ -18,6 +18,7 @@ extern "C"
     void tunet_model_unref(NativeModel m);
     void tunet_model_queue(NativeModel m, Action a);
     void tunet_model_queue_state(NativeModel m, State s);
+    StringView tunet_model_log(NativeModel m);
     StringView tunet_model_flux_username(NativeModel m);
     std::uint64_t tunet_model_flux_flux(NativeModel m);
     std::int64_t tunet_model_flux_online_time(NativeModel m);
@@ -41,11 +42,6 @@ bool tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char**
 {
     init_data data{ main, argc, argv };
     return tunet_runtime_init(threads, fn_init_callback, &data);
-}
-
-QString tunet_format(std::u8string_view str)
-{
-    return QString::fromUtf8(str.data(), str.size());
 }
 
 QString tunet_format_flux(std::uint64_t f)
@@ -101,15 +97,22 @@ void Model::update(UpdateMsg m) const
 {
     switch (m)
     {
+    case UpdateMsg::Log:
+        emit log_changed();
+        break;
     case UpdateMsg::Flux:
-    {
         emit flux_changed();
         break;
-    }
     }
 }
 
 void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
+
+QString Model::log() const
+{
+    auto str = tunet_model_log(m_handle);
+    return QString::fromUtf8(str.data, str.size);
+}
 
 NetFlux Model::flux() const
 {
@@ -117,5 +120,5 @@ NetFlux Model::flux() const
     auto f = tunet_model_flux_flux(m_handle);
     auto online = tunet_model_flux_online_time(m_handle);
     auto balance = tunet_model_flux_balance(m_handle);
-    return NetFlux{ std::u8string_view{ username.data, username.size }, f, std::chrono::seconds{ online }, balance };
+    return NetFlux{ QString::fromUtf8(username.data, username.size), f, std::chrono::seconds{ online }, balance };
 }

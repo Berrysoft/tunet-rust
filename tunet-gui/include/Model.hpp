@@ -39,13 +39,12 @@ bool tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char**
 
 struct NetFlux
 {
-    std::u8string_view username;
+    QString username;
     std::uint64_t flux;
     std::chrono::seconds online_time;
     double balance;
 };
 
-QString tunet_format(std::u8string_view str);
 QString tunet_format_flux(std::uint64_t flux);
 QString tunet_format_duration(std::chrono::seconds sec);
 
@@ -58,6 +57,7 @@ public:
 
     ~Model();
 
+    QString log() const;
     NetFlux flux() const;
 
     void queue(Action a) const;
@@ -65,6 +65,7 @@ public:
     void update(UpdateMsg m) const;
 
 signals:
+    void log_changed() const;
     void flux_changed() const;
 
 private:

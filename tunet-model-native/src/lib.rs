@@ -87,6 +87,11 @@ pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: na
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tunet_model_log(model: native::Model) -> native::StringView {
+    native::StringView::new(&lock_model(model).log)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_username(model: native::Model) -> native::StringView {
     native::StringView::new(&lock_model(model).flux.username)
 }

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <Model.hpp>
-#include <QPushButton>
 #include <QGridLayout>
 #include <QLabel>
 #include <QMainWindow>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 struct MainWnd : QMainWindow
@@ -21,6 +21,7 @@ public slots:
     void spawn_logout();
     void spawn_flux();
 
+    void update_log();
     void update_flux();
 
 private:
@@ -35,6 +36,8 @@ private:
     QLabel m_flux_label{};
     QLabel m_online_time_label{};
     QLabel m_balance_label{};
+
+    QLabel m_log_label{};
 
     QHBoxLayout m_command_layout{};
     QPushButton m_login_button{};
