@@ -4,6 +4,7 @@
 #include <Model.hpp>
 #include <QComboBox>
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
@@ -32,19 +33,23 @@ public slots:
 
 private:
     Model m_model{};
-    QWidget m_root_widget{};
-    QVBoxLayout m_root_layout{};
+
+    QWidget m_root_widget{ this };
+    QVBoxLayout m_root_layout{ &m_root_widget };
     QGridLayout m_info_layout{};
 
     FluxCircle m_flux_circle{};
 
     QWidget m_flux_widget{};
-    QVBoxLayout m_flux_layout{};
+    QVBoxLayout m_flux_layout{ &m_flux_widget };
     QLabel m_username_label{};
     QLabel m_flux_label{};
     QLabel m_online_time_label{};
     QLabel m_balance_label{};
 
+    QWidget m_state_widget{};
+    QHBoxLayout m_state_layout{ &m_state_widget };
+    QLabel m_state_label{};
     QComboBox m_state_combo{};
 
     QLabel m_log_label{};

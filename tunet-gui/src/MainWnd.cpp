@@ -3,25 +3,25 @@
 
 MainWnd::MainWnd() : QMainWindow()
 {
-    m_flux_layout.setAlignment(Qt::AlignCenter);
-    m_flux_layout.addStretch();
     m_flux_layout.addWidget(&m_username_label, Qt::AlignLeft);
     m_flux_layout.addWidget(&m_flux_label, Qt::AlignLeft);
     m_flux_layout.addWidget(&m_online_time_label, Qt::AlignLeft);
     m_flux_layout.addWidget(&m_balance_label, Qt::AlignLeft);
-    m_flux_layout.addStretch();
-    m_flux_widget.setLayout(&m_flux_layout);
 
     m_info_layout.addWidget(&m_flux_circle, 0, 0);
     m_info_layout.addWidget(&m_flux_widget, 0, 0, Qt::AlignCenter);
-
     m_root_layout.addLayout(&m_info_layout, 1);
 
+    m_state_layout.addStretch();
+    m_state_label.setText(u8"连接方式：");
+    m_state_layout.addWidget(&m_state_label);
     m_state_combo.addItem("Net");
     m_state_combo.addItem("Auth4");
     m_state_combo.addItem("Auth6");
     QObject::connect(&m_state_combo, &QComboBox::currentIndexChanged, this, &MainWnd::update_state_back);
-    m_root_layout.addWidget(&m_state_combo);
+    m_state_layout.addWidget(&m_state_combo);
+    m_state_layout.addStretch();
+    m_root_layout.addWidget(&m_state_widget);
 
     m_log_label.setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_log_label.setWordWrap(true);
@@ -40,7 +40,6 @@ MainWnd::MainWnd() : QMainWindow()
     m_command_layout.addWidget(&m_flux_button);
     m_root_layout.addLayout(&m_command_layout, 1);
 
-    m_root_widget.setLayout(&m_root_layout);
     setCentralWidget(&m_root_widget);
 
     resize(400, 400);
@@ -58,7 +57,6 @@ void MainWnd::showEvent(QShowEvent* event)
     m_model.queue_read_cred();
     m_model.queue_state(State::Auto);
     m_model.queue(Action::Timer);
-    m_model.queue(Action::Flux);
 }
 
 void MainWnd::spawn_login()
@@ -80,6 +78,7 @@ void MainWnd::update_state()
 {
     auto state = m_model.state();
     m_state_combo.setCurrentIndex(static_cast<int>(state) - 1);
+    m_model.queue(Action::Flux);
 }
 
 void MainWnd::update_state_back(int index)
