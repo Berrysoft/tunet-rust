@@ -2,6 +2,7 @@
 
 #include <FluxCircle.hpp>
 #include <Model.hpp>
+#include <QComboBox>
 #include <QGridLayout>
 #include <QLabel>
 #include <QMainWindow>
@@ -16,11 +17,16 @@ public:
     MainWnd();
     ~MainWnd() override;
 
+protected:
+    void showEvent(QShowEvent* event) override;
+
 public slots:
     void spawn_login();
     void spawn_logout();
     void spawn_flux();
 
+    void update_state();
+    void update_state_back(int index);
     void update_log();
     void update_flux();
 
@@ -38,6 +44,8 @@ private:
     QLabel m_flux_label{};
     QLabel m_online_time_label{};
     QLabel m_balance_label{};
+
+    QComboBox m_state_combo{};
 
     QLabel m_log_label{};
 

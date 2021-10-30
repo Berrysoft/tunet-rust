@@ -17,6 +17,12 @@ MainWnd::MainWnd() : QMainWindow()
 
     m_root_layout.addLayout(&m_info_layout, 1);
 
+    m_state_combo.addItem("Net");
+    m_state_combo.addItem("Auth4");
+    m_state_combo.addItem("Auth6");
+    QObject::connect(&m_state_combo, &QComboBox::currentIndexChanged, this, &MainWnd::update_state_back);
+    m_root_layout.addWidget(&m_state_combo);
+
     m_log_label.setAlignment(Qt::AlignCenter);
     m_root_layout.addWidget(&m_log_label);
 
@@ -38,14 +44,20 @@ MainWnd::MainWnd() : QMainWindow()
     resize(400, 400);
     move(screen()->geometry().center() - rect().center());
 
-    m_model.queue_state(State::Net);
+    QObject::connect(&m_model, &Model::state_changed, this, &MainWnd::update_state);
     QObject::connect(&m_model, &Model::log_changed, this, &MainWnd::update_log);
     QObject::connect(&m_model, &Model::flux_changed, this, &MainWnd::update_flux);
-    m_model.queue(Action::Timer);
-    m_model.queue(Action::Flux);
 }
 
 MainWnd::~MainWnd() {}
+
+void MainWnd::showEvent(QShowEvent* event)
+{
+    m_model.queue_read_cred();
+    m_model.queue_state(State::Auto);
+    m_model.queue(Action::Timer);
+    m_model.queue(Action::Flux);
+}
 
 void MainWnd::spawn_login()
 {
@@ -60,6 +72,17 @@ void MainWnd::spawn_logout()
 void MainWnd::spawn_flux()
 {
     m_model.queue(Action::Flux);
+}
+
+void MainWnd::update_state()
+{
+    auto state = m_model.state();
+    m_state_combo.setCurrentIndex(static_cast<int>(state) - 1);
+}
+
+void MainWnd::update_state_back(int index)
+{
+    m_model.queue_state(static_cast<State>(index + 1));
 }
 
 void MainWnd::update_log()
