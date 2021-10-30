@@ -11,7 +11,7 @@ public:
 
     void update_flux(std::uint64_t flux, double balance);
 
-private:
+protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:

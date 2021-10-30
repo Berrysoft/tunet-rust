@@ -35,7 +35,7 @@ find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 file(GLOB HEADERS "include/*.hpp")
 file(GLOB SOURCES "src/*.cpp")
 
-qt_wrap_cpp(SOURCES ${HEADERS})
+qt_wrap_cpp(SOURCES "include/Model.hpp")
 add_executable(tunet-gui ${SOURCES})
 target_include_directories(tunet-gui
     PUBLIC

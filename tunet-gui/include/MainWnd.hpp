@@ -12,16 +12,10 @@
 
 struct MainWnd : QMainWindow
 {
-    Q_OBJECT
-
 public:
     MainWnd();
     ~MainWnd() override;
 
-protected:
-    void showEvent(QShowEvent* event) override;
-
-public slots:
     void spawn_login();
     void spawn_logout();
     void spawn_flux();
@@ -30,6 +24,9 @@ public slots:
     void update_state_back(int index);
     void update_log();
     void update_flux();
+
+protected:
+    void showEvent(QShowEvent* event) override;
 
 private:
     Model m_model{};
