@@ -10,6 +10,11 @@ extern "C"
     {
         const char8_t* data;
         std::size_t size;
+
+        operator QString() const
+        {
+            return QString::fromUtf8(data, size);
+        }
     };
 
     std::int32_t tunet_runtime_init(std::size_t val, MainCallback main, void* data);
@@ -26,7 +31,11 @@ extern "C"
     NativeModel tunet_model_new(UpdateCallback update, void* data);
     void tunet_model_unref(NativeModel m);
     void tunet_model_queue(NativeModel m, Action a);
+    bool tunet_model_queue_read_cred(NativeModel m);
     void tunet_model_queue_state(NativeModel m, State s);
+    StringView tunet_model_cred_username(NativeModel m);
+    StringView tunet_model_cred_password(NativeModel m);
+    State tunet_model_state(NativeModel m);
     StringView tunet_model_log(NativeModel m);
     StringView tunet_model_flux_username(NativeModel m);
     std::uint64_t tunet_model_flux_flux(NativeModel m);
@@ -108,10 +117,17 @@ Model::~Model() { tunet_model_unref(m_handle); }
 
 void Model::queue(Action a) const { tunet_model_queue(m_handle, a); }
 
+bool Model::queue_read_cred() const { return tunet_model_queue_read_cred(m_handle); }
+
+void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
+
 void Model::update(UpdateMsg m) const
 {
     switch (m)
     {
+    case UpdateMsg::State:
+        emit state_changed();
+        break;
     case UpdateMsg::Log:
         emit log_changed();
         break;
@@ -121,12 +137,21 @@ void Model::update(UpdateMsg m) const
     }
 }
 
-void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
+NetCredential Model::cred() const
+{
+    auto username = tunet_model_cred_username(m_handle);
+    auto password = tunet_model_cred_password(m_handle);
+    return { username, password };
+}
+
+State Model::state() const
+{
+    return tunet_model_state(m_handle);
+}
 
 QString Model::log() const
 {
-    auto str = tunet_model_log(m_handle);
-    return QString::fromUtf8(str.data, str.size);
+    return tunet_model_log(m_handle);
 }
 
 NetFlux Model::flux() const
@@ -135,5 +160,5 @@ NetFlux Model::flux() const
     auto f = tunet_model_flux_flux(m_handle);
     auto online = tunet_model_flux_online_time(m_handle);
     auto balance = tunet_model_flux_balance(m_handle);
-    return NetFlux{ QString::fromUtf8(username.data, username.size), f, std::chrono::seconds{ online }, balance };
+    return NetFlux{ username, f, std::chrono::seconds{ online }, balance };
 }

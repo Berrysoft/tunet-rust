@@ -46,6 +46,17 @@ impl From<State> for NetState {
     }
 }
 
+impl From<NetState> for State {
+    fn from(s: NetState) -> Self {
+        match s {
+            NetState::Net => Self::Net,
+            NetState::Auth4 => Self::Auth4,
+            NetState::Auth6 => Self::Auth6,
+            _ => Self::Auto,
+        }
+    }
+}
+
 pub type MainCallback = Option<extern "C" fn(*mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
 

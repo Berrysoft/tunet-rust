@@ -41,6 +41,12 @@ std::int32_t tunet_start(std::size_t threads, int (*main)(int, char**), int argc
 
 QColor tunet_accent();
 
+struct NetCredential
+{
+    QString username;
+    QString password;
+};
+
 struct NetFlux
 {
     QString username;
@@ -60,14 +66,18 @@ public:
     Model();
     ~Model();
 
+    NetCredential cred() const;
+    State state() const;
     QString log() const;
     NetFlux flux() const;
 
     void queue(Action a) const;
+    bool queue_read_cred() const;
     void queue_state(State s) const;
     void update(UpdateMsg m) const;
 
 signals:
+    void state_changed() const;
     void log_changed() const;
     void flux_changed() const;
 

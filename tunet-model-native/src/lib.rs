@@ -5,6 +5,7 @@ use tokio::runtime::Builder;
 use tokio::sync::mpsc::*;
 use tunet_model::*;
 use tunet_rust::*;
+use tunet_settings::*;
 
 mod native;
 
@@ -86,9 +87,36 @@ pub unsafe extern "C" fn tunet_model_queue(model: native::Model, action: native:
     lock_model(model).queue(action.into());
 }
 
+unsafe fn tunet_model_queue_read_cred_impl(model: native::Model) -> Result<()> {
+    let reader = FileSettingsReader::new()?;
+    let cred = reader.read_with_password()?;
+    lock_model(model).queue(Action::Credential(Arc::new(cred)));
+    Ok(())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_queue_read_cred(model: native::Model) -> bool {
+    tunet_model_queue_read_cred_impl(model).is_ok()
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: native::State) {
     lock_model(model).queue(Action::State(Some(state.into())));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_cred_username(model: native::Model) -> native::StringView {
+    native::StringView::new(&lock_model(model).cred.username)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_cred_password(model: native::Model) -> native::StringView {
+    native::StringView::new(&lock_model(model).cred.password)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_state(model: native::Model) -> native::State {
+    lock_model(model).state.into()
 }
 
 #[no_mangle]

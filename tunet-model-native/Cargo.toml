@@ -11,6 +11,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 tunet-rust = { path = "../tunet-rust", features = [ "netstatus" ] }
+tunet-settings = { path = "../tunet-settings" }
 tunet-model = { path = "../tunet-model" }
 color-theme = { path = "../color-theme" }
 tokio = { version = "1.11", features = [ "rt-multi-thread" ] }
