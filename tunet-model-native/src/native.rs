@@ -1,4 +1,7 @@
-use std::{ffi::c_void, sync::Mutex};
+use std::{
+    ffi::c_void,
+    sync::{Arc, Mutex},
+};
 use tunet_model::UpdateMsg;
 use tunet_rust::NetState;
 
@@ -63,7 +66,7 @@ pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
 pub fn wrap_callback(
     func: UpdateCallback,
     data: *mut c_void,
-) -> Box<dyn Fn(UpdateMsg) + Send + Sync + 'static> {
+) -> Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static> {
     struct TempWrapper {
         func: UpdateCallback,
         data: *mut c_void,
@@ -74,7 +77,7 @@ pub fn wrap_callback(
 
     let wrapper = TempWrapper { func, data };
 
-    Box::new(move |m| {
+    Arc::new(move |m| {
         if let Some(func) = wrapper.func {
             func(m, wrapper.data)
         }

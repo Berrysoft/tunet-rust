@@ -11,7 +11,7 @@ use std::sync::{
 use tokio::sync::mpsc::*;
 use tunet_rust::{usereg::*, *};
 
-pub type UpdateCallback = Box<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
+pub type UpdateCallback = Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
 
 pub struct Model {
     update: Option<UpdateCallback>,
@@ -140,7 +140,8 @@ impl Model {
 
     pub fn update(&self, msg: UpdateMsg) {
         if let Some(f) = &self.update {
-            f(msg)
+            let f = f.clone();
+            tokio::task::spawn_blocking(move || f(msg));
         }
     }
 

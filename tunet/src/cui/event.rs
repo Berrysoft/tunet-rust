@@ -3,6 +3,7 @@ use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
 use futures_util::{pin_mut, Stream, StreamExt};
 use std::{
     pin::Pin,
+    sync::Arc,
     task::{Context, Poll},
 };
 use tokio::sync::mpsc::*;
@@ -14,6 +15,7 @@ use tunet_rust::*;
 pub enum EventType {
     TerminalEvent(TerminalEvent),
     ModelAction(Action),
+    UpdateState,
 }
 
 pub struct Event {
@@ -26,11 +28,12 @@ impl Event {
     pub fn new() -> Result<Self> {
         let (tx, rx) = channel(32);
         let (mtx, mrx) = channel(32);
-        let e = Self {
+        let mut e = Self {
             model: Model::new(mtx)?,
             tx,
             rx,
         };
+        e.attach_callback();
         e.spawn_terminal_event();
         e.spawn_model_action(mrx);
         Ok(e)
@@ -38,9 +41,19 @@ impl Event {
 
     pub fn start(&self) {
         self.spawn_timer();
-        self.spawn_login();
         self.spawn_online();
         self.spawn_details();
+    }
+
+    fn attach_callback(&mut self) {
+        let tx = self.tx.clone();
+        self.model.set_callback(Some(Arc::new(move |m| match m {
+            UpdateMsg::State => {
+                let tx = tx.clone();
+                tokio::spawn(async move { tx.send(Ok(EventType::UpdateState)).await.ok() });
+            }
+            _ => {}
+        })));
     }
 
     fn spawn_terminal_event(&self) {
@@ -115,6 +128,9 @@ impl Event {
             },
             EventType::ModelAction(a) => {
                 self.model.handle(a);
+            }
+            EventType::UpdateState => {
+                self.spawn_flux();
             }
         }
         true

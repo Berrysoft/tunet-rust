@@ -20,7 +20,6 @@ pub async fn run(state: NetState) -> Result<()> {
 
     event.model.queue(Action::Credential(read_cred()?));
     event.model.queue(Action::State(Some(state)));
-    event.start();
 
     enable_raw_mode()?;
     execute!(std::io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
@@ -45,6 +44,7 @@ async fn main_loop(event: &mut Event) -> Result<()> {
     terminal.clear()?;
 
     let mut interval = tokio::time::interval(std::time::Duration::from_micros(100));
+    event.start();
 
     loop {
         tokio::select! {
