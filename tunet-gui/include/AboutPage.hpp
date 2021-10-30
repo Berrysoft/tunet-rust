@@ -1,8 +1,7 @@
 #pragma once
 
 #include <QLabel>
-#include <QStandardItemModel>
-#include <QTableView>
+#include <QTableWidget>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -19,6 +18,5 @@ private:
 
     QLabel m_lib_label{ this };
 
-    QStandardItemModel m_libs{ this };
-    QTableView m_lib_table{ this };
+    QTableWidget m_lib_table{ this };
 };

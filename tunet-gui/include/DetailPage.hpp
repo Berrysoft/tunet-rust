@@ -1,8 +1,7 @@
 #pragma once
 
 #include <Model.hpp>
-#include <QStandardItemModel>
-#include <QTableView>
+#include <QTableWidget>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -21,6 +20,5 @@ private:
     Model* m_pmodel{};
 
     QVBoxLayout m_details_layout{ this };
-    QStandardItemModel m_details{ this };
-    QTableView m_details_table{ this };
+    QTableWidget m_details_table{ this };
 };

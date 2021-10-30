@@ -66,17 +66,23 @@ AboutPage::AboutPage(QWidget* parent) : QWidget(parent)
     m_lib_label.setText(u8"使用的库");
     m_about_layout.addWidget(&m_lib_label);
 
-    m_libs.setHorizontalHeaderLabels(QStringList{ u8"名称", u8"许可证" });
+    m_lib_table.setColumnCount(2);
+    m_lib_table.setHorizontalHeaderLabels(QStringList{ u8"名称", u8"许可证" });
+    m_lib_table.setRowCount((int)std::size(LIBS));
+    int row = 0;
     for (auto& lib : LIBS)
     {
-        auto name = new QStandardItem(lib[0]);
+        auto name = new QTableWidgetItem(lib[0]);
         name->setTextAlignment(Qt::AlignHCenter);
-        auto license = new QStandardItem(lib[1]);
+        m_lib_table.setItem(row, 0, name);
+
+        auto license = new QTableWidgetItem(lib[1]);
         license->setTextAlignment(Qt::AlignHCenter);
-        m_libs.appendRow({ name, license });
+        m_lib_table.setItem(row, 1, license);
+
+        row++;
     }
 
-    m_lib_table.setModel(&m_libs);
     m_lib_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_lib_table.verticalHeader()->setVisible(false);
     m_lib_table.setSortingEnabled(true);

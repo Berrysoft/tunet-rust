@@ -178,7 +178,7 @@ NetFlux Model::flux() const
 static bool fn_foreach_detail(const Detail* d, void* data)
 {
     std::vector<NetDetail>& details = *reinterpret_cast<std::vector<NetDetail>*>(data);
-    details.emplace_back(QDateTime::fromSecsSinceEpoch(d->login_time), QDateTime::fromSecsSinceEpoch(d->logout_time), d->flux);
+    details.emplace_back(QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC), QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC), d->flux);
     return true;
 }
 
