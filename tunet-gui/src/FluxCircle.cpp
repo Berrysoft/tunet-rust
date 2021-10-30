@@ -3,7 +3,6 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <algorithm>
-#include <iostream>
 #include <numbers>
 
 FluxCircle::FluxCircle(QWidget* parent) : QWidget(parent)

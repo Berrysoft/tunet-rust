@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tunet_model::UpdateMsg;
-use tunet_rust::NetState;
+use tunet_rust::{usereg::NetDetail, NetState};
 
 #[repr(i32)]
 pub enum Action {
@@ -60,8 +60,26 @@ impl From<NetState> for State {
     }
 }
 
+#[repr(C)]
+pub struct Detail {
+    pub login_time: i64,
+    pub logout_time: i64,
+    pub flux: u64,
+}
+
+impl From<&NetDetail> for Detail {
+    fn from(d: &NetDetail) -> Self {
+        Self {
+            login_time: d.login_time.timestamp(),
+            logout_time: d.logout_time.timestamp(),
+            flux: d.flux.0,
+        }
+    }
+}
+
 pub type MainCallback = Option<extern "C" fn(*mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
+pub type DetailsForeachCallback = Option<extern "C" fn(*const Detail, *mut c_void) -> bool>;
 
 pub fn wrap_callback(
     func: UpdateCallback,

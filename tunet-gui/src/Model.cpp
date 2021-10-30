@@ -3,8 +3,16 @@
 
 extern "C"
 {
+    struct Detail
+    {
+        std::int64_t login_time;
+        std::int64_t logout_time;
+        std::uint64_t flux;
+    };
+
     using MainCallback = int (*)(void*);
     using UpdateCallback = void (*)(UpdateMsg, void*);
+    using DetailsForeachCallback = bool (*)(const Detail*, void*);
 
     struct StringView
     {
@@ -41,6 +49,7 @@ extern "C"
     std::uint64_t tunet_model_flux_flux(NativeModel m);
     std::int64_t tunet_model_flux_online_time(NativeModel m);
     double tunet_model_flux_balance(NativeModel m);
+    void tunet_model_details_foreach(NativeModel m, DetailsForeachCallback f, void* data);
 }
 
 struct init_data
@@ -134,6 +143,9 @@ void Model::update(UpdateMsg m) const
     case UpdateMsg::Flux:
         emit flux_changed();
         break;
+    case UpdateMsg::Details:
+        emit details_changed();
+        break;
     }
 }
 
@@ -161,4 +173,18 @@ NetFlux Model::flux() const
     auto online = tunet_model_flux_online_time(m_handle);
     auto balance = tunet_model_flux_balance(m_handle);
     return NetFlux{ username, f, std::chrono::seconds{ online }, balance };
+}
+
+static bool fn_foreach_detail(const Detail* d, void* data)
+{
+    std::vector<NetDetail>& details = *reinterpret_cast<std::vector<NetDetail>*>(data);
+    details.emplace_back(QDateTime::fromSecsSinceEpoch(d->login_time), QDateTime::fromSecsSinceEpoch(d->logout_time), d->flux);
+    return true;
+}
+
+std::vector<NetDetail> Model::details() const
+{
+    std::vector<NetDetail> details{};
+    tunet_model_details_foreach(m_handle, fn_foreach_detail, &details);
+    return details;
 }

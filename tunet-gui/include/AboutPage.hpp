@@ -10,7 +10,7 @@ struct AboutPage : QWidget
 {
 public:
     AboutPage(QWidget* parent);
-    ~AboutPage();
+    ~AboutPage() override;
 
 private:
     QVBoxLayout m_about_layout{ this };

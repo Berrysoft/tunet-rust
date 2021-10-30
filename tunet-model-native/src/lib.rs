@@ -143,3 +143,19 @@ pub unsafe extern "C" fn tunet_model_flux_online_time(model: native::Model) -> i
 pub unsafe extern "C" fn tunet_model_flux_balance(model: native::Model) -> f64 {
     lock_model(model).flux.balance.0
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_details_foreach(
+    model: native::Model,
+    f: native::DetailsForeachCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        for d in &lock_model(model).details {
+            let nd = d.into();
+            if !f(&nd, data) {
+                break;
+            }
+        }
+    }
+}

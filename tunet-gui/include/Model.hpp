@@ -1,11 +1,13 @@
 #pragma once
 
 #include <QColor>
+#include <QDateTime>
 #include <QObject>
 #include <QString>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 enum class Action : std::int32_t
 {
@@ -55,6 +57,13 @@ struct NetFlux
     double balance;
 };
 
+struct NetDetail
+{
+    QDateTime login_time;
+    QDateTime logout_time;
+    std::uint64_t flux;
+};
+
 QString tunet_format_flux(std::uint64_t flux);
 QString tunet_format_duration(std::chrono::seconds sec);
 
@@ -70,6 +79,7 @@ public:
     State state() const;
     QString log() const;
     NetFlux flux() const;
+    std::vector<NetDetail> details() const;
 
     void queue(Action a) const;
     bool queue_read_cred() const;
@@ -80,6 +90,7 @@ signals:
     void state_changed() const;
     void log_changed() const;
     void flux_changed() const;
+    void details_changed() const;
 
 private:
     NativeModel m_handle{};
