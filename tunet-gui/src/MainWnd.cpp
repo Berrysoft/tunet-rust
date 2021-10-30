@@ -23,6 +23,8 @@ MainWnd::MainWnd() : QMainWindow()
     QObject::connect(&m_state_combo, &QComboBox::currentIndexChanged, this, &MainWnd::update_state_back);
     m_root_layout.addWidget(&m_state_combo);
 
+    m_log_label.setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_log_label.setWordWrap(true);
     m_log_label.setAlignment(Qt::AlignCenter);
     m_root_layout.addWidget(&m_log_label);
 
