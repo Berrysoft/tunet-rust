@@ -69,11 +69,18 @@ AboutPage::AboutPage(QWidget* parent) : QWidget(parent)
     m_libs.setHorizontalHeaderLabels(QStringList{ u8"名称", u8"许可证" });
     for (auto& lib : LIBS)
     {
-        m_libs.appendRow({ new QStandardItem(lib[0]), new QStandardItem(lib[1]) });
+        auto name = new QStandardItem(lib[0]);
+        name->setTextAlignment(Qt::AlignHCenter);
+        auto license = new QStandardItem(lib[1]);
+        license->setTextAlignment(Qt::AlignHCenter);
+        m_libs.appendRow({ name, license });
     }
 
     m_lib_table.setModel(&m_libs);
     m_lib_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_lib_table.verticalHeader()->setVisible(false);
+    m_lib_table.setSortingEnabled(true);
+    m_lib_table.sortByColumn(0, Qt::AscendingOrder);
     m_about_layout.addWidget(&m_lib_table);
 
     setLayout(&m_about_layout);
