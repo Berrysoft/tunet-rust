@@ -5,6 +5,7 @@
 int main_impl(int argc, char** argv)
 {
     QApplication app{ argc, argv };
+    app.setApplicationDisplayName(u8"清华校园网");
 
     MainWnd wnd{};
     wnd.show();

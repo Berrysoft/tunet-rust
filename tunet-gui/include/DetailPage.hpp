@@ -13,9 +13,6 @@ public:
 
     void update_details();
 
-protected:
-    void showEvent(QShowEvent* event) override;
-
 private:
     Model* m_pmodel{};
 

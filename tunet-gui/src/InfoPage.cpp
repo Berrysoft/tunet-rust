@@ -42,6 +42,10 @@ InfoPage::InfoPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(p
     QObject::connect(m_pmodel, &Model::state_changed, this, &InfoPage::update_state);
     QObject::connect(m_pmodel, &Model::log_changed, this, &InfoPage::update_log);
     QObject::connect(m_pmodel, &Model::flux_changed, this, &InfoPage::update_flux);
+
+    m_pmodel->queue_read_cred();
+    m_pmodel->queue_state(State::Auto);
+    m_pmodel->queue(Action::Timer);
 }
 
 InfoPage::~InfoPage() {}
@@ -86,11 +90,4 @@ void InfoPage::update_flux()
     m_online_time_label.setText(QString(u8"时长：%1").arg(tunet_format_duration(flux.online_time)));
     m_balance_label.setText(QString(u8"余额：￥%1").arg(flux.balance));
     m_flux_circle.update_flux(flux.flux, flux.balance);
-}
-
-void InfoPage::showEvent(QShowEvent* event)
-{
-    m_pmodel->queue_read_cred();
-    m_pmodel->queue_state(State::Auto);
-    m_pmodel->queue(Action::Timer);
 }

@@ -25,6 +25,8 @@ DetailPage::DetailPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmod
     setLayout(&m_details_layout);
 
     QObject::connect(pmodel, &Model::details_changed, this, &DetailPage::update_details);
+
+    m_pmodel->queue(Action::Details);
 }
 
 DetailPage::~DetailPage() {}
@@ -56,9 +58,4 @@ void DetailPage::update_details()
         row++;
     }
     m_details_table.setSortingEnabled(true);
-}
-
-void DetailPage::showEvent(QShowEvent* event)
-{
-    m_pmodel->queue(Action::Details);
 }
