@@ -34,8 +34,12 @@ public slots:
 private:
     Model m_model{};
 
+    // root layout
     QWidget m_root_widget{ this };
     QVBoxLayout m_root_layout{ &m_root_widget };
+
+    // info
+    // basic info
     QGridLayout m_info_layout{};
 
     FluxCircle m_flux_circle{};
@@ -47,13 +51,16 @@ private:
     QLabel m_online_time_label{};
     QLabel m_balance_label{};
 
+    // state
     QWidget m_state_widget{};
     QHBoxLayout m_state_layout{ &m_state_widget };
     QLabel m_state_label{};
     QComboBox m_state_combo{};
 
+    // log
     QLabel m_log_label{};
 
+    // command
     QHBoxLayout m_command_layout{};
     QPushButton m_login_button{};
     QPushButton m_logout_button{};
