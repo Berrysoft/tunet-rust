@@ -42,6 +42,7 @@ MainWnd::MainWnd() : QMainWindow()
 
     setCentralWidget(&m_root_widget);
 
+    setMinimumSize(300, 300);
     resize(400, 400);
     move(screen()->geometry().center() - rect().center());
 
