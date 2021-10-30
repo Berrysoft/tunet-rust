@@ -63,7 +63,7 @@ struct Model : QObject
     Q_OBJECT
 
 public:
-    Model();
+    Model(QObject* parent = nullptr);
     ~Model() override;
 
     NetCredential cred() const;

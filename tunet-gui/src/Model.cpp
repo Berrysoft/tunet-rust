@@ -111,7 +111,7 @@ static void fn_update_callback(UpdateMsg m, void* data)
     model->update(m);
 }
 
-Model::Model() : QObject() { m_handle = tunet_model_new(fn_update_callback, this); }
+Model::Model(QObject* parent) : QObject(parent) { m_handle = tunet_model_new(fn_update_callback, this); }
 
 Model::~Model() { tunet_model_unref(m_handle); }
 
