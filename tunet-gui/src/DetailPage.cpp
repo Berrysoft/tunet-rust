@@ -43,15 +43,15 @@ void DetailPage::update_details()
     for (auto& d : ds)
     {
         auto login_time = new QTableWidgetItem(d.login_time.toString(DATETIME_FORMAT));
-        login_time->setTextAlignment(Qt::AlignHCenter);
+        login_time->setTextAlignment(Qt::AlignCenter);
         m_details_table.setItem(row, 0, login_time);
 
         auto logout_time = new QTableWidgetItem(d.logout_time.toString(DATETIME_FORMAT));
-        logout_time->setTextAlignment(Qt::AlignHCenter);
+        logout_time->setTextAlignment(Qt::AlignCenter);
         m_details_table.setItem(row, 1, logout_time);
 
         auto flux = new FluxItem(tunet_format_flux(d.flux));
-        flux->setTextAlignment(Qt::AlignHCenter);
+        flux->setTextAlignment(Qt::AlignCenter);
         flux->setData(Qt::UserRole, d.flux);
         m_details_table.setItem(row, 2, flux);
 

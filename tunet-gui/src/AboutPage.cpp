@@ -73,11 +73,11 @@ AboutPage::AboutPage(QWidget* parent) : QWidget(parent)
     for (auto& lib : LIBS)
     {
         auto name = new QTableWidgetItem(lib[0]);
-        name->setTextAlignment(Qt::AlignHCenter);
+        name->setTextAlignment(Qt::AlignCenter);
         m_lib_table.setItem(row, 0, name);
 
         auto license = new QTableWidgetItem(lib[1]);
-        license->setTextAlignment(Qt::AlignHCenter);
+        license->setTextAlignment(Qt::AlignCenter);
         m_lib_table.setItem(row, 1, license);
 
         row++;
@@ -86,7 +86,6 @@ AboutPage::AboutPage(QWidget* parent) : QWidget(parent)
     m_lib_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_lib_table.verticalHeader()->setVisible(false);
     m_lib_table.setSortingEnabled(true);
-    m_lib_table.sortByColumn(0, Qt::AscendingOrder);
     m_about_layout.addWidget(&m_lib_table);
 
     setLayout(&m_about_layout);
