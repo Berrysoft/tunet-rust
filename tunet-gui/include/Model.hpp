@@ -64,7 +64,7 @@ struct Model : QObject
 
 public:
     Model();
-    ~Model();
+    ~Model() override;
 
     NetCredential cred() const;
     State state() const;
