@@ -24,20 +24,10 @@ extern "C"
 
     using MainCallback = int (*)(void*);
     using UpdateCallback = void (*)(UpdateMsg, void*);
+    using StringCallback = void (*)(const char8_t*, std::size_t, void*);
     using DetailsForeachCallback = bool (*)(const Detail*, void*);
     using DetailsGroupedForeachCallback = bool (*)(const DetailGroup*, void*);
     using DetailsGroupedByTimeForeachCallback = bool (*)(const DetailGroupByTime*, void*);
-
-    struct StringView
-    {
-        const char8_t* data;
-        std::size_t size;
-
-        operator QString() const
-        {
-            return QString::fromUtf8(data, size);
-        }
-    };
 
     std::int32_t tunet_runtime_init(std::size_t val, MainCallback main, void* data);
 
@@ -55,11 +45,11 @@ extern "C"
     void tunet_model_queue(NativeModel m, Action a);
     bool tunet_model_queue_read_cred(NativeModel m);
     void tunet_model_queue_state(NativeModel m, State s);
-    StringView tunet_model_cred_username(NativeModel m);
-    StringView tunet_model_cred_password(NativeModel m);
+    void tunet_model_cred_username(NativeModel m, StringCallback f, void* data);
+    void tunet_model_cred_password(NativeModel m, StringCallback f, void* data);
     State tunet_model_state(NativeModel m);
-    StringView tunet_model_log(NativeModel m);
-    StringView tunet_model_flux_username(NativeModel m);
+    void tunet_model_log(NativeModel m, StringCallback f, void* data);
+    void tunet_model_flux_username(NativeModel m, StringCallback f, void* data);
     std::uint64_t tunet_model_flux_flux(NativeModel m);
     std::int64_t tunet_model_flux_online_time(NativeModel m);
     double tunet_model_flux_balance(NativeModel m);
@@ -165,11 +155,25 @@ void Model::update(UpdateMsg m) const
     }
 }
 
+static void fn_string_callback(const char8_t* data, std::size_t size, void* d)
+{
+    QString* pstr = reinterpret_cast<QString*>(d);
+    *pstr = QString::fromUtf8(data, size);
+}
+
+template <typename F, typename... Args>
+QString get_q_string(F&& f, Args... args)
+{
+    QString str;
+    f(std::move(args)..., fn_string_callback, &str);
+    return str;
+}
+
 NetCredential Model::cred() const
 {
-    auto username = tunet_model_cred_username(m_handle);
-    auto password = tunet_model_cred_password(m_handle);
-    return { username, password };
+    auto username = get_q_string(tunet_model_cred_username, m_handle);
+    auto password = get_q_string(tunet_model_cred_password, m_handle);
+    return { std::move(username), std::move(password) };
 }
 
 State Model::state() const
@@ -179,16 +183,16 @@ State Model::state() const
 
 QString Model::log() const
 {
-    return tunet_model_log(m_handle);
+    return get_q_string(tunet_model_log, m_handle);
 }
 
 NetFlux Model::flux() const
 {
-    auto username = tunet_model_flux_username(m_handle);
+    auto username = get_q_string(tunet_model_flux_username, m_handle);
     auto f = tunet_model_flux_flux(m_handle);
     auto online = tunet_model_flux_online_time(m_handle);
     auto balance = tunet_model_flux_balance(m_handle);
-    return NetFlux{ username, f, std::chrono::seconds{ online }, balance };
+    return NetFlux{ std::move(username), f, std::chrono::seconds{ online }, balance };
 }
 
 static bool fn_foreach_detail(const Detail* d, void* data)

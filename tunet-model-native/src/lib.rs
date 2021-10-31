@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use native::StringCallback;
 use std::ffi::c_void;
 use std::ptr::null_mut;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
@@ -105,14 +106,31 @@ pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: na
     read_model(model).queue(Action::State(Some(state.into())));
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn tunet_model_cred_username(model: native::Model) -> native::StringView {
-    native::StringView::new(&read_model(model).cred.username)
+fn read_str(s: &str, f: extern "C" fn(*const u8, usize, *mut c_void), data: *mut c_void) {
+    let bytes = s.as_bytes();
+    f(bytes.as_ptr(), bytes.len(), data)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tunet_model_cred_password(model: native::Model) -> native::StringView {
-    native::StringView::new(&read_model(model).cred.password)
+pub unsafe extern "C" fn tunet_model_cred_username(
+    model: native::Model,
+    f: StringCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        read_str(&read_model(model).cred.username, f, data)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_cred_password(
+    model: native::Model,
+    f: StringCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        read_str(&read_model(model).cred.password, f, data)
+    }
 }
 
 #[no_mangle]
@@ -121,13 +139,25 @@ pub unsafe extern "C" fn tunet_model_state(model: native::Model) -> native::Stat
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tunet_model_log(model: native::Model) -> native::StringView {
-    native::StringView::new(&read_model(model).log)
+pub unsafe extern "C" fn tunet_model_log(
+    model: native::Model,
+    f: StringCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        read_str(&read_model(model).log, f, data)
+    }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tunet_model_flux_username(model: native::Model) -> native::StringView {
-    native::StringView::new(&read_model(model).flux.username)
+pub unsafe extern "C" fn tunet_model_flux_username(
+    model: native::Model,
+    f: StringCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        read_str(&read_model(model).flux.username, f, data)
+    }
 }
 
 #[no_mangle]

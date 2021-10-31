@@ -91,6 +91,7 @@ pub struct DetailGroupByTime {
 
 pub type MainCallback = Option<extern "C" fn(*mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
+pub type StringCallback = Option<extern "C" fn(*const u8, usize, *mut c_void)>;
 pub type DetailsForeachCallback = Option<extern "C" fn(*const Detail, *mut c_void) -> bool>;
 pub type DetailsGroupedForeachCallback =
     Option<extern "C" fn(*const DetailGroup, *mut c_void) -> bool>;
@@ -119,19 +120,3 @@ pub fn wrap_callback(
 }
 
 pub type Model = *const RwLock<tunet_model::Model>;
-
-#[repr(C)]
-pub struct StringView {
-    data: *const u8,
-    size: usize,
-}
-
-impl StringView {
-    pub fn new(s: &str) -> Self {
-        let span = s.as_bytes();
-        Self {
-            data: span.as_ptr(),
-            size: span.len(),
-        }
-    }
-}
