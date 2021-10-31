@@ -17,3 +17,4 @@ color-theme = { path = "../color-theme" }
 tokio = { version = "1.11", features = [ "rt-multi-thread" ] }
 once_cell = "1.8"
 anyhow = "1.0"
+itertools = "0.10"

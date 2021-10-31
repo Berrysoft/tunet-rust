@@ -64,6 +64,12 @@ struct NetDetail
     std::uint64_t flux;
 };
 
+struct NetDetailGroup
+{
+    QDate logout_date;
+    std::uint64_t flux;
+};
+
 QString tunet_format_flux(std::uint64_t flux);
 QString tunet_format_duration(std::chrono::seconds sec);
 
@@ -80,6 +86,7 @@ public:
     QString log() const;
     NetFlux flux() const;
     std::vector<NetDetail> details() const;
+    std::vector<NetDetailGroup> details_grouped() const;
 
     void queue(Action a) const;
     bool queue_read_cred() const;

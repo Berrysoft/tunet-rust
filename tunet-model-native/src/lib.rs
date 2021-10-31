@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::ffi::c_void;
 use std::ptr::null_mut;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -154,6 +155,32 @@ pub unsafe extern "C" fn tunet_model_details_foreach(
         for d in &lock_model(model).details {
             let nd = d.into();
             if !f(&nd, data) {
+                break;
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_details_grouped_foreach(
+    model: native::Model,
+    f: native::DetailsGroupedForeachCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        for (date, flux) in lock_model(model)
+            .details
+            .iter()
+            .group_by(|detail| detail.logout_time.date())
+            .into_iter()
+            .map(|(key, group)| (key, Flux(group.map(|detail| detail.flux.0).sum::<u64>())))
+            .into_iter()
+        {
+            let g = native::DetailGroup {
+                logout_date: date.and_hms(0, 0, 0).timestamp(),
+                flux: flux.0,
+            };
+            if !f(&g, data) {
                 break;
             }
         }

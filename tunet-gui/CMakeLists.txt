@@ -30,7 +30,7 @@ add_custom_target(tunet-model
     DEPENDS ${RUST_SOURCES}
 )
 
-find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
 
 file(GLOB HEADERS "include/*.hpp")
 file(GLOB SOURCES "src/*.cpp")
@@ -42,7 +42,7 @@ target_include_directories(tunet-gui
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_directories(tunet-gui PUBLIC ${LIB_DIR})
-target_link_libraries(tunet-gui PUBLIC Qt6::Widgets tunet_model_native)
+target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts tunet_model_native)
 add_dependencies(tunet-gui tunet-model)
 
 if(WIN32)
