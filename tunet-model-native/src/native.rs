@@ -1,6 +1,6 @@
 use std::{
     ffi::c_void,
-    sync::{Arc, Mutex},
+    sync::{Arc, RwLock},
 };
 use tunet_model::UpdateMsg;
 use tunet_rust::{usereg::NetDetail, NetState};
@@ -118,7 +118,7 @@ pub fn wrap_callback(
     })
 }
 
-pub type Model = *const Mutex<tunet_model::Model>;
+pub type Model = *const RwLock<tunet_model::Model>;
 
 #[repr(C)]
 pub struct StringView {

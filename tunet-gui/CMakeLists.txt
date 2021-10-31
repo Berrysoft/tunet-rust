@@ -32,7 +32,6 @@ add_custom_target(tunet-model
 
 find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
 
-file(GLOB HEADERS "include/*.hpp")
 file(GLOB SOURCES "src/*.cpp")
 
 qt_wrap_cpp(SOURCES "include/Model.hpp")

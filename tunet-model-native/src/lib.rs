@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::ffi::c_void;
 use std::ptr::null_mut;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, RwLock, RwLockReadGuard};
 use tokio::runtime::Builder;
 use tokio::sync::mpsc::*;
 use tunet_model::*;
@@ -48,7 +48,7 @@ fn tunet_model_new_impl(
     data: *mut c_void,
 ) -> Result<native::Model> {
     let (tx, mut rx) = channel(32);
-    let model = Arc::new(Mutex::new({
+    let model = Arc::new(RwLock::new({
         let mut model = Model::new(tx)?;
         model.set_callback(Some(native::wrap_callback(update, data)));
         model
@@ -57,7 +57,7 @@ fn tunet_model_new_impl(
         let model = model.clone();
         tokio::spawn(async move {
             while let Some(a) = rx.recv().await {
-                let mut model = model.lock().unwrap();
+                let mut model = model.write().unwrap();
                 model.handle(a);
             }
         });
@@ -76,22 +76,22 @@ pub extern "C" fn tunet_model_new(
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_unref(model: native::Model) {
     let model = Arc::from_raw(model);
-    model.lock().unwrap().set_callback(None);
+    model.write().unwrap().set_callback(None);
 }
 
-unsafe fn lock_model<'a>(model: native::Model) -> MutexGuard<'a, Model> {
-    model.as_ref().unwrap().lock().unwrap()
+unsafe fn read_model<'a>(model: native::Model) -> RwLockReadGuard<'a, Model> {
+    model.as_ref().unwrap().read().unwrap()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_queue(model: native::Model, action: native::Action) {
-    lock_model(model).queue(action.into());
+    read_model(model).queue(action.into());
 }
 
 unsafe fn tunet_model_queue_read_cred_impl(model: native::Model) -> Result<()> {
     let reader = FileSettingsReader::new()?;
     let cred = reader.read_with_password()?;
-    lock_model(model).queue(Action::Credential(Arc::new(cred)));
+    read_model(model).queue(Action::Credential(Arc::new(cred)));
     Ok(())
 }
 
@@ -102,47 +102,47 @@ pub unsafe extern "C" fn tunet_model_queue_read_cred(model: native::Model) -> bo
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: native::State) {
-    lock_model(model).queue(Action::State(Some(state.into())));
+    read_model(model).queue(Action::State(Some(state.into())));
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_cred_username(model: native::Model) -> native::StringView {
-    native::StringView::new(&lock_model(model).cred.username)
+    native::StringView::new(&read_model(model).cred.username)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_cred_password(model: native::Model) -> native::StringView {
-    native::StringView::new(&lock_model(model).cred.password)
+    native::StringView::new(&read_model(model).cred.password)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_state(model: native::Model) -> native::State {
-    lock_model(model).state.into()
+    read_model(model).state.into()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_log(model: native::Model) -> native::StringView {
-    native::StringView::new(&lock_model(model).log)
+    native::StringView::new(&read_model(model).log)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_username(model: native::Model) -> native::StringView {
-    native::StringView::new(&lock_model(model).flux.username)
+    native::StringView::new(&read_model(model).flux.username)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_flux(model: native::Model) -> u64 {
-    lock_model(model).flux.flux.0
+    read_model(model).flux.flux.0
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_online_time(model: native::Model) -> i64 {
-    lock_model(model).flux.online_time.0.num_seconds()
+    read_model(model).flux.online_time.0.num_seconds()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_balance(model: native::Model) -> f64 {
-    lock_model(model).flux.balance.0
+    read_model(model).flux.balance.0
 }
 
 #[no_mangle]
@@ -152,7 +152,7 @@ pub unsafe extern "C" fn tunet_model_details_foreach(
     data: *mut c_void,
 ) {
     if let Some(f) = f {
-        for d in &lock_model(model).details {
+        for d in &read_model(model).details {
             let nd = d.into();
             if !f(&nd, data) {
                 break;
@@ -168,7 +168,7 @@ pub unsafe extern "C" fn tunet_model_details_grouped_foreach(
     data: *mut c_void,
 ) {
     if let Some(f) = f {
-        for (date, flux) in lock_model(model)
+        for (date, flux) in read_model(model)
             .details
             .iter()
             .group_by(|detail| detail.logout_time.date())
@@ -196,7 +196,7 @@ pub unsafe extern "C" fn tunet_model_details_grouped_by_time_foreach(
 ) {
     if let Some(f) = f {
         let interval = 24 / groups;
-        for (t, flux) in lock_model(model)
+        for (t, flux) in read_model(model)
             .details
             .iter()
             .into_group_map_by(|detail| detail.logout_time.hour() / interval)
