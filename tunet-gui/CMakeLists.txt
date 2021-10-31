@@ -31,6 +31,13 @@ add_custom_target(tunet-model
 )
 
 find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
+get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
+get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+else()
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt.debug.bat HINTS "${_qt_bin_dir}")
+endif()
 
 file(GLOB SOURCES "src/*.cpp")
 
@@ -53,4 +60,46 @@ if(WIN32)
     if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
         set_target_properties(tunet-gui PROPERTIES WIN32_EXECUTABLE ON)
     endif()
+    add_custom_command(TARGET tunet-gui POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E
+            env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXECUTABLE}"
+                --no-compiler-runtime
+                --no-translations
+                --no-system-d3d-compiler
+                \"$<TARGET_FILE:tunet-gui>\"
+    )
+endif()
+
+install(TARGETS tunet-gui DESTINATION bin)
+
+if(WIN32)
+    install(CODE [[
+        file(GET_RUNTIME_DEPENDENCIES
+            EXECUTABLES $<TARGET_FILE:tunet-gui>
+            RESOLVED_DEPENDENCIES_VAR _r_deps
+            UNRESOLVED_DEPENDENCIES_VAR _u_deps
+            POST_EXCLUDE_REGEXES "system32"
+        )
+        foreach(_file ${_r_deps})
+            file(INSTALL
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+                FILES "${_file}"
+            )
+        endforeach()
+        list(LENGTH _u_deps _u_length)
+        if("${_u_length}" GREATER 0)
+            message(WARNING "Unresolved dependencies detected!")
+        endif()
+    ]])
+
+    install(CODE "
+        execute_process(
+            COMMAND \"${CMAKE_COMMAND}\" -E
+                env PATH=\"${_qt_bin_dir}\" \"${WINDEPLOYQT_EXECUTABLE}\"
+                    --no-compiler-runtime
+                    --no-translations
+                    --no-system-d3d-compiler
+                    \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.exe\"
+        )
+    ")
 endif()
