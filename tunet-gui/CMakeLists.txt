@@ -102,4 +102,6 @@ if(WIN32)
                     \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.exe\"
         )
     ")
+
+    include(InstallRequiredSystemLibraries)
 endif()
