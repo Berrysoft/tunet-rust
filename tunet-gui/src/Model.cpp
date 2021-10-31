@@ -3,6 +3,15 @@
 
 extern "C"
 {
+    struct OnlineUser
+    {
+        std::uint32_t address;
+        std::int64_t login_time;
+        std::uint64_t flux;
+        std::uint8_t mac_address[6];
+        bool is_local;
+    };
+
     struct Detail
     {
         std::int64_t login_time;
@@ -25,6 +34,7 @@ extern "C"
     using MainCallback = int (*)(void*);
     using UpdateCallback = void (*)(UpdateMsg, void*);
     using StringCallback = void (*)(const char8_t*, std::size_t, void*);
+    using OnlinesForeachCallback = bool (*)(const OnlineUser*, void*);
     using DetailsForeachCallback = bool (*)(const Detail*, void*);
     using DetailsGroupedForeachCallback = bool (*)(const DetailGroup*, void*);
     using DetailsGroupedByTimeForeachCallback = bool (*)(const DetailGroupByTime*, void*);
@@ -54,6 +64,7 @@ extern "C"
     std::uint64_t tunet_model_flux_flux(NativeModel m);
     std::int64_t tunet_model_flux_online_time(NativeModel m);
     double tunet_model_flux_balance(NativeModel m);
+    void tunet_model_onlines_foreach(NativeModel m, OnlinesForeachCallback f, void* data);
     void tunet_model_details_foreach(NativeModel m, DetailsForeachCallback f, void* data);
     void tunet_model_details_grouped_foreach(NativeModel m, DetailsGroupedForeachCallback f, void* data);
     void tunet_model_details_grouped_by_time_foreach(NativeModel m, std::uint32_t groups, DetailsGroupedByTimeForeachCallback f, void* data);

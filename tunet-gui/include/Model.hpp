@@ -73,6 +73,13 @@ struct NetFlux
     double balance;
 };
 
+struct NetUser
+{
+    QDateTime login_time;
+    std::uint64_t flux;
+    bool is_local;
+};
+
 struct NetDetail
 {
     QDateTime login_time;

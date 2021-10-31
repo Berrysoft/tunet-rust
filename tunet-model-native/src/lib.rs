@@ -195,6 +195,23 @@ pub unsafe extern "C" fn tunet_model_flux_balance(model: native::Model) -> f64 {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tunet_model_onlines_foreach(
+    model: native::Model,
+    f: native::OnlinesForeachCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        let model = read_model(model);
+        for u in &model.users {
+            let ou = native::OnlineUser::new(u, &model.mac_addrs);
+            if !f(&ou, data) {
+                break;
+            }
+        }
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tunet_model_details_foreach(
     model: native::Model,
     f: native::DetailsForeachCallback,

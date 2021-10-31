@@ -2,6 +2,7 @@
 
 #include <Model.hpp>
 #include <QLabel>
+#include <QTableWidget>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -23,4 +24,7 @@ private:
 
     QLabel m_status_title_label{ this };
     QLabel m_status_label{ this };
+
+    QLabel m_online_label{ this };
+    QTableWidget m_online_table{ this };
 };

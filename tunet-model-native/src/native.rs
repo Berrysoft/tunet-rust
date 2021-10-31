@@ -1,9 +1,13 @@
+use mac_address::MacAddress;
 use std::{
     ffi::c_void,
     sync::{Arc, RwLock},
 };
 use tunet_model::UpdateMsg;
-use tunet_rust::{usereg::NetDetail, NetState};
+use tunet_rust::{
+    usereg::{NetDetail, NetUser},
+    NetState,
+};
 
 #[repr(i32)]
 pub enum Action {
@@ -69,6 +73,29 @@ impl From<NetState> for State {
 }
 
 #[repr(C)]
+pub struct OnlineUser {
+    pub address: u32,
+    pub login_time: i64,
+    pub flux: u64,
+    pub mac_address: [u8; 6],
+    pub is_local: bool,
+}
+
+impl OnlineUser {
+    pub fn new(u: &NetUser, mac_addrs: &[MacAddress]) -> Self {
+        Self {
+            address: u.address.into(),
+            login_time: u.login_time.timestamp(),
+            flux: u.flux.0,
+            mac_address: u.mac_address.map(|mac| mac.bytes()).unwrap_or_default(),
+            is_local: mac_addrs
+                .iter()
+                .any(|it| Some(it) == u.mac_address.as_ref()),
+        }
+    }
+}
+
+#[repr(C)]
 pub struct Detail {
     pub login_time: i64,
     pub logout_time: i64,
@@ -100,6 +127,7 @@ pub struct DetailGroupByTime {
 pub type MainCallback = Option<extern "C" fn(*mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
 pub type StringCallback = Option<extern "C" fn(*const u8, usize, *mut c_void)>;
+pub type OnlinesForeachCallback = Option<extern "C" fn(*const OnlineUser, *mut c_void) -> bool>;
 pub type DetailsForeachCallback = Option<extern "C" fn(*const Detail, *mut c_void) -> bool>;
 pub type DetailsGroupedForeachCallback =
     Option<extern "C" fn(*const DetailGroup, *mut c_void) -> bool>;
