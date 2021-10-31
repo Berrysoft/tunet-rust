@@ -13,6 +13,7 @@ public:
     ~SettingsPage() override;
 
     void update_cred();
+    void update_online();
 
 private:
     Model* m_pmodel{};

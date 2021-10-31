@@ -25,14 +25,19 @@ endif()
 file(GLOB RUST_SOURCES "../**/*.rs")
 set(RUST_LIB_PATH ${LIB_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}tunet_model_native${CMAKE_FIND_LIBRARY_SUFFIXES})
 
-add_custom_command(
-    OUTPUT ${RUST_LIB_PATH}
+add_custom_target(tunet-model
     COMMAND cargo build --lib ${CARGO_FLAGS}
-    WORKING_DIRECTORY ${PROJECT_DIR}
     DEPENDS ${RUST_SOURCES}
 )
 
-find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
+add_custom_command(
+    OUTPUT ${RUST_LIB_PATH}
+    COMMAND ${CMAKE_COMMAND} -E echo
+    WORKING_DIRECTORY ${PROJECT_DIR}
+    DEPENDS tunet-model
+)
+
+find_package(Qt6 COMPONENTS Widgets Network Charts REQUIRED)
 get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
 get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
 if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
@@ -49,7 +54,8 @@ target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts ${RUST_LIB_PATH})
+target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Network Qt6::Charts ${RUST_LIB_PATH})
+add_dependencies(tunet-gui tunet-model)
 
 if(WIN32)
     set(WINDOWS_LIB ${CMAKE_BINARY_DIR}/windows.lib)

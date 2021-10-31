@@ -28,4 +28,6 @@ void MainWnd::showEvent(QShowEvent* event)
     m_model.queue_read_cred();
     m_model.queue_state(State::Auto);
     m_model.queue(Action::Timer);
+    m_model.queue(Action::Online);
+    m_model.queue(Action::Details);
 }

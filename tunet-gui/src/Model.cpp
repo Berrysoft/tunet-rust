@@ -147,6 +147,29 @@ QString tunet_format_duration(std::chrono::seconds s)
     }
 }
 
+QString tunet_format_datetime(const QDateTime& time)
+{
+    static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
+    return time.toString(DATETIME_FORMAT);
+}
+
+QString tunet_format_mac_address(const std::array<std::uint8_t, 6>& maddr)
+{
+    if (maddr == std::array<std::uint8_t, 6>{ 0, 0, 0, 0, 0, 0 })
+    {
+        return QString{};
+    }
+    else
+    {
+        QString fmt = u"%1:%2:%3:%4:%5:%6"_qs;
+        for (auto& part : maddr)
+        {
+            fmt = fmt.arg(part, 2, 16, QChar(u'0'));
+        }
+        return fmt;
+    }
+}
+
 static void fn_update_callback(UpdateMsg m, void* data)
 {
     auto model = reinterpret_cast<Model*>(data);
@@ -178,6 +201,9 @@ void Model::update(UpdateMsg m) const
         break;
     case UpdateMsg::Flux:
         emit flux_changed();
+        break;
+    case UpdateMsg::Online:
+        emit onlines_changed();
         break;
     case UpdateMsg::Details:
         emit details_changed();
@@ -230,6 +256,22 @@ NetFlux Model::flux() const
     auto online = tunet_model_flux_online_time(m_handle);
     auto balance = tunet_model_flux_balance(m_handle);
     return NetFlux{ std::move(username), f, std::chrono::seconds{ online }, balance };
+}
+
+static bool fn_foreach_online(const OnlineUser* u, void* data)
+{
+    std::vector<NetUser>& users = *reinterpret_cast<std::vector<NetUser>*>(data);
+    std::array<std::uint8_t, 6> mac{};
+    std::copy(std::begin(u->mac_address), std::end(u->mac_address), mac.begin());
+    users.emplace_back(QHostAddress{ u->address }, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::move(mac), u->is_local);
+    return true;
+}
+
+std::vector<NetUser> Model::onlines() const
+{
+    std::vector<NetUser> users;
+    tunet_model_onlines_foreach(m_handle, fn_foreach_online, &users);
+    return users;
 }
 
 static bool fn_foreach_detail(const Detail* d, void* data)

@@ -2,8 +2,11 @@
 
 #include <QColor>
 #include <QDateTime>
+#include <QHostAddress>
+#include <QNetworkInterface>
 #include <QObject>
 #include <QString>
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -75,8 +78,10 @@ struct NetFlux
 
 struct NetUser
 {
+    QHostAddress address;
     QDateTime login_time;
     std::uint64_t flux;
+    std::array<std::uint8_t, 6> mac_address;
     bool is_local;
 };
 
@@ -96,6 +101,8 @@ struct NetDetailGroup
 QString tunet_format_status(const Status& status);
 QString tunet_format_flux(std::uint64_t flux);
 QString tunet_format_duration(std::chrono::seconds sec);
+QString tunet_format_datetime(const QDateTime& time);
+QString tunet_format_mac_address(const std::array<std::uint8_t, 6>& maddr);
 
 struct Model : QObject
 {
@@ -110,6 +117,7 @@ public:
     State state() const;
     QString log() const;
     NetFlux flux() const;
+    std::vector<NetUser> onlines() const;
     std::vector<NetDetail> details() const;
     std::vector<NetDetailGroup> details_grouped() const;
     std::map<std::uint32_t, std::uint64_t> details_grouped_by_time(std::uint32_t groups) const;
@@ -124,6 +132,7 @@ signals:
     void state_changed() const;
     void log_changed() const;
     void flux_changed() const;
+    void onlines_changed() const;
     void details_changed() const;
 
 private:
