@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use native::StringCallback;
+use netstatus::*;
 use std::ffi::c_void;
 use std::ptr::null_mut;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
@@ -112,9 +112,28 @@ fn read_str(s: &str, f: extern "C" fn(*const u8, usize, *mut c_void), data: *mut
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tunet_model_status(
+    model: native::Model,
+    f: native::StringCallback,
+    data: *mut c_void,
+) -> native::Status {
+    match &read_model(model).status {
+        NetStatus::Unknown => native::Status::Unknown,
+        NetStatus::Wwan => native::Status::Wwan,
+        NetStatus::Wlan(ssid) => {
+            if let Some(f) = f {
+                read_str(ssid, f, data);
+            }
+            native::Status::Wlan
+        }
+        NetStatus::Lan => native::Status::Lan,
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tunet_model_cred_username(
     model: native::Model,
-    f: StringCallback,
+    f: native::StringCallback,
     data: *mut c_void,
 ) {
     if let Some(f) = f {
@@ -125,7 +144,7 @@ pub unsafe extern "C" fn tunet_model_cred_username(
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_cred_password(
     model: native::Model,
-    f: StringCallback,
+    f: native::StringCallback,
     data: *mut c_void,
 ) {
     if let Some(f) = f {
@@ -141,7 +160,7 @@ pub unsafe extern "C" fn tunet_model_state(model: native::Model) -> native::Stat
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_log(
     model: native::Model,
-    f: StringCallback,
+    f: native::StringCallback,
     data: *mut c_void,
 ) {
     if let Some(f) = f {
@@ -152,7 +171,7 @@ pub unsafe extern "C" fn tunet_model_log(
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_flux_username(
     model: native::Model,
-    f: StringCallback,
+    f: native::StringCallback,
     data: *mut c_void,
 ) {
     if let Some(f) = f {

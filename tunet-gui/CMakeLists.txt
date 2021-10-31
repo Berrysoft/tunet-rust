@@ -23,8 +23,10 @@ else()
 endif()
 
 file(GLOB RUST_SOURCES "../**/*.rs")
+set(RUST_LIB_PATH ${LIB_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}tunet_model_native${CMAKE_FIND_LIBRARY_SUFFIXES})
 
-add_custom_target(tunet-model
+add_custom_command(
+    OUTPUT ${RUST_LIB_PATH}
     COMMAND cargo build --lib ${CARGO_FLAGS}
     WORKING_DIRECTORY ${PROJECT_DIR}
     DEPENDS ${RUST_SOURCES}
@@ -47,9 +49,7 @@ target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_directories(tunet-gui PUBLIC ${LIB_DIR})
-target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts tunet_model_native)
-add_dependencies(tunet-gui tunet-model)
+target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts ${RUST_LIB_PATH})
 
 if(WIN32)
     set(WINDOWS_LIB ${CMAKE_BINARY_DIR}/windows.lib)

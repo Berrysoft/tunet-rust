@@ -7,12 +7,16 @@
 #include <Model.hpp>
 #include <QMainWindow>
 #include <QTabWidget>
+#include <SettingsPage.hpp>
 
 struct MainWnd : QMainWindow
 {
 public:
     MainWnd();
     ~MainWnd() override;
+
+protected:
+    void showEvent(QShowEvent* event) override;
 
 private:
     Model m_model{ this };
@@ -21,5 +25,6 @@ private:
     InfoPage m_info_page{ &m_root_tab, &m_model };
     ChartPage m_chart_page{ &m_root_tab, &m_model };
     DetailPage m_detail_page{ &m_root_tab, &m_model };
+    SettingsPage m_settings_page{ &m_root_tab, &m_model };
     AboutPage m_about_page{ &m_root_tab };
 };

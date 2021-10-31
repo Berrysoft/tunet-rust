@@ -45,6 +45,7 @@ extern "C"
     void tunet_model_queue(NativeModel m, Action a);
     bool tunet_model_queue_read_cred(NativeModel m);
     void tunet_model_queue_state(NativeModel m, State s);
+    StatusFlag tunet_model_status(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_username(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_password(NativeModel m, StringCallback f, void* data);
     State tunet_model_state(NativeModel m);
@@ -81,6 +82,21 @@ QColor tunet_accent()
 {
     auto color = tunet_color_accent();
     return QColor::fromRgb(color.r, color.g, color.b);
+}
+
+QString tunet_format_status(const Status& status)
+{
+    switch (status.flag)
+    {
+    case StatusFlag::Wwan:
+        return u"移动流量"_qs;
+    case StatusFlag::Wlan:
+        return u"无线网络（%1）"_qs.arg(status.ssid);
+    case StatusFlag::Lan:
+        return u"有线网络"_qs;
+    default:
+        return u"未知"_qs;
+    }
 }
 
 QString tunet_format_flux(std::uint64_t f)
@@ -140,6 +156,9 @@ void Model::update(UpdateMsg m) const
 {
     switch (m)
     {
+    case UpdateMsg::Credential:
+        emit cred_changed();
+        break;
     case UpdateMsg::State:
         emit state_changed();
         break;
@@ -167,6 +186,13 @@ QString get_q_string(F&& f, Args... args)
     QString str;
     f(std::move(args)..., fn_string_callback, &str);
     return str;
+}
+
+Status Model::status() const
+{
+    QString ssid{};
+    StatusFlag flag = tunet_model_status(m_handle, fn_string_callback, &ssid);
+    return { flag, std::move(ssid) };
 }
 
 NetCredential Model::cred() const

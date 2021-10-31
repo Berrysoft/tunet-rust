@@ -67,7 +67,10 @@ impl Model {
 
     pub fn handle(&mut self, action: Action) {
         match action {
-            Action::Credential(cred) => self.cred = cred,
+            Action::Credential(cred) => {
+                self.cred = cred;
+                self.update(UpdateMsg::Credential);
+            }
             Action::State(s) => {
                 let s = s.unwrap_or(NetState::Auto);
                 match s {
@@ -300,6 +303,7 @@ pub enum Action {
 
 #[repr(i32)]
 pub enum UpdateMsg {
+    Credential,
     State,
     Log,
     Flux,

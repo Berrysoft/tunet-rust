@@ -23,11 +23,26 @@ enum class Action : std::int32_t
 
 enum class UpdateMsg : std::int32_t
 {
+    Credential,
     State,
     Log,
     Flux,
     Online,
     Details,
+};
+
+enum class StatusFlag : std::int32_t
+{
+    Unknown,
+    Wwan,
+    Wlan,
+    Lan
+};
+
+struct Status
+{
+    StatusFlag flag;
+    QString ssid;
 };
 
 enum class State : std::int32_t
@@ -71,6 +86,7 @@ struct NetDetailGroup
     std::uint64_t flux;
 };
 
+QString tunet_format_status(const Status& status);
 QString tunet_format_flux(std::uint64_t flux);
 QString tunet_format_duration(std::chrono::seconds sec);
 
@@ -82,6 +98,7 @@ public:
     Model(QObject* parent = nullptr);
     ~Model() override;
 
+    Status status() const;
     NetCredential cred() const;
     State state() const;
     QString log() const;
@@ -96,6 +113,7 @@ public:
     void update(UpdateMsg m) const;
 
 signals:
+    void cred_changed() const;
     void state_changed() const;
     void log_changed() const;
     void flux_changed() const;

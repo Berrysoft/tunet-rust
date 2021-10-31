@@ -31,6 +31,14 @@ impl From<Action> for tunet_model::Action {
 }
 
 #[repr(i32)]
+pub enum Status {
+    Unknown,
+    Wwan,
+    Wlan,
+    Lan,
+}
+
+#[repr(i32)]
 pub enum State {
     Auto,
     Net,
