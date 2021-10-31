@@ -173,12 +173,45 @@ pub unsafe extern "C" fn tunet_model_details_grouped_foreach(
             .iter()
             .group_by(|detail| detail.logout_time.date())
             .into_iter()
-            .map(|(key, group)| (key, Flux(group.map(|detail| detail.flux.0).sum::<u64>())))
+            .map(|(key, group)| (key, group.map(|detail| detail.flux.0).sum::<u64>()))
             .into_iter()
         {
             let g = native::DetailGroup {
                 logout_date: date.and_hms(0, 0, 0).timestamp(),
-                flux: flux.0,
+                flux,
+            };
+            if !f(&g, data) {
+                break;
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_details_grouped_by_time_foreach(
+    model: native::Model,
+    groups: u32,
+    f: native::DetailsGroupedByTimeForeachCallback,
+    data: *mut c_void,
+) {
+    if let Some(f) = f {
+        let interval = 24 / groups;
+        for (t, flux) in lock_model(model)
+            .details
+            .iter()
+            .into_group_map_by(|detail| detail.logout_time.hour() / interval)
+            .into_iter()
+            .map(|(key, group)| {
+                (
+                    key * interval,
+                    group.into_iter().map(|detail| detail.flux.0).sum::<u64>(),
+                )
+            })
+            .into_iter()
+        {
+            let g = native::DetailGroupByTime {
+                logout_start_time: t,
+                flux,
             };
             if !f(&g, data) {
                 break;

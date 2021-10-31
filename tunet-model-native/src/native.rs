@@ -83,11 +83,19 @@ pub struct DetailGroup {
     pub flux: u64,
 }
 
+#[repr(C)]
+pub struct DetailGroupByTime {
+    pub logout_start_time: u32,
+    pub flux: u64,
+}
+
 pub type MainCallback = Option<extern "C" fn(*mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
 pub type DetailsForeachCallback = Option<extern "C" fn(*const Detail, *mut c_void) -> bool>;
 pub type DetailsGroupedForeachCallback =
     Option<extern "C" fn(*const DetailGroup, *mut c_void) -> bool>;
+pub type DetailsGroupedByTimeForeachCallback =
+    Option<extern "C" fn(*const DetailGroupByTime, *mut c_void) -> bool>;
 
 pub fn wrap_callback(
     func: UpdateCallback,

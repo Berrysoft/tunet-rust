@@ -17,8 +17,11 @@ public:
 private:
     Model* m_pmodel{};
 
-    QVBoxLayout m_chart_layout{ this };
+    QVBoxLayout m_chart_layout{};
 
     QChartView m_daily_view{ this };
     QChart m_daily_chart{};
+
+    QChartView m_time_view{ this };
+    QChart m_time_chart{};
 };

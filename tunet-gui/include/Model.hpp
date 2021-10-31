@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <vector>
 
 enum class Action : std::int32_t
@@ -87,6 +88,7 @@ public:
     NetFlux flux() const;
     std::vector<NetDetail> details() const;
     std::vector<NetDetailGroup> details_grouped() const;
+    std::map<std::uint32_t, std::uint64_t> details_grouped_by_time(std::uint32_t groups) const;
 
     void queue(Action a) const;
     bool queue_read_cred() const;

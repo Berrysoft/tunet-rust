@@ -16,10 +16,17 @@ extern "C"
         std::uint64_t flux;
     };
 
+    struct DetailGroupByTime
+    {
+        std::uint32_t logout_start_time;
+        std::uint64_t flux;
+    };
+
     using MainCallback = int (*)(void*);
     using UpdateCallback = void (*)(UpdateMsg, void*);
     using DetailsForeachCallback = bool (*)(const Detail*, void*);
     using DetailsGroupedForeachCallback = bool (*)(const DetailGroup*, void*);
+    using DetailsGroupedByTimeForeachCallback = bool (*)(const DetailGroupByTime*, void*);
 
     struct StringView
     {
@@ -58,6 +65,7 @@ extern "C"
     double tunet_model_flux_balance(NativeModel m);
     void tunet_model_details_foreach(NativeModel m, DetailsForeachCallback f, void* data);
     void tunet_model_details_grouped_foreach(NativeModel m, DetailsGroupedForeachCallback f, void* data);
+    void tunet_model_details_grouped_by_time_foreach(NativeModel m, std::uint32_t groups, DetailsGroupedByTimeForeachCallback f, void* data);
 }
 
 struct init_data
@@ -208,5 +216,19 @@ std::vector<NetDetailGroup> Model::details_grouped() const
 {
     std::vector<NetDetailGroup> details{};
     tunet_model_details_grouped_foreach(m_handle, fn_foreach_detail_group, &details);
+    return details;
+}
+
+static bool fn_foreach_detail_group_by_time(const DetailGroupByTime* d, void* data)
+{
+    std::map<std::uint32_t, std::uint64_t>& details = *reinterpret_cast<std::map<std::uint32_t, std::uint64_t>*>(data);
+    details.emplace(d->logout_start_time, d->flux);
+    return true;
+}
+
+std::map<std::uint32_t, std::uint64_t> Model::details_grouped_by_time(std::uint32_t groups) const
+{
+    std::map<std::uint32_t, std::uint64_t> details{};
+    tunet_model_details_grouped_by_time_foreach(m_handle, groups, fn_foreach_detail_group_by_time, &details);
     return details;
 }
