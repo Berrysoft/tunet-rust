@@ -1,4 +1,5 @@
 #include <AboutPage.hpp>
+#include <Model.hpp>
 #include <QHeaderView>
 #include <QStandardItem>
 
@@ -56,6 +57,12 @@ AboutPage::AboutPage(QWidget* parent) : QWidget(parent)
     m_title_label.setAlignment(Qt::AlignHCenter);
     m_title_label.setText(u8"清华大学校园网客户端");
     m_about_layout.addWidget(&m_title_label);
+
+    auto accent = tunet_accent();
+    m_source_label.setAlignment(Qt::AlignHCenter);
+    m_source_label.setText(QString(u8R"#(版本 0.1.0 <a href="https://github.com/Berrysoft/tunet-rust" style="color:#%1">项目地址</a>)#").arg(accent.rgb(), 6, 16, QChar(u'0')));
+    m_source_label.setOpenExternalLinks(true);
+    m_about_layout.addWidget(&m_source_label);
 
     m_copyright_label.setAlignment(Qt::AlignHCenter);
     m_copyright_label.setText(u8"版权所有 © 2021 Berrysoft");

@@ -29,6 +29,7 @@ ChartPage::~ChartPage() {}
 
 void ChartPage::update_details()
 {
+    auto accent = tunet_accent();
     {
         auto details = m_pmodel->details_grouped();
         m_daily_chart.removeAllSeries();
@@ -39,6 +40,7 @@ void ChartPage::update_details()
             total_flux += d.flux / 1000000000.0;
             series->append(QDateTime{ d.logout_date, QTime{} }.toMSecsSinceEpoch(), total_flux);
         }
+        series->setColor(accent);
         m_daily_chart.addSeries(series);
 
         auto axis_x = new QDateTimeAxis();
@@ -62,6 +64,7 @@ void ChartPage::update_details()
             axis_x->append(QString(u8"%1~%2 时").arg(d.first).arg(d.first + 5));
             set->append(d.second / 1000000000.0);
         }
+        set->setColor(accent);
         series->append(set);
         m_time_chart.addSeries(series);
 
