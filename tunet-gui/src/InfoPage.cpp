@@ -12,11 +12,11 @@ InfoPage::InfoPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(p
     m_root_layout.addLayout(&m_info_layout, 1);
 
     m_state_layout.addStretch();
-    m_state_label.setText(u8"连接方式：");
+    m_state_label.setText(u"连接方式："_qs);
     m_state_layout.addWidget(&m_state_label);
-    m_state_combo.addItem("Net");
-    m_state_combo.addItem("Auth4");
-    m_state_combo.addItem("Auth6");
+    m_state_combo.addItem(u"Net"_qs);
+    m_state_combo.addItem(u"Auth4"_qs);
+    m_state_combo.addItem(u"Auth6"_qs);
     QObject::connect(&m_state_combo, &QComboBox::currentIndexChanged, this, &InfoPage::update_state_back);
     m_state_layout.addWidget(&m_state_combo);
     m_state_layout.addStretch();
@@ -27,11 +27,11 @@ InfoPage::InfoPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(p
     m_log_label.setAlignment(Qt::AlignCenter);
     m_root_layout.addWidget(&m_log_label);
 
-    m_login_button.setText(u8"登录");
+    m_login_button.setText(u"登录"_qs);
     QObject::connect(&m_login_button, &QPushButton::clicked, this, &InfoPage::spawn_login);
-    m_logout_button.setText(u8"注销");
+    m_logout_button.setText(u"注销"_qs);
     QObject::connect(&m_logout_button, &QPushButton::clicked, this, &InfoPage::spawn_logout);
-    m_flux_button.setText(u8"刷新");
+    m_flux_button.setText(u"刷新"_qs);
     QObject::connect(&m_flux_button, &QPushButton::clicked, this, &InfoPage::spawn_flux);
 
     m_command_layout.addWidget(&m_login_button);
@@ -85,9 +85,9 @@ void InfoPage::update_log()
 void InfoPage::update_flux()
 {
     auto flux = m_pmodel->flux();
-    m_username_label.setText(QString(u8"用户：%1").arg(flux.username));
-    m_flux_label.setText(QString(u8"流量：%1").arg(tunet_format_flux(flux.flux)));
-    m_online_time_label.setText(QString(u8"时长：%1").arg(tunet_format_duration(flux.online_time)));
-    m_balance_label.setText(QString(u8"余额：￥%1").arg(flux.balance));
+    m_username_label.setText(u"用户：%1"_qs.arg(flux.username));
+    m_flux_label.setText(u"流量：%1"_qs.arg(tunet_format_flux(flux.flux)));
+    m_online_time_label.setText(u"时长：%1"_qs.arg(tunet_format_duration(flux.online_time)));
+    m_balance_label.setText(u"余额：￥%1"_qs.arg(flux.balance));
     m_flux_circle.update_flux(flux.flux, flux.balance);
 }

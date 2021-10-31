@@ -8,13 +8,13 @@
 
 ChartPage::ChartPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
 {
-    m_daily_chart.setTitle(u8"按日统计");
+    m_daily_chart.setTitle(u"按日统计"_qs);
     m_daily_chart.legend()->setVisible(false);
     m_daily_view.setChart(&m_daily_chart);
     m_daily_view.setRenderHint(QPainter::Antialiasing);
     m_chart_layout.addWidget(&m_daily_view);
 
-    m_time_chart.setTitle(u8"按时段统计");
+    m_time_chart.setTitle(u"按时段统计"_qs);
     m_time_chart.legend()->setVisible(false);
     m_time_view.setChart(&m_time_chart);
     m_time_view.setRenderHint(QPainter::Antialiasing);
@@ -44,12 +44,12 @@ void ChartPage::update_details()
         m_daily_chart.addSeries(series);
 
         auto axis_x = new QDateTimeAxis();
-        axis_x->setFormat(u8"d日");
+        axis_x->setFormat(u"d日"_qs);
         m_daily_chart.addAxis(axis_x, Qt::AlignBottom);
         series->attachAxis(axis_x);
 
         auto axis_y = new QValueAxis();
-        axis_y->setLabelFormat("%.2lf G");
+        axis_y->setLabelFormat(u"%.2lf G"_qs);
         m_daily_chart.addAxis(axis_y, Qt::AlignLeft);
         series->attachAxis(axis_y);
     }
@@ -61,7 +61,7 @@ void ChartPage::update_details()
         auto axis_x = new QBarCategoryAxis();
         for (auto& d : details)
         {
-            axis_x->append(QString(u8"%1~%2 时").arg(d.first).arg(d.first + 5));
+            axis_x->append(u"%1~%2 时"_qs.arg(d.first).arg(d.first + 5));
             set->append(d.second / 1000000000.0);
         }
         set->setColor(accent);
@@ -72,7 +72,7 @@ void ChartPage::update_details()
         series->attachAxis(axis_x);
 
         auto axis_y = new QValueAxis();
-        axis_y->setLabelFormat("%.2lf G");
+        axis_y->setLabelFormat(u"%.2lf G"_qs);
         m_time_chart.addAxis(axis_y, Qt::AlignLeft);
         series->attachAxis(axis_y);
     }

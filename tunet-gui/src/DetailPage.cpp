@@ -16,7 +16,7 @@ struct FluxItem : QTableWidgetItem
 DetailPage::DetailPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
 {
     m_details_table.setColumnCount(3);
-    m_details_table.setHorizontalHeaderLabels(QStringList{ u8"登录时间", u8"注销时间", u8"流量" });
+    m_details_table.setHorizontalHeaderLabels({ u"登录时间"_qs, u"注销时间"_qs, u"流量"_qs });
     m_details_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_details_table.verticalHeader()->setVisible(false);
     m_details_table.setSortingEnabled(true);

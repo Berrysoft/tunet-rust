@@ -3,10 +3,10 @@
 
 MainWnd::MainWnd() : QMainWindow()
 {
-    m_root_tab.addTab(&m_info_page, u8"主页");
-    m_root_tab.addTab(&m_chart_page, u8"统计");
-    m_root_tab.addTab(&m_detail_page, u8"明细");
-    m_root_tab.addTab(&m_about_page, u8"关于");
+    m_root_tab.addTab(&m_info_page, u"主页"_qs);
+    m_root_tab.addTab(&m_chart_page, u"统计"_qs);
+    m_root_tab.addTab(&m_detail_page, u"明细"_qs);
+    m_root_tab.addTab(&m_about_page, u"关于"_qs);
 
     setCentralWidget(&m_root_tab);
 

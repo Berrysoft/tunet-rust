@@ -88,20 +88,20 @@ QString tunet_format_flux(std::uint64_t f)
     double flux = f;
     if (flux < 1000.0)
     {
-        return QString("%1 B").arg(f);
+        return u"%1 B"_qs.arg(f);
     }
     flux /= 1000.0;
     if (flux < 1000.0)
     {
-        return QString("%1 K").arg(flux, 0, 'f', 2);
+        return u"%1 K"_qs.arg(flux, 0, 'f', 2);
     }
     flux /= 1000.0;
     if (flux < 1000.0)
     {
-        return QString("%1 M").arg(flux, 0, 'f', 2);
+        return u"%1 M"_qs.arg(flux, 0, 'f', 2);
     }
     flux /= 1000.0;
-    return QString("%1 G").arg(flux, 0, 'f', 2);
+    return u"%1 G"_qs.arg(flux, 0, 'f', 2);
 }
 
 QString tunet_format_duration(std::chrono::seconds s)
@@ -112,11 +112,11 @@ QString tunet_format_duration(std::chrono::seconds s)
     auto [day, h] = std::div(total_h, 60ll);
     if (day)
     {
-        return QString("%1.%2:%3:%4").arg(day).arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+        return u"%1.%2:%3:%4"_qs.arg(day).arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
     }
     else
     {
-        return QString("%1:%2:%3").arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+        return u"%1:%2:%3"_qs.arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
     }
 }
 
