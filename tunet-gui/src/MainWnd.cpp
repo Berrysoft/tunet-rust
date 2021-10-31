@@ -17,10 +17,6 @@ MainWnd::MainWnd() : QMainWindow()
     QPalette pal = palette();
     QColor accent = tunet_accent();
     pal.setColor(QPalette::Highlight, accent);
-    pal.setColor(QPalette::Link, accent);
-    QColor accent_t2 = accent;
-    accent_t2.setAlphaF(0.55f);
-    pal.setColor(QPalette::LinkVisited, accent_t2);
     setPalette(pal);
 }
 
