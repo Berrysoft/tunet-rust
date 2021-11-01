@@ -141,7 +141,7 @@ namespace TUNet
 
     QString format_duration(std::chrono::seconds s)
     {
-        auto total_sec = s.count();
+        long long total_sec = s.count();
         auto [total_min, sec] = std::div(total_sec, 60ll);
         auto [total_h, min] = std::div(total_min, 60ll);
         auto [day, h] = std::div(total_h, 60ll);

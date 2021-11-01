@@ -23,7 +23,7 @@ else()
 endif()
 
 file(GLOB RUST_SOURCES "../**/*.rs")
-set(RUST_LIB_PATH ${LIB_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}tunet_model_native${CMAKE_FIND_LIBRARY_SUFFIXES})
+set(RUST_LIB_PATH ${LIB_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tunet_model_native${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 add_custom_target(tunet-model
     COMMAND cargo build --lib ${CARGO_FLAGS}
@@ -76,6 +76,10 @@ if(WIN32)
                 --no-system-d3d-compiler
                 \"$<TARGET_FILE:tunet-gui>\"
     )
+elseif(UNIX)
+    if(NOT APPLE)
+        target_link_libraries(tunet-gui PRIVATE dl)
+    endif()
 endif()
 
 install(TARGETS tunet-gui DESTINATION bin)
