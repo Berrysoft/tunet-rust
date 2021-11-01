@@ -4,18 +4,21 @@
 #include <QWidget>
 #include <cstdint>
 
-struct FluxCircle : QWidget
+namespace TUNet
 {
-public:
-    FluxCircle(QWidget* parent = nullptr);
-    ~FluxCircle() override;
+    struct FluxCircle : QWidget
+    {
+    public:
+        FluxCircle(QWidget* parent = nullptr);
+        ~FluxCircle() override;
 
-    void update_flux(Flux flux, double balance);
+        void update_flux(Flux flux, double balance);
 
-protected:
-    void paintEvent(QPaintEvent* event) override;
+    protected:
+        void paintEvent(QPaintEvent* event) override;
 
-private:
-    Flux m_flux{};
-    double m_balance{};
-};
+    private:
+        Flux m_flux{};
+        double m_balance{};
+    };
+} // namespace TUNet

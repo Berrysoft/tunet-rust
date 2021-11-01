@@ -2,56 +2,59 @@
 #include <QHeaderView>
 #include <QLabel>
 
-struct FluxItem : QTableWidgetItem
+namespace TUNet
 {
-    FluxItem(const QString& text) : QTableWidgetItem(text) {}
-    ~FluxItem() override {}
-
-    bool operator<(const QTableWidgetItem& other) const override
+    struct FluxItem : QTableWidgetItem
     {
-        return data(Qt::UserRole).toULongLong() < other.data(Qt::UserRole).toULongLong();
-    }
-};
+        FluxItem(const QString& text) : QTableWidgetItem(text) {}
+        ~FluxItem() override {}
 
-DetailPage::DetailPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
-{
-    m_details_table.setColumnCount(3);
-    m_details_table.setHorizontalHeaderLabels({ u"登录时间"_qs, u"注销时间"_qs, u"流量"_qs });
-    m_details_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    m_details_table.verticalHeader()->setVisible(false);
-    m_details_table.setSortingEnabled(true);
-    m_details_layout.addWidget(&m_details_table);
+        bool operator<(const QTableWidgetItem& other) const override
+        {
+            return data(Qt::UserRole).toULongLong() < other.data(Qt::UserRole).toULongLong();
+        }
+    };
 
-    setLayout(&m_details_layout);
-
-    QObject::connect(pmodel, &Model::details_changed, this, &DetailPage::update_details);
-}
-
-DetailPage::~DetailPage() {}
-
-void DetailPage::update_details()
-{
-    auto ds = m_pmodel->details();
-    m_details_table.clearContents();
-    m_details_table.setSortingEnabled(false);
-    m_details_table.setRowCount((int)ds.size());
-    int row = 0;
-    for (auto& d : ds)
+    DetailPage::DetailPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
     {
-        auto login_time = new QTableWidgetItem(tunet_format_datetime(d.login_time));
-        login_time->setTextAlignment(Qt::AlignCenter);
-        m_details_table.setItem(row, 0, login_time);
+        m_details_table.setColumnCount(3);
+        m_details_table.setHorizontalHeaderLabels({ u"登录时间"_qs, u"注销时间"_qs, u"流量"_qs });
+        m_details_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        m_details_table.verticalHeader()->setVisible(false);
+        m_details_table.setSortingEnabled(true);
+        m_details_layout.addWidget(&m_details_table);
 
-        auto logout_time = new QTableWidgetItem(tunet_format_datetime(d.logout_time));
-        logout_time->setTextAlignment(Qt::AlignCenter);
-        m_details_table.setItem(row, 1, logout_time);
+        setLayout(&m_details_layout);
 
-        auto flux = new FluxItem(d.flux.toString());
-        flux->setTextAlignment(Qt::AlignCenter);
-        flux->setData(Qt::UserRole, static_cast<qulonglong>(d.flux));
-        m_details_table.setItem(row, 2, flux);
-
-        row++;
+        QObject::connect(pmodel, &Model::details_changed, this, &DetailPage::update_details);
     }
-    m_details_table.setSortingEnabled(true);
-}
+
+    DetailPage::~DetailPage() {}
+
+    void DetailPage::update_details()
+    {
+        auto ds = m_pmodel->details();
+        m_details_table.clearContents();
+        m_details_table.setSortingEnabled(false);
+        m_details_table.setRowCount((int)ds.size());
+        int row = 0;
+        for (auto& d : ds)
+        {
+            auto login_time = new QTableWidgetItem(format_datetime(d.login_time));
+            login_time->setTextAlignment(Qt::AlignCenter);
+            m_details_table.setItem(row, 0, login_time);
+
+            auto logout_time = new QTableWidgetItem(format_datetime(d.logout_time));
+            logout_time->setTextAlignment(Qt::AlignCenter);
+            m_details_table.setItem(row, 1, logout_time);
+
+            auto flux = new FluxItem(d.flux.toString());
+            flux->setTextAlignment(Qt::AlignCenter);
+            flux->setData(Qt::UserRole, static_cast<qulonglong>(d.flux));
+            m_details_table.setItem(row, 2, flux);
+
+            row++;
+        }
+        m_details_table.setSortingEnabled(true);
+    }
+} // namespace TUNet

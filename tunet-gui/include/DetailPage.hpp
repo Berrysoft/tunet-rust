@@ -5,17 +5,20 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-struct DetailPage : QWidget
+namespace TUNet
 {
-public:
-    DetailPage(QWidget* parent, Model* pmodel);
-    ~DetailPage() override;
+    struct DetailPage : QWidget
+    {
+    public:
+        DetailPage(QWidget* parent, Model* pmodel);
+        ~DetailPage() override;
 
-    void update_details();
+        void update_details();
 
-private:
-    Model* m_pmodel{};
+    private:
+        Model* m_pmodel{};
 
-    QVBoxLayout m_details_layout{ this };
-    QTableWidget m_details_table{ this };
-};
+        QVBoxLayout m_details_layout{ this };
+        QTableWidget m_details_table{ this };
+    };
+} // namespace TUNet

@@ -3,6 +3,12 @@
 
 extern "C"
 {
+    using TUNet::Action;
+    using TUNet::NativeModel;
+    using TUNet::State;
+    using TUNet::StatusFlag;
+    using TUNet::UpdateMsg;
+
     struct OnlineUser
     {
         std::uint32_t address;
@@ -70,253 +76,256 @@ extern "C"
     void tunet_model_details_grouped_by_time_foreach(NativeModel m, std::uint32_t groups, DetailsGroupedByTimeForeachCallback f, void* data);
 }
 
-struct init_data
+namespace TUNet
 {
-    int (*main)(int, char**);
-    int argc;
-    char** argv;
-};
-
-static int fn_init_callback(void* data)
-{
-    auto d = reinterpret_cast<init_data*>(data);
-    return (d->main)(d->argc, d->argv);
-}
-
-std::int32_t tunet_start(std::size_t threads, int (*main)(int, char**), int argc, char** argv)
-{
-    init_data data{ main, argc, argv };
-    return tunet_runtime_init(threads, fn_init_callback, &data);
-}
-
-QColor tunet_accent()
-{
-    auto color = tunet_color_accent();
-    return QColor::fromRgb(color.r, color.g, color.b);
-}
-
-QString Flux::toString() const
-{
-    double flux = m_value;
-    if (flux < 1000.0)
+    struct init_data
     {
-        return u"%1 B"_qs.arg(m_value);
+        int (*main)(int, char**);
+        int argc;
+        char** argv;
+    };
+
+    static int fn_init_callback(void* data)
+    {
+        auto d = reinterpret_cast<init_data*>(data);
+        return (d->main)(d->argc, d->argv);
     }
-    flux /= 1000.0;
-    if (flux < 1000.0)
-    {
-        return u"%1 K"_qs.arg(flux, 0, 'f', 2);
-    }
-    flux /= 1000.0;
-    if (flux < 1000.0)
-    {
-        return u"%1 M"_qs.arg(flux, 0, 'f', 2);
-    }
-    flux /= 1000.0;
-    return u"%1 G"_qs.arg(flux, 0, 'f', 2);
-}
 
-QString tunet_format_status(const Status& status)
-{
-    switch (status.flag)
+    std::int32_t start(std::size_t threads, int (*main)(int, char**), int argc, char** argv)
     {
-    case StatusFlag::Wwan:
-        return u"移动流量"_qs;
-    case StatusFlag::Wlan:
-        return u"无线网络（%1）"_qs.arg(status.ssid);
-    case StatusFlag::Lan:
-        return u"有线网络"_qs;
-    default:
-        return u"未知"_qs;
+        init_data data{ main, argc, argv };
+        return tunet_runtime_init(threads, fn_init_callback, &data);
     }
-}
 
-QString tunet_format_duration(std::chrono::seconds s)
-{
-    auto total_sec = s.count();
-    auto [total_min, sec] = std::div(total_sec, 60ll);
-    auto [total_h, min] = std::div(total_min, 60ll);
-    auto [day, h] = std::div(total_h, 60ll);
-    if (day)
+    QColor accent_color()
     {
-        return u"%1.%2:%3:%4"_qs.arg(day).arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+        auto color = tunet_color_accent();
+        return QColor::fromRgb(color.r, color.g, color.b);
     }
-    else
-    {
-        return u"%1:%2:%3"_qs.arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
-    }
-}
 
-QString tunet_format_datetime(const QDateTime& time)
-{
-    static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
-    return time.toString(DATETIME_FORMAT);
-}
-
-QString tunet_format_ip(std::uint32_t addr)
-{
-    return u"%1.%2.%3.%4"_qs.arg((addr >> 24) & 0xFF).arg((addr >> 16) & 0xFF).arg((addr >> 8) & 0xFF).arg(addr & 0xFF);
-}
-
-QString tunet_format_mac_address(const std::array<std::uint8_t, 6>& maddr)
-{
-    if (maddr == std::array<std::uint8_t, 6>{ 0, 0, 0, 0, 0, 0 })
+    QString Flux::toString() const
     {
-        return QString{};
-    }
-    else
-    {
-        QString fmt = u"%1:%2:%3:%4:%5:%6"_qs;
-        for (auto& part : maddr)
+        double flux = m_value;
+        if (flux < 1000.0)
         {
-            fmt = fmt.arg(part, 2, 16, QChar(u'0'));
+            return u"%1 B"_qs.arg(m_value);
         }
-        return fmt;
+        flux /= 1000.0;
+        if (flux < 1000.0)
+        {
+            return u"%1 K"_qs.arg(flux, 0, 'f', 2);
+        }
+        flux /= 1000.0;
+        if (flux < 1000.0)
+        {
+            return u"%1 M"_qs.arg(flux, 0, 'f', 2);
+        }
+        flux /= 1000.0;
+        return u"%1 G"_qs.arg(flux, 0, 'f', 2);
     }
-}
 
-static void fn_update_callback(UpdateMsg m, void* data)
-{
-    auto model = reinterpret_cast<Model*>(data);
-    model->update(m);
-}
-
-Model::Model(QObject* parent) : QObject(parent) { m_handle = tunet_model_new(fn_update_callback, this); }
-
-Model::~Model() { tunet_model_unref(m_handle); }
-
-void Model::queue(Action a) const { tunet_model_queue(m_handle, a); }
-
-bool Model::queue_read_cred() const { return tunet_model_queue_read_cred(m_handle); }
-
-void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
-
-void Model::update(UpdateMsg m) const
-{
-    switch (m)
+    QString format_status(const Status& status)
     {
-    case UpdateMsg::Credential:
-        emit cred_changed();
-        break;
-    case UpdateMsg::State:
-        emit state_changed();
-        break;
-    case UpdateMsg::Log:
-        emit log_changed();
-        break;
-    case UpdateMsg::Flux:
-        emit flux_changed();
-        break;
-    case UpdateMsg::Online:
-        emit onlines_changed();
-        break;
-    case UpdateMsg::Details:
-        emit details_changed();
-        break;
+        switch (status.flag)
+        {
+        case StatusFlag::Wwan:
+            return u"移动流量"_qs;
+        case StatusFlag::Wlan:
+            return u"无线网络（%1）"_qs.arg(status.ssid);
+        case StatusFlag::Lan:
+            return u"有线网络"_qs;
+        default:
+            return u"未知"_qs;
+        }
     }
-}
 
-static void fn_string_callback(const char8_t* data, std::size_t size, void* d)
-{
-    QString* pstr = reinterpret_cast<QString*>(d);
-    *pstr = QString::fromUtf8(data, size);
-}
+    QString format_duration(std::chrono::seconds s)
+    {
+        auto total_sec = s.count();
+        auto [total_min, sec] = std::div(total_sec, 60ll);
+        auto [total_h, min] = std::div(total_min, 60ll);
+        auto [day, h] = std::div(total_h, 60ll);
+        if (day)
+        {
+            return u"%1.%2:%3:%4"_qs.arg(day).arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+        }
+        else
+        {
+            return u"%1:%2:%3"_qs.arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+        }
+    }
 
-template <typename F, typename... Args>
-QString get_q_string(F&& f, Args... args)
-{
-    QString str;
-    f(std::move(args)..., fn_string_callback, &str);
-    return str;
-}
+    QString format_datetime(const QDateTime& time)
+    {
+        static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
+        return time.toString(DATETIME_FORMAT);
+    }
 
-Status Model::status() const
-{
-    QString ssid{};
-    StatusFlag flag = tunet_model_status(m_handle, fn_string_callback, &ssid);
-    return { flag, std::move(ssid) };
-}
+    QString format_ip(std::uint32_t addr)
+    {
+        return u"%1.%2.%3.%4"_qs.arg((addr >> 24) & 0xFF).arg((addr >> 16) & 0xFF).arg((addr >> 8) & 0xFF).arg(addr & 0xFF);
+    }
 
-NetCredential Model::cred() const
-{
-    auto username = get_q_string(tunet_model_cred_username, m_handle);
-    auto password = get_q_string(tunet_model_cred_password, m_handle);
-    return { std::move(username), std::move(password) };
-}
+    QString format_mac_address(const std::array<std::uint8_t, 6>& maddr)
+    {
+        if (maddr == std::array<std::uint8_t, 6>{ 0, 0, 0, 0, 0, 0 })
+        {
+            return QString{};
+        }
+        else
+        {
+            QString fmt = u"%1:%2:%3:%4:%5:%6"_qs;
+            for (auto& part : maddr)
+            {
+                fmt = fmt.arg(part, 2, 16, QChar(u'0'));
+            }
+            return fmt;
+        }
+    }
 
-State Model::state() const
-{
-    return tunet_model_state(m_handle);
-}
+    static void fn_update_callback(UpdateMsg m, void* data)
+    {
+        auto model = reinterpret_cast<Model*>(data);
+        model->update(m);
+    }
 
-QString Model::log() const
-{
-    return get_q_string(tunet_model_log, m_handle);
-}
+    Model::Model(QObject* parent) : QObject(parent) { m_handle = tunet_model_new(fn_update_callback, this); }
 
-NetFlux Model::flux() const
-{
-    auto username = get_q_string(tunet_model_flux_username, m_handle);
-    auto f = tunet_model_flux_flux(m_handle);
-    auto online = tunet_model_flux_online_time(m_handle);
-    auto balance = tunet_model_flux_balance(m_handle);
-    return NetFlux{ std::move(username), f, std::chrono::seconds{ online }, balance };
-}
+    Model::~Model() { tunet_model_unref(m_handle); }
 
-static bool fn_foreach_online(const OnlineUser* u, void* data)
-{
-    auto& users = *reinterpret_cast<std::vector<NetUser>*>(data);
-    std::array<std::uint8_t, 6> mac{};
-    std::copy(std::begin(u->mac_address), std::end(u->mac_address), mac.begin());
-    users.emplace_back(u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::move(mac), u->is_local);
-    return true;
-}
+    void Model::queue(Action a) const { tunet_model_queue(m_handle, a); }
 
-std::vector<NetUser> Model::onlines() const
-{
-    std::vector<NetUser> users;
-    tunet_model_onlines_foreach(m_handle, fn_foreach_online, &users);
-    return users;
-}
+    bool Model::queue_read_cred() const { return tunet_model_queue_read_cred(m_handle); }
 
-static bool fn_foreach_detail(const Detail* d, void* data)
-{
-    auto& details = *reinterpret_cast<std::vector<NetDetail>*>(data);
-    details.emplace_back(QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC), QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC), d->flux);
-    return true;
-}
+    void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
 
-std::vector<NetDetail> Model::details() const
-{
-    std::vector<NetDetail> details{};
-    tunet_model_details_foreach(m_handle, fn_foreach_detail, &details);
-    return details;
-}
+    void Model::update(UpdateMsg m) const
+    {
+        switch (m)
+        {
+        case UpdateMsg::Credential:
+            emit cred_changed();
+            break;
+        case UpdateMsg::State:
+            emit state_changed();
+            break;
+        case UpdateMsg::Log:
+            emit log_changed();
+            break;
+        case UpdateMsg::Flux:
+            emit flux_changed();
+            break;
+        case UpdateMsg::Online:
+            emit onlines_changed();
+            break;
+        case UpdateMsg::Details:
+            emit details_changed();
+            break;
+        }
+    }
 
-static bool fn_foreach_detail_group(const DetailGroup* d, void* data)
-{
-    auto& details = *reinterpret_cast<std::map<QDate, Flux>*>(data);
-    details.emplace(QDateTime::fromSecsSinceEpoch(d->logout_date, Qt::UTC).date(), d->flux);
-    return true;
-}
+    static void fn_string_callback(const char8_t* data, std::size_t size, void* d)
+    {
+        QString* pstr = reinterpret_cast<QString*>(d);
+        *pstr = QString::fromUtf8(data, size);
+    }
 
-std::map<QDate, Flux> Model::details_grouped() const
-{
-    std::map<QDate, Flux> details{};
-    tunet_model_details_grouped_foreach(m_handle, fn_foreach_detail_group, &details);
-    return details;
-}
+    template <typename F, typename... Args>
+    QString get_q_string(F&& f, Args... args)
+    {
+        QString str;
+        f(std::move(args)..., fn_string_callback, &str);
+        return str;
+    }
 
-static bool fn_foreach_detail_group_by_time(const DetailGroupByTime* d, void* data)
-{
-    auto& details = *reinterpret_cast<std::map<std::uint32_t, Flux>*>(data);
-    details.emplace(d->logout_start_time, d->flux);
-    return true;
-}
+    Status Model::status() const
+    {
+        QString ssid{};
+        StatusFlag flag = tunet_model_status(m_handle, fn_string_callback, &ssid);
+        return { flag, std::move(ssid) };
+    }
 
-std::map<std::uint32_t, Flux> Model::details_grouped_by_time(std::uint32_t groups) const
-{
-    std::map<std::uint32_t, Flux> details{};
-    tunet_model_details_grouped_by_time_foreach(m_handle, groups, fn_foreach_detail_group_by_time, &details);
-    return details;
-}
+    Credential Model::cred() const
+    {
+        auto username = get_q_string(tunet_model_cred_username, m_handle);
+        auto password = get_q_string(tunet_model_cred_password, m_handle);
+        return { std::move(username), std::move(password) };
+    }
+
+    State Model::state() const
+    {
+        return tunet_model_state(m_handle);
+    }
+
+    QString Model::log() const
+    {
+        return get_q_string(tunet_model_log, m_handle);
+    }
+
+    Info Model::flux() const
+    {
+        auto username = get_q_string(tunet_model_flux_username, m_handle);
+        auto f = tunet_model_flux_flux(m_handle);
+        auto online = tunet_model_flux_online_time(m_handle);
+        auto balance = tunet_model_flux_balance(m_handle);
+        return Info{ std::move(username), f, std::chrono::seconds{ online }, balance };
+    }
+
+    static bool fn_foreach_online(const OnlineUser* u, void* data)
+    {
+        auto& users = *reinterpret_cast<std::vector<Online>*>(data);
+        std::array<std::uint8_t, 6> mac{};
+        std::copy(std::begin(u->mac_address), std::end(u->mac_address), mac.begin());
+        users.emplace_back(u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::move(mac), u->is_local);
+        return true;
+    }
+
+    std::vector<Online> Model::onlines() const
+    {
+        std::vector<Online> users;
+        tunet_model_onlines_foreach(m_handle, fn_foreach_online, &users);
+        return users;
+    }
+
+    static bool fn_foreach_detail(const ::Detail* d, void* data)
+    {
+        auto& details = *reinterpret_cast<std::vector<Detail>*>(data);
+        details.emplace_back(QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC), QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC), d->flux);
+        return true;
+    }
+
+    std::vector<Detail> Model::details() const
+    {
+        std::vector<Detail> details{};
+        tunet_model_details_foreach(m_handle, fn_foreach_detail, &details);
+        return details;
+    }
+
+    static bool fn_foreach_detail_group(const DetailGroup* d, void* data)
+    {
+        auto& details = *reinterpret_cast<std::map<QDate, Flux>*>(data);
+        details.emplace(QDateTime::fromSecsSinceEpoch(d->logout_date, Qt::UTC).date(), d->flux);
+        return true;
+    }
+
+    std::map<QDate, Flux> Model::details_grouped() const
+    {
+        std::map<QDate, Flux> details{};
+        tunet_model_details_grouped_foreach(m_handle, fn_foreach_detail_group, &details);
+        return details;
+    }
+
+    static bool fn_foreach_detail_group_by_time(const DetailGroupByTime* d, void* data)
+    {
+        auto& details = *reinterpret_cast<std::map<std::uint32_t, Flux>*>(data);
+        details.emplace(d->logout_start_time, d->flux);
+        return true;
+    }
+
+    std::map<std::uint32_t, Flux> Model::details_grouped_by_time(std::uint32_t groups) const
+    {
+        std::map<std::uint32_t, Flux> details{};
+        tunet_model_details_grouped_by_time_foreach(m_handle, groups, fn_foreach_detail_group_by_time, &details);
+        return details;
+    }
+} // namespace TUNet

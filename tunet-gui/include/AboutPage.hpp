@@ -5,18 +5,21 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-struct AboutPage : QWidget
+namespace TUNet
 {
-public:
-    AboutPage(QWidget* parent);
-    ~AboutPage() override;
+    struct AboutPage : QWidget
+    {
+    public:
+        AboutPage(QWidget* parent);
+        ~AboutPage() override;
 
-private:
-    QVBoxLayout m_about_layout{ this };
-    QLabel m_title_label{ this };
-    QLabel m_source_label{ this };
-    QLabel m_copyright_label{ this };
+    private:
+        QVBoxLayout m_about_layout{ this };
+        QLabel m_title_label{ this };
+        QLabel m_source_label{ this };
+        QLabel m_copyright_label{ this };
 
-    QLabel m_lib_label{ this };
-    QTableWidget m_lib_table{ this };
-};
+        QLabel m_lib_label{ this };
+        QTableWidget m_lib_table{ this };
+    };
+} // namespace TUNet
