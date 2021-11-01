@@ -95,27 +95,12 @@ QColor tunet_accent()
     return QColor::fromRgb(color.r, color.g, color.b);
 }
 
-QString tunet_format_status(const Status& status)
+QString Flux::toString() const
 {
-    switch (status.flag)
-    {
-    case StatusFlag::Wwan:
-        return u"移动流量"_qs;
-    case StatusFlag::Wlan:
-        return u"无线网络（%1）"_qs.arg(status.ssid);
-    case StatusFlag::Lan:
-        return u"有线网络"_qs;
-    default:
-        return u"未知"_qs;
-    }
-}
-
-QString tunet_format_flux(std::uint64_t f)
-{
-    double flux = f;
+    double flux = m_value;
     if (flux < 1000.0)
     {
-        return u"%1 B"_qs.arg(f);
+        return u"%1 B"_qs.arg(m_value);
     }
     flux /= 1000.0;
     if (flux < 1000.0)
@@ -129,6 +114,21 @@ QString tunet_format_flux(std::uint64_t f)
     }
     flux /= 1000.0;
     return u"%1 G"_qs.arg(flux, 0, 'f', 2);
+}
+
+QString tunet_format_status(const Status& status)
+{
+    switch (status.flag)
+    {
+    case StatusFlag::Wwan:
+        return u"移动流量"_qs;
+    case StatusFlag::Wlan:
+        return u"无线网络（%1）"_qs.arg(status.ssid);
+    case StatusFlag::Lan:
+        return u"有线网络"_qs;
+    default:
+        return u"未知"_qs;
+    }
 }
 
 QString tunet_format_duration(std::chrono::seconds s)
@@ -151,6 +151,11 @@ QString tunet_format_datetime(const QDateTime& time)
 {
     static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
     return time.toString(DATETIME_FORMAT);
+}
+
+QString tunet_format_ip(std::uint32_t addr)
+{
+    return u"%1.%2.%3.%4"_qs.arg((addr >> 24) & 0xFF).arg((addr >> 16) & 0xFF).arg((addr >> 8) & 0xFF).arg(addr & 0xFF);
 }
 
 QString tunet_format_mac_address(const std::array<std::uint8_t, 6>& maddr)
@@ -260,10 +265,10 @@ NetFlux Model::flux() const
 
 static bool fn_foreach_online(const OnlineUser* u, void* data)
 {
-    std::vector<NetUser>& users = *reinterpret_cast<std::vector<NetUser>*>(data);
+    auto& users = *reinterpret_cast<std::vector<NetUser>*>(data);
     std::array<std::uint8_t, 6> mac{};
     std::copy(std::begin(u->mac_address), std::end(u->mac_address), mac.begin());
-    users.emplace_back(QHostAddress{ u->address }, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::move(mac), u->is_local);
+    users.emplace_back(u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::move(mac), u->is_local);
     return true;
 }
 
@@ -276,7 +281,7 @@ std::vector<NetUser> Model::onlines() const
 
 static bool fn_foreach_detail(const Detail* d, void* data)
 {
-    std::vector<NetDetail>& details = *reinterpret_cast<std::vector<NetDetail>*>(data);
+    auto& details = *reinterpret_cast<std::vector<NetDetail>*>(data);
     details.emplace_back(QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC), QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC), d->flux);
     return true;
 }
@@ -290,28 +295,28 @@ std::vector<NetDetail> Model::details() const
 
 static bool fn_foreach_detail_group(const DetailGroup* d, void* data)
 {
-    std::vector<NetDetailGroup>& details = *reinterpret_cast<std::vector<NetDetailGroup>*>(data);
-    details.emplace_back(QDateTime::fromSecsSinceEpoch(d->logout_date, Qt::UTC).date(), d->flux);
+    auto& details = *reinterpret_cast<std::map<QDate, Flux>*>(data);
+    details.emplace(QDateTime::fromSecsSinceEpoch(d->logout_date, Qt::UTC).date(), d->flux);
     return true;
 }
 
-std::vector<NetDetailGroup> Model::details_grouped() const
+std::map<QDate, Flux> Model::details_grouped() const
 {
-    std::vector<NetDetailGroup> details{};
+    std::map<QDate, Flux> details{};
     tunet_model_details_grouped_foreach(m_handle, fn_foreach_detail_group, &details);
     return details;
 }
 
 static bool fn_foreach_detail_group_by_time(const DetailGroupByTime* d, void* data)
 {
-    std::map<std::uint32_t, std::uint64_t>& details = *reinterpret_cast<std::map<std::uint32_t, std::uint64_t>*>(data);
+    auto& details = *reinterpret_cast<std::map<std::uint32_t, Flux>*>(data);
     details.emplace(d->logout_start_time, d->flux);
     return true;
 }
 
-std::map<std::uint32_t, std::uint64_t> Model::details_grouped_by_time(std::uint32_t groups) const
+std::map<std::uint32_t, Flux> Model::details_grouped_by_time(std::uint32_t groups) const
 {
-    std::map<std::uint32_t, std::uint64_t> details{};
+    std::map<std::uint32_t, Flux> details{};
     tunet_model_details_grouped_by_time_foreach(m_handle, groups, fn_foreach_detail_group_by_time, &details);
     return details;
 }

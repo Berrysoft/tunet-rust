@@ -2,8 +2,6 @@
 
 #include <QColor>
 #include <QDateTime>
-#include <QHostAddress>
-#include <QNetworkInterface>
 #include <QObject>
 #include <QString>
 #include <array>
@@ -68,19 +66,33 @@ struct NetCredential
     QString password;
 };
 
+struct Flux
+{
+    std::uint64_t m_value{};
+
+    constexpr Flux() noexcept {}
+    constexpr Flux(std::uint64_t value) noexcept : m_value(value) {}
+
+    constexpr operator std::uint64_t() const { return m_value; }
+
+    constexpr double toGb() const { return static_cast<double>(m_value) / 1000000000.0; }
+
+    QString toString() const;
+};
+
 struct NetFlux
 {
     QString username;
-    std::uint64_t flux;
+    Flux flux;
     std::chrono::seconds online_time;
     double balance;
 };
 
 struct NetUser
 {
-    QHostAddress address;
+    std::uint32_t address;
     QDateTime login_time;
-    std::uint64_t flux;
+    Flux flux;
     std::array<std::uint8_t, 6> mac_address;
     bool is_local;
 };
@@ -89,19 +101,13 @@ struct NetDetail
 {
     QDateTime login_time;
     QDateTime logout_time;
-    std::uint64_t flux;
-};
-
-struct NetDetailGroup
-{
-    QDate logout_date;
-    std::uint64_t flux;
+    Flux flux;
 };
 
 QString tunet_format_status(const Status& status);
-QString tunet_format_flux(std::uint64_t flux);
 QString tunet_format_duration(std::chrono::seconds sec);
 QString tunet_format_datetime(const QDateTime& time);
+QString tunet_format_ip(std::uint32_t addr);
 QString tunet_format_mac_address(const std::array<std::uint8_t, 6>& maddr);
 
 struct Model : QObject
@@ -119,8 +125,8 @@ public:
     NetFlux flux() const;
     std::vector<NetUser> onlines() const;
     std::vector<NetDetail> details() const;
-    std::vector<NetDetailGroup> details_grouped() const;
-    std::map<std::uint32_t, std::uint64_t> details_grouped_by_time(std::uint32_t groups) const;
+    std::map<QDate, Flux> details_grouped() const;
+    std::map<std::uint32_t, Flux> details_grouped_by_time(std::uint32_t groups) const;
 
     void queue(Action a) const;
     bool queue_read_cred() const;

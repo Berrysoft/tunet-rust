@@ -55,7 +55,7 @@ void SettingsPage::update_online()
     int row = 0;
     for (auto& u : users)
     {
-        auto address = new QTableWidgetItem(u.address.toString());
+        auto address = new QTableWidgetItem(tunet_format_ip(u.address));
         address->setTextAlignment(Qt::AlignCenter);
         m_online_table.setItem(row, 0, address);
 
@@ -63,7 +63,7 @@ void SettingsPage::update_online()
         login_time->setTextAlignment(Qt::AlignCenter);
         m_online_table.setItem(row, 1, login_time);
 
-        auto flux = new QTableWidgetItem(tunet_format_flux(u.flux));
+        auto flux = new QTableWidgetItem(u.flux.toString());
         flux->setTextAlignment(Qt::AlignCenter);
         m_online_table.setItem(row, 2, flux);
 

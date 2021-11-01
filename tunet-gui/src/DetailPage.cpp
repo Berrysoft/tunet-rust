@@ -46,9 +46,9 @@ void DetailPage::update_details()
         logout_time->setTextAlignment(Qt::AlignCenter);
         m_details_table.setItem(row, 1, logout_time);
 
-        auto flux = new FluxItem(tunet_format_flux(d.flux));
+        auto flux = new FluxItem(d.flux.toString());
         flux->setTextAlignment(Qt::AlignCenter);
-        flux->setData(Qt::UserRole, d.flux);
+        flux->setData(Qt::UserRole, static_cast<qulonglong>(d.flux));
         m_details_table.setItem(row, 2, flux);
 
         row++;

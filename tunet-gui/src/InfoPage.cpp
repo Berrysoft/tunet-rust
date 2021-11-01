@@ -82,7 +82,7 @@ void InfoPage::update_flux()
 {
     auto flux = m_pmodel->flux();
     m_username_label.setText(u"用户：%1"_qs.arg(flux.username));
-    m_flux_label.setText(u"流量：%1"_qs.arg(tunet_format_flux(flux.flux)));
+    m_flux_label.setText(u"流量：%1"_qs.arg(flux.flux.toString()));
     m_online_time_label.setText(u"时长：%1"_qs.arg(tunet_format_duration(flux.online_time)));
     m_balance_label.setText(u"余额：￥%1"_qs.arg(flux.balance));
     m_flux_circle.update_flux(flux.flux, flux.balance);

@@ -37,7 +37,7 @@ add_custom_command(
     DEPENDS tunet-model
 )
 
-find_package(Qt6 COMPONENTS Widgets Network Charts REQUIRED)
+find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
 get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
 get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
 if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
@@ -54,7 +54,7 @@ target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Network Qt6::Charts ${RUST_LIB_PATH})
+target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts ${RUST_LIB_PATH})
 add_dependencies(tunet-gui tunet-model)
 
 if(WIN32)

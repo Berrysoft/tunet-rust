@@ -37,8 +37,8 @@ void ChartPage::update_details()
         auto series = new QLineSeries();
         for (auto& d : details)
         {
-            total_flux += d.flux / 1000000000.0;
-            series->append(QDateTime{ d.logout_date, QTime{} }.toMSecsSinceEpoch(), total_flux);
+            total_flux += d.second.toGb();
+            series->append(QDateTime{ d.first, QTime{} }.toMSecsSinceEpoch(), total_flux);
         }
         series->setColor(accent);
         m_daily_chart.addSeries(series);
@@ -57,12 +57,12 @@ void ChartPage::update_details()
         auto details = m_pmodel->details_grouped_by_time(4);
         m_time_chart.removeAllSeries();
         auto series = new QBarSeries();
-        auto set = new QBarSet("");
+        auto set = new QBarSet({});
         auto axis_x = new QBarCategoryAxis();
         for (auto& d : details)
         {
             axis_x->append(u"%1~%2 时"_qs.arg(d.first).arg(d.first + 5));
-            set->append(d.second / 1000000000.0);
+            set->append(d.second.toGb());
         }
         set->setColor(accent);
         series->append(set);

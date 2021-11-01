@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Model.hpp>
 #include <QWidget>
 #include <cstdint>
 
@@ -9,12 +10,12 @@ public:
     FluxCircle(QWidget* parent = nullptr);
     ~FluxCircle() override;
 
-    void update_flux(std::uint64_t flux, double balance);
+    void update_flux(Flux flux, double balance);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
-    std::uint64_t m_flux{};
+    Flux m_flux{};
     double m_balance{};
 };

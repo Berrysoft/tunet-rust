@@ -1,5 +1,4 @@
 #include <FluxCircle.hpp>
-#include <Model.hpp>
 #include <QPainter>
 #include <QPainterPath>
 #include <algorithm>
@@ -12,7 +11,7 @@ FluxCircle::FluxCircle(QWidget* parent) : QWidget(parent)
 
 FluxCircle::~FluxCircle() {}
 
-void FluxCircle::update_flux(std::uint64_t flux, double balance)
+void FluxCircle::update_flux(Flux flux, double balance)
 {
     m_flux = flux;
     m_balance = balance;
@@ -55,7 +54,7 @@ void FluxCircle::paintEvent(QPaintEvent* event)
 
     double max_flux = m_balance + 50.0;
 
-    double flux_length = m_flux / 1000000000.0 / max_flux * 360.0;
+    double flux_length = m_flux.toGb() / max_flux * 360.0;
     double free_length = 50.0 / max_flux * 360.0;
 
     QPainter painter{ this };
