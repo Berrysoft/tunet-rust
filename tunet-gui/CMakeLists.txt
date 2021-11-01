@@ -46,17 +46,17 @@ else()
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt.debug.bat HINTS "${_qt_bin_dir}")
 endif()
 
+file(GLOB HEADERS "include/*.hpp")
 file(GLOB SOURCES "src/*.cpp")
 
-qt_wrap_cpp(SOURCES "include/Model.hpp")
-add_executable(tunet-gui ${SOURCES})
+add_executable(tunet-gui ${SOURCES} ${HEADERS})
 target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts ${RUST_LIB_PATH})
 add_dependencies(tunet-gui tunet-model)
-set_target_properties(tunet-gui PROPERTIES qt_no_entrypoint ON)
+set_target_properties(tunet-gui PROPERTIES AUTOMOC ON qt_no_entrypoint ON)
 
 if(WIN32)
     set(WINDOWS_LIB ${CMAKE_BINARY_DIR}/windows.lib)
