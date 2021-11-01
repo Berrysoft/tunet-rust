@@ -124,7 +124,7 @@ pub struct DetailGroupByTime {
     pub flux: u64,
 }
 
-pub type MainCallback = Option<extern "C" fn(*mut c_void) -> i32>;
+pub type MainCallback = Option<extern "C" fn(Model, *mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
 pub type StringCallback = Option<extern "C" fn(*const u8, usize, *mut c_void)>;
 pub type OnlinesForeachCallback = Option<extern "C" fn(*const OnlineUser, *mut c_void) -> bool>;
@@ -137,21 +137,18 @@ pub type DetailsGroupedByTimeForeachCallback =
 pub fn wrap_callback(
     func: UpdateCallback,
     data: *mut c_void,
-) -> Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static> {
+) -> Option<Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>> {
     struct TempWrapper {
-        func: UpdateCallback,
+        func: extern "C" fn(UpdateMsg, *mut c_void),
         data: *mut c_void,
     }
 
     unsafe impl Send for TempWrapper {}
     unsafe impl Sync for TempWrapper {}
 
-    let wrapper = TempWrapper { func, data };
-
-    Arc::new(move |m| {
-        if let Some(func) = wrapper.func {
-            func(m, wrapper.data)
-        }
+    func.map(move |func| {
+        let wrapper = TempWrapper { func, data };
+        Arc::new(move |m| (wrapper.func)(m, wrapper.data)) as _
     })
 }
 

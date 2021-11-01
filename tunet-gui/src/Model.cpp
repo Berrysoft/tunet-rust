@@ -37,7 +37,7 @@ extern "C"
         std::uint64_t flux;
     };
 
-    using MainCallback = int (*)(void*);
+    using MainCallback = int (*)(NativeModel, void*);
     using UpdateCallback = void (*)(UpdateMsg, void*);
     using StringCallback = void (*)(const char8_t*, std::size_t, void*);
     using OnlinesForeachCallback = bool (*)(const OnlineUser*, void*);
@@ -56,8 +56,7 @@ extern "C"
 
     ThemeColor tunet_color_accent();
 
-    NativeModel tunet_model_new(UpdateCallback update, void* data);
-    void tunet_model_unref(NativeModel m);
+    void tunet_model_set_update_callback(NativeModel m, UpdateCallback update, void* data);
     void tunet_model_queue(NativeModel m, Action a);
     bool tunet_model_queue_read_cred(NativeModel m);
     void tunet_model_queue_state(NativeModel m, State s);
@@ -80,18 +79,19 @@ namespace TUNet
 {
     struct init_data
     {
-        int (*main)(int, char**);
+        StartCallback main;
         int argc;
         char** argv;
     };
 
-    static int fn_init_callback(void* data)
+    static int fn_init_callback(NativeModel handle, void* data)
     {
         auto d = reinterpret_cast<init_data*>(data);
-        return (d->main)(d->argc, d->argv);
+        Model model{ handle };
+        return (d->main)(d->argc, d->argv, &model);
     }
 
-    std::int32_t start(std::size_t threads, int (*main)(int, char**), int argc, char** argv)
+    std::int32_t start(std::size_t threads, StartCallback main, int argc, char** argv)
     {
         init_data data{ main, argc, argv };
         return tunet_runtime_init(threads, fn_init_callback, &data);
@@ -189,9 +189,12 @@ namespace TUNet
         model->update(m);
     }
 
-    Model::Model(QObject* parent) : QObject(parent) { m_handle = tunet_model_new(fn_update_callback, this); }
+    Model::Model(NativeModel handle) : QObject(), m_handle(handle)
+    {
+        tunet_model_set_update_callback(m_handle, fn_update_callback, this);
+    }
 
-    Model::~Model() { tunet_model_unref(m_handle); }
+    Model::~Model() { tunet_model_set_update_callback(m_handle, nullptr, nullptr); }
 
     void Model::queue(Action a) const { tunet_model_queue(m_handle, a); }
 

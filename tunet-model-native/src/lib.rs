@@ -1,7 +1,6 @@
 use itertools::Itertools;
 use netstatus::*;
 use std::ffi::c_void;
-use std::ptr::null_mut;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use tokio::runtime::Builder;
 use tokio::sync::mpsc::*;
@@ -20,14 +19,25 @@ fn tunet_runtime_init_impl(
         .worker_threads(val)
         .enable_all()
         .build()?;
-    let res = runtime.block_on(async move {
+    runtime.block_on(async move {
         if let Some(main) = main {
-            main(data)
+            let (tx, mut rx) = channel(32);
+            let model = Arc::new(RwLock::new(Model::new(tx)?));
+            {
+                let model = model.clone();
+                tokio::spawn(async move {
+                    while let Some(a) = rx.recv().await {
+                        let mut model = model.write().unwrap();
+                        model.handle(a);
+                    }
+                });
+            }
+            let res = main(Arc::as_ptr(&model), data);
+            Ok::<_, anyhow::Error>(res)
         } else {
-            1
+            Ok(0)
         }
-    });
-    Ok(res)
+    })
 }
 
 #[no_mangle]
@@ -44,40 +54,14 @@ pub extern "C" fn tunet_color_accent() -> color_theme::Color {
     color_theme::Color::accent()
 }
 
-fn tunet_model_new_impl(
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_set_update_callback(
+    model: native::Model,
     update: native::UpdateCallback,
     data: *mut c_void,
-) -> Result<native::Model> {
-    let (tx, mut rx) = channel(32);
-    let model = Arc::new(RwLock::new({
-        let mut model = Model::new(tx)?;
-        model.set_callback(Some(native::wrap_callback(update, data)));
-        model
-    }));
-    {
-        let model = model.clone();
-        tokio::spawn(async move {
-            while let Some(a) = rx.recv().await {
-                let mut model = model.write().unwrap();
-                model.handle(a);
-            }
-        });
-    }
-    Ok(Arc::into_raw(model))
-}
-
-#[no_mangle]
-pub extern "C" fn tunet_model_new(
-    update: native::UpdateCallback,
-    data: *mut c_void,
-) -> native::Model {
-    tunet_model_new_impl(update, data).unwrap_or(null_mut())
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn tunet_model_unref(model: native::Model) {
-    let model = Arc::from_raw(model);
-    model.write().unwrap().set_callback(None);
+) {
+    let mut model = model.as_ref().unwrap().write().unwrap();
+    model.set_callback(native::wrap_callback(update, data));
 }
 
 unsafe fn read_model<'a>(model: native::Model) -> RwLockReadGuard<'a, Model> {

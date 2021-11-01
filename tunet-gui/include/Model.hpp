@@ -58,8 +58,6 @@ namespace TUNet
 
     using NativeModel = const void*;
 
-    std::int32_t start(std::size_t threads, int (*main)(int, char**), int argc, char** argv);
-
     QColor accent_color();
 
     struct Credential
@@ -117,7 +115,7 @@ namespace TUNet
         Q_OBJECT
 
     public:
-        Model(QObject* parent = nullptr);
+        Model(NativeModel handle);
         ~Model() override;
 
         Status status() const;
@@ -146,4 +144,7 @@ namespace TUNet
     private:
         NativeModel m_handle{};
     };
+
+    using StartCallback = int (*)(int, char**, Model*);
+    std::int32_t start(std::size_t threads, StartCallback main, int argc, char** argv);
 } // namespace TUNet

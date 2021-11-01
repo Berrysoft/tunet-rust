@@ -3,7 +3,7 @@
 
 namespace TUNet
 {
-    MainWnd::MainWnd() : QMainWindow()
+    MainWnd::MainWnd(Model* pmodel) : QMainWindow(), m_pmodel(pmodel)
     {
         m_root_tab.addTab(&m_info_page, u"主页"_qs);
         m_root_tab.addTab(&m_chart_page, u"统计"_qs);
@@ -27,10 +27,10 @@ namespace TUNet
 
     void MainWnd::showEvent(QShowEvent* event)
     {
-        m_model.queue_read_cred();
-        m_model.queue_state(State::Auto);
-        m_model.queue(Action::Timer);
-        m_model.queue(Action::Online);
-        m_model.queue(Action::Details);
+        m_pmodel->queue_read_cred();
+        m_pmodel->queue(Action::Timer);
+        m_pmodel->queue_state(State::Auto);
+        m_pmodel->queue(Action::Online);
+        m_pmodel->queue(Action::Details);
     }
 } // namespace TUNet

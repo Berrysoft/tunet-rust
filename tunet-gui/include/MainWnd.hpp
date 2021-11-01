@@ -14,20 +14,20 @@ namespace TUNet
     struct MainWnd : QMainWindow
     {
     public:
-        MainWnd();
+        MainWnd(Model* pmodel);
         ~MainWnd() override;
 
     protected:
         void showEvent(QShowEvent* event) override;
 
     private:
-        Model m_model{ this };
+        Model* m_pmodel{};
 
         QTabWidget m_root_tab{ this };
-        InfoPage m_info_page{ &m_root_tab, &m_model };
-        ChartPage m_chart_page{ &m_root_tab, &m_model };
-        DetailPage m_detail_page{ &m_root_tab, &m_model };
-        SettingsPage m_settings_page{ &m_root_tab, &m_model };
+        InfoPage m_info_page{ &m_root_tab, m_pmodel };
+        ChartPage m_chart_page{ &m_root_tab, m_pmodel };
+        DetailPage m_detail_page{ &m_root_tab, m_pmodel };
+        SettingsPage m_settings_page{ &m_root_tab, m_pmodel };
         AboutPage m_about_page{ &m_root_tab };
     };
 } // namespace TUNet
