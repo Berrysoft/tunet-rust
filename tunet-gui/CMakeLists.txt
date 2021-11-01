@@ -56,6 +56,7 @@ target_include_directories(tunet-gui
 )
 target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts ${RUST_LIB_PATH})
 add_dependencies(tunet-gui tunet-model)
+set_target_properties(tunet-gui PROPERTIES qt_no_entrypoint ON)
 
 if(WIN32)
     set(WINDOWS_LIB ${CMAKE_BINARY_DIR}/windows.lib)
@@ -65,6 +66,7 @@ if(WIN32)
     target_link_libraries(tunet-gui PRIVATE ntdll ${WINDOWS_LIB})
     if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
         set_target_properties(tunet-gui PROPERTIES WIN32_EXECUTABLE ON)
+        target_link_options(tunet-gui PUBLIC "/ENTRY:mainCRTStartup")
     endif()
     add_custom_command(TARGET tunet-gui POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E
