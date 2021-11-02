@@ -1,3 +1,5 @@
+#![allow(clippy::missing_safety_doc)]
+
 use itertools::Itertools;
 use netstatus::*;
 use std::ffi::c_void;
@@ -224,7 +226,6 @@ pub unsafe extern "C" fn tunet_model_details_grouped_foreach(
             .group_by(|detail| detail.logout_time.date())
             .into_iter()
             .map(|(key, group)| (key, group.map(|detail| detail.flux.0).sum::<u64>()))
-            .into_iter()
         {
             let g = native::DetailGroup {
                 logout_date: date.and_hms(0, 0, 0).timestamp(),
@@ -257,7 +258,6 @@ pub unsafe extern "C" fn tunet_model_details_grouped_by_time_foreach(
                     group.into_iter().map(|detail| detail.flux.0).sum::<u64>(),
                 )
             })
-            .into_iter()
         {
             let g = native::DetailGroupByTime {
                 logout_start_time: t,

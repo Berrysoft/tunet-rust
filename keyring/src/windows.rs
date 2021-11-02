@@ -37,7 +37,7 @@ impl Keyring {
     pub fn set(&self, value: &str) -> Result<()> {
         unsafe {
             let value = value.as_bytes();
-            let mut credential = CREDENTIALW {
+            let credential = CREDENTIALW {
                 Flags: CRED_FLAGS::default(),
                 Type: CRED_TYPE_GENERIC,
                 TargetName: PWSTR(self.key.as_ptr() as _),
@@ -51,7 +51,7 @@ impl Keyring {
                 TargetAlias: PWSTR(null_mut()),
                 UserName: PWSTR(null_mut()),
             };
-            CredWriteW(&mut credential, 0).ok()
+            CredWriteW(&credential, 0).ok()
         }
     }
 

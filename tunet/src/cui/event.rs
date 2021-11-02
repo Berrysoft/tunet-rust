@@ -45,6 +45,7 @@ impl Event {
         self.spawn_details();
     }
 
+    #[allow(clippy::single_match)]
     fn attach_callback(&mut self) {
         let tx = self.tx.clone();
         self.model.set_callback(Some(Arc::new(move |m| match m {
@@ -65,7 +66,6 @@ impl Event {
                 tx.send(e.map(EventType::TerminalEvent).map_err(anyhow::Error::from))
                     .await?;
             }
-            #[allow(unreachable_code)]
             Ok::<_, anyhow::Error>(())
         });
     }
