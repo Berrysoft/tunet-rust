@@ -43,7 +43,8 @@ extern "C"
     using OnlinesForeachCallback = bool (*)(const OnlineUser*, void*);
     using DetailsForeachCallback = bool (*)(const Detail*, void*);
     using DetailsGroupedForeachCallback = bool (*)(const DetailGroup*, void*);
-    using DetailsGroupedByTimeForeachCallback = bool (*)(const DetailGroupByTime*, void*);
+    using DetailsGroupedByTimeForeachCallback = bool (*)(const DetailGroupByTime*,
+                                                         void*);
 
     struct ThemeColor
     {
@@ -70,8 +71,11 @@ extern "C"
     double tunet_model_flux_balance(NativeModel m);
     void tunet_model_onlines_foreach(NativeModel m, OnlinesForeachCallback f, void* data);
     void tunet_model_details_foreach(NativeModel m, DetailsForeachCallback f, void* data);
-    void tunet_model_details_grouped_foreach(NativeModel m, DetailsGroupedForeachCallback f, void* data);
-    void tunet_model_details_grouped_by_time_foreach(NativeModel m, std::uint32_t groups, DetailsGroupedByTimeForeachCallback f, void* data);
+    void tunet_model_details_grouped_foreach(NativeModel m,
+                                             DetailsGroupedForeachCallback f,
+                                             void* data);
+    void tunet_model_details_grouped_by_time_foreach(
+        NativeModel m, std::uint32_t groups, DetailsGroupedByTimeForeachCallback f, void* data);
 }
 
 namespace TUNet
@@ -140,11 +144,16 @@ namespace TUNet
         auto [day, h] = std::div(total_h, 60ll);
         if (day)
         {
-            return u"%1.%2:%3:%4"_qs.arg(day).arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+            return u"%1.%2:%3:%4"_qs.arg(day)
+                .arg(h, 2, 10, QChar(u'0'))
+                .arg(min, 2, 10, QChar(u'0'))
+                .arg(sec, 2, 10, QChar(u'0'));
         }
         else
         {
-            return u"%1:%2:%3"_qs.arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
+            return u"%1:%2:%3"_qs.arg(h, 2, 10, QChar(u'0'))
+                .arg(min, 2, 10, QChar(u'0'))
+                .arg(sec, 2, 10, QChar(u'0'));
         }
     }
 
@@ -156,7 +165,10 @@ namespace TUNet
 
     QString format_ip(std::uint32_t addr)
     {
-        return u"%1.%2.%3.%4"_qs.arg((addr >> 24) & 0xFF).arg((addr >> 16) & 0xFF).arg((addr >> 8) & 0xFF).arg(addr & 0xFF);
+        return u"%1.%2.%3.%4"_qs.arg((addr >> 24) & 0xFF)
+            .arg((addr >> 16) & 0xFF)
+            .arg((addr >> 8) & 0xFF)
+            .arg(addr & 0xFF);
     }
 
     QString format_mac_address(const std::array<std::uint8_t, 6>& maddr)
@@ -197,7 +209,10 @@ namespace TUNet
 
     void Model::queue(Action a) const { tunet_model_queue(m_handle, a); }
 
-    bool Model::queue_read_cred() const { return tunet_model_queue_read_cred(m_handle); }
+    bool Model::queue_read_cred() const
+    {
+        return tunet_model_queue_read_cred(m_handle);
+    }
 
     void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
 
@@ -254,15 +269,9 @@ namespace TUNet
         return { std::move(username), std::move(password) };
     }
 
-    State Model::state() const
-    {
-        return tunet_model_state(m_handle);
-    }
+    State Model::state() const { return tunet_model_state(m_handle); }
 
-    QString Model::log() const
-    {
-        return get_q_string(tunet_model_log, m_handle);
-    }
+    QString Model::log() const { return get_q_string(tunet_model_log, m_handle); }
 
     Info Model::flux() const
     {
@@ -278,7 +287,9 @@ namespace TUNet
         auto& users = *reinterpret_cast<std::vector<Online>*>(data);
         std::array<std::uint8_t, 6> mac{};
         std::copy(std::begin(u->mac_address), std::end(u->mac_address), mac.begin());
-        users.emplace_back(u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::move(mac), u->is_local);
+        users.emplace_back(
+            Online{ u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC),
+                    u->flux, std::move(mac), u->is_local });
         return true;
     }
 
@@ -292,7 +303,9 @@ namespace TUNet
     static bool fn_foreach_detail(const ::Detail* d, void* data)
     {
         auto& details = *reinterpret_cast<std::vector<Detail>*>(data);
-        details.emplace_back(QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC), QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC), d->flux);
+        details.emplace_back(
+            Detail{ QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC),
+                    QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC), d->flux });
         return true;
     }
 
@@ -306,28 +319,33 @@ namespace TUNet
     static bool fn_foreach_detail_group(const DetailGroup* d, void* data)
     {
         auto& details = *reinterpret_cast<std::map<QDate, Flux>*>(data);
-        details.emplace(QDateTime::fromSecsSinceEpoch(d->logout_date, Qt::UTC).date(), d->flux);
+        details.emplace(QDateTime::fromSecsSinceEpoch(d->logout_date, Qt::UTC).date(),
+                        d->flux);
         return true;
     }
 
     std::map<QDate, Flux> Model::details_grouped() const
     {
         std::map<QDate, Flux> details{};
-        tunet_model_details_grouped_foreach(m_handle, fn_foreach_detail_group, &details);
+        tunet_model_details_grouped_foreach(m_handle, fn_foreach_detail_group,
+                                            &details);
         return details;
     }
 
-    static bool fn_foreach_detail_group_by_time(const DetailGroupByTime* d, void* data)
+    static bool fn_foreach_detail_group_by_time(const DetailGroupByTime* d,
+                                                void* data)
     {
         auto& details = *reinterpret_cast<std::map<std::uint32_t, Flux>*>(data);
         details.emplace(d->logout_start_time, d->flux);
         return true;
     }
 
-    std::map<std::uint32_t, Flux> Model::details_grouped_by_time(std::uint32_t groups) const
+    std::map<std::uint32_t, Flux>
+    Model::details_grouped_by_time(std::uint32_t groups) const
     {
         std::map<std::uint32_t, Flux> details{};
-        tunet_model_details_grouped_by_time_foreach(m_handle, groups, fn_foreach_detail_group_by_time, &details);
+        tunet_model_details_grouped_by_time_foreach(
+            m_handle, groups, fn_foreach_detail_group_by_time, &details);
         return details;
     }
 } // namespace TUNet
