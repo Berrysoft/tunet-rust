@@ -1,7 +1,6 @@
 #![allow(clippy::missing_safety_doc)]
 
 use itertools::Itertools;
-use netstatus::*;
 use std::ffi::c_void;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tokio::runtime::Builder;
@@ -123,17 +122,9 @@ pub unsafe extern "C" fn tunet_model_status(
     model: native::Model,
     f: native::StringCallback,
     data: *mut c_void,
-) -> native::Status {
-    match &read_model(model).status {
-        NetStatus::Unknown => native::Status::Unknown,
-        NetStatus::Wwan => native::Status::Wwan,
-        NetStatus::Wlan(ssid) => {
-            if let Some(f) = f {
-                read_str(ssid, f, data);
-            }
-            native::Status::Wlan
-        }
-        NetStatus::Lan => native::Status::Lan,
+) {
+    if let Some(f) = f {
+        read_str(&read_model(model).status.to_string(), f, data)
     }
 }
 

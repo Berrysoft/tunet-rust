@@ -6,7 +6,6 @@ extern "C"
     using TUNet::Action;
     using TUNet::NativeModel;
     using TUNet::State;
-    using TUNet::StatusFlag;
     using TUNet::UpdateMsg;
 
     struct OnlineUser
@@ -60,7 +59,7 @@ extern "C"
     bool tunet_model_queue_cred_load(NativeModel m);
     void tunet_model_queue_cred(NativeModel m, const char16_t* u, const char16_t* p);
     void tunet_model_queue_state(NativeModel m, State s);
-    StatusFlag tunet_model_status(NativeModel m, StringCallback f, void* data);
+    void tunet_model_status(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_username(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_password(NativeModel m, StringCallback f, void* data);
     State tunet_model_state(NativeModel m);
@@ -116,21 +115,6 @@ namespace TUNet
         }
         flux /= 1000.0;
         return u"%1 G"_qs.arg(flux, 0, 'f', 2);
-    }
-
-    QString format_status(const Status& status)
-    {
-        switch (status.flag)
-        {
-        case StatusFlag::Wwan:
-            return u"移动流量"_qs;
-        case StatusFlag::Wlan:
-            return u"无线网络（%1）"_qs.arg(status.ssid);
-        case StatusFlag::Lan:
-            return u"有线网络"_qs;
-        default:
-            return u"未知"_qs;
-        }
     }
 
     QString format_duration(std::chrono::seconds s)
@@ -246,11 +230,9 @@ namespace TUNet
         return str;
     }
 
-    Status Model::status() const
+    QString Model::status() const
     {
-        QString ssid{};
-        StatusFlag flag = tunet_model_status(m_handle, fn_string_callback, &ssid);
-        return { flag, std::move(ssid) };
+        return get_q_string(tunet_model_status, m_handle);
     }
 
     Credential Model::cred() const

@@ -34,20 +34,6 @@ namespace TUNet
         Details,
     };
 
-    enum class StatusFlag : std::int32_t
-    {
-        Unknown,
-        Wwan,
-        Wlan,
-        Lan
-    };
-
-    struct Status
-    {
-        StatusFlag flag;
-        QString ssid;
-    };
-
     enum class State : std::int32_t
     {
         Auto,
@@ -104,7 +90,6 @@ namespace TUNet
         Flux flux;
     };
 
-    QString format_status(const Status& status);
     QString format_duration(std::chrono::seconds sec);
     QString format_datetime(const QDateTime& time);
     QString format_ip(std::uint32_t addr);
@@ -122,7 +107,7 @@ namespace TUNet
         Model(NativeModel handle);
         ~Model() override;
 
-        Status status() const;
+        QString status() const;
         Credential cred() const;
         State state() const;
         QString log() const;

@@ -21,7 +21,7 @@ namespace TUNet
         m_status_title_label.setText(u"网络状态"_qs);
         m_settings_layout.addWidget(&m_status_title_label);
         m_status_label.setAlignment(Qt::AlignHCenter);
-        m_status_label.setText(format_status(m_pmodel->status()));
+        m_status_label.setText(m_pmodel->status());
         m_settings_layout.addWidget(&m_status_label);
 
         m_online_label.setFont(title_font);
