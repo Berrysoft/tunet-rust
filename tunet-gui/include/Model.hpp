@@ -115,6 +115,10 @@ namespace TUNet
         Q_OBJECT
 
     public:
+        using StartCallback = int (*)(int, char**, Model*);
+
+        static std::int32_t start(std::size_t threads, StartCallback main, int argc, char** argv);
+
         Model(NativeModel handle);
         ~Model() override;
 
@@ -145,6 +149,4 @@ namespace TUNet
         NativeModel m_handle{};
     };
 
-    using StartCallback = int (*)(int, char**, Model*);
-    std::int32_t start(std::size_t threads, StartCallback main, int argc, char** argv);
 } // namespace TUNet

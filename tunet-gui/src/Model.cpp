@@ -45,8 +45,6 @@ extern "C"
     using DetailsGroupedForeachCallback = bool (*)(const DetailGroup*, void*);
     using DetailsGroupedByTimeForeachCallback = bool (*)(const DetailGroupByTime*, void*);
 
-    std::int32_t tunet_runtime_init(std::size_t val, MainCallback main, void* data);
-
     struct ThemeColor
     {
         std::uint8_t r;
@@ -56,6 +54,7 @@ extern "C"
 
     ThemeColor tunet_color_accent();
 
+    std::int32_t tunet_model_start(std::size_t val, MainCallback main, void* data);
     void tunet_model_set_update_callback(NativeModel m, UpdateCallback update, void* data);
     void tunet_model_queue(NativeModel m, Action a);
     bool tunet_model_queue_read_cred(NativeModel m);
@@ -79,7 +78,7 @@ namespace TUNet
 {
     struct init_data
     {
-        StartCallback main;
+        Model::StartCallback main;
         int argc;
         char** argv;
     };
@@ -89,12 +88,6 @@ namespace TUNet
         auto d = reinterpret_cast<init_data*>(data);
         Model model{ handle };
         return (d->main)(d->argc, d->argv, &model);
-    }
-
-    std::int32_t start(std::size_t threads, StartCallback main, int argc, char** argv)
-    {
-        init_data data{ main, argc, argv };
-        return tunet_runtime_init(threads, fn_init_callback, &data);
     }
 
     QColor accent_color()
@@ -187,6 +180,12 @@ namespace TUNet
     {
         auto model = reinterpret_cast<Model*>(data);
         model->update(m);
+    }
+
+    std::int32_t Model::start(std::size_t threads, StartCallback main, int argc, char** argv)
+    {
+        init_data data{ main, argc, argv };
+        return tunet_model_start(threads, fn_init_callback, &data);
     }
 
     Model::Model(NativeModel handle) : QObject(), m_handle(handle)

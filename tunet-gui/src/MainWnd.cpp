@@ -14,7 +14,7 @@ namespace TUNet
         setCentralWidget(&m_root_tab);
 
         setMinimumSize(300, 300);
-        resize(400, 400);
+        resize(500, 500);
         move(screen()->geometry().center() - rect().center());
 
         QPalette pal = palette();

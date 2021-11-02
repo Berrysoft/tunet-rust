@@ -12,7 +12,12 @@ use tunet_settings::*;
 
 mod native;
 
-fn tunet_runtime_init_impl(
+#[no_mangle]
+pub extern "C" fn tunet_color_accent() -> color_theme::Color {
+    color_theme::Color::accent()
+}
+
+fn tunet_model_start_impl(
     val: usize,
     main: native::MainCallback,
     data: *mut c_void,
@@ -43,17 +48,12 @@ fn tunet_runtime_init_impl(
 }
 
 #[no_mangle]
-pub extern "C" fn tunet_runtime_init(
+pub extern "C" fn tunet_model_start(
     val: usize,
     main: native::MainCallback,
     data: *mut c_void,
 ) -> i32 {
-    tunet_runtime_init_impl(val, main, data).unwrap_or(1)
-}
-
-#[no_mangle]
-pub extern "C" fn tunet_color_accent() -> color_theme::Color {
-    color_theme::Color::accent()
+    tunet_model_start_impl(val, main, data).unwrap_or(1)
 }
 
 #[no_mangle]
