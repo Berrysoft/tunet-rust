@@ -23,12 +23,12 @@ namespace TUNet
 
         QVBoxLayout m_chart_layout{};
 
-        QPushButton m_refresh_button{ this };
-
         QChartView m_daily_view{ this };
         QChart m_daily_chart{};
 
         QChartView m_time_view{ this };
         QChart m_time_chart{};
+
+        QPushButton m_refresh_button{ this };
     };
 } // namespace TUNet

@@ -17,16 +17,16 @@ namespace TUNet
 
     DetailPage::DetailPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
     {
-        m_refresh_button.setText(u"刷新"_qs);
-        QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &DetailPage::refresh_details);
-        m_details_layout.addWidget(&m_refresh_button);
-
         m_details_table.setColumnCount(3);
         m_details_table.setHorizontalHeaderLabels({ u"登录时间"_qs, u"注销时间"_qs, u"流量"_qs });
         m_details_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         m_details_table.verticalHeader()->setVisible(false);
         m_details_table.setSortingEnabled(true);
         m_details_layout.addWidget(&m_details_table);
+
+        m_refresh_button.setText(u"刷新"_qs);
+        QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &DetailPage::refresh_details);
+        m_details_layout.addWidget(&m_refresh_button);
 
         setLayout(&m_details_layout);
 

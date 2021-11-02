@@ -10,10 +10,6 @@ namespace TUNet
 {
     ChartPage::ChartPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
     {
-        m_refresh_button.setText(u"刷新"_qs);
-        QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &ChartPage::refresh_details);
-        m_chart_layout.addWidget(&m_refresh_button);
-
         m_daily_chart.setTitle(u"按日统计"_qs);
         m_daily_chart.legend()->setVisible(false);
         m_daily_view.setChart(&m_daily_chart);
@@ -25,6 +21,10 @@ namespace TUNet
         m_time_view.setChart(&m_time_chart);
         m_time_view.setRenderHint(QPainter::Antialiasing);
         m_chart_layout.addWidget(&m_time_view);
+
+        m_refresh_button.setText(u"刷新"_qs);
+        QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &ChartPage::refresh_details);
+        m_chart_layout.addWidget(&m_refresh_button);
 
         setLayout(&m_chart_layout);
 

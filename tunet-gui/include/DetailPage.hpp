@@ -21,7 +21,7 @@ namespace TUNet
         Model* m_pmodel{};
 
         QVBoxLayout m_details_layout{ this };
-        QPushButton m_refresh_button{ this };
         QTableWidget m_details_table{ this };
+        QPushButton m_refresh_button{ this };
     };
 } // namespace TUNet
