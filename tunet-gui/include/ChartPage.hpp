@@ -3,6 +3,7 @@
 #include <Model.hpp>
 #include <QChart>
 #include <QChartView>
+#include <QPushButton>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -14,12 +15,15 @@ namespace TUNet
         ChartPage(QWidget* parent, Model* pmodel);
         ~ChartPage() override;
 
+        void refresh_details();
         void update_details();
 
     private:
         Model* m_pmodel{};
 
         QVBoxLayout m_chart_layout{};
+
+        QPushButton m_refresh_button{ this };
 
         QChartView m_daily_view{ this };
         QChart m_daily_chart{};

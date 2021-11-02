@@ -10,6 +10,10 @@ namespace TUNet
 {
     ChartPage::ChartPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
     {
+        m_refresh_button.setText(u"刷新"_qs);
+        QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &ChartPage::refresh_details);
+        m_chart_layout.addWidget(&m_refresh_button);
+
         m_daily_chart.setTitle(u"按日统计"_qs);
         m_daily_chart.legend()->setVisible(false);
         m_daily_view.setChart(&m_daily_chart);
@@ -29,12 +33,21 @@ namespace TUNet
 
     ChartPage::~ChartPage() {}
 
+    void ChartPage::refresh_details()
+    {
+        m_pmodel->queue(Action::Details);
+    }
+
     void ChartPage::update_details()
     {
         auto accent = accent_color();
         {
             auto details = m_pmodel->details_grouped();
             m_daily_chart.removeAllSeries();
+            for (auto axis : m_daily_chart.axes())
+            {
+                m_daily_chart.removeAxis(axis);
+            }
             double total_flux = 0.0;
             auto series = new QLineSeries();
             for (auto& d : details)
@@ -58,6 +71,10 @@ namespace TUNet
         {
             auto details = m_pmodel->details_grouped_by_time(4);
             m_time_chart.removeAllSeries();
+            for (auto axis : m_time_chart.axes())
+            {
+                m_time_chart.removeAxis(axis);
+            }
             auto series = new QBarSeries();
             auto set = new QBarSet({});
             auto axis_x = new QBarCategoryAxis();
