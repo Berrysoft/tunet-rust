@@ -133,7 +133,8 @@ namespace TUNet
         std::map<std::uint32_t, Flux> details_grouped_by_time(std::uint32_t groups) const;
 
         void queue(Action a) const;
-        bool queue_read_cred() const;
+        bool queue_cred_load() const;
+        void queue_cred(const Credential& cred) const;
         void queue_state(State s) const;
         void update(UpdateMsg m) const;
 

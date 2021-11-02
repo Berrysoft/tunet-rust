@@ -126,7 +126,7 @@ pub struct DetailGroupByTime {
 
 pub type MainCallback = Option<extern "C" fn(Model, *mut c_void) -> i32>;
 pub type UpdateCallback = Option<extern "C" fn(UpdateMsg, *mut c_void)>;
-pub type StringCallback = Option<extern "C" fn(*const u8, usize, *mut c_void)>;
+pub type StringCallback = Option<extern "C" fn(*const u16, *mut c_void)>;
 pub type OnlinesForeachCallback = Option<extern "C" fn(*const OnlineUser, *mut c_void) -> bool>;
 pub type DetailsForeachCallback = Option<extern "C" fn(*const Detail, *mut c_void) -> bool>;
 pub type DetailsGroupedForeachCallback =

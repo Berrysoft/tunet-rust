@@ -27,7 +27,7 @@ namespace TUNet
 
     void MainWnd::showEvent(QShowEvent* event)
     {
-        m_pmodel->queue_read_cred();
+        m_pmodel->queue_cred_load();
         m_pmodel->queue(Action::Timer);
         m_pmodel->queue_state(State::Auto);
         m_pmodel->queue(Action::Online);

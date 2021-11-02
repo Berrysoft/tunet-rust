@@ -39,7 +39,7 @@ extern "C"
 
     using MainCallback = int (*)(NativeModel, void*);
     using UpdateCallback = void (*)(UpdateMsg, void*);
-    using StringCallback = void (*)(const char8_t*, std::size_t, void*);
+    using StringCallback = void (*)(const char16_t*, void*);
     using OnlinesForeachCallback = bool (*)(const OnlineUser*, void*);
     using DetailsForeachCallback = bool (*)(const Detail*, void*);
     using DetailsGroupedForeachCallback = bool (*)(const DetailGroup*, void*);
@@ -57,7 +57,8 @@ extern "C"
     std::int32_t tunet_model_start(std::size_t val, MainCallback main, void* data);
     void tunet_model_set_update_callback(NativeModel m, UpdateCallback update, void* data);
     void tunet_model_queue(NativeModel m, Action a);
-    bool tunet_model_queue_read_cred(NativeModel m);
+    bool tunet_model_queue_cred_load(NativeModel m);
+    void tunet_model_queue_cred(NativeModel m, const char16_t* u, const char16_t* p);
     void tunet_model_queue_state(NativeModel m, State s);
     StatusFlag tunet_model_status(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_username(NativeModel m, StringCallback f, void* data);
@@ -197,7 +198,12 @@ namespace TUNet
 
     void Model::queue(Action a) const { tunet_model_queue(m_handle, a); }
 
-    bool Model::queue_read_cred() const { return tunet_model_queue_read_cred(m_handle); }
+    bool Model::queue_cred_load() const { return tunet_model_queue_cred_load(m_handle); }
+
+    void Model::queue_cred(const Credential& cred) const
+    {
+        tunet_model_queue_cred(m_handle, QStringView{ cred.username }.utf16(), QStringView{ cred.password }.utf16());
+    }
 
     void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
 
@@ -226,10 +232,10 @@ namespace TUNet
         }
     }
 
-    static void fn_string_callback(const char8_t* data, std::size_t size, void* d)
+    static void fn_string_callback(const char16_t* data, void* d)
     {
         QString* pstr = reinterpret_cast<QString*>(d);
-        *pstr = QString::fromUtf8(data, size);
+        *pstr = QString::fromUtf16(data);
     }
 
     template <typename F, typename... Args>

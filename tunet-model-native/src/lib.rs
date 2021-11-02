@@ -3,18 +3,40 @@
 use itertools::Itertools;
 use netstatus::*;
 use std::ffi::c_void;
-use std::sync::{Arc, RwLock, RwLockReadGuard};
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tokio::runtime::Builder;
 use tokio::sync::mpsc::*;
 use tunet_model::*;
 use tunet_rust::*;
 use tunet_settings::*;
+use widestring::{U16CStr, U16CString};
 
 mod native;
 
 #[no_mangle]
 pub extern "C" fn tunet_color_accent() -> color_theme::Color {
     color_theme::Color::accent()
+}
+
+unsafe fn write_str(p: *const u16) -> String {
+    if !p.is_null() {
+        U16CStr::from_ptr_str(p).to_string_lossy()
+    } else {
+        String::new()
+    }
+}
+
+unsafe fn read_str(s: &str, f: extern "C" fn(*const u16, *mut c_void), data: *mut c_void) {
+    let u16str = U16CString::from_str_unchecked(s);
+    f(u16str.as_ptr(), data)
+}
+
+unsafe fn write_model<'a>(model: native::Model) -> RwLockWriteGuard<'a, Model> {
+    model.as_ref().unwrap().write().unwrap()
+}
+
+unsafe fn read_model<'a>(model: native::Model) -> RwLockReadGuard<'a, Model> {
+    model.as_ref().unwrap().read().unwrap()
 }
 
 fn tunet_model_start_impl(
@@ -62,12 +84,7 @@ pub unsafe extern "C" fn tunet_model_set_update_callback(
     update: native::UpdateCallback,
     data: *mut c_void,
 ) {
-    let mut model = model.as_ref().unwrap().write().unwrap();
-    model.set_callback(native::wrap_callback(update, data));
-}
-
-unsafe fn read_model<'a>(model: native::Model) -> RwLockReadGuard<'a, Model> {
-    model.as_ref().unwrap().read().unwrap()
+    write_model(model).set_callback(native::wrap_callback(update, data));
 }
 
 #[no_mangle]
@@ -75,7 +92,7 @@ pub unsafe extern "C" fn tunet_model_queue(model: native::Model, action: native:
     read_model(model).queue(action.into());
 }
 
-unsafe fn tunet_model_queue_read_cred_impl(model: native::Model) -> Result<()> {
+unsafe fn tunet_model_queue_cred_load_impl(model: native::Model) -> Result<()> {
     let reader = FileSettingsReader::new()?;
     let cred = reader.read_with_password()?;
     read_model(model).queue(Action::Credential(Arc::new(cred)));
@@ -83,18 +100,22 @@ unsafe fn tunet_model_queue_read_cred_impl(model: native::Model) -> Result<()> {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tunet_model_queue_read_cred(model: native::Model) -> bool {
-    tunet_model_queue_read_cred_impl(model).is_ok()
+pub unsafe extern "C" fn tunet_model_queue_cred_load(model: native::Model) -> bool {
+    tunet_model_queue_cred_load_impl(model).is_ok()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_queue_cred(
+    model: native::Model,
+    u: *const u16,
+    p: *const u16,
+) {
+    read_model(model).queue(Action::UpdateCredential(write_str(u), write_str(p)));
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: native::State) {
     read_model(model).queue(Action::State(Some(state.into())));
-}
-
-fn read_str(s: &str, f: extern "C" fn(*const u8, usize, *mut c_void), data: *mut c_void) {
-    let bytes = s.as_bytes();
-    f(bytes.as_ptr(), bytes.len(), data)
 }
 
 #[no_mangle]

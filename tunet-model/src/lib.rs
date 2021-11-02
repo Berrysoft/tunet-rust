@@ -71,6 +71,18 @@ impl Model {
                 self.cred = cred;
                 self.update(UpdateMsg::Credential);
             }
+            Action::UpdateCredential(u, p) => {
+                let cred = self.cred.clone();
+                let tx = self.tx.clone();
+                tokio::spawn(async move {
+                    let ac_ids = cred.ac_ids.read().await.clone();
+                    tx.send(Action::Credential(Arc::new(NetCredential::new(
+                        u, p, ac_ids,
+                    ))))
+                    .await
+                    .ok()
+                });
+            }
             Action::State(s) => {
                 let s = s.unwrap_or(NetState::Auto);
                 match s {
@@ -286,6 +298,7 @@ impl Model {
 #[derive(Debug)]
 pub enum Action {
     Credential(Arc<NetCredential>),
+    UpdateCredential(String, String),
     State(Option<NetState>),
     Timer,
     Tick,
