@@ -53,6 +53,11 @@ extern "C"
 
     ThemeColor tunet_color_accent();
 
+    void tunet_format_flux(std::uint64_t flux, StringCallback f, void* data);
+    void tunet_format_duration(std::int64_t sec, StringCallback f, void* data);
+    void tunet_format_ip(std::uint32_t addr, StringCallback f, void* data);
+    void tunet_format_mac_address(const std::uint8_t* addr, StringCallback f, void* data);
+
     std::int32_t tunet_model_start(std::size_t val, MainCallback main, void* data);
     void tunet_model_set_update_callback(NativeModel m, UpdateCallback update, void* data);
     void tunet_model_queue(NativeModel m, Action a);
@@ -76,6 +81,40 @@ extern "C"
 
 namespace TUNet
 {
+    QColor accent_color()
+    {
+        auto color = tunet_color_accent();
+        return QColor::fromRgb(color.r, color.g, color.b);
+    }
+
+    static void fn_string_callback(const char16_t* data, void* d)
+    {
+        QString* pstr = reinterpret_cast<QString*>(d);
+        *pstr = QString::fromUtf16(data);
+    }
+
+    template <typename F, typename... Args>
+    QString get_q_string(F&& f, Args... args)
+    {
+        QString str;
+        f(std::move(args)..., fn_string_callback, &str);
+        return str;
+    }
+
+    QString Flux::toString() const { return get_q_string(tunet_format_flux, m_value); }
+
+    QString format_duration(std::chrono::seconds s) { return get_q_string(tunet_format_duration, s.count()); }
+
+    QString format_datetime(const QDateTime& time)
+    {
+        static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
+        return time.toString(DATETIME_FORMAT);
+    }
+
+    QString format_ip(std::uint32_t addr) { return get_q_string(tunet_format_ip, addr); }
+
+    QString format_mac_address(const std::array<std::uint8_t, 6>& maddr) { return get_q_string(tunet_format_mac_address, maddr.data()); }
+
     struct init_data
     {
         Model::StartCallback main;
@@ -90,87 +129,16 @@ namespace TUNet
         return (d->main)(d->argc, d->argv, &model);
     }
 
-    QColor accent_color()
+    std::int32_t Model::start(std::size_t threads, StartCallback main, int argc, char** argv)
     {
-        auto color = tunet_color_accent();
-        return QColor::fromRgb(color.r, color.g, color.b);
-    }
-
-    QString Flux::toString() const
-    {
-        double flux = m_value;
-        if (flux < 1000.0)
-        {
-            return u"%1 B"_qs.arg(m_value);
-        }
-        flux /= 1000.0;
-        if (flux < 1000.0)
-        {
-            return u"%1 K"_qs.arg(flux, 0, 'f', 2);
-        }
-        flux /= 1000.0;
-        if (flux < 1000.0)
-        {
-            return u"%1 M"_qs.arg(flux, 0, 'f', 2);
-        }
-        flux /= 1000.0;
-        return u"%1 G"_qs.arg(flux, 0, 'f', 2);
-    }
-
-    QString format_duration(std::chrono::seconds s)
-    {
-        long long total_sec = s.count();
-        auto [total_min, sec] = std::div(total_sec, 60ll);
-        auto [total_h, min] = std::div(total_min, 60ll);
-        auto [day, h] = std::div(total_h, 60ll);
-        if (day)
-        {
-            return u"%1.%2:%3:%4"_qs.arg(day).arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
-        }
-        else
-        {
-            return u"%1:%2:%3"_qs.arg(h, 2, 10, QChar(u'0')).arg(min, 2, 10, QChar(u'0')).arg(sec, 2, 10, QChar(u'0'));
-        }
-    }
-
-    QString format_datetime(const QDateTime& time)
-    {
-        static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
-        return time.toString(DATETIME_FORMAT);
-    }
-
-    QString format_ip(std::uint32_t addr)
-    {
-        return u"%1.%2.%3.%4"_qs.arg((addr >> 24) & 0xFF).arg((addr >> 16) & 0xFF).arg((addr >> 8) & 0xFF).arg(addr & 0xFF);
-    }
-
-    QString format_mac_address(const std::array<std::uint8_t, 6>& maddr)
-    {
-        if (maddr == std::array<std::uint8_t, 6>{ 0, 0, 0, 0, 0, 0 })
-        {
-            return QString{};
-        }
-        else
-        {
-            QString fmt = u"%1:%2:%3:%4:%5:%6"_qs;
-            for (auto& part : maddr)
-            {
-                fmt = fmt.arg(part, 2, 16, QChar(u'0'));
-            }
-            return fmt;
-        }
+        init_data data{ main, argc, argv };
+        return tunet_model_start(threads, fn_init_callback, &data);
     }
 
     static void fn_update_callback(UpdateMsg m, void* data)
     {
         auto model = reinterpret_cast<Model*>(data);
         model->update(m);
-    }
-
-    std::int32_t Model::start(std::size_t threads, StartCallback main, int argc, char** argv)
-    {
-        init_data data{ main, argc, argv };
-        return tunet_model_start(threads, fn_init_callback, &data);
     }
 
     Model::Model(NativeModel handle) : QObject(), m_handle(handle)
@@ -216,20 +184,6 @@ namespace TUNet
         }
     }
 
-    static void fn_string_callback(const char16_t* data, void* d)
-    {
-        QString* pstr = reinterpret_cast<QString*>(d);
-        *pstr = QString::fromUtf16(data);
-    }
-
-    template <typename F, typename... Args>
-    QString get_q_string(F&& f, Args... args)
-    {
-        QString str;
-        f(std::move(args)..., fn_string_callback, &str);
-        return str;
-    }
-
     QString Model::status() const
     {
         return get_q_string(tunet_model_status, m_handle);
@@ -258,9 +212,7 @@ namespace TUNet
     static bool fn_foreach_online(const OnlineUser* u, void* data)
     {
         auto& users = *reinterpret_cast<std::vector<Online>*>(data);
-        std::array<std::uint8_t, 6> mac{};
-        std::copy(std::begin(u->mac_address), std::end(u->mac_address), mac.begin());
-        users.emplace_back(Online{ u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::move(mac), u->is_local });
+        users.emplace_back(Online{ u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::to_array(u->mac_address), u->is_local });
         return true;
     }
 

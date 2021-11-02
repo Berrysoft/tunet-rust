@@ -1,7 +1,9 @@
 #![allow(clippy::missing_safety_doc)]
 
 use itertools::Itertools;
+use mac_address::MacAddress;
 use std::ffi::c_void;
+use std::net::Ipv4Addr;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tokio::runtime::Builder;
 use tokio::sync::mpsc::*;
@@ -28,6 +30,44 @@ unsafe fn write_str(p: *const u16) -> String {
 unsafe fn read_str(s: &str, f: extern "C" fn(*const u16, *mut c_void), data: *mut c_void) {
     let u16str = U16CString::from_str_unchecked(s);
     f(u16str.as_ptr(), data)
+}
+
+unsafe fn tunet_format<T: ToString>(value: T, f: native::StringCallback, data: *mut c_void) {
+    if let Some(f) = f {
+        read_str(&value.to_string(), f, data)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_format_flux(
+    flux: u64,
+    f: native::StringCallback,
+    data: *mut c_void,
+) {
+    tunet_format(Flux(flux), f, data)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_format_duration(
+    sec: i64,
+    f: native::StringCallback,
+    data: *mut c_void,
+) {
+    tunet_format(Duration(NaiveDuration::seconds(sec)), f, data)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_format_ip(addr: u32, f: native::StringCallback, data: *mut c_void) {
+    tunet_format(Ipv4Addr::from(addr), f, data)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_format_mac_address(
+    addr: &[u8; 6],
+    f: native::StringCallback,
+    data: *mut c_void,
+) {
+    tunet_format(MacAddress::from(*addr), f, data)
 }
 
 unsafe fn write_model<'a>(model: native::Model) -> RwLockWriteGuard<'a, Model> {
