@@ -34,7 +34,20 @@ namespace TUNet
         m_online_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         m_online_table.horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
         m_online_table.verticalHeader()->setVisible(false);
+        QObject::connect(&m_online_table, &QTableWidget::itemSelectionChanged, this, &SettingsPage::selection_changed);
         m_settings_layout.addWidget(&m_online_table);
+
+        m_connect_button.setText(u"连接IP"_qs);
+        QObject::connect(&m_connect_button, &QPushButton::clicked, this, &SettingsPage::connect_ip);
+        m_drop_button.setText(u"下线IP"_qs);
+        m_drop_button.setEnabled(false);
+        QObject::connect(&m_drop_button, &QPushButton::clicked, this, &SettingsPage::drop_ip);
+        m_refresh_button.setText(u"刷新"_qs);
+        QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &SettingsPage::refresh_online);
+        m_command_layout.addWidget(&m_connect_button);
+        m_command_layout.addWidget(&m_drop_button);
+        m_command_layout.addWidget(&m_refresh_button);
+        m_settings_layout.addLayout(&m_command_layout);
 
         setLayout(&m_settings_layout);
 
@@ -43,6 +56,24 @@ namespace TUNet
     }
 
     SettingsPage::~SettingsPage() {}
+
+    void SettingsPage::selection_changed()
+    {
+        m_drop_button.setEnabled(!m_online_table.selectedRanges().empty());
+    }
+
+    void SettingsPage::connect_ip()
+    {
+    }
+
+    void SettingsPage::drop_ip()
+    {
+    }
+
+    void SettingsPage::refresh_online()
+    {
+        m_pmodel->queue(Action::Online);
+    }
 
     void SettingsPage::update_cred()
     {
