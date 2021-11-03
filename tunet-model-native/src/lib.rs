@@ -158,6 +158,11 @@ pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: na
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tunet_model_queue_drop(model: native::Model, addr: u32) {
+    read_model(model).queue(Action::Drop(Ipv4Addr::from(addr)));
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tunet_model_status(
     model: native::Model,
     f: native::StringCallback,

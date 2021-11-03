@@ -4,6 +4,7 @@ use futures_util::{pin_mut, TryStreamExt};
 use mac_address::*;
 use netstatus::*;
 use std::borrow::Cow;
+use std::net::Ipv4Addr;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
@@ -142,6 +143,16 @@ impl Model {
             Action::OnlineDone(us) => {
                 self.users = us;
                 self.update(UpdateMsg::Online);
+            }
+            Action::Drop(addr) => {
+                let tx = self.tx.clone();
+                let usereg = self.usereg();
+                tokio::spawn(async move {
+                    usereg.login().await?;
+                    usereg.drop(addr).await?;
+                    tx.send(Action::Online).await?;
+                    Ok::<_, anyhow::Error>(())
+                });
             }
             Action::Details => {
                 self.spawn_details();
@@ -310,6 +321,7 @@ pub enum Action {
     FluxDone(NetFlux, Option<String>),
     Online,
     OnlineDone(Vec<NetUser>),
+    Drop(Ipv4Addr),
     Details,
     DetailsDone(Vec<NetDetail>),
 }

@@ -35,6 +35,7 @@ namespace TUNet
         m_online_table.horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
         m_online_table.verticalHeader()->setVisible(false);
         m_online_table.setSelectionBehavior(QTableWidget::SelectRows);
+        m_online_table.setSelectionMode(QTableWidget::SingleSelection);
         QObject::connect(&m_online_table, &QTableWidget::itemSelectionChanged, this, &SettingsPage::selection_changed);
         m_settings_layout.addWidget(&m_online_table);
 
@@ -69,6 +70,14 @@ namespace TUNet
 
     void SettingsPage::drop_ip()
     {
+        auto users = m_pmodel->onlines();
+        for (auto& range : m_online_table.selectedRanges())
+        {
+            for (int i = range.topRow(); i <= range.bottomRow(); i++)
+            {
+                m_pmodel->queue_drop(users[i].address);
+            }
+        }
     }
 
     void SettingsPage::refresh_online()

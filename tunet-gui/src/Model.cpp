@@ -65,6 +65,7 @@ extern "C"
     bool tunet_model_queue_cred_load(NativeModel m);
     void tunet_model_queue_cred(NativeModel m, const char16_t* u, const char16_t* p);
     void tunet_model_queue_state(NativeModel m, State s);
+    void tunet_model_queue_drop(NativeModel m, std::uint32_t addr);
     void tunet_model_status(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_username(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_password(NativeModel m, StringCallback f, void* data);
@@ -159,6 +160,8 @@ namespace TUNet
     }
 
     void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
+
+    void Model::queue_drop(std::uint32_t addr) const { tunet_model_queue_drop(m_handle, addr); }
 
     void Model::update(UpdateMsg m) const
     {

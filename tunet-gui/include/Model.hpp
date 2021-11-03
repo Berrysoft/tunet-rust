@@ -122,6 +122,7 @@ namespace TUNet
         bool queue_cred_load() const;
         void queue_cred(const Credential& cred) const;
         void queue_state(State s) const;
+        void queue_drop(std::uint32_t addr) const;
         void update(UpdateMsg m) const;
 
     signals:
