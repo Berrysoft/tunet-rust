@@ -70,6 +70,7 @@ pub struct OnlineUser {
     pub login_time: i64,
     pub flux: u64,
     pub mac_address: [u8; 6],
+    pub has_mac: bool,
     pub is_local: bool,
 }
 
@@ -80,6 +81,7 @@ impl OnlineUser {
             login_time: u.login_time.timestamp(),
             flux: u.flux.0,
             mac_address: u.mac_address.map(|mac| mac.bytes()).unwrap_or_default(),
+            has_mac: u.mac_address.is_some(),
             is_local: mac_addrs
                 .iter()
                 .any(|it| Some(it) == u.mac_address.as_ref()),

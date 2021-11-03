@@ -101,7 +101,7 @@ namespace TUNet
             flux->setTextAlignment(Qt::AlignCenter);
             m_online_table.setItem(row, 2, flux);
 
-            auto mac_address = new QTableWidgetItem(format_mac_address(u.mac_address));
+            auto mac_address = new QTableWidgetItem(u.mac_address ? format_mac_address(*u.mac_address) : QString{});
             mac_address->setTextAlignment(Qt::AlignCenter);
             m_online_table.setItem(row, 3, mac_address);
 

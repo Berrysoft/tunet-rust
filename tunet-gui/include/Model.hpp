@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <vector>
 
 namespace TUNet
@@ -79,7 +80,7 @@ namespace TUNet
         std::uint32_t address;
         QDateTime login_time;
         Flux flux;
-        std::array<std::uint8_t, 6> mac_address;
+        std::optional<std::array<std::uint8_t, 6>> mac_address;
         bool is_local;
     };
 

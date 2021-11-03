@@ -14,6 +14,7 @@ extern "C"
         std::int64_t login_time;
         std::uint64_t flux;
         std::uint8_t mac_address[6];
+        bool has_mac;
         bool is_local;
     };
 
@@ -212,7 +213,12 @@ namespace TUNet
     static bool fn_foreach_online(const OnlineUser* u, void* data)
     {
         auto& users = *reinterpret_cast<std::vector<Online>*>(data);
-        users.emplace_back(Online{ u->address, QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC), u->flux, std::to_array(u->mac_address), u->is_local });
+        users.emplace_back(Online{
+            u->address,
+            QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC),
+            u->flux,
+            u->has_mac ? std::make_optional(std::to_array(u->mac_address)) : std::nullopt,
+            u->is_local });
         return true;
     }
 
@@ -226,7 +232,10 @@ namespace TUNet
     static bool fn_foreach_detail(const ::Detail* d, void* data)
     {
         auto& details = *reinterpret_cast<std::vector<Detail>*>(data);
-        details.emplace_back(Detail{ QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC), QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC), d->flux });
+        details.emplace_back(Detail{
+            QDateTime::fromSecsSinceEpoch(d->login_time, Qt::UTC),
+            QDateTime::fromSecsSinceEpoch(d->logout_time, Qt::UTC),
+            d->flux });
         return true;
     }
 
