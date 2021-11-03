@@ -97,8 +97,6 @@ namespace TUNet
         m_lib_table.setSortingEnabled(true);
         m_lib_table.setSelectionBehavior(QTableWidget::SelectRows);
         m_about_layout.addWidget(&m_lib_table);
-
-        setLayout(&m_about_layout);
     }
 
     AboutPage::~AboutPage() {}

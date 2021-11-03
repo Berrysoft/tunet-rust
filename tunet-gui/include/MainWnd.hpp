@@ -25,7 +25,7 @@ namespace TUNet
     private:
         Model* m_pmodel{};
 
-        QTabWidget m_root_tab{ this };
+        QTabWidget m_root_tab{};
         InfoPage m_info_page{ &m_root_tab, m_pmodel };
         ChartPage m_chart_page{ &m_root_tab, m_pmodel };
         DetailPage m_detail_page{ &m_root_tab, m_pmodel };

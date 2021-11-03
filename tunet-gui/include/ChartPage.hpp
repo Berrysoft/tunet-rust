@@ -21,14 +21,14 @@ namespace TUNet
     private:
         Model* m_pmodel{};
 
-        QVBoxLayout m_chart_layout{};
+        QVBoxLayout m_chart_layout{ this };
 
-        QChartView m_daily_view{ this };
+        QChartView m_daily_view{};
         QChart m_daily_chart{};
 
-        QChartView m_time_view{ this };
+        QChartView m_time_view{};
         QChart m_time_chart{};
 
-        QPushButton m_refresh_button{ this };
+        QPushButton m_refresh_button{};
     };
 } // namespace TUNet

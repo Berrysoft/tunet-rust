@@ -15,11 +15,11 @@ namespace TUNet
 
     private:
         QVBoxLayout m_about_layout{ this };
-        QLabel m_title_label{ this };
-        QLabel m_source_label{ this };
-        QLabel m_copyright_label{ this };
+        QLabel m_title_label{};
+        QLabel m_source_label{};
+        QLabel m_copyright_label{};
 
-        QLabel m_lib_label{ this };
-        QTableWidget m_lib_table{ this };
+        QLabel m_lib_label{};
+        QTableWidget m_lib_table{};
     };
 } // namespace TUNet

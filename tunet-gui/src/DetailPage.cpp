@@ -29,8 +29,6 @@ namespace TUNet
         QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &DetailPage::refresh_details);
         m_details_layout.addWidget(&m_refresh_button);
 
-        setLayout(&m_details_layout);
-
         QObject::connect(pmodel, &Model::details_changed, this, &DetailPage::update_details);
     }
 

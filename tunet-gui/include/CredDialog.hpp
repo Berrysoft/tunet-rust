@@ -21,11 +21,11 @@ namespace TUNet
     private:
         QVBoxLayout m_root_layout{ this };
 
-        QLineEdit m_username_edit{ this };
-        QLineEdit m_password_edit{ this };
+        QLineEdit m_username_edit{};
+        QLineEdit m_password_edit{};
 
         QHBoxLayout m_command_layout{};
-        QPushButton m_cancel_button{ this };
-        QPushButton m_ok_button{ this };
+        QPushButton m_cancel_button{};
+        QPushButton m_ok_button{};
     };
 } // namespace TUNet

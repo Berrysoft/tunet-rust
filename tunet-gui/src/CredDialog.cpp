@@ -15,8 +15,6 @@ namespace TUNet
         QObject::connect(&m_ok_button, &QPushButton::clicked, this, &QDialog::accept);
         m_command_layout.addWidget(&m_ok_button);
         m_root_layout.addLayout(&m_command_layout);
-
-        setLayout(&m_root_layout);
     }
 
     CredDialog::~CredDialog() {}

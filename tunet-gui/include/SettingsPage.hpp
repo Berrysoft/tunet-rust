@@ -33,19 +33,19 @@ namespace TUNet
 
         QVBoxLayout m_settings_layout{ this };
 
-        QLabel m_user_title_label{ this };
+        QLabel m_user_title_label{};
         QHBoxLayout m_user_layout{};
-        QPushButton m_user_button{ this };
+        QPushButton m_user_button{};
 
-        QLabel m_status_title_label{ this };
-        QLabel m_status_label{ this };
+        QLabel m_status_title_label{};
+        QLabel m_status_label{};
 
-        QLabel m_online_label{ this };
-        QTableWidget m_online_table{ this };
+        QLabel m_online_label{};
+        QTableWidget m_online_table{};
 
         QHBoxLayout m_command_layout{};
-        QPushButton m_connect_button{ this };
-        QPushButton m_drop_button{ this };
-        QPushButton m_refresh_button{ this };
+        QPushButton m_connect_button{};
+        QPushButton m_drop_button{};
+        QPushButton m_refresh_button{};
     };
 } // namespace TUNet

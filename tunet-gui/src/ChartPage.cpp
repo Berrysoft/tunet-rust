@@ -26,8 +26,6 @@ namespace TUNet
         QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &ChartPage::refresh_details);
         m_chart_layout.addWidget(&m_refresh_button);
 
-        setLayout(&m_chart_layout);
-
         QObject::connect(m_pmodel, &Model::details_changed, this, &ChartPage::update_details);
     }
 

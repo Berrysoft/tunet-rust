@@ -56,8 +56,6 @@ namespace TUNet
         m_command_layout.addWidget(&m_refresh_button);
         m_settings_layout.addLayout(&m_command_layout);
 
-        setLayout(&m_settings_layout);
-
         QObject::connect(m_pmodel, &Model::cred_changed, this, &SettingsPage::update_cred);
         QObject::connect(m_pmodel, &Model::onlines_changed, this, &SettingsPage::update_online);
     }

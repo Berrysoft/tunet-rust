@@ -45,8 +45,7 @@ namespace TUNet
         QLabel m_balance_label{};
 
         // state
-        QWidget m_state_widget{};
-        QHBoxLayout m_state_layout{ &m_state_widget };
+        QHBoxLayout m_state_layout{};
         QLabel m_state_label{};
         QComboBox m_state_combo{};
 
