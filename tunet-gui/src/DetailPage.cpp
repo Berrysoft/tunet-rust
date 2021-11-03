@@ -22,6 +22,7 @@ namespace TUNet
         m_details_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         m_details_table.verticalHeader()->setVisible(false);
         m_details_table.setSortingEnabled(true);
+        m_details_table.setSelectionBehavior(QTableWidget::SelectRows);
         m_details_layout.addWidget(&m_details_table);
 
         m_refresh_button.setText(u"刷新"_qs);

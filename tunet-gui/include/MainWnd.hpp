@@ -17,6 +17,8 @@ namespace TUNet
         MainWnd(Model* pmodel);
         ~MainWnd() override;
 
+        void update_cred();
+
     protected:
         void showEvent(QShowEvent* event) override;
 

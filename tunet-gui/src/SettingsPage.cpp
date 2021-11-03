@@ -34,6 +34,7 @@ namespace TUNet
         m_online_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         m_online_table.horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
         m_online_table.verticalHeader()->setVisible(false);
+        m_online_table.setSelectionBehavior(QTableWidget::SelectRows);
         QObject::connect(&m_online_table, &QTableWidget::itemSelectionChanged, this, &SettingsPage::selection_changed);
         m_settings_layout.addWidget(&m_online_table);
 

@@ -21,6 +21,8 @@ namespace TUNet
         QColor accent = accent_color();
         pal.setColor(QPalette::Highlight, accent);
         setPalette(pal);
+
+        QObject::connect(m_pmodel, &Model::cred_changed, this, &MainWnd::update_cred);
     }
 
     MainWnd::~MainWnd() {}
@@ -29,6 +31,10 @@ namespace TUNet
     {
         m_pmodel->queue_cred_load();
         m_pmodel->queue(Action::Timer);
+    }
+
+    void MainWnd::update_cred()
+    {
         m_pmodel->queue_state(State::Auto);
         m_pmodel->queue(Action::Online);
         m_pmodel->queue(Action::Details);

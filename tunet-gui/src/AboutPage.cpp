@@ -95,6 +95,7 @@ namespace TUNet
         m_lib_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         m_lib_table.verticalHeader()->setVisible(false);
         m_lib_table.setSortingEnabled(true);
+        m_lib_table.setSelectionBehavior(QTableWidget::SelectRows);
         m_about_layout.addWidget(&m_lib_table);
 
         setLayout(&m_about_layout);
