@@ -101,6 +101,9 @@ fn tunet_model_start_impl(
                 });
             }
             let res = main(Arc::as_ptr(&model), data);
+            FileSettingsReader::new()?
+                .save(model.read().unwrap().cred.clone())
+                .await?;
             Ok::<_, anyhow::Error>(res)
         } else {
             Ok(0)
