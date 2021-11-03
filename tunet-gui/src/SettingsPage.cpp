@@ -1,3 +1,4 @@
+#include <ConnectIPDialog.hpp>
 #include <CredDialog.hpp>
 #include <QHeaderView>
 #include <SettingsPage.hpp>
@@ -79,6 +80,11 @@ namespace TUNet
 
     void SettingsPage::connect_ip()
     {
+        ConnectIPDialog dialog{};
+        if (dialog.exec() == QDialog::Accepted)
+        {
+            m_pmodel->queue_connect(dialog.ip());
+        }
     }
 
     void SettingsPage::drop_ip()
@@ -119,7 +125,7 @@ namespace TUNet
         int row = 0;
         for (auto& u : users)
         {
-            auto address = new QTableWidgetItem(format_ip(u.address));
+            auto address = new QTableWidgetItem(u.address.toString());
             address->setTextAlignment(Qt::AlignCenter);
             m_online_table.setItem(row, 0, address);
 

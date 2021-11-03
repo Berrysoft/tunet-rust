@@ -62,6 +62,11 @@ pub unsafe extern "C" fn tunet_format_ip(addr: u32, f: native::StringCallback, d
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tunet_parse_ip(str: *const u16) -> u32 {
+    write_str(str).parse::<Ipv4Addr>().unwrap().into()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tunet_format_mac_address(
     addr: &[u8; 6],
     f: native::StringCallback,
@@ -158,6 +163,11 @@ pub unsafe extern "C" fn tunet_model_queue_cred(
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: native::State) {
     read_model(model).queue(Action::State(Some(state.into())));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_queue_connect(model: native::Model, addr: u32) {
+    read_model(model).queue(Action::Connect(Ipv4Addr::from(addr)));
 }
 
 #[no_mangle]

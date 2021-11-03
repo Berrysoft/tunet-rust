@@ -67,6 +67,19 @@ namespace TUNet
         QString toString() const;
     };
 
+    struct Ipv4Addr
+    {
+        std::uint32_t m_value{};
+
+        constexpr Ipv4Addr() noexcept {}
+        constexpr Ipv4Addr(std::uint32_t value) noexcept : m_value(value) {}
+        explicit Ipv4Addr(const QString& str);
+
+        constexpr operator std::uint32_t() const { return m_value; }
+
+        QString toString() const;
+    };
+
     struct Info
     {
         QString username;
@@ -77,7 +90,7 @@ namespace TUNet
 
     struct Online
     {
-        std::uint32_t address;
+        Ipv4Addr address;
         QDateTime login_time;
         Flux flux;
         std::optional<std::array<std::uint8_t, 6>> mac_address;
@@ -93,7 +106,6 @@ namespace TUNet
 
     QString format_duration(std::chrono::seconds sec);
     QString format_datetime(const QDateTime& time);
-    QString format_ip(std::uint32_t addr);
     QString format_mac_address(const std::array<std::uint8_t, 6>& maddr);
 
     struct Model : QObject
@@ -122,7 +134,8 @@ namespace TUNet
         bool queue_cred_load() const;
         void queue_cred(const Credential& cred) const;
         void queue_state(State s) const;
-        void queue_drop(std::uint32_t addr) const;
+        void queue_connect(Ipv4Addr addr) const;
+        void queue_drop(Ipv4Addr addr) const;
         void update(UpdateMsg m) const;
 
     signals:

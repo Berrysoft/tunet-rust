@@ -144,6 +144,16 @@ impl Model {
                 self.users = us;
                 self.update(UpdateMsg::Online);
             }
+            Action::Connect(addr) => {
+                let tx = self.tx.clone();
+                let usereg = self.usereg();
+                tokio::spawn(async move {
+                    usereg.login().await?;
+                    usereg.connect(addr).await?;
+                    tx.send(Action::Online).await?;
+                    Ok::<_, anyhow::Error>(())
+                });
+            }
             Action::Drop(addr) => {
                 let tx = self.tx.clone();
                 let usereg = self.usereg();
@@ -321,6 +331,7 @@ pub enum Action {
     FluxDone(NetFlux, Option<String>),
     Online,
     OnlineDone(Vec<NetUser>),
+    Connect(Ipv4Addr),
     Drop(Ipv4Addr),
     Details,
     DetailsDone(Vec<NetDetail>),

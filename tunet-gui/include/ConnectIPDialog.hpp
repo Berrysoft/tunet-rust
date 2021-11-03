@@ -9,22 +9,20 @@
 
 namespace TUNet
 {
-    struct CredDialog : QDialog
+    struct ConnectIPDialog : QDialog
     {
     public:
-        CredDialog();
-        ~CredDialog();
+        ConnectIPDialog();
+        ~ConnectIPDialog();
 
         void text_changed(const QString& str);
 
-        void set_credential(const Credential& cred);
-        Credential credential() const;
+        Ipv4Addr ip() const;
 
     private:
         QVBoxLayout m_root_layout{ this };
 
-        QLineEdit m_username_edit{};
-        QLineEdit m_password_edit{};
+        QLineEdit m_ip_edit{};
 
         QHBoxLayout m_command_layout{};
         QPushButton m_cancel_button{};

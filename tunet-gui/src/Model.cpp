@@ -57,6 +57,7 @@ extern "C"
     void tunet_format_flux(std::uint64_t flux, StringCallback f, void* data);
     void tunet_format_duration(std::int64_t sec, StringCallback f, void* data);
     void tunet_format_ip(std::uint32_t addr, StringCallback f, void* data);
+    std::uint32_t tunet_parse_ip(const char16_t* str);
     void tunet_format_mac_address(const std::uint8_t* addr, StringCallback f, void* data);
 
     std::int32_t tunet_model_start(std::size_t val, MainCallback main, void* data);
@@ -65,6 +66,7 @@ extern "C"
     bool tunet_model_queue_cred_load(NativeModel m);
     void tunet_model_queue_cred(NativeModel m, const char16_t* u, const char16_t* p);
     void tunet_model_queue_state(NativeModel m, State s);
+    void tunet_model_queue_connect(NativeModel m, std::uint32_t addr);
     void tunet_model_queue_drop(NativeModel m, std::uint32_t addr);
     void tunet_model_status(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_username(NativeModel m, StringCallback f, void* data);
@@ -103,6 +105,10 @@ namespace TUNet
         return str;
     }
 
+    Ipv4Addr::Ipv4Addr(const QString& str) { m_value = tunet_parse_ip(QStringView{ str }.utf16()); }
+
+    QString Ipv4Addr::toString() const { return get_q_string(tunet_format_ip, m_value); }
+
     QString Flux::toString() const { return get_q_string(tunet_format_flux, m_value); }
 
     QString format_duration(std::chrono::seconds s) { return get_q_string(tunet_format_duration, s.count()); }
@@ -112,8 +118,6 @@ namespace TUNet
         static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
         return time.toString(DATETIME_FORMAT);
     }
-
-    QString format_ip(std::uint32_t addr) { return get_q_string(tunet_format_ip, addr); }
 
     QString format_mac_address(const std::array<std::uint8_t, 6>& maddr) { return get_q_string(tunet_format_mac_address, maddr.data()); }
 
@@ -161,7 +165,9 @@ namespace TUNet
 
     void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }
 
-    void Model::queue_drop(std::uint32_t addr) const { tunet_model_queue_drop(m_handle, addr); }
+    void Model::queue_connect(Ipv4Addr addr) const { tunet_model_queue_connect(m_handle, addr); }
+
+    void Model::queue_drop(Ipv4Addr addr) const { tunet_model_queue_drop(m_handle, addr); }
 
     void Model::update(UpdateMsg m) const
     {
