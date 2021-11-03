@@ -16,6 +16,8 @@ namespace TUNet
         SettingsPage(QWidget* parent, Model* pmodel);
         ~SettingsPage() override;
 
+        void set_credential();
+
         void selection_changed();
 
         void connect_ip();
@@ -32,7 +34,8 @@ namespace TUNet
         QVBoxLayout m_settings_layout{ this };
 
         QLabel m_user_title_label{ this };
-        QLabel m_user_label{ this };
+        QHBoxLayout m_user_layout{};
+        QPushButton m_user_button{ this };
 
         QLabel m_status_title_label{ this };
         QLabel m_status_label{ this };

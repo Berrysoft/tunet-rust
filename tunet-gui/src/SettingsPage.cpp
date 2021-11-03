@@ -1,3 +1,4 @@
+#include <CredDialog.hpp>
 #include <QHeaderView>
 #include <SettingsPage.hpp>
 
@@ -13,8 +14,12 @@ namespace TUNet
         m_user_title_label.setAlignment(Qt::AlignHCenter);
         m_user_title_label.setText(u"当前用户"_qs);
         m_settings_layout.addWidget(&m_user_title_label);
-        m_user_label.setAlignment(Qt::AlignHCenter);
-        m_settings_layout.addWidget(&m_user_label);
+        m_user_button.setToolTip(u"点击设置用户密码"_qs);
+        QObject::connect(&m_user_button, &QPushButton::clicked, this, &SettingsPage::set_credential);
+        m_user_layout.addStretch();
+        m_user_layout.addWidget(&m_user_button);
+        m_user_layout.addStretch();
+        m_settings_layout.addLayout(&m_user_layout);
 
         m_status_title_label.setFont(title_font);
         m_status_title_label.setAlignment(Qt::AlignHCenter);
@@ -59,6 +64,16 @@ namespace TUNet
 
     SettingsPage::~SettingsPage() {}
 
+    void SettingsPage::set_credential()
+    {
+        CredDialog dialog{};
+        dialog.set_credential(m_pmodel->cred());
+        if (dialog.exec() == QDialog::Accepted)
+        {
+            m_pmodel->queue_cred(dialog.credential());
+        }
+    }
+
     void SettingsPage::selection_changed()
     {
         m_drop_button.setEnabled(!m_online_table.selectedRanges().empty());
@@ -87,7 +102,15 @@ namespace TUNet
 
     void SettingsPage::update_cred()
     {
-        m_user_label.setText(m_pmodel->cred().username);
+        auto cred = m_pmodel->cred();
+        if (!cred.username.isEmpty())
+        {
+            m_user_button.setText(cred.username);
+        }
+        else
+        {
+            m_user_button.setText(u"设置"_qs);
+        }
     }
 
     void SettingsPage::update_online()
