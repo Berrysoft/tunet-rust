@@ -4,7 +4,9 @@ namespace TUNet
 {
     CredDialog::CredDialog() : QDialog()
     {
+        m_username_edit.setPlaceholderText(u"用户名"_qs);
         m_root_layout.addWidget(&m_username_edit);
+        m_password_edit.setPlaceholderText(u"密码"_qs);
         m_password_edit.setEchoMode(QLineEdit::Password);
         m_root_layout.addWidget(&m_password_edit);
 
@@ -12,6 +14,7 @@ namespace TUNet
         QObject::connect(&m_cancel_button, &QPushButton::clicked, this, &QDialog::reject);
         m_command_layout.addWidget(&m_cancel_button);
         m_ok_button.setText(u"确定"_qs);
+        m_ok_button.setDefault(true);
         QObject::connect(&m_ok_button, &QPushButton::clicked, this, &QDialog::accept);
         m_command_layout.addWidget(&m_ok_button);
         m_root_layout.addLayout(&m_command_layout);
