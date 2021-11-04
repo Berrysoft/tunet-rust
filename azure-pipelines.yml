@@ -7,7 +7,7 @@ trigger:
 - master
 
 jobs:
-- job: Build CLI
+- job: Build_CLI
   strategy:
     matrix:
       linux-x86:
@@ -164,7 +164,7 @@ jobs:
     inputs:
       ArtifactName: 'publish'
 
-- job: FatBinary CLI
+- job: FatBinary_CLI
   dependsOn: Build
   condition: succeeded('Build')
   pool:
@@ -183,7 +183,7 @@ jobs:
     inputs:
       ArtifactName: 'publish'
 
-- job: Build GUI
+- job: Build_GUI
   strategy:
     matrix:
       linux-x64:
