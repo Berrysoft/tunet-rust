@@ -101,7 +101,7 @@ jobs:
       lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output target/release/tunet
       cd $(Build.BinariesDirectory)
       mkdir -p tunet-gui.macos
-      cp -r tunet-gui.macos.x86_64/bin tunet-gui.macos/
+      cp -R tunet-gui.macos.x86_64/bin tunet-gui.macos/
       rm tunet-gui.macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
       lipo -create tunet-gui.macos.x86_64/bin/tunet-gui.app/Contents/MacOS/tunet-gui tunet-gui.macos.aarch64/bin/tunet-gui.app/Contents/MacOS/tunet-gui -output tunet-gui.macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
     displayName: "Create fat binary"
