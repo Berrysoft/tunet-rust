@@ -113,8 +113,9 @@ jobs:
     inputs:
       rootFolderOrFile: '$(Build.BinariesDirectory)/tunet-gui.macos/bin/tunet-gui.app'
       includeRootFolder: true
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/tunet-gui.macos/tunet-gui.app.zip'
+      archiveType: 'tar'
+      tarCompression: 'gz'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/tunet-gui.macos/tunet-gui.app.tar.gz'
     displayName: 'Archive app'
 
   - task: PublishBuildArtifacts@1
