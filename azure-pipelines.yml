@@ -81,7 +81,7 @@ jobs:
       cd tunet-gui
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.ArtifactStagingDirectory)/$(publishGuiName)" $(cmakeArgs)
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.ArtifactStagingDirectory)/$(publishGuiName)" $(cmakeArgs)
       ninja install
     displayName: "Build"
 
