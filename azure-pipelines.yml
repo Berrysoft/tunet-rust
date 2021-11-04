@@ -70,7 +70,7 @@ jobs:
   
   - pwsh: |
       python3 -m pip install aqtinstall
-      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop 6.2.0 win64_msvc2019_64 -m qtcharts
+      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop 6.2.1 win64_msvc2019_64 -m qtcharts
     displayName: "Install Qt on Windows"
     condition: eq(variables.os, 'windows')
   

@@ -100,6 +100,7 @@ if(WIN32)
                 --no-compiler-runtime
                 --no-translations
                 --no-system-d3d-compiler
+                --no-opengl-sw
                 \"$<TARGET_FILE:tunet-gui>\"
     )
 elseif(UNIX)
@@ -146,6 +147,7 @@ if(WIN32)
                     --no-compiler-runtime
                     --no-translations
                     --no-system-d3d-compiler
+                    --no-opengl-sw
                     \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.exe\"
         )
     ")
