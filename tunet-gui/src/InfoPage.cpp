@@ -19,7 +19,7 @@ namespace TUNet
         m_state_combo.addItem(u"Net"_qs);
         m_state_combo.addItem(u"Auth4"_qs);
         m_state_combo.addItem(u"Auth6"_qs);
-        QObject::connect(&m_state_combo, &QComboBox::currentIndexChanged, this, &InfoPage::update_state_back);
+        QObject::connect(&m_state_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &InfoPage::update_state_back);
         m_state_layout.addWidget(&m_state_combo);
         m_state_layout.addStretch();
         m_root_layout.addLayout(&m_state_layout);

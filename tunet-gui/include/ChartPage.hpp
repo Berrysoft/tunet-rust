@@ -9,6 +9,10 @@
 
 namespace TUNet
 {
+#if QT_VERSION < 0x060000
+    using namespace QtCharts;
+#endif
+
     struct ChartPage : QWidget
     {
     public:

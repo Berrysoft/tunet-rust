@@ -12,6 +12,13 @@
 #include <optional>
 #include <vector>
 
+#if QT_VERSION < 0x060000
+inline QString operator""_qs(const char16_t* str, std::size_t len)
+{
+    return QString::fromUtf16(str, len);
+}
+#endif
+
 namespace TUNet
 {
     enum class Action : std::int32_t

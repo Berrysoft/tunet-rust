@@ -106,7 +106,7 @@ if(WIN32)
     )
 elseif(UNIX)
     if(NOT APPLE)
-        target_link_libraries(tunet-gui PRIVATE dl)
+        target_link_libraries(tunet-gui PRIVATE dl pthread)
     endif()
 endif()
 
