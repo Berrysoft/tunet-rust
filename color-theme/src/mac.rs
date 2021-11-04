@@ -1,9 +1,5 @@
 use super::*;
-use objc::{
-    rc::StrongPtr,
-    runtime::{Class, Object},
-    *,
-};
+use objc::{rc::StrongPtr, runtime::Class, *};
 use std::ptr::{addr_of_mut, null_mut};
 
 #[link(name = "AppKit", kind = "framework")]
@@ -14,9 +10,9 @@ extern "C" {
 
 pub fn accent() -> Color {
     let accent = StrongPtr::new(msg_send![&OBJC_CLASS__NSColor, controlAccentColor]);
-    let mut r: f64 = 0;
-    let mut g: f64 = 0;
-    let mut b: f64 = 0;
+    let mut r: f64 = 0.0;
+    let mut g: f64 = 0.0;
+    let mut b: f64 = 0.0;
     let _: () = msg_send![*accent, getRed:addr_of_mut!(r) green:addr_of_mut!(g) blue:addr_of_mut!(b) alpha:null_mut::<f64>()];
     Color {
         r: (r * 255.0) as u8,

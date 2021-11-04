@@ -42,15 +42,14 @@ add_custom_command(
 )
 
 if(${USE_QT5})
-    find_package(Qt5 COMPONENTS Widgets Charts Tools REQUIRED)
+    find_package(Qt5 COMPONENTS Widgets Charts REQUIRED)
 else()
-    find_package(Qt6 COMPONENTS Widgets Charts Tools REQUIRED)
+    find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
 endif()
 
-get_target_property(_qmake_executable Qt::qmake IMPORTED_LOCATION)
-get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-
 if(WIN32)
+    get_target_property(_qmake_executable Qt::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
     if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
         find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
     else()
