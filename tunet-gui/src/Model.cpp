@@ -1,6 +1,14 @@
 #include <Model.hpp>
 #include <cmath>
 
+#if QT_VERSION < 0x051000
+    #define QSTRING_UTF16(str) (reinterpret_cast<const char16_t*>((str).utf16()))
+#elif QT_VERSION < 0x070000
+    #define QSTRING_UTF16(str) (QStringView{ (str) }.utf16())
+#else
+    #define QSTRING_UTF16(str) ((str).utf16())
+#endif
+
 extern "C"
 {
     using TUNet::Action;
@@ -105,7 +113,7 @@ namespace TUNet
         return str;
     }
 
-    Ipv4Addr::Ipv4Addr(const QString& str) { m_value = tunet_parse_ip(QStringView{ str }.utf16()); }
+    Ipv4Addr::Ipv4Addr(const QString& str) { m_value = tunet_parse_ip(QSTRING_UTF16(str)); }
 
     QString Ipv4Addr::toString() const { return get_q_string(tunet_format_ip, m_value); }
 
@@ -115,8 +123,12 @@ namespace TUNet
 
     QString format_datetime(const QDateTime& time)
     {
+#if QT_VERSION < 0x051000
+        return time.toString(u"yyyy-MM-dd hh:mm:ss"_qs);
+#else
         constexpr QStringView DATETIME_FORMAT{ u"yyyy-MM-dd hh:mm:ss" };
         return time.toString(DATETIME_FORMAT);
+#endif
     }
 
     QString format_mac_address(const std::array<std::uint8_t, 6>& maddr) { return get_q_string(tunet_format_mac_address, maddr.data()); }
@@ -160,7 +172,7 @@ namespace TUNet
 
     void Model::queue_cred(const Credential& cred) const
     {
-        tunet_model_queue_cred(m_handle, QStringView{ cred.username }.utf16(), QStringView{ cred.password }.utf16());
+        tunet_model_queue_cred(m_handle, QSTRING_UTF16(cred.username), QSTRING_UTF16(cred.password));
     }
 
     void Model::queue_state(State s) const { tunet_model_queue_state(m_handle, s); }

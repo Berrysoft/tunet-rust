@@ -15,7 +15,10 @@ namespace TUNet
 
         setMinimumSize(300, 300);
         resize(500, 500);
+
+#if QT_VERSION >= 0x051400
         move(screen()->geometry().center() - rect().center());
+#endif
 
         QPalette pal = palette();
         QColor accent = accent_color();
