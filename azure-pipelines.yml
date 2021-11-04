@@ -191,19 +191,19 @@ jobs:
         imageName: 'ubuntu-18.04'
         target: 'x86_64-unknown-linux-gnu'
         publishName: 'tunet-gui.linux.x86_64'
-        cmakeArg: '-DUSE_QT5=on'
+        cmakeArgs: '-DUSE_QT5=on'
       osx-x64:
         os: 'mac'
         imageName: 'maxOS-11'
         target: 'x86_64-apple-darwin'
         publishName: 'tunet-gui.macos.x86_64'
-        cmakeArg: ''
+        cmakeArgs: ''
       win-x64:
         os: 'windows'
         imageName: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
         publishName: 'tunet-gui.win.x86_64'
-        cmakeArg: ''
+        cmakeArgs: ''
   pool:
     vmImage: $(imageName)
   
@@ -228,7 +228,7 @@ jobs:
       cd tunet-gui
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.SourcesDirectory)/$(publishName)"
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.SourcesDirectory)/$(publishName)" $(cmakeArgs)
       ninja install
     displayName: "Build"
 
