@@ -7,11 +7,11 @@ trigger:
 - master
 
 jobs:
-- job: Build
+- job: Build CLI
   strategy:
     matrix:
       linux-x86:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'i686-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.i686'
@@ -19,14 +19,14 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-multilib'
       linux-x64:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'x86_64-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.x86_64'
         rustflags: ''
         crosslib: false
       linux-arm:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'arm-unknown-linux-gnueabihf'
         exeName: 'tunet'
         publishName: 'tunet.linux.arm'
@@ -34,7 +34,7 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-arm-linux-gnueabihf'
       linux-arm64:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'aarch64-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.aarch64'
@@ -50,7 +50,7 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-riscv64-linux-gnu'
       linux-mips:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'mips-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.mips'
@@ -58,7 +58,7 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-mips-linux-gnu'
       linux-mipsel:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'mipsel-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.mipsel'
@@ -82,7 +82,7 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-mips64el-linux-gnuabi64'
       linux-ppc:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'powerpc-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.powerpc'
@@ -90,7 +90,7 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-powerpc-linux-gnu'
       linux-ppc64le:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 'powerpc64le-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.powerpc64le'
@@ -98,7 +98,7 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-powerpc64le-linux-gnu'
       linux-s390x:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         target: 's390x-unknown-linux-gnu'
         exeName: 'tunet'
         publishName: 'tunet.linux.s390x'
@@ -164,7 +164,7 @@ jobs:
     inputs:
       ArtifactName: 'publish'
 
-- job: FatBinary
+- job: FatBinary CLI
   dependsOn: Build
   condition: succeeded('Build')
   pool:
@@ -178,6 +178,56 @@ jobs:
 
   - script: lipo -create $(Build.SourcesDirectory)/publish/tunet.macos.x86_64 $(Build.SourcesDirectory)/publish/tunet.macos.aarch64 -output $(Build.ArtifactStagingDirectory)/tunet.macos
     displayName: "Create fat binary"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
+
+- job: Build GUI
+  strategy:
+    matrix:
+      linux-x64:
+        os: 'ubuntu'
+        imageName: 'ubuntu-18.04'
+        target: 'x86_64-unknown-linux-gnu'
+        publishName: 'tunet-gui.linux.x86_64'
+      osx-x64:
+        os: 'mac'
+        imageName: 'maxOS-latest'
+        target: 'x86_64-apple-darwin'
+        publishName: 'tunet-gui.macos.x86_64'
+      win-x64:
+        os: 'windows'
+        imageName: 'windows-latest'
+        target: 'x86_64-pc-windows-msvc'
+        publishName: 'tunet-gui.win.x86_64'
+  pool:
+    vmImage: $(imageName)
+  
+  steps:
+  - script: |
+      sudo apt update
+      sudo apt install qtbase5-dev libqt5charts5-dev
+    displayName: "Install Qt on Linux"
+    condition: eq(variables.os, 'ubuntu')
+
+  - script: |
+      brew install qt
+    displayName: "Install Qt on MacOS"
+    condition: eq(variables.os, 'mac')
+  
+  - script: |
+      vcpkg install qtbase[brotli,concurrent,core,dbus,default-features,doubleconversion,freetype,gui,harfbuzz,jpeg,network,openssl,pcre2,png,sql,sql-psql,sql-sqlite,testlib,widgets,zstd]:x64-windows qttools[core]:x64-windows qtcharts[core]:x64-windows
+    displayName: "Compile Qt on Windows"
+    condition: eq(variables.os, 'windows')
+  
+  - pwsh: |
+      cd tunet-gui
+      mkdir build
+      cd build
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.SourcesDirectory)/$(publishName)"
+      ninja install
+    displayName: "Build"
 
   - task: PublishBuildArtifacts@1
     inputs:
