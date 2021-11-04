@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
+option(USE_QT5 "Use Qt5." OFF)
+
 include(CheckIPOSupported)
 check_ipo_supported(RESULT ENABLE_IPO OUTPUT output)
 if(ENABLE_IPO)
@@ -39,13 +41,21 @@ add_custom_command(
     DEPENDS tunet-model
 )
 
-find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
-get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
-get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
-    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+if(${USE_QT5})
+    find_package(Qt5 COMPONENTS Widgets Charts REQUIRED)
 else()
-    find_program(WINDEPLOYQT_EXECUTABLE windeployqt.debug.bat HINTS "${_qt_bin_dir}")
+    find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
+endif()
+
+get_target_property(_qmake_executable Qt::qmake IMPORTED_LOCATION)
+get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+
+if(WIN32)
+    if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
+        find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+    else()
+        find_program(WINDEPLOYQT_EXECUTABLE windeployqt.debug.bat HINTS "${_qt_bin_dir}")
+    endif()
 endif()
 
 file(GLOB HEADERS "include/*.hpp")
@@ -56,7 +66,7 @@ target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts ${RUST_LIB_PATH})
+target_link_libraries(tunet-gui PUBLIC Qt::Widgets Qt::Charts ${RUST_LIB_PATH})
 add_dependencies(tunet-gui tunet-model)
 set_target_properties(tunet-gui PROPERTIES AUTOMOC ON qt_no_entrypoint ON)
 
