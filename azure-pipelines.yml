@@ -210,7 +210,7 @@ jobs:
   steps:
   - script: |
       sudo apt update
-      sudo apt install qtbase5-dev libqt5charts5-dev ninja-build
+      sudo apt install qtbase5-dev libqt5charts5-dev qt5-qmake ninja-build
     displayName: "Install Qt on Linux"
     condition: eq(variables.os, 'ubuntu')
 
