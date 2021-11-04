@@ -165,7 +165,7 @@ jobs:
       ArtifactName: 'publish'
 
 - job: FatBinary_CLI
-  dependsOn: Build
+  dependsOn: Build_CLI
   condition: succeeded('Build_CLI')
   pool:
     vmImage: 'macOS-11'
