@@ -166,7 +166,7 @@ jobs:
 
 - job: FatBinary_CLI
   dependsOn: Build
-  condition: succeeded('Build')
+  condition: succeeded('Build_CLI')
   pool:
     vmImage: 'macOS-11'
   
