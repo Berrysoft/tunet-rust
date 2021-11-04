@@ -90,12 +90,20 @@ jobs:
       cd tunet-gui
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.ArtifactStagingDirectory)/tunet-gui.macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
       ninja install
     displayName: "Build"
 
   - pwsh: cp target/release/tunet $(Build.ArtifactStagingDirectory)/tunet.macos
     displayName: 'Copy CLI binaries'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(Build.BinariesDirectory)/tunet-gui.macos/bin/tunet-gui.app'
+      includeRootFolder: true
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/tunet-gui.macos/tunet-gui.app.zip'
+    displayName: 'Archive app'
 
   - task: PublishBuildArtifacts@1
     inputs:
