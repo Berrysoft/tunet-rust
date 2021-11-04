@@ -42,9 +42,9 @@ add_custom_command(
 )
 
 if(${USE_QT5})
-    find_package(Qt5 COMPONENTS Widgets Charts REQUIRED)
+    find_package(Qt5 COMPONENTS Widgets Charts Tools REQUIRED)
 else()
-    find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
+    find_package(Qt6 COMPONENTS Widgets Charts Tools REQUIRED)
 endif()
 
 get_target_property(_qmake_executable Qt::qmake IMPORTED_LOCATION)

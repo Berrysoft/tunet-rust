@@ -215,7 +215,7 @@ jobs:
     condition: eq(variables.os, 'ubuntu')
 
   - script: |
-      brew install qt
+      brew install qt cmake ninja
     displayName: "Install Qt on MacOS"
     condition: eq(variables.os, 'mac')
   
