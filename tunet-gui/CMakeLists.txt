@@ -166,15 +166,8 @@ elseif(APPLE)
     install(CODE "
         execute_process(
             COMMAND \"${MACDEPLOYQT_EXECUTABLE}\"
-                \"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tunet-gui.app\"
+                \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.app\"
                 -always-overwrite
-        )
-    ")
-    install(CODE "
-        execute_process(COMMAND
-            ${CMAKE_COMMAND} -E tar \"cfv\" \"${CMAKE_INSTALL_PREFIX}/tunet-gui.app.zip\" --format=zip
-                \"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tunet-gui.app\"
-            WORKING_DIRECTORY \"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\"
         )
     ")
 endif()
