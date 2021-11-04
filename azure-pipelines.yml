@@ -108,7 +108,7 @@ jobs:
         imageName: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
         publishName: 'tunet-gui.win.x86_64'
-        cmakeArgs: ''
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.0/msvc2019_64"'
   pool:
     vmImage: $(imageName)
   
@@ -123,10 +123,16 @@ jobs:
       brew install qt cmake ninja
     displayName: "Install Qt on MacOS"
     condition: eq(variables.os, 'mac')
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+    condition: eq(variables.os, 'windows')
   
-  - script: |
-      vcpkg install qtbase[brotli,concurrent,core,dbus,default-features,doubleconversion,freetype,gui,harfbuzz,jpeg,network,openssl,pcre2,png,sql,sql-psql,sql-sqlite,testlib,widgets,zstd]:x64-windows qttools[core]:x64-windows qtcharts[core]:x64-windows
-    displayName: "Compile Qt on Windows"
+  - pwsh: |
+      python3 -m pip install aqtinstall
+      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop 6.2.0 win64_msvc2019_64 -m qtcharts
+    displayName: "Install Qt on Windows"
     condition: eq(variables.os, 'windows')
   
   - pwsh: |
