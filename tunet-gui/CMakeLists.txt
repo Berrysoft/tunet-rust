@@ -54,6 +54,10 @@ if(WIN32)
     else()
         find_program(WINDEPLOYQT_EXECUTABLE windeployqt.debug.bat HINTS "${_qt_bin_dir}")
     endif()
+elseif(APPLE)
+    get_target_property(_qmake_executable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+    find_program(MACDEPLOYQT_EXECUTABLE macdeployqt HINTS "${_qt_bin_dir}")
 endif()
 
 file(GLOB HEADERS "include/*.hpp")
@@ -113,6 +117,11 @@ elseif(UNIX)
                 "-framework Security"
                 "-framework SystemConfiguration"
         )
+        set_target_properties(tunet-gui PROPERTIES
+            MACOSX_BUNDLE ON
+            MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+            MACOSX_BUNDLE_LONG_VERSION_STRING ${TUNET_LONG_VERSION}
+        )
     else()
         target_link_libraries(tunet-gui PRIVATE dl pthread)
     endif()
@@ -153,4 +162,19 @@ if(WIN32)
     ")
 
     include(InstallRequiredSystemLibraries)
+elseif(APPLE)
+    install(CODE "
+        execute_process(
+            COMMAND \"${MACDEPLOYQT_EXECUTABLE}\"
+                \"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tunet-gui.app\"
+                -always-overwrite
+        )
+    ")
+    install(CODE "
+        execute_process(COMMAND
+            ${CMAKE_COMMAND} -E tar \"cfv\" \"${CMAKE_INSTALL_PREFIX}/tunet-gui.app.zip\" --format=zip
+                \"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tunet-gui.app\"
+            WORKING_DIRECTORY \"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\"
+        )
+    ")
 endif()

@@ -27,7 +27,7 @@ jobs:
         publishName: 'tunet.macos.x86_64'
         publishGuiName: 'tunet-gui.macos.x86_64'
         preCmakeCmd: ''
-        cmakeArgs: ''
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos"'
       osx-arm64:
         os: 'mac'
         imageName: 'macOS-11'
@@ -36,7 +36,7 @@ jobs:
         publishName: 'tunet.macos.aarch64'
         publishGuiName: 'tunet-gui.macos.aarch64'
         preCmakeCmd: ''
-        cmakeArgs: '-DCMAKE_OSX_ARCHITECTURES="arm64"'
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="arm64"'
       win-x64:
         os: 'windows'
         imageName: 'windows-latest'
@@ -46,7 +46,7 @@ jobs:
         publishGuiName: 'tunet-gui.win.x86_64'
         preCmakeCmd: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
-        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.0/msvc2019_64"'
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/msvc2019_64"'
   pool:
     vmImage: $(imageName)
   
@@ -59,15 +59,12 @@ jobs:
     condition: eq(variables.os, 'ubuntu')
 
   - script: |
-      brew install qt cmake ninja
+      brew install cmake ninja
+      python3 -m pip install aqtinstall
+      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt mac desktop 6.2.1 clang_64 -m qtcharts
     displayName: "Install Qt on MacOS"
     condition: eq(variables.os, 'mac')
 
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.x'
-    condition: eq(variables.os, 'windows')
-  
   - pwsh: |
       python3 -m pip install aqtinstall
       python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop 6.2.1 win64_msvc2019_64 -m qtcharts
