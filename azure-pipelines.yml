@@ -142,6 +142,7 @@ jobs:
   
   - script: |
       $(preCmakeCmd)
+      cargo build --release
       cd tunet-gui
       mkdir build
       cd build
