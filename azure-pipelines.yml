@@ -82,18 +82,29 @@ jobs:
     displayName: "Build Rust part"
 
   - script: |
-      mkdir -p target/release
-      lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output target/release/tunet
-      lipo -create target/x86_64-apple-darwin/release/libtunet_model_native.a target/aarch64-apple-darwin/release/libtunet_model_native.a -output target/release/libtunet_model_native.a
-    displayName: "Create fat binary"
-
-  - script: |
       cd tunet-gui
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+      mkdir x64
+      cd x64
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="x86_64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.x86_64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos"
+      ninja install
+      cd ..
+      mkdir arm64
+      cd arm64
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="aarch64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.aarch64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="arm64"
       ninja install
     displayName: "Build C++ part"
+
+  - script: |
+      mkdir -p target/release
+      lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output target/release/tunet
+      cd $(Build.BinariesDirectory)
+      mkdir -p tunet-gui.macos
+      cp -r tunet-gui.macos.x86_64/bin tunet-gui.macos/
+      rm tunet-gui.macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
+      lipo -create tunet-gui.macos.x86_64/bin/tunet-gui.app/Contents/MacOS/tunet-gui tunet-gui.macos.aarch64/bin/tunet-gui.app/Contents/MacOS/tunet-gui -output tunet-gui.macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
+    displayName: "Create fat binary"
 
   - pwsh: cp target/release/tunet $(Build.ArtifactStagingDirectory)/tunet.macos
     displayName: 'Copy CLI binaries'
