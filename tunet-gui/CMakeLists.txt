@@ -24,6 +24,11 @@ else()
     set(CARGO_FLAGS "")
 endif()
 
+if(DEFINED RUST_TARGET)
+    list(APPEND CARGO_FLAGS "--target=${RUST_TARGET}")
+    set(LIB_DIR "${LIB_DIR}/${RUST_TARGET}")
+endif()
+
 file(GLOB RUST_SOURCES "../**/*.rs")
 set(RUST_LIB_PATH ${LIB_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tunet_model_native${CMAKE_STATIC_LIBRARY_SUFFIX})
 

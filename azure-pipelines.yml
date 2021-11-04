@@ -7,109 +7,43 @@ trigger:
 - master
 
 jobs:
-- job: Build_CLI
-  strategy:
-    matrix:
-      linux-x64:
-        imageName: 'ubuntu-18.04'
-        target: 'x86_64-unknown-linux-gnu'
-        exeName: 'tunet'
-        publishName: 'tunet.linux.x86_64'
-        rustflags: ''
-        crosslib: false
-      osx-x64:
-        imageName: 'macOS-11'
-        target: 'x86_64-apple-darwin'
-        exeName: 'tunet'
-        publishName: 'tunet.macos.x86_64'
-        rustflags: ''
-        crosslib: false
-      osx-arm64:
-        imageName: 'macOS-11'
-        target: 'aarch64-apple-darwin'
-        exeName: 'tunet'
-        publishName: 'tunet.macos.aarch64'
-        rustflags: ''
-        crosslib: false
-      win-x64:
-        imageName: 'windows-latest'
-        target: 'x86_64-pc-windows-msvc'
-        exeName: 'tunet.exe'
-        publishName: 'tunet.win.x86_64.exe'
-        rustflags: '-C target-feature=+crt-static'
-        crosslib: false
-      win-arm64:
-        imageName: 'windows-latest'
-        target: 'aarch64-pc-windows-msvc'
-        exeName: 'tunet.exe'
-        publishName: 'tunet.win.aarch64.exe'
-        rustflags: '-C target-feature=+crt-static'
-        crosslib: false
-  pool:
-    vmImage: $(imageName)
-
-  steps:
-  - script: |
-      sudo apt update
-      sudo apt install $(crosslibs)
-    displayName: "Install cross-compile libs"
-    condition: eq(variables.crosslib, 'true')
-
-  - script: |
-      rustup target add $(target)
-      cargo build --release --target $(target)
-    displayName: 'Build'
-    env:
-      RUSTFLAGS: $(rustflags)
-
-  - pwsh: cp target/$(target)/release/$(exeName) $(Build.ArtifactStagingDirectory)/$(publishName)
-    displayName: 'Copy binaries'
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      ArtifactName: 'publish'
-
-- job: FatBinary_CLI
-  dependsOn: Build_CLI
-  condition: succeeded('Build_CLI')
-  pool:
-    vmImage: 'macOS-11'
-  
-  steps:
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      artifact: 'publish'
-      path: $(Build.SourcesDirectory)/publish
-
-  - script: lipo -create $(Build.SourcesDirectory)/publish/tunet.macos.x86_64 $(Build.SourcesDirectory)/publish/tunet.macos.aarch64 -output $(Build.ArtifactStagingDirectory)/tunet.macos
-    displayName: "Create fat binary"
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      ArtifactName: 'publish'
-
-- job: Build_GUI
+- job: Build
   strategy:
     matrix:
       linux-x64:
         os: 'ubuntu'
         imageName: 'ubuntu-18.04'
         target: 'x86_64-unknown-linux-gnu'
-        publishName: 'tunet-gui.linux.x86_64'
+        exeName: 'tunet'
+        publishName: 'tunet.linux.x86_64'
+        publishGuiName: 'tunet-gui.linux.x86_64'
         preCmakeCmd: ''
         cmakeArgs: '-DUSE_QT5=on -DCMAKE_CXX_COMPILER=g++-11'
       osx-x64:
         os: 'mac'
         imageName: 'macOS-11'
         target: 'x86_64-apple-darwin'
-        publishName: 'tunet-gui.macos.x86_64'
+        exeName: 'tunet'
+        publishName: 'tunet.macos.x86_64'
+        publishGuiName: 'tunet-gui.macos.x86_64'
         preCmakeCmd: ''
         cmakeArgs: ''
+      osx-arm64:
+        os: 'mac'
+        imageName: 'macOS-11'
+        target: 'aarch64-apple-darwin'
+        exeName: 'tunet'
+        publishName: 'tunet.macos.aarch64'
+        publishGuiName: 'tunet-gui.macos.aarch64'
+        preCmakeCmd: ''
+        cmakeArgs: '-DCMAKE_OSX_ARCHITECTURES="arm64"'
       win-x64:
         os: 'windows'
         imageName: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
-        publishName: 'tunet-gui.win.x86_64'
+        exeName: 'tunet.exe'
+        publishName: 'tunet.win.x86_64.exe'
+        publishGuiName: 'tunet-gui.win.x86_64'
         preCmakeCmd: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
         cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.0/msvc2019_64"'
@@ -141,14 +75,37 @@ jobs:
     condition: eq(variables.os, 'windows')
   
   - script: |
+      rustup target add $(target)
+      cargo build --release --target $(target)
       $(preCmakeCmd)
-      cargo build --release
       cd tunet-gui
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.SourcesDirectory)/$(publishName)" $(cmakeArgs)
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.ArtifactStagingDirectory)/$(publishGuiName)" $(cmakeArgs)
       ninja install
     displayName: "Build"
+
+  - pwsh: cp target/$(target)/release/$(exeName) $(Build.ArtifactStagingDirectory)/$(publishName)
+    displayName: 'Copy CLI binaries'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
+
+- job: FatBinary_CLI
+  dependsOn: Build
+  condition: succeeded('Build')
+  pool:
+    vmImage: 'macOS-11'
+  
+  steps:
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: 'publish'
+      path: $(Build.SourcesDirectory)/publish
+
+  - script: lipo -create $(Build.SourcesDirectory)/publish/tunet.macos.x86_64 $(Build.SourcesDirectory)/publish/tunet.macos.aarch64 -output $(Build.ArtifactStagingDirectory)/tunet.macos
+    displayName: "Create fat binary"
 
   - task: PublishBuildArtifacts@1
     inputs:
