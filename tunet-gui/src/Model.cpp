@@ -115,7 +115,7 @@ namespace TUNet
 
     QString format_datetime(const QDateTime& time)
     {
-        static QStringView DATETIME_FORMAT = u"yyyy-MM-dd hh:mm:ss";
+        constexpr QStringView DATETIME_FORMAT{ u"yyyy-MM-dd hh:mm:ss" };
         return time.toString(DATETIME_FORMAT);
     }
 

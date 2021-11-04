@@ -62,7 +62,7 @@ namespace TUNet
 
         auto accent = accent_color();
         m_source_label.setAlignment(Qt::AlignHCenter);
-        m_source_label.setText(uR"#(版本 0.1.0 <a href="https://github.com/Berrysoft/tunet-rust" style="color:#%1">项目地址</a>)#"_qs.arg(accent.rgb(), 6, 16, QChar(u'0')));
+        m_source_label.setText(u"版本 " TUNET_VERSION uR"#( <a href="https://github.com/Berrysoft/tunet-rust" style="color:#%1">项目地址</a>)#"_qs.arg(accent.rgb(), 6, 16, QChar(u'0')));
         m_source_label.setOpenExternalLinks(true);
         m_about_layout.addWidget(&m_source_label);
 

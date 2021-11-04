@@ -60,6 +60,22 @@ target_link_libraries(tunet-gui PUBLIC Qt6::Widgets Qt6::Charts ${RUST_LIB_PATH}
 add_dependencies(tunet-gui tunet-model)
 set_target_properties(tunet-gui PROPERTIES AUTOMOC ON qt_no_entrypoint ON)
 
+find_package(Git)
+if(Git_FOUND)
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+        RESULT_VARIABLE GIT_RESULT
+        OUTPUT_VARIABLE GIT_HASH
+    )
+    if(GIT_RESULT EQUAL 0)
+        string(REPLACE "\n" "" GIT_HASH ${GIT_HASH})
+        string(SUBSTRING ${GIT_HASH} 0 6 GIT_HASH)
+        string(CONCAT TUNET_LONG_VERSION ${PROJECT_VERSION} "-" ${GIT_HASH})
+    endif()
+else()
+    set(TUNET_LONG_VERSION ${PROJECT_VERSION})
+endif()
+target_compile_definitions(tunet-gui PRIVATE "TUNET_VERSION=\"${TUNET_LONG_VERSION}\"")
+
 if(WIN32)
     set(WINDOWS_LIB ${CMAKE_BINARY_DIR}/windows.lib)
     if(NOT EXISTS "${WINDOWS_LIB}")
