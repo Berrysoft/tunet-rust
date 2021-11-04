@@ -99,7 +99,16 @@ if(WIN32)
                 \"$<TARGET_FILE:tunet-gui>\"
     )
 elseif(UNIX)
-    if(NOT APPLE)
+    if(APPLE)
+        target_link_libraries(tunet-gui
+            PRIVATE
+                "-framework AppKit"
+                "-framework CoreWLAN"
+                "-framework CoreFoundation"
+                "-framework Security"
+                "-framework SystemConfiguration"
+        )
+    else()
         target_link_libraries(tunet-gui PRIVATE dl pthread)
     endif()
 endif()
