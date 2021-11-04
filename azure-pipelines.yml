@@ -106,7 +106,7 @@ jobs:
         crosslib: true
         crosslibs: 'gcc-s390x-linux-gnu'
       osx-x64:
-        imageName: 'macOS-latest'
+        imageName: 'macOS-11'
         target: 'x86_64-apple-darwin'
         exeName: 'tunet'
         publishName: 'tunet.macos.x86_64'
@@ -191,23 +191,26 @@ jobs:
         imageName: 'ubuntu-18.04'
         target: 'x86_64-unknown-linux-gnu'
         publishName: 'tunet-gui.linux.x86_64'
+        cmakeArg: '-DUSE_QT5=on'
       osx-x64:
         os: 'mac'
-        imageName: 'maxOS-latest'
+        imageName: 'maxOS-11'
         target: 'x86_64-apple-darwin'
         publishName: 'tunet-gui.macos.x86_64'
+        cmakeArg: ''
       win-x64:
         os: 'windows'
         imageName: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
         publishName: 'tunet-gui.win.x86_64'
+        cmakeArg: ''
   pool:
     vmImage: $(imageName)
   
   steps:
   - script: |
       sudo apt update
-      sudo apt install qtbase5-dev libqt5charts5-dev
+      sudo apt install qtbase5-dev libqt5charts5-dev ninja-build
     displayName: "Install Qt on Linux"
     condition: eq(variables.os, 'ubuntu')
 
