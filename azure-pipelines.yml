@@ -120,7 +120,7 @@ jobs:
   - script: |
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt update
-      sudo apt install qtbase5-dev libqt5charts5-dev qt5-qmake ninja-build gcc-11
+      sudo apt install qtbase5-dev libqt5charts5-dev qt5-qmake ninja-build g++-11
     displayName: "Install Qt on Linux"
     condition: eq(variables.os, 'ubuntu')
 
