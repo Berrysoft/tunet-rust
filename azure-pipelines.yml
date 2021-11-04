@@ -194,7 +194,7 @@ jobs:
         cmakeArgs: '-DUSE_QT5=on'
       osx-x64:
         os: 'mac'
-        imageName: 'maxOS-11'
+        imageName: 'macOS-11'
         target: 'x86_64-apple-darwin'
         publishName: 'tunet-gui.macos.x86_64'
         cmakeArgs: ''
