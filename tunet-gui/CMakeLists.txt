@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-option(USE_QT5 "Use Qt5." OFF)
-
 include(CheckIPOSupported)
 check_ipo_supported(RESULT ENABLE_IPO OUTPUT output)
 if(ENABLE_IPO)
@@ -41,14 +39,11 @@ add_custom_command(
     DEPENDS tunet-model
 )
 
-if(${USE_QT5})
-    find_package(Qt5 COMPONENTS Widgets Charts REQUIRED)
-else()
-    find_package(Qt6 COMPONENTS Widgets Charts REQUIRED)
-endif()
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Charts REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
 
 if(WIN32)
-    get_target_property(_qmake_executable Qt::qmake IMPORTED_LOCATION)
+    get_target_property(_qmake_executable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
     get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
     if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
         find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
@@ -65,7 +60,7 @@ target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(tunet-gui PUBLIC Qt::Widgets Qt::Charts ${RUST_LIB_PATH})
+target_link_libraries(tunet-gui PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts ${RUST_LIB_PATH})
 add_dependencies(tunet-gui tunet-model)
 set_target_properties(tunet-gui PROPERTIES AUTOMOC ON qt_no_entrypoint ON)
 
