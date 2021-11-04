@@ -87,12 +87,12 @@ jobs:
       cd build
       mkdir x64
       cd x64
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="x86_64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.x86_64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos"
+      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="x86_64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.x86_64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos"
       ninja install
       cd ..
       mkdir arm64
       cd arm64
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="aarch64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.aarch64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="arm64"
+      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="aarch64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.aarch64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="arm64"
       ninja install
     displayName: "Build C++ part"
 
