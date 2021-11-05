@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.14)
-project(TUNetGui VERSION 0.1.0 LANGUAGES CXX)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-
 include(CheckIPOSupported)
 check_ipo_supported(RESULT ENABLE_IPO OUTPUT output)
 if(ENABLE_IPO)
@@ -13,37 +5,13 @@ if(ENABLE_IPO)
     message(STATUS "LTO is enabled for Release")
 endif()
 
-set(PROJECT_DIR "${CMAKE_CURRENT_LIST_DIR}/..")
-set(TARGET_DIR "${PROJECT_DIR}/target")
-
-if(DEFINED RUST_TARGET)
-    set(CARGO_FLAGS "--target=${RUST_TARGET}")
-    set(TARGET_DIR "${TARGET_DIR}/${RUST_TARGET}")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
-    set(LIB_DIR "${TARGET_DIR}/release")
-    list(APPEND CARGO_FLAGS "--release")
+option(USE_QT5 "Build against Qt5" OFF)
+if(${USE_QT5})
+    set(QT_VERSION_MAJOR 5)
 else()
-    set(LIB_DIR "${TARGET_DIR}/debug")
+    set(QT_VERSION_MAJOR 6)
 endif()
 
-file(GLOB RUST_SOURCES "../**/*.rs")
-set(RUST_LIB_PATH ${LIB_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tunet_model_native${CMAKE_STATIC_LIBRARY_SUFFIX})
-
-add_custom_target(tunet-model
-    COMMAND cargo build --lib ${CARGO_FLAGS}
-    DEPENDS ${RUST_SOURCES}
-)
-
-add_custom_command(
-    OUTPUT ${RUST_LIB_PATH}
-    COMMAND ${CMAKE_COMMAND} -E echo
-    WORKING_DIRECTORY ${PROJECT_DIR}
-    DEPENDS tunet-model
-)
-
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Charts REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
 
 if(WIN32)
@@ -68,8 +36,7 @@ target_include_directories(tunet-gui
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(tunet-gui PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts ${RUST_LIB_PATH})
-add_dependencies(tunet-gui tunet-model)
+target_link_libraries(tunet-gui PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts tunet-model-native-static)
 set_target_properties(tunet-gui PROPERTIES AUTOMOC ON qt_no_entrypoint ON)
 
 find_package(Git)
