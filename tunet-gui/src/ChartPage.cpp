@@ -10,16 +10,28 @@ namespace TUNet
 {
     ChartPage::ChartPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
     {
+        static QString CHART_VIEW_TRANSPARENT = u"background: transparent"_qs;
+
+        auto& pal = palette();
+        auto& base = pal.color(QPalette::Base);
+        bool dark = ((base.redF() + base.greenF() + base.blueF()) / 3.0) < 0.5;
+
         m_daily_chart.setTitle(u"按日统计"_qs);
         m_daily_chart.legend()->setVisible(false);
+        m_daily_chart.setBackgroundVisible(false);
+        m_daily_chart.setTheme(dark ? QChart::ChartThemeDark : QChart::ChartThemeLight);
         m_daily_view.setChart(&m_daily_chart);
         m_daily_view.setRenderHint(QPainter::Antialiasing);
+        m_daily_view.setStyleSheet(CHART_VIEW_TRANSPARENT);
         m_chart_layout.addWidget(&m_daily_view);
 
         m_time_chart.setTitle(u"按时段统计"_qs);
         m_time_chart.legend()->setVisible(false);
+        m_time_chart.setBackgroundVisible(false);
+        m_time_chart.setTheme(dark ? QChart::ChartThemeDark : QChart::ChartThemeLight);
         m_time_view.setChart(&m_time_chart);
         m_time_view.setRenderHint(QPainter::Antialiasing);
+        m_time_view.setStyleSheet(CHART_VIEW_TRANSPARENT);
         m_chart_layout.addWidget(&m_time_view);
 
         m_refresh_button.setText(u"刷新"_qs);
