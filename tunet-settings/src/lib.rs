@@ -8,7 +8,7 @@ use std::fs::{remove_file, DirBuilder, File};
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tunet_rust::*;
+use tunet_helper::*;
 
 #[derive(Deserialize, Serialize)]
 struct Settings<'a> {

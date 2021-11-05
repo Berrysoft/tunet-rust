@@ -9,7 +9,7 @@ mod cui;
 use commands::TUNet;
 use structopt::StructOpt;
 use tokio::runtime::Builder as RuntimeBuilder;
-use tunet_rust::Result;
+use tunet_helper::Result;
 
 #[cfg(feature = "cui")]
 fn runtime_builder(cui: bool) -> RuntimeBuilder {

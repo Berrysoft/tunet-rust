@@ -10,7 +10,7 @@ use std::sync::Arc;
 use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
-use tunet_rust::{usereg::*, *};
+use tunet_helper::{usereg::*, *};
 
 fn get_flux_color(f: &Flux, total: bool) -> Color {
     let flux = f.0;

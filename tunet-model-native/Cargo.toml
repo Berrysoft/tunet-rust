@@ -10,14 +10,13 @@ license = "MIT"
 crate-type = ["staticlib"]
 
 [dependencies]
-tunet-rust = { path = "../tunet-rust", features = [ "netstatus" ] }
+tunet-helper = { path = "../tunet-helper" }
 netstatus = { path = "../netstatus" }
 tunet-settings = { path = "../tunet-settings" }
 tunet-model = { path = "../tunet-model" }
 color-theme = { path = "../color-theme" }
 tokio = { version = "1.11", features = [ "rt-multi-thread" ] }
 mac_address = "1.1"
-once_cell = "1.8"
 anyhow = "1.0"
 itertools = "0.10"
 widestring = "0.5"

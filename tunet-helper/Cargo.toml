@@ -1,6 +1,6 @@
 [package]
-name = "tunet-rust"
-version = "0.10.0"
+name = "tunet-helper"
+version = "0.11.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2018"
 readme = "README.md"
@@ -8,7 +8,7 @@ license = "MIT"
 
 [dependencies]
 authtea = { path = "../authtea" }
-netstatus = { path = "../netstatus", optional = true }
+netstatus = { path = "../netstatus" }
 async-trait = "0.1"
 async-stream = "0.3"
 futures-core = "0.3"

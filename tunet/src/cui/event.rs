@@ -8,8 +8,8 @@ use std::{
 };
 use tokio::sync::mpsc::*;
 use tui::layout::Rect;
+use tunet_helper::*;
 use tunet_model::*;
-use tunet_rust::*;
 
 #[derive(Debug)]
 pub enum EventType {

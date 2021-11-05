@@ -10,7 +10,7 @@ use std::sync::{
     Arc,
 };
 use tokio::sync::mpsc::*;
-use tunet_rust::{usereg::*, *};
+use tunet_helper::{usereg::*, *};
 
 pub type UpdateCallback = Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
 

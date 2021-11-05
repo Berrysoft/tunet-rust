@@ -7,7 +7,7 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-tunet-rust = { path = "../tunet-rust", features = [ "netstatus" ] }
+tunet-helper = { path = "../tunet-helper" }
 tunet-settings = { path = "../tunet-settings" }
 tunet-model = { path = "../tunet-model" }
 futures-util = "0.3"

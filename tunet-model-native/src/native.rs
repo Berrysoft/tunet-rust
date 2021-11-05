@@ -3,11 +3,11 @@ use std::{
     ffi::c_void,
     sync::{Arc, RwLock},
 };
-use tunet_model::UpdateMsg;
-use tunet_rust::{
+use tunet_helper::{
     usereg::{NetDetail, NetUser},
     NetState,
 };
+use tunet_model::UpdateMsg;
 
 #[repr(i32)]
 pub enum Action {

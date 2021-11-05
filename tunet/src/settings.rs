@@ -1,7 +1,7 @@
 use rpassword::read_password;
 use std::io::{stdin, stdout, Write};
 use std::sync::Arc;
-use tunet_rust::*;
+use tunet_helper::*;
 use tunet_settings::*;
 
 struct StdioSettingsReader;

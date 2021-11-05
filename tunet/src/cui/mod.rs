@@ -7,8 +7,8 @@ use crossterm::{
 };
 use futures_util::TryStreamExt;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
+use tunet_helper::*;
 use tunet_model::Action;
-use tunet_rust::*;
 
 mod event;
 mod view;

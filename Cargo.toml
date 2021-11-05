@@ -4,7 +4,7 @@ members = [
     "netstatus",
     "color-theme",
     "keyring",
-    "tunet-rust",
+    "tunet-helper",
     "tunet-settings",
     "tunet-model",
     "tunet-model-native",
