@@ -1,14 +1,14 @@
 [workspace]
 members = [
     "authtea",
-    "tunet-rust",
-    "tunet"
-]
-
-exclude = [
     "netstatus",
+    "color-theme",
     "keyring",
-    "winrt-bindings"
+    "tunet-rust",
+    "tunet-settings",
+    "tunet-model",
+    "tunet-model-native",
+    "tunet",
 ]
 
 resolver = "2"

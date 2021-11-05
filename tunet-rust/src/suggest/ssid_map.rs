@@ -17,7 +17,11 @@ lazy_static! {
 }
 
 pub async fn suggest(client: &HttpClient) -> NetState {
-    let state = match NetStatus::current() {
+    suggest_with_status(client, NetStatus::current()).await
+}
+
+pub async fn suggest_with_status(client: &HttpClient, s: NetStatus) -> NetState {
+    let state = match s {
         NetStatus::Unknown => None,
         NetStatus::Wwan => Some(NetState::Unknown),
         NetStatus::Wlan(ssid) => SUGGEST_SSID_MAP.get(ssid.as_str()).copied(),

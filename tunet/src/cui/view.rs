@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
 use crate::cui::*;
+use itertools::Itertools;
 use tui::{backend::Backend, style::*, Frame};
+use tunet_model::*;
 
 fn get_flux_color(flux: u64, total: bool) -> Color {
     if flux == 0 {
@@ -10,8 +14,6 @@ fn get_flux_color(flux: u64, total: bool) -> Color {
         Color::LightMagenta
     }
 }
-
-const GIGABYTES: f64 = 1_000_000_000.0;
 
 pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let global_chunks = Layout::default()
@@ -29,12 +31,12 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
 
     let subtitle_style = Style::default().fg(Color::Cyan);
 
-    let graph = if let Some(flux) = &m.flux {
+    let graph = {
         Paragraph::new(vec![
             Spans::from(vec![
                 Span::styled("用户 ", subtitle_style),
                 Span::styled(
-                    &flux.username,
+                    &m.flux.username,
                     Style::default()
                         .fg(Color::White)
                         .add_modifier(Modifier::BOLD),
@@ -43,26 +45,27 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             Spans::from(vec![
                 Span::styled("流量 ", subtitle_style),
                 Span::styled(
-                    flux.flux.to_string(),
+                    m.flux.flux.to_string(),
                     Style::default()
-                        .fg(get_flux_color(flux.flux.0, true))
+                        .fg(get_flux_color(m.flux.flux.0, true))
                         .add_modifier(Modifier::BOLD),
                 ),
             ]),
             Spans::from(vec![
                 Span::styled("时长 ", subtitle_style),
                 Span::styled(
-                    FmtDuration(flux.online_time).to_string(),
+                    m.flux.online_time.to_string(),
                     Style::default().fg(Color::Green),
                 ),
             ]),
             Spans::from(vec![
                 Span::styled("余额 ", subtitle_style),
-                Span::styled(flux.balance.to_string(), Style::default().fg(Color::Yellow)),
+                Span::styled(
+                    m.flux.balance.to_string(),
+                    Style::default().fg(Color::Yellow),
+                ),
             ]),
         ])
-    } else {
-        Paragraph::new("")
     }
     .block(Block::default().title("基础信息").borders(Borders::all()));
     f.render_widget(graph, title_chunks[0]);
@@ -83,9 +86,13 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                     ]),
                     Spans::from(vec![
                         Span::styled("登录时间 ", subtitle_style),
+                        Span::styled(u.login_time.to_string(), Style::default().fg(Color::Green)),
+                    ]),
+                    Spans::from(vec![
+                        Span::styled("流量     ", subtitle_style),
                         Span::styled(
-                            FmtDateTime(u.login_time).to_string(),
-                            Style::default().fg(Color::Green),
+                            u.flux.to_string(),
+                            Style::default().fg(get_flux_color(u.flux.0, true)),
                         ),
                     ]),
                     Spans::from({
@@ -113,21 +120,40 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     .block(Block::default().title("连接详情").borders(Borders::all()));
     f.render_widget(table, title_chunks[1]);
 
-    let max_flux = (m.max_flux.0 as f64 / GIGABYTES * 1.1).ceil().max(1.0) as u64;
+    let now = Local::now();
+
+    let mut max = Flux(0);
+    let mut details = vec![];
+
+    let details_group = m
+        .details
+        .iter()
+        .group_by(|d| d.logout_time.date())
+        .into_iter()
+        .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
+        .collect::<HashMap<_, _>>();
+    for d in 1u32..=now.day() {
+        if let Some(f) = details_group.get(&d) {
+            max.0 += *f;
+        }
+        details.push((d as f64, max.to_gb()));
+    }
+
+    let max_flux = (max.to_gb() * 1.1).ceil().max(1.0) as u64;
 
     let dataset = Dataset::default()
         .marker(tui::symbols::Marker::Dot)
         .graph_type(GraphType::Line)
-        .style(Style::default().fg(get_flux_color(m.max_flux.0, true)))
-        .data(&m.details);
+        .style(Style::default().fg(get_flux_color(max.0, true)))
+        .data(&details);
 
     let chart = Chart::new(vec![dataset])
         .x_axis(
             Axis::default()
-                .title(Span::from(format!("日期/{}月", m.now.month())))
-                .bounds([1.0, m.now.day() as f64])
+                .title(Span::from(format!("日期/{}月", now.month())))
+                .bounds([1.0, now.day() as f64])
                 .labels(
-                    (1..=m.now.day())
+                    (1..=now.day())
                         .into_iter()
                         .map(|d| Span::from(d.to_string()))
                         .collect(),
@@ -159,15 +185,16 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         Span::raw("退出    "),
     ];
 
-    if let Some(log) = &m.log {
+    let log = &m.log;
+    if !log.is_empty() {
         spans.push(Span::styled("  ", key_style));
         spans.push(Span::raw(log.as_ref()));
     }
-    if m.online {
+    if m.online_busy() {
         spans.push(Span::styled("  ", key_style));
         spans.push(Span::raw("正在刷新在线"));
     }
-    if m.detail {
+    if m.detail_busy() {
         spans.push(Span::styled("  ", key_style));
         spans.push(Span::raw("正在刷新图表"));
     }

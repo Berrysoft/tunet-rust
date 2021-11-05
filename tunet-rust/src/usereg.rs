@@ -15,14 +15,16 @@ pub struct NetUser {
     pub address: Ipv4Addr,
     pub login_time: NaiveDateTime,
     pub mac_address: Option<MacAddress>,
+    pub flux: Flux,
 }
 
 impl NetUser {
-    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: Option<MacAddress>) -> Self {
+    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: Option<MacAddress>, f: Flux) -> Self {
         NetUser {
             address: a,
             login_time: t,
             mac_address: m,
+            flux: f,
         }
     }
 }
@@ -179,6 +181,7 @@ impl UseregHelper {
                     NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT)
                         .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
                     tds[6].parse().ok(),
+                    tds[2].parse().unwrap_or_default(),
                 );
             }
         }

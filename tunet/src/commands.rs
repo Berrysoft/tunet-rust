@@ -1,4 +1,4 @@
-use crate::{settings::*, strfmt::*};
+use crate::settings::*;
 use async_trait::async_trait;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
@@ -74,11 +74,7 @@ impl Deref for TUNet {
 impl TUNet {
     #[cfg(feature = "cui")]
     pub fn is_cui(&self) -> bool {
-        if let Self::Cui(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Cui(_))
     }
 
     #[cfg(not(feature = "cui"))]
@@ -159,7 +155,7 @@ impl TUNetCommand for Status {
             "{}时长 {}{}",
             fg!(Some(Color::Cyan)),
             fg!(Some(Color::Green)),
-            FmtDuration(f.online_time)
+            f.online_time
         )?;
         tco::writeln!(
             stdout,
@@ -188,7 +184,10 @@ impl TUNetCommand for Online {
             .unwrap_or_default();
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut stdout = tco::ResetGuard::Owned(stdout);
-        tco::writeln!(stdout, "    IP地址            登录时间            MAC地址")?;
+        tco::writeln!(
+            stdout,
+            "    IP地址            登录时间         流量        MAC地址"
+        )?;
 
         pin_mut!(us);
         while let Some(u) = us.try_next().await? {
@@ -197,11 +196,13 @@ impl TUNetCommand for Online {
                 .any(|it| Some(it) == u.mac_address.as_ref());
             tco::writeln!(
                 stdout,
-                "{}{:15} {}{:20} {}{} {}{}",
+                "{}{:15} {}{:20} {}{:>8} {}{} {}{}",
                 fg!(Some(Color::Yellow)),
                 u.address,
                 fg!(Some(Color::Green)),
-                FmtDateTime(u.login_time),
+                u.login_time,
+                fg!(Some(get_flux_color(&u.flux, true))),
+                u.flux,
                 fg!(Some(Color::Cyan)),
                 u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
                 fg!(Some(Color::Magenta)),
@@ -283,8 +284,8 @@ impl Detail {
                 stdout,
                 "{}{:20} {:20} {}{:>8}",
                 fg!(Some(Color::Green)),
-                FmtDateTime(d.login_time),
-                FmtDateTime(d.logout_time),
+                d.login_time,
+                d.logout_time,
                 fg!(Some(get_flux_color(&d.flux, false))),
                 d.flux
             )?;

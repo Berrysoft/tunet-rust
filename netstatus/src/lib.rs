@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 #[cfg(target_os = "windows")]
 mod winrt;
 
@@ -24,7 +26,7 @@ mod platform {
     pub use super::stub::*;
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NetStatus {
     Unknown,
     Wwan,
@@ -35,5 +37,16 @@ pub enum NetStatus {
 impl NetStatus {
     pub fn current() -> Self {
         platform::current()
+    }
+}
+
+impl Display for NetStatus {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unknown => f.pad("未知"),
+            Self::Wwan => f.pad("移动流量"),
+            Self::Wlan(ssid) => f.pad(&format!("无线网络（{}）", ssid)),
+            Self::Lan => f.pad("有线网络"),
+        }
     }
 }

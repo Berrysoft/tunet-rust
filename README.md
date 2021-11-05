@@ -3,28 +3,23 @@
 
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
-## 平台支持
-支持并提供如下目标的预编译程序：
+## GUI
+支持 Qt5/6，以及 Qt 支持的桌面平台。
 
-* i686-unknown-linux-gnu
-* x86_64-unknown-linux-gnu
-* arm-unknown-linux-gnueabihf
-* aarch64-unknown-linux-gnu
-* riscv64gc-unknown-linux-gnu
-* mips-unknown-linux-gnu
-* mipsel-unknown-linux-gnu
-* mips64-unknown-linux-gnuabi64
-* mips64el-unknown-linux-gnuabi64
-* powerpc-unknown-linux-gnu
-* powerpc64le-unknown-linux-gnu
-* s390x-unknown-linux-gnu
-* x86_64-apple-darwin
-* aarch64-apple-darwin
-* i686-pc-windows-msvc
-* x86_64-pc-windows-msvc
-* aarch64-pc-windows-msvc
+|Windows|Linux|MacOS|MacOS（暗）|
+|-|-|-|-|
+|![Windows](assets/windows.png)|![Linux](assets/linux.png)|![macos](assets/mac.light.png)|![macos](assets/mac.dark.png)|
 
-## tunet
+## CUI（命令行图形界面）
+使用如下命令启动：
+
+``` base
+./tunet cui
+```
+
+![Console](assets/console.png)
+
+## 命令行
 ### 登录/注销
 ``` bash
 # 使用默认（自动判断）方式登录
@@ -89,3 +84,26 @@
 |Windows|`Windows::Networking::Connectivity`|
 |Linux|[Netlink](https://wiki.linuxfoundation.org/networking/generic_netlink_howto)|
 |macOS|System Configuration 与 Core WLAN|
+
+## 平台支持
+至少支持如下目标：
+
+* i686-unknown-linux-gnu
+* x86_64-unknown-linux-gnu
+* arm-unknown-linux-gnueabihf
+* aarch64-unknown-linux-gnu
+* riscv64gc-unknown-linux-gnu
+* mips-unknown-linux-gnu
+* mipsel-unknown-linux-gnu
+* mips64-unknown-linux-gnuabi64
+* mips64el-unknown-linux-gnuabi64
+* powerpc-unknown-linux-gnu
+* powerpc64le-unknown-linux-gnu
+* s390x-unknown-linux-gnu
+* x86_64-apple-darwin
+* aarch64-apple-darwin
+* i686-pc-windows-msvc
+* x86_64-pc-windows-msvc
+* aarch64-pc-windows-msvc
+
+但是大部分目标并不提供预编译程序，如有需要请自行编译。

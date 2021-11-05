@@ -2,7 +2,6 @@
 
 mod commands;
 mod settings;
-mod strfmt;
 
 #[cfg(feature = "cui")]
 mod cui;

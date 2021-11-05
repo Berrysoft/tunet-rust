@@ -8,7 +8,9 @@ use tokio::sync::RwLock;
 use trait_enum::trait_enum;
 
 pub use anyhow::Result;
-pub use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, NaiveDateTime, Timelike};
+pub use chrono::{
+    DateTime, Datelike, Duration as NaiveDuration, Local, NaiveDate, NaiveDateTime, Timelike,
+};
 pub use reqwest::Client as HttpClient;
 
 mod auth;
@@ -59,6 +61,14 @@ impl NetCredential {
 pub struct Flux(pub u64);
 
 impl Flux {
+    pub fn from_gb(f: f64) -> Self {
+        Self((f * 1_000_000_000.) as u64)
+    }
+
+    pub fn to_gb(self) -> f64 {
+        self.0 as f64 / 1_000_000_000.
+    }
+
     fn string(&self) -> String {
         let mut flux = self.0 as f64;
         if flux < 1000.0 {
@@ -99,8 +109,32 @@ impl std::str::FromStr for Flux {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Duration(pub NaiveDuration);
+
+impl Default for Duration {
+    fn default() -> Self {
+        Self(NaiveDuration::zero())
+    }
+}
+
+impl Display for Duration {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let total_sec = self.0.num_seconds();
+        let (total_min, sec) = (total_sec / 60, total_sec % 60);
+        let (total_h, min) = (total_min / 60, total_min % 60);
+        let (day, h) = (total_h / 24, total_h % 24);
+        let str = if day != 0 {
+            format!("{}.{:02}:{:02}:{:02}", day, h, min, sec)
+        } else {
+            format!("{:02}:{:02}:{:02}", h, min, sec)
+        };
+        f.pad(&str)
+    }
+}
+
 #[repr(transparent)]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, PartialOrd, Clone, Copy)]
 pub struct Balance(pub f64);
 
 impl Display for Balance {
@@ -109,23 +143,12 @@ impl Display for Balance {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 pub struct NetFlux {
     pub username: String,
     pub flux: Flux,
     pub online_time: Duration,
     pub balance: Balance,
-}
-
-impl Default for NetFlux {
-    fn default() -> Self {
-        Self {
-            username: String::default(),
-            flux: Flux::default(),
-            online_time: Duration::zero(),
-            balance: Balance::default(),
-        }
-    }
 }
 
 impl std::str::FromStr for NetFlux {
@@ -136,19 +159,17 @@ impl std::str::FromStr for NetFlux {
             Ok(NetFlux {
                 username: vec[0].to_string(),
                 flux: Flux(vec[6].parse::<u64>().unwrap_or_default()),
-                online_time: Duration::seconds(
+                online_time: Duration(NaiveDuration::seconds(
                     (vec[2].parse::<i64>().unwrap_or_default()
                         - vec[1].parse::<i64>().unwrap_or_default())
                     .max(0),
-                ),
+                )),
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
+        } else if s.is_empty() {
+            Err(NetHelperError::NoFluxErr)
         } else {
-            if s.is_empty() {
-                Err(NetHelperError::NoFluxErr)
-            } else {
-                Err(NetHelperError::ParseFluxErr(s.to_string()))
-            }
+            Err(NetHelperError::ParseFluxErr(s.to_string()))
         }
     }
 }
@@ -206,6 +227,14 @@ impl TUNetConnect {
             s = suggest::suggest(&client).await;
             debug_assert_ne!(s, NetState::Auto);
         }
+        Self::new_nosuggest(s, cred, client)
+    }
+
+    pub fn new_nosuggest(
+        s: NetState,
+        cred: Arc<NetCredential>,
+        client: HttpClient,
+    ) -> NetHelperResult<TUNetConnect> {
         match s {
             NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(cred, client))),
             NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(cred, client))),
