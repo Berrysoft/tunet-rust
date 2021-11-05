@@ -110,8 +110,10 @@ jobs:
     displayName: 'Copy CLI binaries'
 
   - script: |
+      cd $(Build.BinariesDirectory)/tunet-gui.macos/bin
+      zip -r -y tunet-gui.app.zip tunet-gui.app
       mkdir -p $(Build.ArtifactStagingDirectory)/tunet-gui.macos
-      zip -r -y $(Build.ArtifactStagingDirectory)/tunet-gui.macos/tunet-gui.app.zip $(Build.BinariesDirectory)/tunet-gui.macos/bin/tunet-gui.app
+      cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/tunet-gui.macos/
     displayName: 'Archive app'
 
   - task: PublishBuildArtifacts@1
