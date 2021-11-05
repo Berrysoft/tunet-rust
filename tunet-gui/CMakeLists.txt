@@ -89,11 +89,7 @@ endif()
 target_compile_definitions(tunet-gui PRIVATE "TUNET_VERSION=\"${TUNET_LONG_VERSION}\"")
 
 if(WIN32)
-    set(WINDOWS_LIB ${CMAKE_BINARY_DIR}/windows.lib)
-    if(NOT EXISTS "${WINDOWS_LIB}")
-        file(DOWNLOAD https://github.com/microsoft/windows-rs/raw/master/crates/targets/x86_64_msvc/lib/windows.lib ${WINDOWS_LIB})
-    endif()
-    target_link_libraries(tunet-gui PRIVATE ntdll ${WINDOWS_LIB})
+    target_link_libraries(tunet-gui PUBLIC ntdll ole32 oleaut32 ws2_32 bcrypt advapi32 userenv iphlpapi secur32 crypt32 ncrypt shell32)
     if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
         set_target_properties(tunet-gui PROPERTIES WIN32_EXECUTABLE ON)
         target_link_options(tunet-gui PUBLIC "/ENTRY:mainCRTStartup")
@@ -107,24 +103,22 @@ if(WIN32)
                 --no-opengl-sw
                 \"$<TARGET_FILE:tunet-gui>\"
     )
+elseif(APPLE)
+    target_link_libraries(tunet-gui
+        PUBLIC
+            "-framework AppKit"
+            "-framework CoreWLAN"
+            "-framework CoreFoundation"
+            "-framework Security"
+            "-framework SystemConfiguration"
+    )
+    set_target_properties(tunet-gui PROPERTIES
+        MACOSX_BUNDLE ON
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+        MACOSX_BUNDLE_LONG_VERSION_STRING ${TUNET_LONG_VERSION}
+    )
 elseif(UNIX)
-    if(APPLE)
-        target_link_libraries(tunet-gui
-            PRIVATE
-                "-framework AppKit"
-                "-framework CoreWLAN"
-                "-framework CoreFoundation"
-                "-framework Security"
-                "-framework SystemConfiguration"
-        )
-        set_target_properties(tunet-gui PROPERTIES
-            MACOSX_BUNDLE ON
-            MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
-            MACOSX_BUNDLE_LONG_VERSION_STRING ${TUNET_LONG_VERSION}
-        )
-    else()
-        target_link_libraries(tunet-gui PRIVATE dl pthread)
-    endif()
+    target_link_libraries(tunet-gui PUBLIC dl pthread)
 endif()
 
 install(TARGETS tunet-gui DESTINATION bin)
@@ -170,4 +164,12 @@ elseif(APPLE)
                 -always-overwrite
         )
     ")
+elseif(UNIX)
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Berrysoft")
+    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Tsinghua campus network client.")
+    set(CPACK_DEBIAN_PACKAGE_VERSION ${PROJECT_VERSION})
+    set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5charts5 (>= 5.0.0)")
+
+    include(CPack)
 endif()

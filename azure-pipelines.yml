@@ -7,30 +7,46 @@ trigger:
 - master
 
 jobs:
-- job: Build
+- job: Build_Windows
   strategy:
     matrix:
-      linux-x64:
-        os: 'ubuntu'
-        imageName: 'ubuntu-18.04'
-        target: 'x86_64-unknown-linux-gnu'
-        exeName: 'tunet'
-        publishName: 'tunet.linux.x86_64'
-        publishGuiName: 'tunet-gui.linux.x86_64'
-        preCmakeCmd: ''
-        cmakeArgs: '-DUSE_QT5=on -DCMAKE_CXX_COMPILER=g++-11'
       win-x64:
-        os: 'windows'
-        imageName: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
-        exeName: 'tunet.exe'
         publishName: 'tunet.win.x86_64.exe'
         publishGuiName: 'tunet-gui.win.x86_64'
-        preCmakeCmd: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
-        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/msvc2019_64"'
+        vsArch: 'x64'
+        qtDist: 'msvc2019_64'
+        qtDistFull: 'win64_msvc2019_64'
   pool:
-    vmImage: $(imageName)
+    vmImage: 'windows-latest'
+  
+  steps:
+  - pwsh: |
+      python3 -m pip install aqtinstall
+      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop 6.2.1 $(qtDistFull) -m qtcharts
+    displayName: "Install Qt on Windows"
+  
+  - script: |
+      rustup target add $(target)
+      cargo build --release --target $(target)
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" $(vsArch)
+      cd tunet-gui
+      mkdir build
+      cd build
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.ArtifactStagingDirectory)/$(publishGuiName)" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/$(qtDist)"
+      ninja install
+    displayName: "Build"
+
+  - pwsh: cp target/$(target)/release/tunet.exe $(Build.ArtifactStagingDirectory)/$(publishName)
+    displayName: 'Copy CLI binaries'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
+
+- job: Build_Linux
+  pool:
+    vmImage: 'ubuntu-18.04'
   
   steps:
   - script: |
@@ -38,27 +54,24 @@ jobs:
       sudo apt update
       sudo apt install qtbase5-dev libqt5charts5-dev qt5-qmake ninja-build g++-11
     displayName: "Install Qt on Linux"
-    condition: eq(variables.os, 'ubuntu')
 
-  - pwsh: |
-      python3 -m pip install aqtinstall
-      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop 6.2.1 win64_msvc2019_64 -m qtcharts
-    displayName: "Install Qt on Windows"
-    condition: eq(variables.os, 'windows')
-  
   - script: |
-      rustup target add $(target)
-      cargo build --release --target $(target)
-      $(preCmakeCmd)
+      cargo build --release
       cd tunet-gui
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRUST_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.ArtifactStagingDirectory)/$(publishGuiName)" $(cmakeArgs)
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.ArtifactStagingDirectory)/tunet-gui.linux.x86_64" -DCMAKE_CXX_COMPILER=g++-11
       ninja install
     displayName: "Build"
 
-  - pwsh: cp target/$(target)/release/$(exeName) $(Build.ArtifactStagingDirectory)/$(publishName)
+  - script: cp target/release/tunet $(Build.ArtifactStagingDirectory)/tunet.linux.x86_64
     displayName: 'Copy CLI binaries'
+
+  - script: |
+      cd tunet-gui/build
+      cpack
+      cp *.deb $(Build.ArtifactStagingDirectory)/tunet-gui.linux.x86_64/
+    displayName: 'Pack'
 
   - task: PublishBuildArtifacts@1
     inputs:
