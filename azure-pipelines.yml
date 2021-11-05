@@ -106,16 +106,10 @@ jobs:
       lipo -create tunet-gui.macos.x86_64/bin/tunet-gui.app/Contents/MacOS/tunet-gui tunet-gui.macos.aarch64/bin/tunet-gui.app/Contents/MacOS/tunet-gui -output tunet-gui.macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
     displayName: "Create fat binary"
 
-  - pwsh: cp target/release/tunet $(Build.ArtifactStagingDirectory)/tunet.macos
+  - script: cp target/release/tunet $(Build.ArtifactStagingDirectory)/tunet.macos
     displayName: 'Copy CLI binaries'
 
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: '$(Build.BinariesDirectory)/tunet-gui.macos/bin/tunet-gui.app'
-      includeRootFolder: true
-      archiveType: 'tar'
-      tarCompression: 'gz'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/tunet-gui.macos/tunet-gui.app.tar.gz'
+  = script: zip -r -y $(Build.ArtifactStagingDirectory)/tunet-gui.macos/tunet-gui.app.zip $(Build.BinariesDirectory)/tunet-gui.macos/bin/tunet-gui.app
     displayName: 'Archive app'
 
   - task: PublishBuildArtifacts@1
