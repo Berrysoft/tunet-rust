@@ -169,7 +169,7 @@ elseif(UNIX)
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Tsinghua campus network client.")
     set(CPACK_DEBIAN_PACKAGE_VERSION ${PROJECT_VERSION})
     set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5charts5 (>= 5.0.0)")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.18), libqt5charts5 (>= 5.0.0)")
 
     include(CPack)
 endif()
