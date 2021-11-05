@@ -69,7 +69,7 @@ jobs:
 
   - script: |
       cd tunet-gui/build
-      cpack
+      cpack -G DEB
       cp *.deb $(Build.ArtifactStagingDirectory)/tunet-gui.linux.x86_64/
     displayName: 'Pack'
 
