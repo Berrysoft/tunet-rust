@@ -71,7 +71,7 @@ jobs:
     displayName: "Build"
 
   - script: |
-      cd tunet-gui/build
+      cd build
       cpack -G DEB
       cp *.deb $(Build.ArtifactStagingDirectory)/linux.x86_64/
     displayName: 'Pack'
