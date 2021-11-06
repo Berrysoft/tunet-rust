@@ -48,9 +48,11 @@ if(WIN32)
         set_target_properties(tunet-gui PROPERTIES WIN32_EXECUTABLE ON)
         target_link_options(tunet-gui PUBLIC "/ENTRY:mainCRTStartup")
     endif()
+    get_target_property(_qwidgets_lib Qt${QT_VERSION_MAJOR}::Widgets IMPORTED_LOCATION)
+    get_filename_component(_qt_lib_dir "${_qwidgets_lib}" DIRECTORY)
     add_custom_command(TARGET tunet-gui POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E
-            env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXECUTABLE}"
+            env PATH="${_qt_lib_dir}" "${WINDEPLOYQT_EXECUTABLE}"
                 --no-compiler-runtime
                 --no-translations
                 --no-system-d3d-compiler
@@ -78,29 +80,10 @@ endif()
 install(TARGETS tunet-gui DESTINATION bin)
 
 if(WIN32)
-    install(CODE [[
-        file(GET_RUNTIME_DEPENDENCIES
-            EXECUTABLES $<TARGET_FILE:tunet-gui>
-            RESOLVED_DEPENDENCIES_VAR _r_deps
-            UNRESOLVED_DEPENDENCIES_VAR _u_deps
-            POST_EXCLUDE_REGEXES "system32"
-        )
-        foreach(_file ${_r_deps})
-            file(INSTALL
-                DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-                FILES "${_file}"
-            )
-        endforeach()
-        list(LENGTH _u_deps _u_length)
-        if("${_u_length}" GREATER 0)
-            message(WARNING "Unresolved dependencies detected!")
-        endif()
-    ]])
-
     install(CODE "
         execute_process(
             COMMAND \"${CMAKE_COMMAND}\" -E
-                env PATH=\"${_qt_bin_dir}\" \"${WINDEPLOYQT_EXECUTABLE}\"
+                env PATH=\"${_qt_lib_dir}\" \"${WINDEPLOYQT_EXECUTABLE}\"
                     --no-compiler-runtime
                     --no-translations
                     --no-system-d3d-compiler
