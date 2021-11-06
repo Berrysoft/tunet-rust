@@ -17,6 +17,7 @@ jobs:
         qtVersion: '6.2.1'
         qtDist: 'msvc2019_64'
         qtDistFull: 'win64_msvc2019_64'
+        cross: false
         cmakeArgs: ''
       win-x64-qt5:
         target: 'x86_64-pc-windows-msvc'
@@ -25,6 +26,7 @@ jobs:
         qtVersion: '5.15.2'
         qtDist: 'msvc2019_64'
         qtDistFull: 'win64_msvc2019_64'
+        cross: false
         cmakeArgs: '-DUSE_QT5=on'
       win-arm64:
         target: 'aarch64-pc-windows-msvc'
@@ -33,7 +35,9 @@ jobs:
         qtVersion: '6.2.1'
         qtDist: 'msvc2019_arm64'
         qtDistFull: 'win64_msvc2019_arm64'
-        cmakeArgs: ''
+        cross: true
+        qtHostFull: 'win64_msvc2019_64'
+        cmakeArgs: '-DQT_HOST_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
   pool:
     vmImage: 'windows-latest'
   
@@ -45,6 +49,11 @@ jobs:
       python3 -m pip install aqtinstall
       python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop $(qtVersion) $(qtDistFull) -m qtcharts
     displayName: "Install Qt"
+
+  - pwsh: |
+      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop $(qtVersion) $(qtHostFull) -m qtcharts
+    displayName: "Install Qt host"
+    condition: eq(variables.cross, 'true')
   
   - script: |
       rustup target add $(target)

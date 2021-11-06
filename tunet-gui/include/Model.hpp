@@ -15,7 +15,7 @@
 #if QT_VERSION < 0x060000
 inline QString operator""_qs(const char16_t* str, std::size_t len)
 {
-    return QString::fromUtf16(str, len);
+    return QString::fromUtf16(str, (int)len);
 }
 #endif
 
