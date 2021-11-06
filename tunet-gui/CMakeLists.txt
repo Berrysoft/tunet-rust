@@ -50,14 +50,14 @@ if(WIN32)
     endif()
     get_target_property(_qwidgets_lib Qt${QT_VERSION_MAJOR}::Widgets IMPORTED_LOCATION)
     get_filename_component(_qt_lib_dir "${_qwidgets_lib}" DIRECTORY)
+    set(WINDEPLOYQT_ARGS "--no-compiler-runtime" "--no-translations" "--no-system-d3d-compiler" "--no-opengl-sw")
+    if(NOT ${USE_QT5})
+        list(APPEND WINDEPLOYQT_ARGS "--qmake" "${_qt_lib_dir}/qmake.exe")
+    endif()
     add_custom_command(TARGET tunet-gui POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E
             env PATH="${_qt_lib_dir}" "${WINDEPLOYQT_EXECUTABLE}"
-                --qmake "${_qt_lib_dir}/qmake.exe"
-                --no-compiler-runtime
-                --no-translations
-                --no-system-d3d-compiler
-                --no-opengl-sw
+                ${WINDEPLOYQT_ARGS}
                 \"$<TARGET_FILE:tunet-gui>\"
     )
 elseif(APPLE)
@@ -85,11 +85,7 @@ if(WIN32)
         execute_process(
             COMMAND \"${CMAKE_COMMAND}\" -E
                 env PATH=\"${_qt_lib_dir}\" \"${WINDEPLOYQT_EXECUTABLE}\"
-                    --qmake \"${_qt_lib_dir}/qmake.exe\"
-                    --no-compiler-runtime
-                    --no-translations
-                    --no-system-d3d-compiler
-                    --no-opengl-sw
+                    ${WINDEPLOYQT_ARGS}
                     \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.exe\"
         )
     ")
