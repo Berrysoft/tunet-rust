@@ -13,8 +13,11 @@
 ## CUI（命令行图形界面）
 使用如下命令启动：
 
-``` base
+``` bash
+# 使用默认（自动判断）方式登录/注销
 ./tunet cui
+# 使用 auth4 方式登录/注销
+./tunet cui -s auth4
 ```
 
 ![Console](assets/console.png)
@@ -69,6 +72,7 @@
 |macOS|[Keychain](https://developer.apple.com/documentation/security/keychain_services)|
 
 对于不支持密码管理的 Linux 发行版，会回退到**明文**密码。
+在 WSL 上的表现可能为，保存的密码会在 WSL 重启后消失。
 
 请不要在不信任的电脑上保存密码。可以使用如下命令删除：
 ``` bash
@@ -86,7 +90,7 @@
 |macOS|System Configuration 与 Core WLAN|
 
 ## 平台支持
-至少支持如下目标：
+至少支持如下目标编译命令行程序：
 
 * i686-unknown-linux-gnu
 * x86_64-unknown-linux-gnu
