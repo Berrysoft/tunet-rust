@@ -15,29 +15,26 @@ jobs:
         publishName: 'win.x86_64'
         vsArch: 'x64'
         qtVersion: '6.2.1'
-        qtDist: 'msvc2019_64'
         qtDistFull: 'win64_msvc2019_64'
         cross: false
-        cmakeArgs: ''
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
       win-x64-qt5:
         target: 'x86_64-pc-windows-msvc'
         publishName: 'win.x86_64'
         vsArch: 'x64'
         qtVersion: '5.15.2'
-        qtDist: 'msvc2019_64'
         qtDistFull: 'win64_msvc2019_64'
         cross: false
-        cmakeArgs: '-DUSE_QT5=on'
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64" -DUSE_QT5=on'
       win-arm64:
         target: 'aarch64-pc-windows-msvc'
         publishName: 'win.aarch64'
         vsArch: 'x64_arm64'
         qtVersion: '6.2.1'
-        qtDist: 'msvc2019_arm64'
         qtDistFull: 'win64_msvc2019_arm64'
         cross: true
         qtHostFull: 'win64_msvc2019_64'
-        cmakeArgs: '-DQT_HOST_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_arm64;$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
   pool:
     vmImage: 'windows-latest'
   
@@ -52,7 +49,6 @@ jobs:
 
   - pwsh: |
       python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop $(qtVersion) $(qtHostFull) -m qtcharts
-      cp $(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64/bin/*.exe $(Build.BinariesDirectory)/Qt/$(qtVersion)/$(qtDist)/bin/
     displayName: "Install Qt host"
     condition: eq(variables.cross, 'true')
   
@@ -61,7 +57,7 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" $(vsArch)
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/$(publishName)" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/$(qtDist)" $(cmakeArgs)
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/$(publishName)" $(cmakeArgs)
       ninja install
     displayName: "Build"
 
