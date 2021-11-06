@@ -25,6 +25,9 @@ target_include_directories(tunet-gui
 )
 target_link_libraries(tunet-gui PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts tunet-model-native-static)
 set_target_properties(tunet-gui PROPERTIES AUTOMOC ON Qt5_NO_LINK_QTMAIN ON qt_no_entrypoint ON)
+if(MSVC)
+    target_compile_options(tunet-gui PUBLIC "/utf-8")
+endif()
 
 find_package(Git)
 if(Git_FOUND)
