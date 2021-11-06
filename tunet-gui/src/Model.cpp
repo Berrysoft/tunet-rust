@@ -60,8 +60,6 @@ extern "C"
         std::uint8_t b;
     };
 
-    ThemeColor tunet_color_accent();
-
     void tunet_format_flux(std::uint64_t flux, StringCallback f, void* data);
     void tunet_format_duration(std::int64_t sec, StringCallback f, void* data);
     void tunet_format_ip(std::uint32_t addr, StringCallback f, void* data);
@@ -77,6 +75,7 @@ extern "C"
     void tunet_model_queue_connect(NativeModel m, std::uint32_t addr);
     void tunet_model_queue_drop(NativeModel m, std::uint32_t addr);
     void tunet_model_status(NativeModel m, StringCallback f, void* data);
+    ThemeColor tunet_model_accent_color(NativeModel m);
     void tunet_model_cred_username(NativeModel m, StringCallback f, void* data);
     void tunet_model_cred_password(NativeModel m, StringCallback f, void* data);
     State tunet_model_state(NativeModel m);
@@ -93,12 +92,6 @@ extern "C"
 
 namespace TUNet
 {
-    QColor accent_color()
-    {
-        auto color = tunet_color_accent();
-        return QColor::fromRgb(color.r, color.g, color.b);
-    }
-
     static void fn_string_callback(const char16_t* data, void* d)
     {
         QString* pstr = reinterpret_cast<QString*>(d);
@@ -209,6 +202,12 @@ namespace TUNet
     QString Model::status() const
     {
         return get_q_string(tunet_model_status, m_handle);
+    }
+
+    QColor Model::accent_color() const
+    {
+        auto color = tunet_model_accent_color(m_handle);
+        return QColor::fromRgb(color.r, color.g, color.b);
     }
 
     Credential Model::cred() const

@@ -50,7 +50,7 @@ namespace TUNet
 
     void ChartPage::update_details()
     {
-        auto accent = accent_color();
+        auto accent = m_pmodel->accent_color();
         {
             auto details = m_pmodel->details_grouped();
             m_daily_chart.removeAllSeries();

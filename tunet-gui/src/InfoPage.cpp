@@ -9,6 +9,7 @@ namespace TUNet
         m_flux_layout.addWidget(&m_online_time_label, Qt::AlignLeft);
         m_flux_layout.addWidget(&m_balance_label, Qt::AlignLeft);
 
+        m_flux_circle.set_color(m_pmodel->accent_color());
         m_info_layout.addWidget(&m_flux_circle, 0, 0);
         m_info_layout.addWidget(&m_flux_widget, 0, 0, Qt::AlignCenter);
         m_root_layout.addLayout(&m_info_layout, 1);

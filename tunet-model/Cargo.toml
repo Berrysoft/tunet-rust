@@ -9,6 +9,7 @@ license = "MIT"
 [dependencies]
 tunet-helper = { path = "../tunet-helper" }
 netstatus = { path = "../netstatus" }
+color-theme = { path = "../color-theme" }
 futures-util = "0.3"
 tokio = "1.11"
 mac_address = "1.1"

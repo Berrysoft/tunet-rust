@@ -14,11 +14,6 @@ use widestring::{U16CStr, U16CString};
 
 mod native;
 
-#[no_mangle]
-pub extern "C" fn tunet_color_accent() -> color_theme::Color {
-    color_theme::Color::accent()
-}
-
 unsafe fn write_str(p: *const u16) -> String {
     if !p.is_null() {
         U16CStr::from_ptr_str(p).to_string_lossy()
@@ -184,6 +179,11 @@ pub unsafe extern "C" fn tunet_model_status(
     if let Some(f) = f {
         read_str(&read_model(model).status.to_string(), f, data)
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_accent_color(model: native::Model) -> color_theme::Color {
+    read_model(model).accent
 }
 
 #[no_mangle]

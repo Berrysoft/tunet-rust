@@ -52,8 +52,6 @@ namespace TUNet
 
     using NativeModel = const void*;
 
-    QColor accent_color();
-
     struct Credential
     {
         QString username;
@@ -130,6 +128,7 @@ namespace TUNet
         QString status() const;
         Credential cred() const;
         State state() const;
+        QColor accent_color() const;
         QString log() const;
         Info flux() const;
         std::vector<Online> onlines() const;

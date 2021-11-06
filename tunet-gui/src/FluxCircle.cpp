@@ -14,6 +14,11 @@ namespace TUNet
 
     FluxCircle::~FluxCircle() {}
 
+    void FluxCircle::set_color(const QColor& c)
+    {
+        m_color = c;
+    }
+
     void FluxCircle::update_flux(Flux flux, double balance)
     {
         m_flux = flux;
@@ -49,10 +54,10 @@ namespace TUNet
         QPointF center{ s.width() / 2.0, s.height() / 2.0 };
         double line_width = radius * 0.2;
 
-        auto accent = accent_color();
-        auto accent_t1 = accent;
+        const QColor& accent = m_color;
+        QColor accent_t1 = accent;
         accent_t1.setAlphaF(0.75f);
-        auto accent_t2 = accent;
+        QColor accent_t2 = accent;
         accent_t2.setAlphaF(0.55f);
 
         double max_flux = m_balance + 50.0;

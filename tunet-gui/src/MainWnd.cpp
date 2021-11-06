@@ -23,13 +23,6 @@ namespace TUNet
         move(screen()->geometry().center() - rect().center());
 #endif
 
-#ifdef Q_OS_WIN
-        QPalette pal = palette();
-        QColor accent = accent_color();
-        pal.setColor(QPalette::Highlight, accent);
-        setPalette(pal);
-#endif
-
         QObject::connect(m_pmodel, &Model::cred_changed, this, &MainWnd::update_cred);
     }
 

@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use color_theme::Color as ThemeColor;
 use futures_util::{pin_mut, TryStreamExt};
 use mac_address::*;
 use netstatus::*;
@@ -21,6 +22,7 @@ pub struct Model {
     pub http: HttpClient,
     pub state: NetState,
     pub status: NetStatus,
+    pub accent: ThemeColor,
     pub log: Cow<'static, str>,
     pub log_busy: Arc<AtomicBool>,
     pub online_busy: Arc<AtomicBool>,
@@ -46,6 +48,7 @@ impl Model {
             http,
             state: NetState::Unknown,
             status: NetStatus::current(),
+            accent: ThemeColor::accent(),
             log: Cow::default(),
             log_busy: Arc::new(AtomicBool::new(false)),
             online_busy: Arc::new(AtomicBool::new(false)),
