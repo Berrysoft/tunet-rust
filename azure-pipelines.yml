@@ -20,7 +20,7 @@ jobs:
         cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
       win-x64-qt5:
         target: 'x86_64-pc-windows-msvc'
-        publishName: 'win.x86_64'
+        publishName: 'win.x86_64.qt5'
         vsArch: 'x64'
         qtVersion: '5.15.2'
         qtDistFull: 'win64_msvc2019_64'
