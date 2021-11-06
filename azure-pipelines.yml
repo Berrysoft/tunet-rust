@@ -134,29 +134,29 @@ jobs:
       cd build
       mkdir x64
       cd x64
-      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="x86_64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.x86_64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64"
+      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="x86_64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos.x86_64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64"
       ninja install
       cd ..
       mkdir arm64
       cd arm64
-      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="aarch64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/tunet-gui.macos.aarch64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="arm64"
+      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="aarch64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos.aarch64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="arm64"
       ninja install
     displayName: "Build"
 
   - script: |
-      mkdir -p $(Build.ArtifactStagingDirectory)/tunet-gui.macos
+      mkdir -p $(Build.ArtifactStagingDirectory)/macos
       cd $(Build.BinariesDirectory)
-      mkdir -p tunet-gui.macos
-      lipo -create tunet-gui.macos.x86_64/bin/tunet tunet-gui.macos.aarch64/bin/tunet -output $(Build.ArtifactStagingDirectory)/tunet-gui.macos/tunet
-      cp -R tunet-gui.macos.x86_64/bin tunet-gui.macos/
-      rm tunet-gui.macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
-      lipo -create tunet-gui.macos.x86_64/bin/tunet-gui.app/Contents/MacOS/tunet-gui tunet-gui.macos.aarch64/bin/tunet-gui.app/Contents/MacOS/tunet-gui -output tunet-gui.macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
+      mkdir -p macos
+      lipo -create macos.x86_64/bin/tunet macos.aarch64/bin/tunet -output $(Build.ArtifactStagingDirectory)/macos/tunet
+      cp -R macos.x86_64/bin macos/
+      rm macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
+      lipo -create macos.x86_64/bin/tunet-gui.app/Contents/MacOS/tunet-gui macos.aarch64/bin/tunet-gui.app/Contents/MacOS/tunet-gui -output macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
     displayName: "Create fat binary"
 
   - script: |
-      cd $(Build.BinariesDirectory)/tunet-gui.macos/bin
+      cd $(Build.BinariesDirectory)/macos/bin
       zip -r -y tunet-gui.app.zip tunet-gui.app
-      cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/tunet-gui.macos/
+      cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/macos/
     displayName: 'Archive'
 
   - task: PublishBuildArtifacts@1
