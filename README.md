@@ -107,3 +107,23 @@
 * aarch64-pc-windows-msvc
 
 但是大部分目标并不提供预编译程序，如有需要请自行编译。
+
+## 编译说明
+如果只需要命令行程序，使用 `cargo` 直接编译：
+``` bash
+cargo build --release
+```
+即可在 `target/release` 下找到编译好的程序。
+
+如果需要图形界面程序，应首先安装 Qt5/6 与 cmake，之后运行：
+``` bash
+mkdir build
+cd build
+# Qt6
+cmake ..
+# Qt5
+cmake .. -DUSE_QT5=on
+cmake --build .
+```
+
+有关交叉编译的说明，参考 `cargo` 文档以及 [Corrosion](https://github.com/AndrewGaspar/corrosion)。
