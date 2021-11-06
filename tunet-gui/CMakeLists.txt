@@ -53,6 +53,7 @@ if(WIN32)
     add_custom_command(TARGET tunet-gui POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E
             env PATH="${_qt_lib_dir}" "${WINDEPLOYQT_EXECUTABLE}"
+                --qmake "${_qt_lib_dir}/qmake.exe"
                 --no-compiler-runtime
                 --no-translations
                 --no-system-d3d-compiler
@@ -84,6 +85,7 @@ if(WIN32)
         execute_process(
             COMMAND \"${CMAKE_COMMAND}\" -E
                 env PATH=\"${_qt_lib_dir}\" \"${WINDEPLOYQT_EXECUTABLE}\"
+                    --qmake \"${_qt_lib_dir}/qmake.exe\"
                     --no-compiler-runtime
                     --no-translations
                     --no-system-d3d-compiler

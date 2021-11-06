@@ -49,6 +49,7 @@ jobs:
 
   - pwsh: |
       python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop $(qtVersion) $(qtHostFull) -m qtcharts
+      cp $(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64/bin/qmake.exe $(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_arm64/bin/
     displayName: "Install Qt host"
     condition: eq(variables.cross, 'true')
   
