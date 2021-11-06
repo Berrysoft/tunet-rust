@@ -5,6 +5,7 @@ namespace TUNet
 {
     MainWnd::MainWnd(Model* pmodel) : QMainWindow(), m_pmodel(pmodel)
     {
+        setWindowTitle(u"清华校园网"_qs);
         setWindowIcon(QIcon(u":logo.ico"_qs));
 
         m_root_tab.addTab(&m_info_page, u"主页"_qs);
