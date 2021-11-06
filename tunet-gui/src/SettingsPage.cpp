@@ -45,7 +45,7 @@ namespace TUNet
         QObject::connect(&m_online_table, &QTableWidget::itemSelectionChanged, this, &SettingsPage::selection_changed);
         m_settings_layout.addWidget(&m_online_table);
 
-        m_connect_button.setText(u"连接IP"_qs);
+        m_connect_button.setText(u"认证IP"_qs);
         QObject::connect(&m_connect_button, &QPushButton::clicked, this, &SettingsPage::connect_ip);
         m_drop_button.setText(u"下线IP"_qs);
         m_drop_button.setEnabled(false);

@@ -4,6 +4,9 @@ namespace TUNet
 {
     CredDialog::CredDialog() : QDialog()
     {
+        setWindowTitle(u"设置凭据"_qs);
+        setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+
         m_username_edit.setPlaceholderText(u"用户名"_qs);
         QObject::connect(&m_username_edit, &QLineEdit::textChanged, this, &CredDialog::text_changed);
         m_root_layout.addWidget(&m_username_edit);
@@ -21,6 +24,8 @@ namespace TUNet
         QObject::connect(&m_ok_button, &QPushButton::clicked, this, &QDialog::accept);
         m_command_layout.addWidget(&m_ok_button);
         m_root_layout.addLayout(&m_command_layout);
+
+        setFixedSize(sizeHint());
     }
 
     CredDialog::~CredDialog() {}

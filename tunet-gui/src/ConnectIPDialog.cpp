@@ -5,6 +5,9 @@ namespace TUNet
 {
     ConnectIPDialog::ConnectIPDialog() : QDialog()
     {
+        setWindowTitle(u"认证IP"_qs);
+        setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+
         m_ip_edit.setPlaceholderText(u"IPv4地址"_qs);
         QObject::connect(&m_ip_edit, &QLineEdit::textChanged, this, &ConnectIPDialog::text_changed);
         m_root_layout.addWidget(&m_ip_edit);
@@ -18,6 +21,8 @@ namespace TUNet
         QObject::connect(&m_ok_button, &QPushButton::clicked, this, &QDialog::accept);
         m_command_layout.addWidget(&m_ok_button);
         m_root_layout.addLayout(&m_command_layout);
+
+        setFixedSize(sizeHint());
     }
 
     ConnectIPDialog::~ConnectIPDialog() {}
