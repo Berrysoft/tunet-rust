@@ -16,7 +16,7 @@ namespace TUNet
         setMinimumSize(300, 300);
         resize(500, 500);
 
-#if QT_VERSION >= 0x051400
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         move(screen()->geometry().center() - rect().center());
 #endif
 

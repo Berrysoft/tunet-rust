@@ -1,9 +1,9 @@
 #include <Model.hpp>
 #include <cmath>
 
-#if QT_VERSION < 0x051000
+#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
     #define QSTRING_UTF16(str) (reinterpret_cast<const char16_t*>((str).utf16()))
-#elif QT_VERSION < 0x070000
+#elif QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     #define QSTRING_UTF16(str) (QStringView{ (str) }.utf16())
 #else
     #define QSTRING_UTF16(str) ((str).utf16())
@@ -123,7 +123,7 @@ namespace TUNet
 
     QString format_datetime(const QDateTime& time)
     {
-#if QT_VERSION < 0x051000
+#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
         return time.toString(u"yyyy-MM-dd hh:mm:ss"_qs);
 #else
         constexpr QStringView DATETIME_FORMAT{ u"yyyy-MM-dd hh:mm:ss" };
