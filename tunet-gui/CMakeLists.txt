@@ -5,15 +5,6 @@ if(ENABLE_IPO)
     message(STATUS "LTO is enabled for Release")
 endif()
 
-option(USE_QT5 "Build against Qt5" OFF)
-if(${USE_QT5})
-    set(QT_VERSION_MAJOR 5)
-else()
-    set(QT_VERSION_MAJOR 6)
-endif()
-
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
-
 if(WIN32)
     get_target_property(_qmake_executable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
     get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
@@ -37,7 +28,7 @@ target_include_directories(tunet-gui
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_libraries(tunet-gui PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts tunet-model-native-static)
-set_target_properties(tunet-gui PROPERTIES AUTOMOC ON qt_no_entrypoint ON)
+set_target_properties(tunet-gui PROPERTIES AUTOMOC ON Qt5_NO_LINK_QTMAIN ON qt_no_entrypoint ON)
 
 find_package(Git)
 if(Git_FOUND)

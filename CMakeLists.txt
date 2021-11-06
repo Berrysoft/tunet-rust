@@ -6,6 +6,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
+option(USE_QT5 "Build against Qt5" OFF)
+if(${USE_QT5})
+    set(QT_VERSION_MAJOR 5)
+else()
+    set(QT_VERSION_MAJOR 6)
+endif()
+
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
+
 add_subdirectory(corrosion)
 
 corrosion_import_crate(MANIFEST_PATH tunet/Cargo.toml)
