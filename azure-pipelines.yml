@@ -26,6 +26,14 @@ jobs:
         qtDistFull: 'win64_msvc2019_64'
         cross: false
         cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64" -DUSE_QT5=on'
+      win-x64-qt5:
+        target: 'i686-pc-windows-msvc'
+        publishName: 'win.i686.qt5'
+        vsArch: 'x64_x86'
+        qtVersion: '5.15.2'
+        qtDistFull: 'win32_msvc2019'
+        cross: false
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019" -DUSE_QT5=on'
       win-arm64:
         target: 'aarch64-pc-windows-msvc'
         publishName: 'win.aarch64'
