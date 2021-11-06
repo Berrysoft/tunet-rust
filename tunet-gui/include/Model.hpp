@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QObject>
 #include <QString>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstddef>
@@ -85,6 +86,16 @@ namespace TUNet
         QString toString() const;
     };
 
+    struct MacAddress
+    {
+        std::array<std::uint8_t, 6> m_values{};
+
+        constexpr MacAddress() noexcept {}
+        explicit constexpr MacAddress(const std::uint8_t (&values)[6]) { std::copy(std::begin(values), std::end(values), m_values.begin()); }
+
+        QString toString() const;
+    };
+
     struct Info
     {
         QString username;
@@ -98,7 +109,7 @@ namespace TUNet
         Ipv4Addr address;
         QDateTime login_time;
         Flux flux;
-        std::optional<std::array<std::uint8_t, 6>> mac_address;
+        std::optional<MacAddress> mac_address;
         bool is_local;
     };
 
@@ -111,7 +122,6 @@ namespace TUNet
 
     QString format_duration(std::chrono::seconds sec);
     QString format_datetime(const QDateTime& time);
-    QString format_mac_address(const std::array<std::uint8_t, 6>& maddr);
 
     struct Model : QObject
     {

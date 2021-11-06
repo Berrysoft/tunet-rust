@@ -1,5 +1,4 @@
 #include <Model.hpp>
-#include <cmath>
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
     #define QSTRING_UTF16(str) (reinterpret_cast<const char16_t*>((str).utf16()))
@@ -108,9 +107,11 @@ namespace TUNet
 
     Ipv4Addr::Ipv4Addr(const QString& str) { m_value = tunet_parse_ip(QSTRING_UTF16(str)); }
 
+    QString Flux::toString() const { return get_q_string(tunet_format_flux, m_value); }
+
     QString Ipv4Addr::toString() const { return get_q_string(tunet_format_ip, m_value); }
 
-    QString Flux::toString() const { return get_q_string(tunet_format_flux, m_value); }
+    QString MacAddress::toString() const { return get_q_string(tunet_format_mac_address, m_values.data()); }
 
     QString format_duration(std::chrono::seconds s) { return get_q_string(tunet_format_duration, s.count()); }
 
@@ -123,8 +124,6 @@ namespace TUNet
         return time.toString(DATETIME_FORMAT);
 #endif
     }
-
-    QString format_mac_address(const std::array<std::uint8_t, 6>& maddr) { return get_q_string(tunet_format_mac_address, maddr.data()); }
 
     struct init_data
     {
@@ -237,7 +236,7 @@ namespace TUNet
             u->address,
             QDateTime::fromSecsSinceEpoch(u->login_time, Qt::UTC),
             u->flux,
-            u->has_mac ? std::make_optional(std::to_array(u->mac_address)) : std::nullopt,
+            u->has_mac ? std::make_optional(MacAddress{ u->mac_address }) : std::nullopt,
             u->is_local });
         return true;
     }

@@ -15,7 +15,7 @@ namespace TUNet
         m_user_title_label.setAlignment(Qt::AlignHCenter);
         m_user_title_label.setText(u"当前用户"_qs);
         m_settings_layout.addWidget(&m_user_title_label);
-        m_user_button.setToolTip(u"点击设置用户密码"_qs);
+        m_user_button.setToolTip(u"点击设置凭据"_qs);
         QObject::connect(&m_user_button, &QPushButton::clicked, this, &SettingsPage::set_credential);
         m_user_layout.addStretch();
         m_user_layout.addWidget(&m_user_button);
@@ -137,7 +137,7 @@ namespace TUNet
             flux->setTextAlignment(Qt::AlignCenter);
             m_online_table.setItem(row, 2, flux);
 
-            auto mac_address = new QTableWidgetItem(u.mac_address ? format_mac_address(*u.mac_address) : QString{});
+            auto mac_address = new QTableWidgetItem(u.mac_address ? u.mac_address->toString() : QString{});
             mac_address->setTextAlignment(Qt::AlignCenter);
             m_online_table.setItem(row, 3, mac_address);
 
