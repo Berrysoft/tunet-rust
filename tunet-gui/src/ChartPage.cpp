@@ -39,6 +39,7 @@ namespace TUNet
         m_chart_layout.addWidget(&m_refresh_button);
 
         QObject::connect(m_pmodel, &Model::details_changed, this, &ChartPage::update_details);
+        QObject::connect(m_pmodel, &Model::detail_busy_changed, this, &ChartPage::update_detail_busy);
     }
 
     ChartPage::~ChartPage() {}
@@ -105,5 +106,10 @@ namespace TUNet
             m_time_chart.addAxis(axis_y, Qt::AlignLeft);
             series->attachAxis(axis_y);
         }
+    }
+
+    void ChartPage::update_detail_busy()
+    {
+        m_refresh_button.setEnabled(!m_pmodel->detail_busy());
     }
 } // namespace TUNet

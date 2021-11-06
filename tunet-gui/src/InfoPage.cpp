@@ -45,6 +45,7 @@ namespace TUNet
         QObject::connect(m_pmodel, &Model::state_changed, this, &InfoPage::update_state);
         QObject::connect(m_pmodel, &Model::log_changed, this, &InfoPage::update_log);
         QObject::connect(m_pmodel, &Model::flux_changed, this, &InfoPage::update_flux);
+        QObject::connect(m_pmodel, &Model::log_busy_changed, this, &InfoPage::update_log_busy);
     }
 
     InfoPage::~InfoPage() {}
@@ -89,5 +90,13 @@ namespace TUNet
         m_online_time_label.setText(u"时长：%1"_qs.arg(format_duration(flux.online_time)));
         m_balance_label.setText(u"余额：￥%1"_qs.arg(flux.balance, 0, 'f', 2));
         m_flux_circle.update_flux(flux.flux, flux.balance);
+    }
+
+    void InfoPage::update_log_busy()
+    {
+        bool free = !m_pmodel->log_busy();
+        m_login_button.setEnabled(free);
+        m_logout_button.setEnabled(free);
+        m_flux_button.setEnabled(free);
     }
 } // namespace TUNet

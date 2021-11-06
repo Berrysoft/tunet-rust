@@ -21,6 +21,7 @@ namespace TUNet
 
         void refresh_details();
         void update_details();
+        void update_detail_busy();
 
     private:
         Model* m_pmodel{};

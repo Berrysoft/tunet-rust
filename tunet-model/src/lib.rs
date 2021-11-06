@@ -174,6 +174,9 @@ impl Model {
                 self.details = ds;
                 self.update(UpdateMsg::Details);
             }
+            Action::Update(msg) => {
+                self.update(msg);
+            }
         }
     }
 
@@ -206,7 +209,7 @@ impl Model {
     }
 
     fn spawn_login(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone());
+        let mut lock = BusyGuard::new(self.log_busy.clone(), self.tx.clone(), UpdateMsg::LogBusy);
         if lock.lock() {
             let tx = self.tx.clone();
             if let Some(client) = self.client() {
@@ -226,7 +229,7 @@ impl Model {
     }
 
     fn spawn_logout(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone());
+        let mut lock = BusyGuard::new(self.log_busy.clone(), self.tx.clone(), UpdateMsg::LogBusy);
         if lock.lock() {
             let tx = self.tx.clone();
             if let Some(client) = self.client() {
@@ -246,7 +249,7 @@ impl Model {
     }
 
     fn spawn_flux(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone());
+        let mut lock = BusyGuard::new(self.log_busy.clone(), self.tx.clone(), UpdateMsg::LogBusy);
         if lock.lock() {
             let tx = self.tx.clone();
             if let Some(client) = self.client() {
@@ -273,7 +276,11 @@ impl Model {
     }
 
     fn spawn_online(&self) {
-        let mut lock = BusyGuard::new(self.online_busy.clone());
+        let mut lock = BusyGuard::new(
+            self.online_busy.clone(),
+            self.tx.clone(),
+            UpdateMsg::OnlineBusy,
+        );
         if lock.lock() {
             let tx = self.tx.clone();
             let usereg = self.usereg();
@@ -290,7 +297,11 @@ impl Model {
     }
 
     fn spawn_details(&self) {
-        let mut lock = BusyGuard::new(self.detail_busy.clone());
+        let mut lock = BusyGuard::new(
+            self.detail_busy.clone(),
+            self.tx.clone(),
+            UpdateMsg::DetailBusy,
+        );
         if lock.lock() {
             let tx = self.tx.clone();
             let usereg = self.usereg();
@@ -338,9 +349,11 @@ pub enum Action {
     Drop(Ipv4Addr),
     Details,
     DetailsDone(Vec<NetDetail>),
+    Update(UpdateMsg),
 }
 
 #[repr(i32)]
+#[derive(Debug, Clone, Copy)]
 pub enum UpdateMsg {
     Credential,
     State,
@@ -348,18 +361,25 @@ pub enum UpdateMsg {
     Flux,
     Online,
     Details,
+    LogBusy,
+    OnlineBusy,
+    DetailBusy,
 }
 
 struct BusyGuard {
     lock: Arc<AtomicBool>,
     locked: bool,
+    tx: Sender<Action>,
+    msg: UpdateMsg,
 }
 
 impl BusyGuard {
-    pub fn new(lock: Arc<AtomicBool>) -> Self {
+    pub fn new(lock: Arc<AtomicBool>, tx: Sender<Action>, msg: UpdateMsg) -> Self {
         Self {
             lock,
             locked: false,
+            tx,
+            msg,
         }
     }
 
@@ -368,6 +388,13 @@ impl BusyGuard {
             .lock
             .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
             .is_ok();
+        {
+            let msg = self.msg;
+            let tx = self.tx.clone();
+            tokio::spawn(async move {
+                tx.send(Action::Update(msg)).await.ok();
+            });
+        }
         self.locked
     }
 }
@@ -376,6 +403,11 @@ impl Drop for BusyGuard {
     fn drop(&mut self) {
         if self.locked {
             self.lock.store(false, Ordering::Release);
+            let msg = self.msg;
+            let tx = self.tx.clone();
+            tokio::spawn(async move {
+                tx.send(Action::Update(msg)).await.ok();
+            });
         }
     }
 }

@@ -26,6 +26,7 @@ namespace TUNet
         void update_state_back(int index);
         void update_log();
         void update_flux();
+        void update_log_busy();
 
     private:
         Model* m_pmodel{};

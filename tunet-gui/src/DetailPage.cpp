@@ -29,7 +29,8 @@ namespace TUNet
         QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &DetailPage::refresh_details);
         m_details_layout.addWidget(&m_refresh_button);
 
-        QObject::connect(pmodel, &Model::details_changed, this, &DetailPage::update_details);
+        QObject::connect(m_pmodel, &Model::details_changed, this, &DetailPage::update_details);
+        QObject::connect(m_pmodel, &Model::detail_busy_changed, this, &DetailPage::update_detail_busy);
     }
 
     DetailPage::~DetailPage() {}
@@ -64,5 +65,10 @@ namespace TUNet
             row++;
         }
         m_details_table.setSortingEnabled(true);
+    }
+
+    void DetailPage::update_detail_busy()
+    {
+        m_refresh_button.setEnabled(!m_pmodel->detail_busy());
     }
 } // namespace TUNet

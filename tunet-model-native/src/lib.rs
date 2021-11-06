@@ -339,3 +339,18 @@ pub unsafe extern "C" fn tunet_model_details_grouped_by_time_foreach(
         }
     }
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_log_busy(model: native::Model) -> bool {
+    read_model(model).log_busy()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_online_busy(model: native::Model) -> bool {
+    read_model(model).online_busy()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_detail_busy(model: native::Model) -> bool {
+    read_model(model).detail_busy()
+}

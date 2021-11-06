@@ -87,6 +87,9 @@ extern "C"
     void tunet_model_details_foreach(NativeModel m, DetailsForeachCallback f, void* data);
     void tunet_model_details_grouped_foreach(NativeModel m, DetailsGroupedForeachCallback f, void* data);
     void tunet_model_details_grouped_by_time_foreach(NativeModel m, std::uint32_t groups, DetailsGroupedByTimeForeachCallback f, void* data);
+    bool tunet_model_log_busy(NativeModel m);
+    bool tunet_model_online_busy(NativeModel m);
+    bool tunet_model_detail_busy(NativeModel m);
 }
 
 namespace TUNet
@@ -195,6 +198,15 @@ namespace TUNet
         case UpdateMsg::Details:
             emit details_changed();
             break;
+        case UpdateMsg::LogBusy:
+            emit log_busy_changed();
+            break;
+        case UpdateMsg::OnlineBusy:
+            emit online_busy_changed();
+            break;
+        case UpdateMsg::DetailBusy:
+            emit detail_busy_changed();
+            break;
         }
     }
 
@@ -292,4 +304,10 @@ namespace TUNet
         tunet_model_details_grouped_by_time_foreach(m_handle, groups, fn_foreach_detail_group_by_time, &details);
         return details;
     }
+
+    bool Model::log_busy() const { return tunet_model_log_busy(m_handle); }
+
+    bool Model::online_busy() const { return tunet_model_online_busy(m_handle); }
+
+    bool Model::detail_busy() const { return tunet_model_detail_busy(m_handle); }
 } // namespace TUNet

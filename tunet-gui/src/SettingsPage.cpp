@@ -59,6 +59,7 @@ namespace TUNet
 
         QObject::connect(m_pmodel, &Model::cred_changed, this, &SettingsPage::update_cred);
         QObject::connect(m_pmodel, &Model::onlines_changed, this, &SettingsPage::update_online);
+        QObject::connect(m_pmodel, &Model::online_busy_changed, this, &SettingsPage::update_online_busy);
     }
 
     SettingsPage::~SettingsPage() {}
@@ -147,5 +148,10 @@ namespace TUNet
 
             row++;
         }
+    }
+
+    void SettingsPage::update_online_busy()
+    {
+        m_refresh_button.setEnabled(!m_pmodel->online_busy());
     }
 } // namespace TUNet

@@ -27,6 +27,7 @@ namespace TUNet
 
         void update_cred();
         void update_online();
+        void update_online_busy();
 
     private:
         Model* m_pmodel{};

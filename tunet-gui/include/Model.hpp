@@ -41,6 +41,9 @@ namespace TUNet
         Flux,
         Online,
         Details,
+        LogBusy,
+        OnlineBusy,
+        DetailBusy,
     };
 
     enum class State : std::int32_t
@@ -146,6 +149,10 @@ namespace TUNet
         std::map<QDate, Flux> details_grouped() const;
         std::map<std::uint32_t, Flux> details_grouped_by_time(std::uint32_t groups) const;
 
+        bool log_busy() const;
+        bool online_busy() const;
+        bool detail_busy() const;
+
         void queue(Action a) const;
         bool queue_cred_load() const;
         void queue_cred(const Credential& cred) const;
@@ -161,6 +168,10 @@ namespace TUNet
         void flux_changed() const;
         void onlines_changed() const;
         void details_changed() const;
+
+        void log_busy_changed() const;
+        void online_busy_changed() const;
+        void detail_busy_changed() const;
 
     private:
         NativeModel m_handle{};
