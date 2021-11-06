@@ -14,8 +14,26 @@ jobs:
         target: 'x86_64-pc-windows-msvc'
         publishName: 'win.x86_64'
         vsArch: 'x64'
+        qtVersion: '6.2.1'
         qtDist: 'msvc2019_64'
         qtDistFull: 'win64_msvc2019_64'
+        cmakeArgs: ''
+      win-x64-qt5:
+        target: 'x86_64-pc-windows-msvc'
+        publishName: 'win.x86_64'
+        vsArch: 'x64'
+        qtVersion: '5.15.2'
+        qtDist: 'msvc2019_64'
+        qtDistFull: 'win64_msvc2019_64'
+        cmakeArgs: '-DUSE_QT5=on'
+      win-arm64:
+        target: 'aarch64-pc-windows-msvc'
+        publishName: 'win.aarch64'
+        vsArch: 'x64_arm64'
+        qtVersion: '6.2.1'
+        qtDist: 'msvc2019_arm64'
+        qtDistFull: 'win64_msvc2019_arm64'
+        cmakeArgs: ''
   pool:
     vmImage: 'windows-latest'
   
@@ -25,15 +43,15 @@ jobs:
 
   - pwsh: |
       python3 -m pip install aqtinstall
-      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop 6.2.1 $(qtDistFull) -m qtcharts
-    displayName: "Install Qt on Windows"
+      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt windows desktop $(qtVersion) $(qtDistFull) -m qtcharts
+    displayName: "Install Qt"
   
   - script: |
       rustup target add $(target)
       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" $(vsArch)
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/$(publishName)" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/$(qtDist)"
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/$(publishName)" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/$(qtDist)" $(cmakeArgs)
       ninja install
     displayName: "Build"
 
@@ -43,7 +61,7 @@ jobs:
       includeRootFolder: false
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/$(publishName).zip'
-    displayName: 'Archive GUI binaries'
+    displayName: 'Archive'
 
   - task: PublishBuildArtifacts@1
     inputs:
@@ -61,7 +79,7 @@ jobs:
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt update
       sudo apt install qtbase5-dev libqt5charts5-dev qt5-qmake ninja-build g++-11
-    displayName: "Install Qt on Linux"
+    displayName: "Install Qt"
 
   - script: |
       mkdir build
@@ -92,7 +110,7 @@ jobs:
       brew install cmake ninja
       python3 -m pip install aqtinstall
       python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt mac desktop 6.2.1 clang_64 -m qtcharts
-    displayName: "Install Qt on MacOS"
+    displayName: "Install Qt"
 
   - script: |
       rustup target add x86_64-apple-darwin
@@ -124,7 +142,7 @@ jobs:
       cd $(Build.BinariesDirectory)/tunet-gui.macos/bin
       zip -r -y tunet-gui.app.zip tunet-gui.app
       cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/tunet-gui.macos/
-    displayName: 'Archive app'
+    displayName: 'Archive'
 
   - task: PublishBuildArtifacts@1
     inputs:
