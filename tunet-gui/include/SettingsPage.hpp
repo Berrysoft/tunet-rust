@@ -29,6 +29,8 @@ namespace TUNet
         void update_online();
         void update_online_busy();
 
+        void delete_cred_and_exit();
+
     private:
         Model* m_pmodel{};
 
@@ -36,7 +38,9 @@ namespace TUNet
 
         QLabel m_user_title_label{};
         QHBoxLayout m_user_layout{};
+        QLabel m_user_label{};
         QPushButton m_user_button{};
+        QPushButton m_del_exit_button{};
 
         QLabel m_status_title_label{};
         QLabel m_status_label{};

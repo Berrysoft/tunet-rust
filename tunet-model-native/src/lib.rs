@@ -101,9 +101,12 @@ fn tunet_model_start_impl(
                 });
             }
             let res = main(Arc::as_ptr(&model), data);
-            FileSettingsReader::new()?
-                .save(model.read().unwrap().cred.clone())
-                .await?;
+            let mut reader = FileSettingsReader::new()?;
+            if model.read().unwrap().del_at_exit() {
+                reader.delete()?;
+            } else {
+                reader.save(model.read().unwrap().cred.clone()).await?;
+            }
             Ok::<_, anyhow::Error>(res)
         } else {
             Ok(0)
@@ -353,4 +356,9 @@ pub unsafe extern "C" fn tunet_model_online_busy(model: native::Model) -> bool {
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_detail_busy(model: native::Model) -> bool {
     read_model(model).detail_busy()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tunet_model_set_del_at_exit(model: native::Model, v: bool) {
+    read_model(model).set_del_at_exit(v)
 }

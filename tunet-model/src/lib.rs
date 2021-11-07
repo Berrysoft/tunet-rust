@@ -31,6 +31,7 @@ pub struct Model {
     pub users: Vec<NetUser>,
     pub details: Vec<NetDetail>,
     pub mac_addrs: Vec<MacAddress>,
+    pub del_at_exit: AtomicBool,
 }
 
 impl Model {
@@ -57,6 +58,7 @@ impl Model {
             users: Vec::default(),
             details: Vec::default(),
             mac_addrs,
+            del_at_exit: AtomicBool::new(false),
         })
     }
 
@@ -327,6 +329,14 @@ impl Model {
 
     pub fn detail_busy(&self) -> bool {
         self.detail_busy.load(Ordering::Acquire)
+    }
+
+    pub fn set_del_at_exit(&self, v: bool) {
+        self.del_at_exit.store(v, Ordering::Release);
+    }
+
+    pub fn del_at_exit(&self) -> bool {
+        self.del_at_exit.load(Ordering::Acquire)
     }
 }
 

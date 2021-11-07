@@ -1,6 +1,8 @@
 #include <ConnectIPDialog.hpp>
 #include <CredDialog.hpp>
+#include <QApplication>
 #include <QHeaderView>
+#include <QMessageBox>
 #include <SettingsPage.hpp>
 
 namespace TUNet
@@ -13,12 +15,16 @@ namespace TUNet
 
         m_user_title_label.setFont(title_font);
         m_user_title_label.setAlignment(Qt::AlignHCenter);
-        m_user_title_label.setText(u"当前用户"_qs);
+        m_user_title_label.setText(u"当前凭据"_qs);
         m_settings_layout.addWidget(&m_user_title_label);
-        m_user_button.setToolTip(u"点击设置凭据"_qs);
+        m_user_button.setText(u"设置"_qs);
         QObject::connect(&m_user_button, &QPushButton::clicked, this, &SettingsPage::set_credential);
+        m_del_exit_button.setText(u"删除并退出"_qs);
+        QObject::connect(&m_del_exit_button, &QPushButton::clicked, this, &SettingsPage::delete_cred_and_exit);
         m_user_layout.addStretch();
+        m_user_layout.addWidget(&m_user_label);
         m_user_layout.addWidget(&m_user_button);
+        m_user_layout.addWidget(&m_del_exit_button);
         m_user_layout.addStretch();
         m_settings_layout.addLayout(&m_user_layout);
 
@@ -108,14 +114,7 @@ namespace TUNet
     void SettingsPage::update_cred()
     {
         auto cred = m_pmodel->cred();
-        if (!cred.username.isEmpty())
-        {
-            m_user_button.setText(cred.username);
-        }
-        else
-        {
-            m_user_button.setText(u"设置"_qs);
-        }
+        m_user_label.setText(u"用户：%1"_qs.arg(cred.username));
     }
 
     void SettingsPage::update_online()
@@ -153,5 +152,17 @@ namespace TUNet
     void SettingsPage::update_online_busy()
     {
         m_refresh_button.setEnabled(!m_pmodel->online_busy());
+    }
+
+    void SettingsPage::delete_cred_and_exit()
+    {
+        QMessageBox box{ QMessageBox::Warning, u"删除凭据并退出"_qs, u"是否删除保存的设置文件与凭据？\n删除后程序将会退出。"_qs, QMessageBox::NoButton, this };
+        box.addButton(u"是"_qs, QMessageBox::AcceptRole);
+        box.addButton(u"否"_qs, QMessageBox::RejectRole);
+        if (box.exec() == QMessageBox::AcceptRole)
+        {
+            m_pmodel->set_del_at_exit();
+            QApplication::exit();
+        }
     }
 } // namespace TUNet

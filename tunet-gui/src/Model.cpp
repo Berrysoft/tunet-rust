@@ -90,6 +90,7 @@ extern "C"
     bool tunet_model_log_busy(NativeModel m);
     bool tunet_model_online_busy(NativeModel m);
     bool tunet_model_detail_busy(NativeModel m);
+    void tunet_model_set_del_at_exit(NativeModel m, bool v);
 }
 
 namespace TUNet
@@ -310,4 +311,6 @@ namespace TUNet
     bool Model::online_busy() const { return tunet_model_online_busy(m_handle); }
 
     bool Model::detail_busy() const { return tunet_model_detail_busy(m_handle); }
+
+    void Model::set_del_at_exit(bool v) const { return tunet_model_set_del_at_exit(m_handle, v); }
 } // namespace TUNet

@@ -161,6 +161,8 @@ namespace TUNet
         void queue_drop(Ipv4Addr addr) const;
         void update(UpdateMsg m) const;
 
+        void set_del_at_exit(bool v = true) const;
+
     signals:
         void cred_changed() const;
         void state_changed() const;
