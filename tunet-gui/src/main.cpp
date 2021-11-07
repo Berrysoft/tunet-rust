@@ -24,6 +24,13 @@ int main_impl(int argc, char** argv, Model* pmodel)
     QApplication::setPalette(pal);
 #endif
 
+#if defined(Q_OS_MACOS) && QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Fix for wrong button height when text contains CJK chars,
+    // set to a small height and let cocoa to determine the default.
+    // Ref commit: https://github.com/qt/qtbase/commit/c6379e34993370e7e2208b51be384b738ce35817
+    app.setStyleSheet(u"QPushButton{height:1;}"_qs);
+#endif
+
     MainWnd wnd{ pmodel };
     wnd.show();
 
