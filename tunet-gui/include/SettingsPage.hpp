@@ -16,6 +16,7 @@ namespace TUNet
         SettingsPage(QWidget* parent, Model* pmodel);
         ~SettingsPage() override;
 
+        void ask_credential(const Credential& cred);
         void set_credential();
 
         void selection_changed();

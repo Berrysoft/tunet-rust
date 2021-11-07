@@ -164,7 +164,14 @@ namespace TUNet
 
     void Model::queue(Action a) const { tunet_model_queue(m_handle, a); }
 
-    bool Model::queue_cred_load() const { return tunet_model_queue_cred_load(m_handle); }
+    void Model::queue_cred_load() const
+    {
+        bool loaded = tunet_model_queue_cred_load(m_handle);
+        if (!loaded)
+        {
+            emit ask_cred({});
+        }
+    }
 
     void Model::queue_cred(const Credential& cred) const
     {
@@ -226,7 +233,12 @@ namespace TUNet
     {
         auto username = get_q_string(tunet_model_cred_username, m_handle);
         auto password = get_q_string(tunet_model_cred_password, m_handle);
-        return { std::move(username), std::move(password) };
+        Credential cred{ std::move(username), std::move(password) };
+        if (cred.username.isEmpty() || cred.password.isEmpty())
+        {
+            emit ask_cred(cred);
+        }
+        return cred;
     }
 
     State Model::state() const { return tunet_model_state(m_handle); }

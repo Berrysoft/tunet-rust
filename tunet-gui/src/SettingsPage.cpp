@@ -63,6 +63,7 @@ namespace TUNet
         m_command_layout.addWidget(&m_refresh_button);
         m_settings_layout.addLayout(&m_command_layout);
 
+        QObject::connect(m_pmodel, &Model::ask_cred, this, &SettingsPage::ask_credential);
         QObject::connect(m_pmodel, &Model::cred_changed, this, &SettingsPage::update_cred);
         QObject::connect(m_pmodel, &Model::onlines_changed, this, &SettingsPage::update_online);
         QObject::connect(m_pmodel, &Model::online_busy_changed, this, &SettingsPage::update_online_busy);
@@ -70,14 +71,19 @@ namespace TUNet
 
     SettingsPage::~SettingsPage() {}
 
-    void SettingsPage::set_credential()
+    void SettingsPage::ask_credential(const Credential& cred)
     {
         CredDialog dialog{};
-        dialog.set_credential(m_pmodel->cred());
+        dialog.set_credential(cred);
         if (dialog.exec() == QDialog::Accepted)
         {
             m_pmodel->queue_cred(dialog.credential());
         }
+    }
+
+    void SettingsPage::set_credential()
+    {
+        ask_credential(m_pmodel->cred());
     }
 
     void SettingsPage::selection_changed()
@@ -114,7 +120,14 @@ namespace TUNet
     void SettingsPage::update_cred()
     {
         auto cred = m_pmodel->cred();
-        m_user_label.setText(u"用户：%1"_qs.arg(cred.username));
+        if (cred.username.isEmpty())
+        {
+            m_user_label.setText({});
+        }
+        else
+        {
+            m_user_label.setText(u"用户：%1"_qs.arg(cred.username));
+        }
     }
 
     void SettingsPage::update_online()

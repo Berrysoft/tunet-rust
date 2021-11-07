@@ -154,7 +154,7 @@ namespace TUNet
         bool detail_busy() const;
 
         void queue(Action a) const;
-        bool queue_cred_load() const;
+        void queue_cred_load() const;
         void queue_cred(const Credential& cred) const;
         void queue_state(State s) const;
         void queue_connect(Ipv4Addr addr) const;
@@ -164,6 +164,8 @@ namespace TUNet
         void set_del_at_exit(bool v = true) const;
 
     signals:
+        void ask_cred(const Credential& cred) const;
+
         void cred_changed() const;
         void state_changed() const;
         void log_changed() const;
