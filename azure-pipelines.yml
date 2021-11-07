@@ -130,28 +130,22 @@ jobs:
   - script: |
       rustup target add x86_64-apple-darwin
       rustup target add aarch64-apple-darwin
-      mkdir build
-      cd build
-      mkdir x64
-      cd x64
-      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="x86_64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos.x86_64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64"
-      ninja install
-      cd ..
-      mkdir arm64
-      cd arm64
-      cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="aarch64-apple-darwin" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos.aarch64" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="arm64"
-      ninja install
-    displayName: "Build"
+      cargo build --release --target x86_64-apple-darwin
+      cargo build --release --target aarch64-apple-darwin
+    displayName: "Build Rust part"
 
   - script: |
       mkdir -p $(Build.ArtifactStagingDirectory)/macos
-      cd $(Build.BinariesDirectory)
-      mkdir -p macos
-      lipo -create macos.x86_64/bin/tunet macos.aarch64/bin/tunet -output $(Build.ArtifactStagingDirectory)/macos/tunet
-      cp -R macos.x86_64/bin macos/
-      rm macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
-      lipo -create macos.x86_64/bin/tunet-gui.app/Contents/MacOS/tunet-gui macos.aarch64/bin/tunet-gui.app/Contents/MacOS/tunet-gui -output macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui
+      lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output $(Build.ArtifactStagingDirectory)/macos/tunet
+      lipo -create target/x86_64-apple-darwin/release/libtunet_model_native.a target/aarch64-apple-darwin/release/libtunet_model_native.a -output $(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a
     displayName: "Create fat binary"
+
+  - script: |
+      mkdir build
+      cd build
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.1/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DUSE_CORROSION=off -DTUNET_MODEL_NATIVE_LIB_PATH="$(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a"
+      ninja install
+    displayName: "Build C++ part"
 
   - script: |
       cd $(Build.BinariesDirectory)/macos/bin

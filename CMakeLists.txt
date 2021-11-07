@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 option(USE_QT5 "Build against Qt5" OFF)
+option(USE_CORROSION "Build rust part with Corrosion" ON)
+
 if(${USE_QT5})
     set(QT_VERSION_MAJOR 5)
 else()
@@ -15,10 +17,15 @@ endif()
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
 
-add_subdirectory(corrosion)
+if(${USE_CORROSION})
+    add_subdirectory(corrosion)
 
-corrosion_import_crate(MANIFEST_PATH tunet/Cargo.toml)
+    corrosion_import_crate(MANIFEST_PATH tunet/Cargo.toml)
 
-corrosion_install(TARGETS tunet)
+    corrosion_install(TARGETS tunet)
+else()
+    add_library(tunet-model-native-static STATIC IMPORTED)
+    set_property(TARGET tunet-model-native-static PROPERTY IMPORTED_LOCATION ${TUNET_MODEL_NATIVE_LIB_PATH})
+endif()
 
 add_subdirectory(tunet-gui)
