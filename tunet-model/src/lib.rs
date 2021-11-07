@@ -134,9 +134,14 @@ impl Model {
                 self.log = s.into();
                 self.update(UpdateMsg::Log);
             }
-            Action::FluxDone(f, s) => {
-                if let Some(s) = s {
-                    self.log = s.into();
+            Action::FluxDone(f, s, keep) => {
+                if keep {
+                    if let Some(s) = s {
+                        self.log = s.into();
+                        self.update(UpdateMsg::Log);
+                    }
+                } else {
+                    self.log = s.unwrap_or_default().into();
                     self.update(UpdateMsg::Log);
                 }
                 self.flux = f;
@@ -222,7 +227,7 @@ impl Model {
                     tx.send(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
                     if ok {
-                        Self::flux_impl(client, tx).await?;
+                        Self::flux_impl(client, tx, true).await?;
                     }
                     Ok::<_, anyhow::Error>(())
                 });
@@ -242,7 +247,7 @@ impl Model {
                     tx.send(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
                     if ok {
-                        Self::flux_impl(client, tx).await?;
+                        Self::flux_impl(client, tx, true).await?;
                     }
                     Ok::<_, anyhow::Error>(())
                 });
@@ -257,21 +262,25 @@ impl Model {
             if let Some(client) = self.client() {
                 tokio::spawn(async move {
                     let _lock = lock;
-                    Self::flux_impl(client, tx).await
+                    Self::flux_impl(client, tx, false).await
                 });
             }
         }
     }
 
-    async fn flux_impl(client: TUNetConnect, tx: Sender<Action>) -> Result<()> {
+    async fn flux_impl(client: TUNetConnect, tx: Sender<Action>, keep_msg: bool) -> Result<()> {
         let flux = client.flux().await;
         match flux {
             Ok(flux) => {
-                tx.send(Action::FluxDone(flux, None)).await?;
+                tx.send(Action::FluxDone(flux, None, keep_msg)).await?;
             }
             Err(err) => {
-                tx.send(Action::FluxDone(NetFlux::default(), Some(err.to_string())))
-                    .await?
+                tx.send(Action::FluxDone(
+                    NetFlux::default(),
+                    Some(err.to_string()),
+                    keep_msg,
+                ))
+                .await?
             }
         }
         Ok(())
@@ -352,7 +361,7 @@ pub enum Action {
     Logout,
     LogoutDone(String),
     Flux,
-    FluxDone(NetFlux, Option<String>),
+    FluxDone(NetFlux, Option<String>, bool),
     Online,
     OnlineDone(Vec<NetUser>),
     Connect(Ipv4Addr),
