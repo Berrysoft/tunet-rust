@@ -5,14 +5,14 @@ namespace TUNet
 {
     MainWnd::MainWnd(Model* pmodel) : QMainWindow(), m_pmodel(pmodel)
     {
-        setWindowTitle(u"清华校园网"_qs);
-        setWindowIcon(QIcon(u":logo.ico"_qs));
+        setWindowTitle(QStringLiteral(u"清华校园网"));
+        setWindowIcon(QIcon(QStringLiteral(u":logo.ico")));
 
-        m_root_tab.addTab(&m_info_page, u"主页"_qs);
-        m_root_tab.addTab(&m_chart_page, u"统计"_qs);
-        m_root_tab.addTab(&m_detail_page, u"明细"_qs);
-        m_root_tab.addTab(&m_settings_page, u"设置"_qs);
-        m_root_tab.addTab(&m_about_page, u"关于"_qs);
+        m_root_tab.addTab(&m_info_page, QStringLiteral(u"主页"));
+        m_root_tab.addTab(&m_chart_page, QStringLiteral(u"统计"));
+        m_root_tab.addTab(&m_detail_page, QStringLiteral(u"明细"));
+        m_root_tab.addTab(&m_settings_page, QStringLiteral(u"设置"));
+        m_root_tab.addTab(&m_about_page, QStringLiteral(u"关于"));
 
         setCentralWidget(&m_root_tab);
 

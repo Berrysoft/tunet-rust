@@ -4,22 +4,22 @@ namespace TUNet
 {
     CredDialog::CredDialog() : QDialog()
     {
-        setWindowTitle(u"设置凭据"_qs);
+        setWindowTitle(QStringLiteral(u"设置凭据"));
         setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
 
-        m_username_edit.setPlaceholderText(u"用户名"_qs);
+        m_username_edit.setPlaceholderText(QStringLiteral(u"用户名"));
         QObject::connect(&m_username_edit, &QLineEdit::textChanged, this, &CredDialog::text_changed);
         m_root_layout.addWidget(&m_username_edit);
-        m_password_edit.setPlaceholderText(u"密码"_qs);
+        m_password_edit.setPlaceholderText(QStringLiteral(u"密码"));
         m_password_edit.setEchoMode(QLineEdit::Password);
         QObject::connect(&m_password_edit, &QLineEdit::textChanged, this, &CredDialog::text_changed);
         m_root_layout.addWidget(&m_password_edit);
 
-        m_ok_button.setText(u"确定"_qs);
+        m_ok_button.setText(QStringLiteral(u"确定"));
         m_ok_button.setEnabled(false);
         QObject::connect(&m_ok_button, &QPushButton::clicked, this, &QDialog::accept);
         m_command_layout.addWidget(&m_ok_button);
-        m_cancel_button.setText(u"取消"_qs);
+        m_cancel_button.setText(QStringLiteral(u"取消"));
         QObject::connect(&m_cancel_button, &QPushButton::clicked, this, &QDialog::reject);
         m_command_layout.addWidget(&m_cancel_button);
         m_root_layout.addLayout(&m_command_layout);

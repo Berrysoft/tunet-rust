@@ -15,11 +15,11 @@ namespace TUNet
 
         m_user_title_label.setFont(title_font);
         m_user_title_label.setAlignment(Qt::AlignHCenter);
-        m_user_title_label.setText(u"当前凭据"_qs);
+        m_user_title_label.setText(QStringLiteral(u"当前凭据"));
         m_settings_layout.addWidget(&m_user_title_label);
-        m_user_button.setText(u"设置"_qs);
+        m_user_button.setText(QStringLiteral(u"设置"));
         QObject::connect(&m_user_button, &QPushButton::clicked, this, &SettingsPage::set_credential);
-        m_del_exit_button.setText(u"删除并退出"_qs);
+        m_del_exit_button.setText(QStringLiteral(u"删除并退出"));
         QObject::connect(&m_del_exit_button, &QPushButton::clicked, this, &SettingsPage::delete_cred_and_exit);
         m_user_layout.addStretch();
         m_user_layout.addWidget(&m_user_label);
@@ -30,7 +30,7 @@ namespace TUNet
 
         m_status_title_label.setFont(title_font);
         m_status_title_label.setAlignment(Qt::AlignHCenter);
-        m_status_title_label.setText(u"网络状态"_qs);
+        m_status_title_label.setText(QStringLiteral(u"网络状态"));
         m_settings_layout.addWidget(&m_status_title_label);
         m_status_label.setAlignment(Qt::AlignHCenter);
         m_status_label.setText(m_pmodel->status());
@@ -38,11 +38,11 @@ namespace TUNet
 
         m_online_label.setFont(title_font);
         m_online_label.setAlignment(Qt::AlignHCenter);
-        m_online_label.setText(u"管理连接"_qs);
+        m_online_label.setText(QStringLiteral(u"管理连接"));
         m_settings_layout.addWidget(&m_online_label);
 
         m_online_table.setColumnCount(5);
-        m_online_table.setHorizontalHeaderLabels({ u"IP地址"_qs, u"登录时间"_qs, u"流量"_qs, u"MAC地址"_qs, u"设备"_qs });
+        m_online_table.setHorizontalHeaderLabels({ QStringLiteral(u"IP地址"), QStringLiteral(u"登录时间"), QStringLiteral(u"流量"), QStringLiteral(u"MAC地址"), QStringLiteral(u"设备") });
         m_online_table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         m_online_table.horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
         m_online_table.verticalHeader()->setVisible(false);
@@ -51,12 +51,12 @@ namespace TUNet
         QObject::connect(&m_online_table, &QTableWidget::itemSelectionChanged, this, &SettingsPage::selection_changed);
         m_settings_layout.addWidget(&m_online_table);
 
-        m_connect_button.setText(u"认证IP"_qs);
+        m_connect_button.setText(QStringLiteral(u"认证IP"));
         QObject::connect(&m_connect_button, &QPushButton::clicked, this, &SettingsPage::connect_ip);
-        m_drop_button.setText(u"下线IP"_qs);
+        m_drop_button.setText(QStringLiteral(u"下线IP"));
         m_drop_button.setEnabled(false);
         QObject::connect(&m_drop_button, &QPushButton::clicked, this, &SettingsPage::drop_ip);
-        m_refresh_button.setText(u"刷新"_qs);
+        m_refresh_button.setText(QStringLiteral(u"刷新"));
         QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &SettingsPage::refresh_online);
         m_command_layout.addWidget(&m_connect_button);
         m_command_layout.addWidget(&m_drop_button);
@@ -126,7 +126,7 @@ namespace TUNet
         }
         else
         {
-            m_user_label.setText(u"用户：%1"_qs.arg(cred.username));
+            m_user_label.setText(QStringLiteral(u"用户：%1").arg(cred.username));
         }
     }
 
@@ -154,7 +154,7 @@ namespace TUNet
             mac_address->setTextAlignment(Qt::AlignCenter);
             m_online_table.setItem(row, 3, mac_address);
 
-            auto device = new QTableWidgetItem(u.is_local ? u"本机"_qs : u"未知"_qs);
+            auto device = new QTableWidgetItem(u.is_local ? QStringLiteral(u"本机") : QStringLiteral(u"未知"));
             device->setTextAlignment(Qt::AlignCenter);
             m_online_table.setItem(row, 4, device);
 
@@ -169,9 +169,10 @@ namespace TUNet
 
     void SettingsPage::delete_cred_and_exit()
     {
-        QMessageBox box{ QMessageBox::Warning, u"删除凭据并退出"_qs, u"是否删除保存的设置文件与凭据？\n删除后程序将会退出。"_qs, QMessageBox::NoButton, this };
-        box.addButton(u"是"_qs, QMessageBox::AcceptRole);
-        box.addButton(u"否"_qs, QMessageBox::RejectRole);
+        QMessageBox box{ QMessageBox::Warning, QStringLiteral(u"删除凭据并退出"), QStringLiteral(u"是否删除保存的设置文件与凭据？"), QMessageBox::NoButton, this };
+        box.setInformativeText(QStringLiteral(u"删除后程序将会退出。"));
+        box.addButton(QStringLiteral(u"是"), QMessageBox::AcceptRole);
+        box.addButton(QStringLiteral(u"否"), QMessageBox::RejectRole);
         if (box.exec() == QMessageBox::AcceptRole)
         {
             m_pmodel->set_del_at_exit();

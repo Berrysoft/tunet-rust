@@ -6,12 +6,12 @@ using namespace TUNet;
 
 int main_impl(int argc, char** argv, Model* pmodel)
 {
-    QApplication::setApplicationDisplayName(u"清华校园网"_qs);
+    QApplication::setApplicationDisplayName(QStringLiteral(u"清华校园网"));
     QApplication app{ argc, argv };
 
 #if defined(Q_OS_WIN) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QFont f = app.font();
-    f.setFamily(u"Microsoft YaHei UI"_qs);
+    f.setFamily(QStringLiteral(u"Microsoft YaHei UI"));
     app.setFont(f);
 #endif
 
@@ -28,7 +28,7 @@ int main_impl(int argc, char** argv, Model* pmodel)
     // Fix for wrong button height when text contains CJK chars,
     // set to a small height and let cocoa to determine the default.
     // Ref commit: https://github.com/qt/qtbase/commit/c6379e34993370e7e2208b51be384b738ce35817
-    app.setStyleSheet(u"QPushButton{height:1;}"_qs);
+    app.setStyleSheet(QStringLiteral(u"QPushButton{height:1;}"));
 #endif
 
     MainWnd wnd{ pmodel };

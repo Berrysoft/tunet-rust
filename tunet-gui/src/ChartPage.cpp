@@ -10,13 +10,13 @@ namespace TUNet
 {
     ChartPage::ChartPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
     {
-        static QString CHART_VIEW_TRANSPARENT = u"background: transparent"_qs;
+        static QString CHART_VIEW_TRANSPARENT{ QStringLiteral(u"background: transparent") };
 
         auto& pal = palette();
         auto& base = pal.color(QPalette::Base);
         bool dark = ((base.redF() + base.greenF() + base.blueF()) / 3.0) < 0.5;
 
-        m_daily_chart.setTitle(u"按日统计"_qs);
+        m_daily_chart.setTitle(QStringLiteral(u"按日统计"));
         m_daily_chart.legend()->setVisible(false);
         m_daily_chart.setBackgroundVisible(false);
         m_daily_chart.setTheme(dark ? QChart::ChartThemeDark : QChart::ChartThemeLight);
@@ -25,7 +25,7 @@ namespace TUNet
         m_daily_view.setStyleSheet(CHART_VIEW_TRANSPARENT);
         m_chart_layout.addWidget(&m_daily_view);
 
-        m_time_chart.setTitle(u"按时段统计"_qs);
+        m_time_chart.setTitle(QStringLiteral(u"按时段统计"));
         m_time_chart.legend()->setVisible(false);
         m_time_chart.setBackgroundVisible(false);
         m_time_chart.setTheme(dark ? QChart::ChartThemeDark : QChart::ChartThemeLight);
@@ -34,7 +34,7 @@ namespace TUNet
         m_time_view.setStyleSheet(CHART_VIEW_TRANSPARENT);
         m_chart_layout.addWidget(&m_time_view);
 
-        m_refresh_button.setText(u"刷新"_qs);
+        m_refresh_button.setText(QStringLiteral(u"刷新"));
         QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &ChartPage::refresh_details);
         m_chart_layout.addWidget(&m_refresh_button);
 
@@ -70,12 +70,12 @@ namespace TUNet
             m_daily_chart.addSeries(series);
 
             auto axis_x = new QDateTimeAxis();
-            axis_x->setFormat(u"d日"_qs);
+            axis_x->setFormat(QStringLiteral(u"d日"));
             m_daily_chart.addAxis(axis_x, Qt::AlignBottom);
             series->attachAxis(axis_x);
 
             auto axis_y = new QValueAxis();
-            axis_y->setLabelFormat(u"%.2lf G"_qs);
+            axis_y->setLabelFormat(QStringLiteral(u"%.2lf G"));
             m_daily_chart.addAxis(axis_y, Qt::AlignLeft);
             series->attachAxis(axis_y);
         }
@@ -91,7 +91,7 @@ namespace TUNet
             auto axis_x = new QBarCategoryAxis();
             for (auto& d : details)
             {
-                axis_x->append(u"%1~%2 时"_qs.arg(d.first).arg(d.first + 5));
+                axis_x->append(QStringLiteral(u"%1~%2 时").arg(d.first).arg(d.first + 5));
                 set->append(d.second.toGb());
             }
             set->setColor(accent);
@@ -102,7 +102,7 @@ namespace TUNet
             series->attachAxis(axis_x);
 
             auto axis_y = new QValueAxis();
-            axis_y->setLabelFormat(u"%.2lf G"_qs);
+            axis_y->setLabelFormat(QStringLiteral(u"%.2lf G"));
             m_time_chart.addAxis(axis_y, Qt::AlignLeft);
             series->attachAxis(axis_y);
         }

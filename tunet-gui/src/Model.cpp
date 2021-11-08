@@ -122,7 +122,7 @@ namespace TUNet
     QString format_datetime(const QDateTime& time)
     {
 #if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-        return time.toString(u"yyyy-MM-dd hh:mm:ss"_qs);
+        return time.toString(QStringLiteral(u"yyyy-MM-dd hh:mm:ss"));
 #else
         constexpr QStringView DATETIME_FORMAT{ u"yyyy-MM-dd hh:mm:ss" };
         return time.toString(DATETIME_FORMAT);
