@@ -50,7 +50,7 @@ endif()
 target_compile_definitions(tunet-gui PRIVATE "TUNET_VERSION=\"${TUNET_LONG_VERSION}\"")
 
 if(WIN32)
-    target_link_libraries(tunet-gui PUBLIC ntdll ole32 oleaut32 ws2_32 bcrypt advapi32 userenv iphlpapi secur32 crypt32 ncrypt shell32)
+    target_link_libraries(tunet-gui PUBLIC ntdll OneCore)
     if(CMAKE_BUILD_TYPE MATCHES "[Rr]el")
         set_target_properties(tunet-gui PROPERTIES WIN32_EXECUTABLE ON)
         target_link_options(tunet-gui PUBLIC "/ENTRY:mainCRTStartup")
