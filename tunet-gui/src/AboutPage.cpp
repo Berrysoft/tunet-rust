@@ -1,7 +1,7 @@
 #include <AboutPage.hpp>
 #include <Model.hpp>
 #include <QHeaderView>
-#include <QStandardItem>
+#include <QMessageBox>
 
 namespace TUNet
 {
@@ -46,18 +46,12 @@ namespace TUNet
         { QStringLiteral(u"wide-literials"), QStringLiteral(u"Unlicense") },
         { QStringLiteral(u"widestring"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"windows"), QStringLiteral(u"MIT") },
-        { QStringLiteral(u"Qt"), QStringLiteral(u"LGPLv3") }
     };
 
     AboutPage::AboutPage(QWidget* parent) : QWidget(parent)
     {
-        QFont title_font = m_title_label.font();
-        title_font.setBold(true);
-        title_font.setPointSizeF(title_font.pointSizeF() * 1.5);
-
-        m_title_label.setFont(title_font);
         m_title_label.setAlignment(Qt::AlignHCenter);
-        m_title_label.setText(QStringLiteral(u"清华大学校园网客户端"));
+        m_title_label.setText(QStringLiteral(u"<b><big>清华大学校园网客户端</big></b>"));
         m_about_layout.addWidget(&m_title_label);
 
         m_source_label.setAlignment(Qt::AlignHCenter);
@@ -69,9 +63,8 @@ namespace TUNet
         m_copyright_label.setText(QStringLiteral(u"版权所有 © 2021 Berrysoft"));
         m_about_layout.addWidget(&m_copyright_label);
 
-        m_lib_label.setFont(title_font);
         m_lib_label.setAlignment(Qt::AlignHCenter);
-        m_lib_label.setText(QStringLiteral(u"使用的库"));
+        m_lib_label.setText(QStringLiteral(u"<b><big>使用的库</big></b>"));
         m_about_layout.addWidget(&m_lib_label);
 
         m_lib_table.setColumnCount(2);
@@ -96,7 +89,16 @@ namespace TUNet
         m_lib_table.setSortingEnabled(true);
         m_lib_table.setSelectionBehavior(QTableWidget::SelectRows);
         m_about_layout.addWidget(&m_lib_table);
+
+        m_about_qt_button.setText(QStringLiteral(u"关于Qt"));
+        QObject::connect(&m_about_qt_button, &QPushButton::clicked, this, &AboutPage::about_qt);
+        m_about_layout.addWidget(&m_about_qt_button);
     }
 
     AboutPage::~AboutPage() {}
+
+    void AboutPage::about_qt()
+    {
+        QMessageBox::aboutQt(this);
+    }
 } // namespace TUNet

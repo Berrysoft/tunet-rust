@@ -9,13 +9,8 @@ namespace TUNet
 {
     SettingsPage::SettingsPage(QWidget* parent, Model* pmodel) : QWidget(parent), m_pmodel(pmodel)
     {
-        QFont title_font = m_user_title_label.font();
-        title_font.setBold(true);
-        title_font.setPointSizeF(title_font.pointSizeF() * 1.5);
-
-        m_user_title_label.setFont(title_font);
         m_user_title_label.setAlignment(Qt::AlignHCenter);
-        m_user_title_label.setText(QStringLiteral(u"当前凭据"));
+        m_user_title_label.setText(QStringLiteral(u"<b><big>当前凭据</big></b>"));
         m_settings_layout.addWidget(&m_user_title_label);
         m_user_button.setText(QStringLiteral(u"设置"));
         QObject::connect(&m_user_button, &QPushButton::clicked, this, &SettingsPage::set_credential);
@@ -28,17 +23,15 @@ namespace TUNet
         m_user_layout.addStretch();
         m_settings_layout.addLayout(&m_user_layout);
 
-        m_status_title_label.setFont(title_font);
         m_status_title_label.setAlignment(Qt::AlignHCenter);
-        m_status_title_label.setText(QStringLiteral(u"网络状态"));
+        m_status_title_label.setText(QStringLiteral(u"<b><big>网络状态</big></b>"));
         m_settings_layout.addWidget(&m_status_title_label);
         m_status_label.setAlignment(Qt::AlignHCenter);
         m_status_label.setText(m_pmodel->status());
         m_settings_layout.addWidget(&m_status_label);
 
-        m_online_label.setFont(title_font);
         m_online_label.setAlignment(Qt::AlignHCenter);
-        m_online_label.setText(QStringLiteral(u"管理连接"));
+        m_online_label.setText(QStringLiteral(u"<b><big>管理连接</big></b>"));
         m_settings_layout.addWidget(&m_online_label);
 
         m_online_table.setColumnCount(5);
