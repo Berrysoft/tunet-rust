@@ -2,10 +2,10 @@
 
 namespace TUNet
 {
-    CredDialog::CredDialog() : QDialog()
+    CredDialog::CredDialog(QWidget* parent) : QDialog(parent)
     {
         setWindowTitle(QStringLiteral(u"设置凭据"));
-        setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+        setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint);
 
         m_username_edit.setPlaceholderText(QStringLiteral(u"用户名"));
         QObject::connect(&m_username_edit, &QLineEdit::textChanged, this, &CredDialog::text_changed);

@@ -3,10 +3,10 @@
 
 namespace TUNet
 {
-    ConnectIPDialog::ConnectIPDialog() : QDialog()
+    ConnectIPDialog::ConnectIPDialog(QWidget* parent) : QDialog(parent)
     {
         setWindowTitle(QStringLiteral(u"认证IP"));
-        setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+        setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint);
 
         m_ip_edit.setPlaceholderText(QStringLiteral(u"IPv4地址"));
         QObject::connect(&m_ip_edit, &QLineEdit::textChanged, this, &ConnectIPDialog::text_changed);

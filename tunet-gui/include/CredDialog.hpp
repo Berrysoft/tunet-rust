@@ -12,7 +12,7 @@ namespace TUNet
     struct CredDialog : QDialog
     {
     public:
-        CredDialog();
+        CredDialog(QWidget* parent = nullptr);
         ~CredDialog();
 
         void text_changed(const QString& str);

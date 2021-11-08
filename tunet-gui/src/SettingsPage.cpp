@@ -73,7 +73,7 @@ namespace TUNet
 
     void SettingsPage::ask_credential(const Credential& cred)
     {
-        CredDialog dialog{};
+        CredDialog dialog{ this };
         dialog.set_credential(cred);
         if (dialog.exec() == QDialog::Accepted)
         {
@@ -93,7 +93,7 @@ namespace TUNet
 
     void SettingsPage::connect_ip()
     {
-        ConnectIPDialog dialog{};
+        ConnectIPDialog dialog{ this };
         if (dialog.exec() == QDialog::Accepted)
         {
             m_pmodel->queue_connect(dialog.ip());

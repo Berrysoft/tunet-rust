@@ -12,7 +12,7 @@ namespace TUNet
     struct ConnectIPDialog : QDialog
     {
     public:
-        ConnectIPDialog();
+        ConnectIPDialog(QWidget* parent = nullptr);
         ~ConnectIPDialog();
 
         void text_changed(const QString& str);
