@@ -15,14 +15,13 @@ namespace TUNet
         QObject::connect(&m_password_edit, &QLineEdit::textChanged, this, &CredDialog::text_changed);
         m_root_layout.addWidget(&m_password_edit);
 
-        m_cancel_button.setText(u"取消"_qs);
-        QObject::connect(&m_cancel_button, &QPushButton::clicked, this, &QDialog::reject);
-        m_command_layout.addWidget(&m_cancel_button);
         m_ok_button.setText(u"确定"_qs);
-        m_ok_button.setDefault(true);
         m_ok_button.setEnabled(false);
         QObject::connect(&m_ok_button, &QPushButton::clicked, this, &QDialog::accept);
         m_command_layout.addWidget(&m_ok_button);
+        m_cancel_button.setText(u"取消"_qs);
+        QObject::connect(&m_cancel_button, &QPushButton::clicked, this, &QDialog::reject);
+        m_command_layout.addWidget(&m_cancel_button);
         m_root_layout.addLayout(&m_command_layout);
 
         setFixedSize(sizeHint());
