@@ -142,7 +142,12 @@ pub fn wrap_callback(
 
     func.map(move |func| {
         let wrapper = TempWrapper { func, data };
-        Arc::new(move |m| (wrapper.func)(m, wrapper.data)) as _
+        Arc::new(move |m| {
+            // The fields seems to be catched separately in edition 2021.
+            // Catch the whole wrapper to avoid compile error.
+            let w = &wrapper;
+            (w.func)(m, w.data);
+        }) as _
     })
 }
 
