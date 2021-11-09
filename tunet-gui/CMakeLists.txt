@@ -61,18 +61,20 @@ if(WIN32)
     configure_file(res/info.rc.in ${PROJECT_BINARY_DIR}/info.rc @ONLY)
     target_sources(tunet-gui PUBLIC ${PROJECT_BINARY_DIR}/info.rc)
 
-    get_target_property(_qwidgets_lib Qt${QT_VERSION_MAJOR}::Widgets IMPORTED_LOCATION)
-    get_filename_component(_qt_lib_dir "${_qwidgets_lib}" DIRECTORY)
-    set(WINDEPLOYQT_ARGS "--no-compiler-runtime" "--no-translations" "--no-system-d3d-compiler" "--no-opengl-sw")
-    if(NOT ${USE_QT5})
-        list(APPEND WINDEPLOYQT_ARGS "--qmake" "${_qt_lib_dir}/qmake.exe")
+    if(${USE_DEPLOYQT})
+        get_target_property(_qwidgets_lib Qt${QT_VERSION_MAJOR}::Widgets IMPORTED_LOCATION)
+        get_filename_component(_qt_lib_dir "${_qwidgets_lib}" DIRECTORY)
+        set(WINDEPLOYQT_ARGS "--no-compiler-runtime" "--no-translations" "--no-system-d3d-compiler" "--no-opengl-sw")
+        if(NOT ${USE_QT5})
+            list(APPEND WINDEPLOYQT_ARGS "--qmake" "${_qt_lib_dir}/qmake.exe")
+        endif()
+        add_custom_command(TARGET tunet-gui POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E
+                env PATH="${_qt_lib_dir}" "${WINDEPLOYQT_EXECUTABLE}"
+                    ${WINDEPLOYQT_ARGS}
+                    \"$<TARGET_FILE:tunet-gui>\"
+        )
     endif()
-    add_custom_command(TARGET tunet-gui POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E
-            env PATH="${_qt_lib_dir}" "${WINDEPLOYQT_EXECUTABLE}"
-                ${WINDEPLOYQT_ARGS}
-                \"$<TARGET_FILE:tunet-gui>\"
-    )
 elseif(APPLE)
     target_link_libraries(tunet-gui
         PUBLIC
@@ -99,24 +101,28 @@ endif()
 install(TARGETS tunet-gui DESTINATION bin)
 
 if(WIN32)
-    install(CODE "
-        execute_process(
-            COMMAND \"${CMAKE_COMMAND}\" -E
-                env PATH=\"${_qt_lib_dir}\" \"${WINDEPLOYQT_EXECUTABLE}\"
-                    ${WINDEPLOYQT_ARGS}
-                    \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.exe\"
-        )
-    ")
+    if(${USE_DEPLOYQT})
+        install(CODE "
+            execute_process(
+                COMMAND \"${CMAKE_COMMAND}\" -E
+                    env PATH=\"${_qt_lib_dir}\" \"${WINDEPLOYQT_EXECUTABLE}\"
+                        ${WINDEPLOYQT_ARGS}
+                        \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.exe\"
+            )
+        ")
+    endif()
 
     include(InstallRequiredSystemLibraries)
 elseif(APPLE)
-    install(CODE "
-        execute_process(
-            COMMAND \"${MACDEPLOYQT_EXECUTABLE}\"
-                \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.app\"
-                -always-overwrite
-        )
-    ")
+    if(${USE_DEPLOYQT})
+        install(CODE "
+            execute_process(
+                COMMAND \"${MACDEPLOYQT_EXECUTABLE}\"
+                    \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.app\"
+                    -always-overwrite
+            )
+        ")
+    endif()
 elseif(UNIX)
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Berrysoft")
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Tsinghua campus network client.")

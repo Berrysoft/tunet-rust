@@ -8,6 +8,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 option(USE_QT5 "Build against Qt5" OFF)
 option(USE_CORROSION "Build rust part with Corrosion" ON)
+option(USE_DEPLOYQT "Use *deployqt for deployment" ON)
 
 if(${USE_QT5})
     set(QT_VERSION_MAJOR 5)
