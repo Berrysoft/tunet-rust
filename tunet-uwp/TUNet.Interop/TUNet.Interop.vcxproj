@@ -95,6 +95,7 @@
       <AdditionalOptions Condition="'$(CppWinRTHeapEnforcement)'==''">/DWINRT_NO_MAKE_DETECTION %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>_WINRT_DLL;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>$(WindowsSDK_WindowsMetadata);$(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -102,17 +103,26 @@
       <ModuleDefinitionFile>TUNet_Interop.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
+  <PropertyGroup>
+    <_RustTarget Condition="'$(Platform)'=='Win32'">i686-pc-windows-msvc</_RustTarget>
+    <_RustTarget Condition="'$(Platform)'=='x64'">x86_64-pc-windows-msvc</_RustTarget>
+    <_RustTarget Condition="'$(Platform)'=='ARM'">thumbv7a-pc-windows-msvc</_RustTarget>
+    <_RustTarget Condition="'$(Platform)'=='ARM64'">aarch64-pc-windows-msvc</_RustTarget>
+    <_RustCommandLineArgs Condition="'$(Configuration)'=='Debug'"></_RustCommandLineArgs>
+    <_RustCommandLineArgs Condition="'$(Configuration)'=='Release'">--release</_RustCommandLineArgs>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <PreBuildEvent>
+      <Command>cargo build --target=$(_RustTarget) $(_RustCommandLineArgs) --manifest-path ../../tunet-model-native/Cargo.toml</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>WindowsApp.lib;OneCore.lib;ntdll.lib;../../target/$(_RustTarget)/$(Configuration)/tunet_model_native.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
-    <PreBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cargo build --target=x86_64-pc-windows-msvc --manifest-path ../../tunet-model-native/Cargo.toml</Command>
-    </PreBuildEvent>
-    <Link>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WindowsApp.lib;OneCore.lib;ntdll.lib;../../target/x86_64-pc-windows-msvc/debug/tunet_model_native.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
