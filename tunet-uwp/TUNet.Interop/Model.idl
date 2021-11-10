@@ -1,0 +1,89 @@
+namespace TUNet.Interop
+{
+    enum Action
+    {
+        Timer,
+        Tick,
+        Login,
+        Logout,
+        Flux,
+        Online,
+        Details,
+    };
+
+    enum UpdateMsg
+    {
+        Credential,
+        Method,
+        Log,
+        Flux,
+        Onlines,
+        Details,
+        LogBusy,
+        OnlineBusy,
+        DetailBusy,
+    };
+
+    enum State
+    {
+        Auto,
+        Net,
+        Auth4,
+        Auth6,
+    };
+
+    struct Cred
+    {
+        String username;
+        String password;
+    };
+
+    struct Info
+    {
+        String username;
+        UInt64 flux;
+        Windows.Foundation.TimeSpan onlineTime;
+        Double balance;
+    };
+
+    struct MacAddress
+    {
+        UInt8 part0;
+        UInt8 part1;
+        UInt8 part2;
+        UInt8 part3;
+        UInt8 part4;
+        UInt8 part5;
+    };
+
+    struct Online
+    {
+        UInt32 address;
+        Windows.Foundation.DateTime loginTime;
+        UInt64 flux;
+        Windows.Foundation.IReference<MacAddress> macAddress;
+        Boolean isLocal;
+    };
+
+    struct Detail
+    {
+        Windows.Foundation.DateTime loginTime;
+        Windows.Foundation.DateTime logoutTime;
+        UInt64 flux;
+    };
+
+    [default_interface] runtimeclass Model : Windows.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        Model();
+
+        String Status { get; };
+        Cred Credential;
+        State Method;
+        String Log { get; };
+        Info OnlineInfo { get; };
+        Windows.Foundation.Collections.IObservableVector<Online> Onlines { get; };
+        Windows.Foundation.Collections.IObservableVector<Detail> Details { get; };
+
+        void Update(UpdateMsg msg);
+    }
+} // namespace Interop
