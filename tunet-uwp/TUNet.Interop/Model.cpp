@@ -9,6 +9,7 @@
 #include <cstdint>
 
 using namespace winrt;
+using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Xaml::Data;
 
@@ -87,7 +88,7 @@ static void fn_string_callback(const wchar_t* data, void* d)
 template <typename F, typename... Args>
 hstring get_hstring(F&& f, Args... args)
 {
-    hstring str;
+    hstring str{};
     f(std::move(args)..., fn_string_callback, &str);
     return str;
 }
@@ -100,7 +101,7 @@ namespace winrt::TUNet::Interop::implementation
         model->Update(m);
     }
 
-    Model::Model()
+    Model::Model(NativeModel handle) : m_handle(handle)
     {
         m_onlines = single_threaded_observable_vector<Online>();
         m_details = single_threaded_observable_vector<Detail>();
@@ -173,6 +174,19 @@ namespace winrt::TUNet::Interop::implementation
         return m_details;
     }
 
+    static int fn_init_callback(NativeModel handle, void* data)
+    {
+        TUNet::Interop::ModelStartHandler handler{};
+        winrt::attach_abi(handler, data);
+        auto model = winrt::make<Model>(handle);
+        return handler(model);
+    }
+
+    std::int32_t Model::Start(TUNet::Interop::ModelStartHandler const& handler)
+    {
+        return tunet_model_start(4, fn_init_callback, winrt::get_abi(handler));
+    }
+
     static std::wstring_view get_string_repr(UpdateMsg msg)
     {
         switch (msg)
@@ -196,7 +210,7 @@ namespace winrt::TUNet::Interop::implementation
         case UpdateMsg::DetailBusy:
             return L"DetailBusy";
         default:
-            return nullptr;
+            return {};
         }
     }
 

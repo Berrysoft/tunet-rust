@@ -8,7 +8,7 @@ namespace winrt::TUNet::Interop::implementation
 {
     struct Model : ModelT<Model>
     {
-        Model();
+        Model(const void* handle);
         ~Model();
 
         event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler);
@@ -23,6 +23,8 @@ namespace winrt::TUNet::Interop::implementation
         TUNet::Interop::Info OnlineInfo();
         Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Online> Onlines();
         Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Detail> Details();
+
+        static std::int32_t Start(TUNet::Interop::ModelStartHandler const& handler);
 
         void Update(TUNet::Interop::UpdateMsg msg);
 

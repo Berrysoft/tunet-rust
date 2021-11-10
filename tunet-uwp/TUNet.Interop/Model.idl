@@ -72,10 +72,10 @@ namespace TUNet.Interop
         UInt64 flux;
     };
 
+    delegate Int32 ModelStartHandler(Model model);
+
     [default_interface] runtimeclass Model : Windows.UI.Xaml.Data.INotifyPropertyChanged
     {
-        Model();
-
         String Status { get; };
         Cred Credential;
         State Method;
@@ -84,6 +84,7 @@ namespace TUNet.Interop
         Windows.Foundation.Collections.IObservableVector<Online> Onlines { get; };
         Windows.Foundation.Collections.IObservableVector<Detail> Details { get; };
 
+        static Int32 Start(ModelStartHandler handler);
         void Update(UpdateMsg msg);
     }
 } // namespace Interop

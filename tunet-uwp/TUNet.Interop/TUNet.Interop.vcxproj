@@ -16,7 +16,6 @@
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.19041.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.17134.0</WindowsTargetPlatformMinVersion>
-    <CppWinRTLibs>true</CppWinRTLibs>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
@@ -108,7 +107,8 @@
     <_RustTarget Condition="'$(Platform)'=='x64'">x86_64-pc-windows-msvc</_RustTarget>
     <_RustTarget Condition="'$(Platform)'=='ARM'">thumbv7a-pc-windows-msvc</_RustTarget>
     <_RustTarget Condition="'$(Platform)'=='ARM64'">aarch64-pc-windows-msvc</_RustTarget>
-    <_RustCommandLineArgs Condition="'$(Configuration)'=='Debug'"></_RustCommandLineArgs>
+    <_RustCommandLineArgs Condition="'$(Configuration)'=='Debug'">
+    </_RustCommandLineArgs>
     <_RustCommandLineArgs Condition="'$(Configuration)'=='Release'">--release</_RustCommandLineArgs>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -116,7 +116,7 @@
       <Command>cargo build --target=$(_RustTarget) $(_RustCommandLineArgs) --manifest-path ../../tunet-model-native/Cargo.toml</Command>
     </PreBuildEvent>
     <Link>
-      <AdditionalDependencies>WindowsApp.lib;OneCore.lib;ntdll.lib;../../target/$(_RustTarget)/$(Configuration)/tunet_model_native.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCore.lib;ntdll.lib;../../target/$(_RustTarget)/$(Configuration)/tunet_model_native.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
