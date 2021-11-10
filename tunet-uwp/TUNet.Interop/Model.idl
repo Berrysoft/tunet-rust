@@ -34,42 +34,42 @@ namespace TUNet.Interop
 
     struct Cred
     {
-        String username;
-        String password;
+        String Username;
+        String Password;
     };
 
     struct Info
     {
-        String username;
-        UInt64 flux;
-        Windows.Foundation.TimeSpan onlineTime;
-        Double balance;
+        String Username;
+        UInt64 Flux;
+        Windows.Foundation.TimeSpan OnlineTime;
+        Double Balance;
     };
 
     struct MacAddress
     {
-        UInt8 part0;
-        UInt8 part1;
-        UInt8 part2;
-        UInt8 part3;
-        UInt8 part4;
-        UInt8 part5;
+        UInt8 Part0;
+        UInt8 Part1;
+        UInt8 Part2;
+        UInt8 Part3;
+        UInt8 Part4;
+        UInt8 Part5;
     };
 
     struct Online
     {
-        UInt32 address;
-        Windows.Foundation.DateTime loginTime;
-        UInt64 flux;
-        Windows.Foundation.IReference<MacAddress> macAddress;
-        Boolean isLocal;
+        UInt32 Address;
+        Windows.Foundation.DateTime LoginTime;
+        UInt64 Flux;
+        Windows.Foundation.IReference<MacAddress> MacAddress;
+        Boolean IsLocal;
     };
 
     struct Detail
     {
-        Windows.Foundation.DateTime loginTime;
-        Windows.Foundation.DateTime logoutTime;
-        UInt64 flux;
+        Windows.Foundation.DateTime LoginTime;
+        Windows.Foundation.DateTime LogoutTime;
+        UInt64 Flux;
     };
 
     delegate Int32 ModelStartHandler(Model model);
@@ -85,6 +85,13 @@ namespace TUNet.Interop
         Windows.Foundation.Collections.IObservableVector<Detail> Details { get; };
 
         static Int32 Start(ModelStartHandler handler);
+        void Queue(Action action);
         void Update(UpdateMsg msg);
+
+        Windows.UI.Xaml.Input.ICommand LoginCommand { get; };
+        Windows.UI.Xaml.Input.ICommand LogoutCommand { get; };
+        Windows.UI.Xaml.Input.ICommand FetchInfoCommand { get; };
+        Windows.UI.Xaml.Input.ICommand FetchOnlinesCommand { get; };
+        Windows.UI.Xaml.Input.ICommand FetchDetailsCommand { get; };
     }
 } // namespace Interop

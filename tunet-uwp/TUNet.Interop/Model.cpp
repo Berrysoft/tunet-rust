@@ -7,11 +7,13 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Xaml::Data;
+using namespace Windows::UI::Xaml::Input;
 
 extern "C"
 {
@@ -79,22 +81,48 @@ extern "C"
     void tunet_model_set_del_at_exit(NativeModel m, bool v);
 }
 
-static void fn_string_callback(const wchar_t* data, void* d)
-{
-    hstring* pstr = reinterpret_cast<hstring*>(d);
-    *pstr = data;
-}
-
-template <typename F, typename... Args>
-hstring get_hstring(F&& f, Args... args)
-{
-    hstring str{};
-    f(std::move(args)..., fn_string_callback, &str);
-    return str;
-}
-
 namespace winrt::TUNet::Interop::implementation
 {
+    struct Command : winrt::implements<Command, ICommand>
+    {
+        Command(std::function<void(IInspectable const&)> execute, std::function<bool(IInspectable const&)> can_execute)
+            : m_execute(execute), m_can_execute(can_execute)
+        {
+        }
+
+        void Execute(IInspectable const& parameter)
+        {
+            m_execute(parameter);
+        }
+
+        bool CanExecute(IInspectable const& parameter)
+        {
+            return m_can_execute(parameter);
+        }
+
+        event_token CanExecuteChanged(EventHandler<IInspectable> const& handler) { return m_can_execute_changed.add(handler); }
+        void CanExecuteChanged(event_token const& token) { m_can_execute_changed.remove(token); }
+
+        event<EventHandler<IInspectable>> m_can_execute_changed{};
+
+        std::function<void(IInspectable const&)> m_execute{};
+        std::function<bool(IInspectable const&)> m_can_execute{};
+    };
+
+    static void fn_string_callback(const wchar_t* data, void* d)
+    {
+        hstring* pstr = reinterpret_cast<hstring*>(d);
+        *pstr = data;
+    }
+
+    template <typename F, typename... Args>
+    hstring get_hstring(F&& f, Args... args)
+    {
+        hstring str{};
+        f(std::move(args)..., fn_string_callback, &str);
+        return str;
+    }
+
     static void fn_update_callback(UpdateMsg m, void* data)
     {
         auto model = reinterpret_cast<Model*>(data);
@@ -105,6 +133,19 @@ namespace winrt::TUNet::Interop::implementation
     {
         m_onlines = single_threaded_observable_vector<Online>();
         m_details = single_threaded_observable_vector<Detail>();
+        m_info_command = winrt::make<Command>(
+            [weak_self = get_weak()](IInspectable const&)
+            {
+                if (auto strong = weak_self.get())
+                {
+                    strong->Queue(Action::Flux);
+                }
+            },
+            [weak_self = get_weak()](IInspectable const&)
+            {
+                return true;
+            });
+
         tunet_model_set_update_callback(m_handle, fn_update_callback, this);
     }
 
@@ -115,12 +156,12 @@ namespace winrt::TUNet::Interop::implementation
 
     event_token Model::PropertyChanged(PropertyChangedEventHandler const& handler)
     {
-        return m_propertyChangedEvent.add(handler);
+        return m_property_changed.add(handler);
     }
 
     void Model::PropertyChanged(event_token const& token) noexcept
     {
-        m_propertyChangedEvent.remove(token);
+        m_property_changed.remove(token);
     }
 
     hstring Model::Status()
@@ -137,7 +178,7 @@ namespace winrt::TUNet::Interop::implementation
 
     void Model::Credential(TUNet::Interop::Cred const& cred)
     {
-        tunet_model_queue_cred(m_handle, cred.username.c_str(), cred.password.c_str());
+        tunet_model_queue_cred(m_handle, cred.Username.c_str(), cred.Password.c_str());
     }
 
     State Model::Method()
@@ -164,16 +205,6 @@ namespace winrt::TUNet::Interop::implementation
         return Info{ username, f, std::chrono::seconds{ online }, balance };
     }
 
-    IObservableVector<Online> Model::Onlines()
-    {
-        return m_onlines;
-    }
-
-    IObservableVector<Detail> Model::Details()
-    {
-        return m_details;
-    }
-
     static int fn_init_callback(NativeModel handle, void* data)
     {
         TUNet::Interop::ModelStartHandler handler{};
@@ -182,9 +213,14 @@ namespace winrt::TUNet::Interop::implementation
         return handler(model);
     }
 
-    std::int32_t Model::Start(TUNet::Interop::ModelStartHandler const& handler)
+    std::int32_t Model::Start(ModelStartHandler const& handler)
     {
         return tunet_model_start(4, fn_init_callback, winrt::get_abi(handler));
+    }
+
+    void Model::Queue(Action action)
+    {
+        tunet_model_queue(m_handle, action);
     }
 
     static std::wstring_view get_string_repr(UpdateMsg msg)
@@ -225,7 +261,7 @@ namespace winrt::TUNet::Interop::implementation
             UpdateDetails();
             break;
         }
-        m_propertyChangedEvent(*this, PropertyChangedEventArgs{ get_string_repr(msg) });
+        m_property_changed(*this, PropertyChangedEventArgs{ get_string_repr(msg) });
     }
 
     static constexpr MacAddress get_mac(std::uint8_t const (&maddr)[6]) noexcept

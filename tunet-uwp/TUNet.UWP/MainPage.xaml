@@ -3,12 +3,79 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TUNet.UWP"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
-    <Grid>
-        <TextBlock Text="{x:Bind Model.Status}"/>
-    </Grid>
+    Background="{ThemeResource SystemControlAcrylicWindowBrush}">
+    <SplitView x:Name="Split" PanePlacement="Right" DisplayMode="Overlay" OpenPaneLength="300" PaneBackground="{ThemeResource SystemControlAcrylicElementBrush}">
+        <SplitView.Content>
+            <Grid>
+                <!--<Frame x:Name="MainFrame" Background="Transparent" Content="{x:Bind Model.UserContent,Mode=OneWay}"/>-->
+                <ScrollViewer x:Name="ResponseViewer" VerticalScrollMode="Disabled" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="48" Opacity="0">
+                    <TextBlock Margin="8" VerticalAlignment="Bottom" HorizontalTextAlignment="Right" TextWrapping="NoWrap" Style="{ThemeResource BodyTextBlockStyle}" IsTextSelectionEnabled="True" Text="{x:Bind Model.Log,Mode=OneWay}"/>
+                </ScrollViewer>
+            </Grid>
+        </SplitView.Content>
+        <SplitView.Pane>
+            <ScrollViewer HorizontalScrollMode="Disabled">
+                <StackPanel Margin="8" Orientation="Vertical">
+                    <TextBlock Margin="8" Style="{ThemeResource TitleTextBlockStyle}">设置</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="8" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center">当前用户</TextBlock>
+                        <AppBarButton Margin="8,0" Style="{ThemeResource AppBarButtonRevealStyle}" Width="48" VerticalAlignment="Center" LabelPosition="Collapsed" Icon="Contact" ToolTipService.ToolTip="更改用户"/>
+                        <TextBlock Margin="8" Style="{ThemeResource BodyTextBlockStyle}" VerticalAlignment="Center" Text="{x:Bind Model.Credential.Username,Mode=OneWay}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="8" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center">网络状态</TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="8" Style="{ThemeResource BaseTextBlockStyle}">网络类型</TextBlock>
+                        <TextBlock Margin="8" Style="{ThemeResource BodyTextBlockStyle}" Text="{x:Bind Model.Status}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="8" Style="{ThemeResource SubtitleTextBlockStyle}">连接类型</TextBlock>
+                        <AppBarButton Margin="8,0" Style="{ThemeResource AppBarButtonRevealStyle}" Width="48" VerticalAlignment="Center" LabelPosition="Collapsed" Icon="Help" ToolTipService.ToolTip="选项帮助"/>
+                    </StackPanel>
+                    <muxc:RadioButtons Margin="8" MaxColumns="2"/>
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Margin="8" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center">管理连接</TextBlock>
+                            <AppBarButton Margin="8,0" Style="{ThemeResource AppBarButtonRevealStyle}" Width="48" VerticalAlignment="Center" LabelPosition="Collapsed" Icon="Refresh" ToolTipService.ToolTip="刷新状态"/>
+                        </StackPanel>
+                        <ListView Margin="8" ItemsSource="{x:Bind Model.Onlines,Mode=OneTime}">
+                            <ListView.ItemContainerTransitions>
+                                <TransitionCollection>
+                                    <AddDeleteThemeTransition/>
+                                </TransitionCollection>
+                            </ListView.ItemContainerTransitions>
+                        </ListView>
+                    </StackPanel>
+                    <TextBlock Margin="8" Style="{ThemeResource SubtitleTextBlockStyle}">主题设置</TextBlock>
+                    <!--<StackPanel Orientation="Horizontal">
+                        <muxc:RadioButtons Margin="8" SelectedIndex="{x:Bind Model.ContentType,Converter={StaticResource EnumIndexConverter},Mode=TwoWay}">
+                            <muxc:RadioButtons.Header>
+                                <TextBlock Margin="0,0,0,8" Style="{ThemeResource BaseTextBlockStyle}">样式</TextBlock>
+                            </muxc:RadioButtons.Header>
+                            <x:String>直线</x:String>
+                            <x:String>圆圈</x:String>
+                            <x:String>水面</x:String>
+                        </muxc:RadioButtons>
+                    </StackPanel>-->
+                </StackPanel>
+            </ScrollViewer>
+        </SplitView.Pane>
+    </SplitView>
+    <Page.BottomAppBar>
+        <CommandBar x:Name="MainBar" Style="{ThemeResource CommandBarRevealStyle}" Background="Transparent" DefaultLabelPosition="Right" OverflowButtonVisibility="Collapsed">
+            <AppBarButton Icon="Upload" Label="登录"/>
+            <AppBarButton Icon="Download" Label="注销"/>
+            <AppBarButton Icon="Refresh" Label="刷新" Command="{x:Bind Model.FetchInfoCommand}"/>
+            <AppBarSeparator/>
+            <AppBarButton Icon="List" Label="流量明细"/>
+            <AppBarSeparator/>
+            <AppBarButton Icon="Setting" Label="设置"/>
+            <AppBarButton Icon="Help" Label="关于"/>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>

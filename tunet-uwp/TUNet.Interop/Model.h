@@ -21,20 +21,34 @@ namespace winrt::TUNet::Interop::implementation
         void Method(TUNet::Interop::State state);
         hstring Log();
         TUNet::Interop::Info OnlineInfo();
-        Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Online> Onlines();
-        Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Detail> Details();
+        Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Online> Onlines() { return m_onlines; }
+        Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Detail> Details() { return m_details; }
+
+        Windows::UI::Xaml::Input::ICommand LoginCommand() { return m_login_command; }
+        Windows::UI::Xaml::Input::ICommand LogoutCommand() { return m_logout_command; }
+        Windows::UI::Xaml::Input::ICommand FetchInfoCommand() { return m_info_command; }
+        Windows::UI::Xaml::Input::ICommand FetchOnlinesCommand() { return m_onlines_command; }
+        Windows::UI::Xaml::Input::ICommand FetchDetailsCommand() { return m_details_command; }
 
         static std::int32_t Start(TUNet::Interop::ModelStartHandler const& handler);
 
+        void Queue(TUNet::Interop::Action action);
         void Update(TUNet::Interop::UpdateMsg msg);
 
         void UpdateOnlines();
         void UpdateDetails();
 
+        event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_property_changed{};
+
         const void* m_handle{};
-        event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_propertyChangedEvent{};
         Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Online> m_onlines{};
         Windows::Foundation::Collections::IObservableVector<TUNet::Interop::Detail> m_details{};
+
+        Windows::UI::Xaml::Input::ICommand m_login_command{};
+        Windows::UI::Xaml::Input::ICommand m_logout_command{};
+        Windows::UI::Xaml::Input::ICommand m_info_command{};
+        Windows::UI::Xaml::Input::ICommand m_onlines_command{};
+        Windows::UI::Xaml::Input::ICommand m_details_command{};
     };
 } // namespace winrt::TUNet::Interop::implementation
 
