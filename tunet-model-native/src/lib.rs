@@ -129,7 +129,7 @@ pub unsafe extern "C" fn tunet_model_set_update_callback(
     update: native::UpdateCallback,
     data: *mut c_void,
 ) {
-    write_model(model).set_callback(native::wrap_callback(update, data));
+    write_model(model).update = native::wrap_callback(update, data);
 }
 
 #[no_mangle]

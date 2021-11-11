@@ -16,17 +16,17 @@ use tunet_helper::{usereg::*, *};
 pub type UpdateCallback = Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
 
 pub struct Model {
-    update: Option<UpdateCallback>,
     tx: Sender<Action>,
+    pub update: Option<UpdateCallback>,
     pub cred: Arc<NetCredential>,
     pub http: HttpClient,
     pub state: NetState,
     pub status: NetStatus,
     pub accent: ThemeColor,
     pub log: Cow<'static, str>,
-    pub log_busy: Arc<AtomicBool>,
-    pub online_busy: Arc<AtomicBool>,
-    pub detail_busy: Arc<AtomicBool>,
+    log_busy: BusyBool,
+    online_busy: BusyBool,
+    detail_busy: BusyBool,
     pub flux: NetFlux,
     pub users: Vec<NetUser>,
     pub details: Vec<NetDetail>,
@@ -44,26 +44,22 @@ impl Model {
 
         Ok(Self {
             update: None,
-            tx,
+            tx: tx.clone(),
             cred: Arc::new(NetCredential::default()),
             http,
             state: NetState::Unknown,
             status: NetStatus::current(),
             accent: ThemeColor::accent(),
             log: Cow::default(),
-            log_busy: Arc::new(AtomicBool::new(false)),
-            online_busy: Arc::new(AtomicBool::new(false)),
-            detail_busy: Arc::new(AtomicBool::new(false)),
+            log_busy: BusyBool::new(tx.clone(), UpdateMsg::LogBusy),
+            online_busy: BusyBool::new(tx.clone(), UpdateMsg::OnlineBusy),
+            detail_busy: BusyBool::new(tx, UpdateMsg::DetailBusy),
             flux: NetFlux::default(),
             users: Vec::default(),
             details: Vec::default(),
             mac_addrs,
             del_at_exit: AtomicBool::new(false),
         })
-    }
-
-    pub fn set_callback(&mut self, update: Option<UpdateCallback>) {
-        self.update = update;
     }
 
     pub fn queue(&self, action: Action) {
@@ -216,8 +212,7 @@ impl Model {
     }
 
     fn spawn_login(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone(), self.tx.clone(), UpdateMsg::LogBusy);
-        if lock.lock() {
+        if let Some(lock) = self.log_busy.lock() {
             let tx = self.tx.clone();
             if let Some(client) = self.client() {
                 tokio::spawn(async move {
@@ -236,8 +231,7 @@ impl Model {
     }
 
     fn spawn_logout(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone(), self.tx.clone(), UpdateMsg::LogBusy);
-        if lock.lock() {
+        if let Some(lock) = self.log_busy.lock() {
             let tx = self.tx.clone();
             if let Some(client) = self.client() {
                 tokio::spawn(async move {
@@ -256,8 +250,7 @@ impl Model {
     }
 
     fn spawn_flux(&self) {
-        let mut lock = BusyGuard::new(self.log_busy.clone(), self.tx.clone(), UpdateMsg::LogBusy);
-        if lock.lock() {
+        if let Some(lock) = self.log_busy.lock() {
             let tx = self.tx.clone();
             if let Some(client) = self.client() {
                 tokio::spawn(async move {
@@ -287,12 +280,7 @@ impl Model {
     }
 
     fn spawn_online(&self) {
-        let mut lock = BusyGuard::new(
-            self.online_busy.clone(),
-            self.tx.clone(),
-            UpdateMsg::OnlineBusy,
-        );
-        if lock.lock() {
+        if let Some(lock) = self.online_busy.lock() {
             let tx = self.tx.clone();
             let usereg = self.usereg();
             tokio::spawn(async move {
@@ -308,12 +296,7 @@ impl Model {
     }
 
     fn spawn_details(&self) {
-        let mut lock = BusyGuard::new(
-            self.detail_busy.clone(),
-            self.tx.clone(),
-            UpdateMsg::DetailBusy,
-        );
-        if lock.lock() {
+        if let Some(lock) = self.detail_busy.lock() {
             let tx = self.tx.clone();
             let usereg = self.usereg();
             tokio::spawn(async move {
@@ -329,15 +312,15 @@ impl Model {
     }
 
     pub fn log_busy(&self) -> bool {
-        self.log_busy.load(Ordering::Acquire)
+        self.log_busy.get()
     }
 
     pub fn online_busy(&self) -> bool {
-        self.online_busy.load(Ordering::Acquire)
+        self.online_busy.get()
     }
 
     pub fn detail_busy(&self) -> bool {
-        self.detail_busy.load(Ordering::Acquire)
+        self.detail_busy.get()
     }
 
     pub fn set_del_at_exit(&self, v: bool) {
@@ -385,48 +368,62 @@ pub enum UpdateMsg {
     DetailBusy,
 }
 
-struct BusyGuard {
+struct BusyBool {
     lock: Arc<AtomicBool>,
-    locked: bool,
     tx: Sender<Action>,
     msg: UpdateMsg,
 }
 
-impl BusyGuard {
-    pub fn new(lock: Arc<AtomicBool>, tx: Sender<Action>, msg: UpdateMsg) -> Self {
+impl BusyBool {
+    pub fn new(tx: Sender<Action>, msg: UpdateMsg) -> Self {
         Self {
-            lock,
-            locked: false,
+            lock: Arc::new(AtomicBool::new(false)),
             tx,
             msg,
         }
     }
 
-    pub fn lock(&mut self) -> bool {
-        self.locked = self
+    pub fn get(&self) -> bool {
+        self.lock.load(Ordering::Acquire)
+    }
+
+    pub fn lock(&self) -> Option<BusyGuard> {
+        if self
             .lock
             .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
-            .is_ok();
+            .is_ok()
         {
             let msg = self.msg;
             let tx = self.tx.clone();
             tokio::spawn(async move {
                 tx.send(Action::Update(msg)).await.ok();
             });
+            Some(BusyGuard::new(self.lock.clone(), self.tx.clone(), self.msg))
+        } else {
+            None
         }
-        self.locked
+    }
+}
+
+struct BusyGuard {
+    lock: Arc<AtomicBool>,
+    tx: Sender<Action>,
+    msg: UpdateMsg,
+}
+
+impl BusyGuard {
+    pub fn new(lock: Arc<AtomicBool>, tx: Sender<Action>, msg: UpdateMsg) -> Self {
+        Self { lock, tx, msg }
     }
 }
 
 impl Drop for BusyGuard {
     fn drop(&mut self) {
-        if self.locked {
-            self.lock.store(false, Ordering::Release);
-            let msg = self.msg;
-            let tx = self.tx.clone();
-            tokio::spawn(async move {
-                tx.send(Action::Update(msg)).await.ok();
-            });
-        }
+        self.lock.store(false, Ordering::Release);
+        let msg = self.msg;
+        let tx = self.tx.clone();
+        tokio::spawn(async move {
+            tx.send(Action::Update(msg)).await.ok();
+        });
     }
 }
