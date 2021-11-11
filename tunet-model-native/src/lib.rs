@@ -87,13 +87,14 @@ fn tunet_model_start_impl(
         .worker_threads(val)
         .enable_all()
         .build()?;
+    let handle = runtime.handle().clone();
     runtime.block_on(async move {
         if let Some(main) = main {
             let (tx, mut rx) = channel(32);
-            let model = Arc::new(RwLock::new(Model::new(tx)?));
+            let model = Arc::new(RwLock::new(Model::new(tx, handle.clone())?));
             {
                 let model = model.clone();
-                tokio::spawn(async move {
+                handle.spawn(async move {
                     while let Some(a) = rx.recv().await {
                         let mut model = model.write().unwrap();
                         model.handle(a);
@@ -129,7 +130,7 @@ pub unsafe extern "C" fn tunet_model_set_update_callback(
     update: native::UpdateCallback,
     data: *mut c_void,
 ) {
-    write_model(model).set_callback(native::wrap_callback(update, data));
+    write_model(model).update = native::wrap_callback(update, data);
 }
 
 #[no_mangle]
