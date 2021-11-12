@@ -10,6 +10,7 @@ license = "MIT"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.26", features = [
+    "std",
     "Networking_Connectivity",
 ] }
 
