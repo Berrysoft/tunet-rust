@@ -48,13 +48,13 @@ impl Event {
     #[allow(clippy::single_match)]
     fn attach_callback(&mut self) {
         let tx = self.tx.clone();
-        self.model.set_callback(Some(Arc::new(move |m| match m {
+        self.model.update = Some(Arc::new(move |m| match m {
             UpdateMsg::State => {
                 let tx = tx.clone();
                 tokio::spawn(async move { tx.send(Ok(EventType::UpdateState)).await.ok() });
             }
             _ => {}
-        })));
+        }));
     }
 
     fn spawn_terminal_event(&self) {
