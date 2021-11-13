@@ -4,7 +4,14 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+  branches:
+    include:
+      - master
+  paths:
+    exclude:
+      - .github/
+      - assets/
+      - README.md
 
 jobs:
 - job: Build_Windows

@@ -4,7 +4,7 @@
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
 ## GUI
-支持 Qt5/6，以及 Qt 支持的桌面平台。
+支持 Qt5/6，以及 Qt 支持的桌面平台。前端使用 C++ 编写。
 
 |Windows|Linux|MacOS|MacOS（暗）|
 |-|-|-|-|
@@ -72,9 +72,10 @@
 |macOS|[Keychain](https://developer.apple.com/documentation/security/keychain_services)|
 
 对于不支持密码管理的 Linux 发行版，会回退到**明文**密码。
-在 WSL 上的表现可能为，保存的密码会在 WSL 重启后消失。
 
-请不要在不信任的电脑上保存密码。可以使用如下命令删除：
+在 WSL 上保存的密码会在 WSL 重启后消失。
+
+请不要在不信任的电脑上保存密码。可以在图形界面点击“删除并退出”，或在命令行使用如下命令删除：
 ``` bash
 ./tunet deletecred
 ```
