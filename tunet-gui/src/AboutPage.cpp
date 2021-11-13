@@ -27,6 +27,7 @@ namespace TUNet
         { QStringLiteral(u"netlink_wi"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"objc"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"once_cell"), QStringLiteral(u"MIT") },
+        { QStringLiteral(u"QProgressIndicator"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"regex"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"reqwest"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"rpassword"), QStringLiteral(u"Apache-2.0") },

@@ -12,6 +12,9 @@ namespace TUNet
         m_flux_circle.set_color(m_pmodel->accent_color());
         m_info_layout.addWidget(&m_flux_circle, 0, 0);
         m_info_layout.addWidget(&m_flux_widget, 0, 0, Qt::AlignCenter);
+        m_log_busy_indicator.setFixedSize(30, 30);
+        m_log_busy_indicator.setColor(m_pmodel->accent_color());
+        m_info_layout.addWidget(&m_log_busy_indicator, 0, 0, Qt::AlignCenter);
         m_root_layout.addLayout(&m_info_layout, 1);
 
         m_state_layout.addStretch();
@@ -98,5 +101,13 @@ namespace TUNet
         m_login_button.setEnabled(free);
         m_logout_button.setEnabled(free);
         m_flux_button.setEnabled(free);
+        if (!free)
+        {
+            m_log_busy_indicator.startAnimation();
+        }
+        else
+        {
+            m_log_busy_indicator.stopAnimation();
+        }
     }
 } // namespace TUNet

@@ -6,6 +6,7 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QProgressIndicator.hpp>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -37,6 +38,8 @@ namespace TUNet
         QGridLayout m_info_layout{};
 
         FluxCircle m_flux_circle{};
+
+        QProgressIndicator m_log_busy_indicator{};
 
         QWidget m_flux_widget{};
         QVBoxLayout m_flux_layout{ &m_flux_widget };
