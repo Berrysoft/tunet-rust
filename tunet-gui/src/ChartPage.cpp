@@ -34,9 +34,14 @@ namespace TUNet
         m_time_view.setStyleSheet(CHART_VIEW_TRANSPARENT);
         m_chart_layout.addWidget(&m_time_view);
 
+        m_chart_root_layout.addLayout(&m_chart_layout, 0, 0);
+        m_detail_busy_indicator.setColor(m_pmodel->accent_color());
+        m_chart_root_layout.addWidget(&m_detail_busy_indicator, 0, 0, Qt::AlignCenter);
+        m_root_layout.addLayout(&m_chart_root_layout);
+
         m_refresh_button.setText(QStringLiteral(u"刷新"));
         QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &ChartPage::refresh_details);
-        m_chart_layout.addWidget(&m_refresh_button);
+        m_root_layout.addWidget(&m_refresh_button);
 
         QObject::connect(m_pmodel, &Model::details_changed, this, &ChartPage::update_details);
         QObject::connect(m_pmodel, &Model::detail_busy_changed, this, &ChartPage::update_detail_busy);
@@ -110,6 +115,15 @@ namespace TUNet
 
     void ChartPage::update_detail_busy()
     {
-        m_refresh_button.setEnabled(!m_pmodel->detail_busy());
+        bool free = !m_pmodel->detail_busy();
+        m_refresh_button.setEnabled(free);
+        if (!free)
+        {
+            m_detail_busy_indicator.startAnimation();
+        }
+        else
+        {
+            m_detail_busy_indicator.stopAnimation();
+        }
     }
 } // namespace TUNet

@@ -1,8 +1,10 @@
 #pragma once
 
 #include <Model.hpp>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QProgressIndicator.hpp>
 #include <QPushButton>
 #include <QTableWidget>
 #include <QVBoxLayout>
@@ -47,7 +49,9 @@ namespace TUNet
         QLabel m_status_label{};
 
         QLabel m_online_label{};
+        QGridLayout m_online_table_layout{};
         QTableWidget m_online_table{};
+        QProgressIndicator m_online_busy_indicator{};
 
         QHBoxLayout m_command_layout{};
         QPushButton m_connect_button{};

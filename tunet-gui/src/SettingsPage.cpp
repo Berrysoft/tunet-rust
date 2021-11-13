@@ -42,7 +42,10 @@ namespace TUNet
         m_online_table.setSelectionBehavior(QTableWidget::SelectRows);
         m_online_table.setSelectionMode(QTableWidget::SingleSelection);
         QObject::connect(&m_online_table, &QTableWidget::itemSelectionChanged, this, &SettingsPage::selection_changed);
-        m_settings_layout.addWidget(&m_online_table);
+        m_online_table_layout.addWidget(&m_online_table, 0, 0);
+        m_online_busy_indicator.setColor(m_pmodel->accent_color());
+        m_online_table_layout.addWidget(&m_online_busy_indicator, 0, 0, Qt::AlignCenter);
+        m_settings_layout.addLayout(&m_online_table_layout);
 
         m_connect_button.setText(QStringLiteral(u"认证IP"));
         QObject::connect(&m_connect_button, &QPushButton::clicked, this, &SettingsPage::connect_ip);
@@ -157,7 +160,16 @@ namespace TUNet
 
     void SettingsPage::update_online_busy()
     {
-        m_refresh_button.setEnabled(!m_pmodel->online_busy());
+        bool free = !m_pmodel->online_busy();
+        m_refresh_button.setEnabled(free);
+        if (!free)
+        {
+            m_online_busy_indicator.startAnimation();
+        }
+        else
+        {
+            m_online_busy_indicator.stopAnimation();
+        }
     }
 
     void SettingsPage::delete_cred_and_exit()

@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-#pragma
+#pragma once
 
 #include <QColor>
 #include <QWidget>

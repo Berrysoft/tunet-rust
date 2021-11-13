@@ -3,6 +3,8 @@
 #include <Model.hpp>
 #include <QChart>
 #include <QChartView>
+#include <QGridLayout>
+#include <QProgressIndicator.hpp>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -26,13 +28,19 @@ namespace TUNet
     private:
         Model* m_pmodel{};
 
-        QVBoxLayout m_chart_layout{ this };
+        QVBoxLayout m_root_layout{ this };
+
+        QGridLayout m_chart_root_layout{};
+
+        QVBoxLayout m_chart_layout{};
 
         QChartView m_daily_view{};
         QChart m_daily_chart{};
 
         QChartView m_time_view{};
         QChart m_time_chart{};
+
+        QProgressIndicator m_detail_busy_indicator{};
 
         QPushButton m_refresh_button{};
     };

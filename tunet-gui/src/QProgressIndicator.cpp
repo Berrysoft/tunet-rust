@@ -30,6 +30,7 @@
 QProgressIndicator::QProgressIndicator(QWidget* parent)
     : QWidget(parent), m_angle(0), m_timerId(-1), m_delay(40), m_displayedWhenStopped(false), m_color(Qt::black)
 {
+    setFixedSize(30, 30);
     setFocusPolicy(Qt::NoFocus);
 }
 

@@ -23,7 +23,10 @@ namespace TUNet
         m_details_table.verticalHeader()->setVisible(false);
         m_details_table.setSortingEnabled(true);
         m_details_table.setSelectionBehavior(QTableWidget::SelectRows);
-        m_details_layout.addWidget(&m_details_table);
+        m_details_table_layout.addWidget(&m_details_table, 0, 0);
+        m_detail_busy_indicator.setColor(m_pmodel->accent_color());
+        m_details_table_layout.addWidget(&m_detail_busy_indicator, 0, 0, Qt::AlignCenter);
+        m_details_layout.addLayout(&m_details_table_layout);
 
         m_refresh_button.setText(QStringLiteral(u"刷新"));
         QObject::connect(&m_refresh_button, &QPushButton::clicked, this, &DetailPage::refresh_details);
@@ -69,6 +72,15 @@ namespace TUNet
 
     void DetailPage::update_detail_busy()
     {
-        m_refresh_button.setEnabled(!m_pmodel->detail_busy());
+        bool free = !m_pmodel->detail_busy();
+        m_refresh_button.setEnabled(free);
+        if (!free)
+        {
+            m_detail_busy_indicator.startAnimation();
+        }
+        else
+        {
+            m_detail_busy_indicator.stopAnimation();
+        }
     }
 } // namespace TUNet

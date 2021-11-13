@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Model.hpp>
+#include <QGridLayout>
+#include <QProgressIndicator.hpp>
 #include <QPushButton>
 #include <QTableWidget>
 #include <QVBoxLayout>
@@ -22,7 +24,9 @@ namespace TUNet
         Model* m_pmodel{};
 
         QVBoxLayout m_details_layout{ this };
+        QGridLayout m_details_table_layout{};
         QTableWidget m_details_table{};
+        QProgressIndicator m_detail_busy_indicator{};
         QPushButton m_refresh_button{};
     };
 } // namespace TUNet
