@@ -27,6 +27,7 @@
 
 #include <QColor>
 #include <QWidget>
+#include <atomic>
 
 /*!
     \class QProgressIndicator
@@ -105,13 +106,17 @@ public slots:
      */
     void setColor(const QColor& color);
 
+private:
+    void start();
+    void stop();
+
 protected:
     void timerEvent(QTimerEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
 
 private:
     int m_angle{};
-    int m_timerId{};
+    std::atomic<int> m_timerId{};
     int m_delay{};
     bool m_displayedWhenStopped{};
     QColor m_color{};

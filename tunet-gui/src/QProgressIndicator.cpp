@@ -25,6 +25,7 @@
 
 #include <QPainter>
 #include <QProgressIndicator.hpp>
+#include <QTimerEvent>
 
 QProgressIndicator::QProgressIndicator(QWidget* parent)
     : QWidget(parent), m_angle(0), m_timerId(-1), m_delay(40), m_displayedWhenStopped(false), m_color(Qt::black)
@@ -40,7 +41,6 @@ bool QProgressIndicator::isAnimated() const
 void QProgressIndicator::setDisplayedWhenStopped(bool state)
 {
     m_displayedWhenStopped = state;
-
     emit update();
 }
 
@@ -52,36 +52,25 @@ bool QProgressIndicator::isDisplayedWhenStopped() const
 void QProgressIndicator::startAnimation()
 {
     m_angle = 0;
-
-    if (m_timerId == -1)
-        m_timerId = startTimer(m_delay);
+    start();
 }
 
 void QProgressIndicator::stopAnimation()
 {
-    if (m_timerId != -1)
-        killTimer(m_timerId);
-
-    m_timerId = -1;
-
+    stop();
     emit update();
 }
 
 void QProgressIndicator::setAnimationDelay(int delay)
 {
-    if (m_timerId != -1)
-        killTimer(m_timerId);
-
+    stop();
     m_delay = delay;
-
-    if (m_timerId != -1)
-        m_timerId = startTimer(m_delay);
+    start();
 }
 
 void QProgressIndicator::setColor(const QColor& color)
 {
     m_color = color;
-
     emit update();
 }
 
@@ -90,41 +79,68 @@ int QProgressIndicator::heightForWidth(int w) const
     return w;
 }
 
+void QProgressIndicator::start()
+{
+    int timer;
+    int old_id = m_timerId.load();
+    while (old_id == -1)
+    {
+        timer = startTimer(m_delay);
+        if (m_timerId.compare_exchange_weak(old_id, timer))
+        {
+            break;
+        }
+        else
+        {
+            killTimer(timer);
+        }
+    }
+}
+
+void QProgressIndicator::stop()
+{
+    int old_id = m_timerId.exchange(-1);
+    if (old_id != -1)
+        killTimer(old_id);
+}
+
 void QProgressIndicator::timerEvent(QTimerEvent* event)
 {
-    m_angle = (m_angle + 30) % 360;
-
-    emit update();
+    if (m_timerId == event->timerId())
+    {
+        m_angle = (m_angle + 30) % 360;
+        emit update();
+    }
 }
 
 void QProgressIndicator::paintEvent(QPaintEvent* event)
 {
-    if (!m_displayedWhenStopped && !isAnimated())
-        return;
-
-    int width = qMin(this->width(), this->height());
-
-    QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setPen(Qt::NoPen);
-
-    double outerRadius = (width - 1) * 0.5;
-    double innerRadius = (width - 1) * 0.5 * 0.38;
-
-    double capsuleHeight = outerRadius - innerRadius;
-    double capsuleWidth = (width > 32) ? capsuleHeight * .23 : capsuleHeight * .35;
-    double capsuleRadius = capsuleWidth / 2;
-
-    for (int i = 0; i < 12; i++)
+    if (m_displayedWhenStopped || isAnimated())
     {
-        QColor color = m_color;
-        color.setAlphaF(1.0f - (i / 12.0f));
-        p.setBrush(color);
-        p.save();
-        p.translate(rect().center());
-        p.rotate(m_angle - i * 30.0f);
-        p.drawRoundedRect(-capsuleWidth * 0.5, -(innerRadius + capsuleHeight), capsuleWidth,
-                          capsuleHeight, capsuleRadius, capsuleRadius);
-        p.restore();
+        int width = qMin(this->width(), this->height());
+
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setPen(Qt::NoPen);
+
+        double outerRadius = (width - 1) * 0.5;
+        double innerRadius = (width - 1) * 0.5 * 0.38;
+
+        double capsuleHeight = outerRadius - innerRadius;
+        double capsuleWidth = (width > 32) ? capsuleHeight * .23 : capsuleHeight * .35;
+        double capsuleRadius = capsuleWidth / 2;
+
+        for (int i = 0; i < 12; i++)
+        {
+            QColor color = m_color;
+            color.setAlphaF(1.0f - (i / 12.0f));
+            p.setBrush(color);
+            p.save();
+            p.translate(rect().center());
+            p.rotate(m_angle - i * 30.0f);
+            p.drawRoundedRect(-capsuleWidth * 0.5, -(innerRadius + capsuleHeight), capsuleWidth,
+                              capsuleHeight, capsuleRadius, capsuleRadius);
+            p.restore();
+        }
     }
 }
