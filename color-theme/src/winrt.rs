@@ -1,5 +1,5 @@
 use super::*;
-use windows::{runtime::*, UI::ViewManagement::*};
+use windows::{core::*, UI::ViewManagement::*};
 
 fn accent_impl() -> Result<Color> {
     let settings = UISettings::new()?;
