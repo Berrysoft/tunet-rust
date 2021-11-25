@@ -1,5 +1,5 @@
 use crate::*;
-use windows::{runtime::*, Networking::Connectivity::*};
+use windows::{core::*, Networking::Connectivity::*};
 
 fn current_impl() -> Result<NetStatus> {
     let profile = NetworkInformation::GetInternetConnectionProfile()?;

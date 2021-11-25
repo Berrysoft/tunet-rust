@@ -2,7 +2,7 @@ use std::ptr::null_mut;
 use wide_literals::*;
 use widestring::U16CString;
 use windows::{
-    runtime::*,
+    core::*,
     Win32::{Foundation::*, Security::Credentials::*},
 };
 
