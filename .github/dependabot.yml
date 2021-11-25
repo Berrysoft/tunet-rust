@@ -4,11 +4,3 @@ updates:
   directory: "/"
   schedule:
     interval: daily
-- package-ecosystem: cargo
-  directory: "/netstatus"
-  schedule:
-    interval: daily
-- package-ecosystem: cargo
-  directory: "/winrt-bindings"
-  schedule:
-    interval: daily
