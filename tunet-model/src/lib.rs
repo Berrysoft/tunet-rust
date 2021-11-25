@@ -12,6 +12,7 @@ use std::sync::{
 };
 use tokio::sync::mpsc::*;
 use tunet_helper::{usereg::*, *};
+use drop_guard::guard;
 
 pub type UpdateCallback = Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
 
@@ -387,7 +388,7 @@ impl BusyBool {
         self.lock.load(Ordering::Acquire)
     }
 
-    pub fn lock(&self) -> Option<BusyGuard> {
+    pub fn lock(&self) -> Option<impl Drop> {
         if self
             .lock
             .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
@@ -398,32 +399,15 @@ impl BusyBool {
             tokio::spawn(async move {
                 tx.send(Action::Update(msg)).await.ok();
             });
-            Some(BusyGuard::new(self.lock.clone(), self.tx.clone(), self.msg))
+            Some(guard((self.lock.clone(), self.tx.clone(), self.msg),|(lock, tx, msg)|{
+                lock.store(false, Ordering::Release);
+                tokio::spawn(async move {
+                    tx.send(Action::Update(msg)).await.ok();
+                });
+            }))
         } else {
             None
         }
     }
 }
 
-struct BusyGuard {
-    lock: Arc<AtomicBool>,
-    tx: Sender<Action>,
-    msg: UpdateMsg,
-}
-
-impl BusyGuard {
-    pub fn new(lock: Arc<AtomicBool>, tx: Sender<Action>, msg: UpdateMsg) -> Self {
-        Self { lock, tx, msg }
-    }
-}
-
-impl Drop for BusyGuard {
-    fn drop(&mut self) {
-        self.lock.store(false, Ordering::Release);
-        let msg = self.msg;
-        let tx = self.tx.clone();
-        tokio::spawn(async move {
-            tx.send(Action::Update(msg)).await.ok();
-        });
-    }
-}
