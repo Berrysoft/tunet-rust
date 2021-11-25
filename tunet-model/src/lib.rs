@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 use color_theme::Color as ThemeColor;
+use drop_guard::guard;
 use futures_util::{pin_mut, TryStreamExt};
 use mac_address::*;
 use netstatus::*;
@@ -12,7 +13,6 @@ use std::sync::{
 };
 use tokio::sync::mpsc::*;
 use tunet_helper::{usereg::*, *};
-use drop_guard::guard;
 
 pub type UpdateCallback = Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
 
@@ -399,15 +399,17 @@ impl BusyBool {
             tokio::spawn(async move {
                 tx.send(Action::Update(msg)).await.ok();
             });
-            Some(guard((self.lock.clone(), self.tx.clone(), self.msg),|(lock, tx, msg)|{
-                lock.store(false, Ordering::Release);
-                tokio::spawn(async move {
-                    tx.send(Action::Update(msg)).await.ok();
-                });
-            }))
+            Some(guard(
+                (self.lock.clone(), self.tx.clone(), self.msg),
+                |(lock, tx, msg)| {
+                    lock.store(false, Ordering::Release);
+                    tokio::spawn(async move {
+                        tx.send(Action::Update(msg)).await.ok();
+                    });
+                },
+            ))
         } else {
             None
         }
     }
 }
-
