@@ -12,7 +12,7 @@ netstatus = { path = "../netstatus" }
 async-trait = "0.1"
 async-stream = "0.3"
 futures-core = "0.3"
-tokio = { version = "1.12", features = [ "sync" ] }
+tokio = { version = "1.14", features = [ "sync" ] }
 url = "2.2"
 md-5 = "0.9"
 sha-1 = "0.9"
