@@ -65,7 +65,9 @@ namespace TUNet
         m_about_layout.addWidget(&m_copyright_label);
 
         m_dial_label.setAlignment(Qt::AlignHCenter);
-        m_dial_label.setText(QStringLiteral(u"服务热线（8:00~20:00）：010-62784859"));
+        m_dial_label.setText(QStringLiteral(u"服务热线（8:00~20:00）"
+                                            uR"(<a href="tel:010-62784859">010-62784859</a>)"));
+        m_dial_label.setOpenExternalLinks(true);
         m_about_layout.addWidget(&m_dial_label);
 
         m_lib_label.setAlignment(Qt::AlignHCenter);
