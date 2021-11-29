@@ -21,6 +21,7 @@ namespace TUNet
         QLabel m_title_label{};
         QLabel m_source_label{};
         QLabel m_copyright_label{};
+        QLabel m_dial_label{};
 
         QLabel m_lib_label{};
         QTableWidget m_lib_table{};

@@ -64,6 +64,10 @@ namespace TUNet
         m_copyright_label.setText(QStringLiteral(u"版权所有 © 2021 Berrysoft"));
         m_about_layout.addWidget(&m_copyright_label);
 
+        m_dial_label.setAlignment(Qt::AlignHCenter);
+        m_dial_label.setText(QStringLiteral(u"服务热线（8:00~20:00）：010-62784859"));
+        m_about_layout.addWidget(&m_dial_label);
+
         m_lib_label.setAlignment(Qt::AlignHCenter);
         m_lib_label.setText(QStringLiteral(u"<b><big>使用的库</big></b>"));
         m_about_layout.addWidget(&m_lib_label);
