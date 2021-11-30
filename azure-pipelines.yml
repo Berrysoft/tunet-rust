@@ -155,7 +155,7 @@ jobs:
     displayName: "Build C++ part"
 
   - script: |
-      python3 macdeployqtfix/macdeployqtfix.py $(Build.BinariesDirectory)/macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui $(Build.BinariesDirectory)/Qt/6.2.1/macos
+      python3 macdeployqtfix/macdeployqtfix.py $(Build.BinariesDirectory)/macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui $(Build.BinariesDirectory)/Qt/6.2.1/macos -v
       cd $(Build.BinariesDirectory)/macos/bin
       zip -r -y tunet-gui.app.zip tunet-gui.app
       cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/macos/
