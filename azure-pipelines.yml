@@ -156,6 +156,7 @@ jobs:
 
   - script: |
       cd $(Build.BinariesDirectory)/macos/bin
+      python3 $(Build.SourcesDirectory)/macdepolyqtfix/macdeployqtfix.py $(Build.BinariesDirectory)/macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui $(Build.BinariesDirectory)/Qt/6.2.1/macos
       zip -r -y tunet-gui.app.zip tunet-gui.app
       cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/macos/
     displayName: 'Archive'

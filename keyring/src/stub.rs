@@ -1,4 +1,4 @@
-use anyhow::*;
+use anyhow::Result;
 
 pub struct Keyring;
 

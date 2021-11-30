@@ -1,5 +1,4 @@
 use crate::settings::*;
-use anyhow::*;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
