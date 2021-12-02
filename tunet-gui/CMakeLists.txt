@@ -121,7 +121,7 @@ elseif(APPLE)
             execute_process(
                 COMMAND \"${MACDEPLOYQT_EXECUTABLE}\"
                     \"${CMAKE_INSTALL_PREFIX}/bin/tunet-gui.app\"
-                    -verbose
+                    -verbose=1
                     -always-overwrite
             )
         ")
