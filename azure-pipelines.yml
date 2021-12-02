@@ -150,7 +150,7 @@ jobs:
   - script: |
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.2/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DUSE_CORROSION=off -DTUNET_MODEL_NATIVE_LIB_PATH="$(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a" -DUSE_DEPLOYQT=off
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.2/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DUSE_CORROSION=off -DTUNET_MODEL_NATIVE_LIB_PATH="$(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a"
       ninja install
     displayName: "Build C++ part"
 
