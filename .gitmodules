@@ -3,4 +3,4 @@
 	url = https://github.com/AndrewGaspar/corrosion.git
 [submodule "macdeployqtfix"]
 	path = macdeployqtfix
-	url = https://github.com/ipsosante/macdeployqtfix.git
+	url = https://github.com/Berrysoft/macdeployqtfix.git
