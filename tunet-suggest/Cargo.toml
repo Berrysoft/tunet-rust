@@ -1,5 +1,5 @@
 [package]
-name = "tunet-model"
+name = "tunet-suggest"
 version = "0.1.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2021"
@@ -8,11 +8,6 @@ license = "MIT"
 
 [dependencies]
 tunet-helper = { path = "../tunet-helper" }
-tunet-suggest = { path = "../tunet-suggest" }
 netstatus = { path = "../netstatus" }
-color-theme = { path = "../color-theme" }
-futures-util = "0.3"
-tokio = "1.14"
-mac_address = "1.1"
-anyhow = "1.0"
-drop_guard = "0.3"
+async-trait = "0.1"
+lazy_static = "1.4"

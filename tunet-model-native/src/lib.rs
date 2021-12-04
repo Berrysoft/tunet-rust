@@ -160,7 +160,7 @@ pub unsafe extern "C" fn tunet_model_queue_cred(
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_queue_state(model: native::Model, state: native::State) {
-    read_model(model).queue(Action::State(Some(state.into())));
+    read_model(model).queue(Action::State(state.into()));
 }
 
 #[no_mangle]
@@ -213,7 +213,7 @@ pub unsafe extern "C" fn tunet_model_cred_password(
 
 #[no_mangle]
 pub unsafe extern "C" fn tunet_model_state(model: native::Model) -> native::State {
-    read_model(model).state.into()
+    Some(read_model(model).state).into()
 }
 
 #[no_mangle]

@@ -42,24 +42,27 @@ pub enum State {
     Auth6,
 }
 
-impl From<State> for NetState {
+impl From<State> for Option<NetState> {
     fn from(s: State) -> Self {
         match s {
-            State::Auto => Self::Auto,
-            State::Net => Self::Net,
-            State::Auth4 => Self::Auth4,
-            State::Auth6 => Self::Auth6,
+            State::Auto => None,
+            State::Net => Some(NetState::Net),
+            State::Auth4 => Some(NetState::Auth4),
+            State::Auth6 => Some(NetState::Auth6),
         }
     }
 }
 
-impl From<NetState> for State {
-    fn from(s: NetState) -> Self {
+impl From<Option<NetState>> for State {
+    fn from(s: Option<NetState>) -> Self {
         match s {
-            NetState::Net => Self::Net,
-            NetState::Auth4 => Self::Auth4,
-            NetState::Auth6 => Self::Auth6,
-            _ => Self::Auto,
+            None => Self::Auto,
+            Some(s) => match s {
+                NetState::Net => Self::Net,
+                NetState::Auth4 => Self::Auth4,
+                NetState::Auth6 => Self::Auth6,
+                _ => Self::Auto,
+            },
         }
     }
 }

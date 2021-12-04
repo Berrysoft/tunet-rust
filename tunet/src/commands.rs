@@ -11,6 +11,7 @@ use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
 use tunet_helper::{usereg::*, *};
+use tunet_suggest::TUNetHelperExt;
 
 fn get_flux_color(f: &Flux, total: bool) -> Color {
     let flux = f.0;
@@ -85,9 +86,9 @@ impl TUNet {
 
 #[derive(Debug, StructOpt)]
 pub struct Login {
-    #[structopt(long, short = "s", default_value = "auto")]
+    #[structopt(long, short = "s")]
     /// 连接方式
-    host: NetState,
+    host: Option<NetState>,
 }
 
 #[async_trait]
@@ -95,7 +96,7 @@ impl TUNetCommand for Login {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_cred()?;
-        let c = TUNetConnect::new(self.host, cred, client).await?;
+        let c = TUNetConnect::new_with_suggest(self.host, cred, client).await?;
         let res = c.login().await?;
         println!("{}", res);
         save_cred(c.cred()).await
@@ -104,9 +105,9 @@ impl TUNetCommand for Login {
 
 #[derive(Debug, StructOpt)]
 pub struct Logout {
-    #[structopt(long, short = "s", default_value = "auto")]
+    #[structopt(long, short = "s")]
     /// 连接方式
-    host: NetState,
+    host: Option<NetState>,
 }
 
 #[async_trait]
@@ -114,7 +115,7 @@ impl TUNetCommand for Logout {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
         let cred = read_username()?;
-        let c = TUNetConnect::new(self.host, cred, client).await?;
+        let c = TUNetConnect::new_with_suggest(self.host, cred, client).await?;
         let res = c.logout().await?;
         println!("{}", res);
         Ok(())
@@ -122,16 +123,18 @@ impl TUNetCommand for Logout {
 }
 #[derive(Debug, StructOpt)]
 pub struct Status {
-    #[structopt(long, short = "s", default_value = "auto")]
+    #[structopt(long, short = "s")]
     /// 连接方式
-    host: NetState,
+    host: Option<NetState>,
 }
 
 #[async_trait]
 impl TUNetCommand for Status {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let c = TUNetConnect::new(self.host, Arc::new(NetCredential::default()), client).await?;
+        let c =
+            TUNetConnect::new_with_suggest(self.host, Arc::new(NetCredential::default()), client)
+                .await?;
         let f = c.flux().await?;
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut stdout = tco::ResetGuard::Owned(stdout);
@@ -382,9 +385,9 @@ impl TUNetCommand for DeleteCred {
 #[cfg(feature = "cui")]
 #[derive(Debug, StructOpt)]
 pub struct Cui {
-    #[structopt(long, short = "s", default_value = "auto")]
+    #[structopt(long, short = "s")]
     /// 连接方式
-    host: NetState,
+    host: Option<NetState>,
 }
 
 #[cfg(feature = "cui")]

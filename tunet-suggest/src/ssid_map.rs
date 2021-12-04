@@ -1,7 +1,8 @@
-use crate::{suggest::ping, *};
+use crate::ping;
 use lazy_static::lazy_static;
 use netstatus::NetStatus;
 use std::collections::BTreeMap;
+use tunet_helper::*;
 
 lazy_static! {
     static ref SUGGEST_SSID_MAP: BTreeMap<&'static str, NetState> = {

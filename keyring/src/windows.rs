@@ -1,10 +1,15 @@
 use std::ptr::null_mut;
-use wide_literals::*;
-use widestring::U16CString;
+use widestring::{u16cstr, U16CString};
 use windows::{
     core::*,
     Win32::{Foundation::*, Security::Credentials::*},
 };
+
+macro_rules! pwstr {
+    ($s : expr) => {
+        PWSTR($s.as_ptr() as _)
+    };
+}
 
 pub struct Keyring {
     key: U16CString,
@@ -20,13 +25,7 @@ impl Keyring {
     pub fn get(&self) -> Result<String> {
         unsafe {
             let mut p_cred = null_mut();
-            CredReadW(
-                PWSTR(self.key.as_ptr() as _),
-                CRED_TYPE_GENERIC.0,
-                0,
-                &mut p_cred,
-            )
-            .ok()?;
+            CredReadW(pwstr!(self.key), CRED_TYPE_GENERIC.0, 0, &mut p_cred).ok()?;
             let p_cred = p_cred.as_mut().unwrap();
             let bytes =
                 std::slice::from_raw_parts(p_cred.CredentialBlob, p_cred.CredentialBlobSize as _);
@@ -40,8 +39,8 @@ impl Keyring {
             let credential = CREDENTIALW {
                 Flags: CRED_FLAGS::default(),
                 Type: CRED_TYPE_GENERIC,
-                TargetName: PWSTR(self.key.as_ptr() as _),
-                Comment: PWSTR(w!("tunet-rust").as_ptr() as _),
+                TargetName: pwstr!(self.key),
+                Comment: pwstr!(u16cstr!("tunet-rust")),
                 LastWritten: FILETIME::default(),
                 CredentialBlobSize: value.len() as _,
                 CredentialBlob: value.as_ptr() as _,
@@ -56,6 +55,6 @@ impl Keyring {
     }
 
     pub fn delete(&self) -> Result<()> {
-        unsafe { CredDeleteW(PWSTR(self.key.as_ptr() as _), CRED_TYPE_GENERIC.0, 0).ok() }
+        unsafe { CredDeleteW(pwstr!(self.key), CRED_TYPE_GENERIC.0, 0).ok() }
     }
 }

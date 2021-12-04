@@ -13,6 +13,7 @@ use std::sync::{
 };
 use tokio::sync::mpsc::*;
 use tunet_helper::{usereg::*, *};
+use tunet_suggest as suggest;
 
 pub type UpdateCallback = Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
 
@@ -87,9 +88,8 @@ impl Model {
                 });
             }
             Action::State(s) => {
-                let s = s.unwrap_or(NetState::Auto);
                 match s {
-                    NetState::Auto => {
+                    None => {
                         let tx = self.tx.clone();
                         let http = self.http.clone();
                         let status = self.status.clone();
@@ -98,7 +98,7 @@ impl Model {
                             tx.send(Action::State(Some(state))).await.ok()
                         });
                     }
-                    _ => {
+                    Some(s) => {
                         self.state = s;
                         self.update(UpdateMsg::State);
                     }
@@ -205,7 +205,7 @@ impl Model {
     }
 
     fn client(&self) -> Option<TUNetConnect> {
-        TUNetConnect::new_nosuggest(self.state, self.cred.clone(), self.http.clone()).ok()
+        TUNetConnect::new(self.state, self.cred.clone(), self.http.clone()).ok()
     }
 
     fn usereg(&self) -> UseregHelper {

@@ -14,11 +14,11 @@ mod view;
 
 use event::*;
 
-pub async fn run(state: NetState) -> Result<()> {
+pub async fn run(state: Option<NetState>) -> Result<()> {
     let mut event = Event::new()?;
 
     event.model.queue(Action::Credential(read_cred()?));
-    event.model.queue(Action::State(Some(state)));
+    event.model.queue(Action::State(state));
 
     enable_raw_mode()?;
     execute!(std::io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;

@@ -8,7 +8,6 @@ license = "MIT"
 
 [dependencies]
 authtea = { path = "../authtea" }
-netstatus = { path = "../netstatus" }
 async-trait = "0.1"
 async-stream = "0.3"
 futures-core = "0.3"

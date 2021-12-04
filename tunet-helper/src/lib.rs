@@ -15,7 +15,6 @@ pub use reqwest::Client as HttpClient;
 
 mod auth;
 mod net;
-pub mod suggest;
 pub mod usereg;
 
 pub use auth::{Auth4Connect, Auth6Connect};
@@ -180,7 +179,6 @@ pub enum NetState {
     Net,
     Auth4,
     Auth6,
-    Auto,
 }
 
 impl std::str::FromStr for NetState {
@@ -192,8 +190,6 @@ impl std::str::FromStr for NetState {
             Ok(NetState::Auth4)
         } else if s.eq_ignore_ascii_case("auth6") {
             Ok(NetState::Auth6)
-        } else if s.eq_ignore_ascii_case("auto") {
-            Ok(NetState::Auto)
         } else {
             Err(NetHelperError::HostErr)
         }
@@ -218,19 +214,7 @@ trait_enum! {
 }
 
 impl TUNetConnect {
-    pub async fn new(
-        mut s: NetState,
-        cred: Arc<NetCredential>,
-        client: HttpClient,
-    ) -> NetHelperResult<Self> {
-        if let NetState::Auto = s {
-            s = suggest::suggest(&client).await;
-            debug_assert_ne!(s, NetState::Auto);
-        }
-        Self::new_nosuggest(s, cred, client)
-    }
-
-    pub fn new_nosuggest(
+    pub fn new(
         s: NetState,
         cred: Arc<NetCredential>,
         client: HttpClient,

@@ -5,6 +5,7 @@ members = [
     "color-theme",
     "keyring",
     "tunet-helper",
+    "tunet-suggest",
     "tunet-settings",
     "tunet-model",
     "tunet-model-native",
