@@ -26,7 +26,6 @@ namespace TUNet
         { QStringLiteral(u"md-5"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"netlink_wi"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"objc"), QStringLiteral(u"MIT") },
-        { QStringLiteral(u"once_cell"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"QProgressIndicator"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"regex"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"reqwest"), QStringLiteral(u"MIT") },
@@ -44,7 +43,6 @@ namespace TUNet
         { QStringLiteral(u"trait_enum"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"tui"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"url"), QStringLiteral(u"MIT") },
-        { QStringLiteral(u"wide-literials"), QStringLiteral(u"Unlicense") },
         { QStringLiteral(u"widestring"), QStringLiteral(u"MIT") },
         { QStringLiteral(u"windows"), QStringLiteral(u"MIT") },
     };
