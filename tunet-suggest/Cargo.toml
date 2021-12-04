@@ -3,7 +3,6 @@ name = "tunet-suggest"
 version = "0.1.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2021"
-readme = "README.md"
 license = "MIT"
 
 [dependencies]

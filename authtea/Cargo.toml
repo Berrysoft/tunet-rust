@@ -3,7 +3,6 @@ name = "authtea"
 version = "0.3.0"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2021"
-readme = "README.md"
 license = "MIT"
 
 [dependencies]
