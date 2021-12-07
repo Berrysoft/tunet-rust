@@ -13,7 +13,7 @@ futures-core = "0.3"
 tokio = { version = "1.14", features = [ "sync" ] }
 url = "2.2"
 md-5 = "0.9"
-sha-1 = "0.9"
+sha-1 = "0.10"
 hmac = "0.11"
 data-encoding = "2.3"
 data-encoding-macro = "0.1"
