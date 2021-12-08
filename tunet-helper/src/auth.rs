@@ -2,7 +2,7 @@ use crate::*;
 use authtea::AuthTea;
 use data_encoding::{Encoding, HEXLOWER};
 use data_encoding_macro::new_encoding;
-use hmac::{Hmac, Mac, NewMac};
+use hmac::{Hmac, Mac};
 use lazy_static::lazy_static;
 use md5::Md5;
 use regex::Regex;
