@@ -64,8 +64,8 @@ impl NetDetailOrder {
 }
 
 impl std::str::FromStr for NetDetailOrder {
-    type Err = NetHelperError;
-    fn from_str(s: &str) -> NetHelperResult<Self> {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self> {
         if s.eq_ignore_ascii_case("login") || s.eq_ignore_ascii_case("logintime") {
             Ok(NetDetailOrder::LoginTime)
         } else if s.eq_ignore_ascii_case("logout") || s.eq_ignore_ascii_case("logouttime") {
@@ -73,7 +73,7 @@ impl std::str::FromStr for NetDetailOrder {
         } else if s.eq_ignore_ascii_case("flux") {
             Ok(NetDetailOrder::Flux)
         } else {
-            Err(NetHelperError::OrderErr)
+            Err(NetHelperError::OrderErr.into())
         }
     }
 }

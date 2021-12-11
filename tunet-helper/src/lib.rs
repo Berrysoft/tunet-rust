@@ -21,7 +21,7 @@ pub use auth::{Auth4Connect, Auth6Connect};
 pub use net::NetConnect;
 
 #[derive(Debug, Error)]
-pub enum NetHelperError {
+enum NetHelperError {
     #[error("无法获取 ac_id")]
     NoAcIdErr,
     #[error("操作失败：{0}")]
@@ -35,8 +35,6 @@ pub enum NetHelperError {
     #[error("无法确定登录方式")]
     HostErr,
 }
-
-pub type NetHelperResult<T> = std::result::Result<T, NetHelperError>;
 
 #[derive(Debug, Default)]
 pub struct NetCredential {
@@ -93,8 +91,8 @@ impl Display for Flux {
 }
 
 impl std::str::FromStr for Flux {
-    type Err = NetHelperError;
-    fn from_str(s: &str) -> NetHelperResult<Self> {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self> {
         let (flux, unit) = s.split_at(s.len() - 1);
         Ok(Flux(
             (flux.trim_end().parse::<f64>().unwrap_or_default()
@@ -151,8 +149,8 @@ pub struct NetFlux {
 }
 
 impl std::str::FromStr for NetFlux {
-    type Err = NetHelperError;
-    fn from_str(s: &str) -> NetHelperResult<Self> {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self> {
         let vec = s.split(',').collect::<Vec<_>>();
         if vec.len() >= 12 {
             Ok(NetFlux {
@@ -166,9 +164,9 @@ impl std::str::FromStr for NetFlux {
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
         } else if s.is_empty() {
-            Err(NetHelperError::NoFluxErr)
+            Err(NetHelperError::NoFluxErr.into())
         } else {
-            Err(NetHelperError::ParseFluxErr(s.to_string()))
+            Err(NetHelperError::ParseFluxErr(s.to_string()).into())
         }
     }
 }
@@ -182,8 +180,8 @@ pub enum NetState {
 }
 
 impl std::str::FromStr for NetState {
-    type Err = NetHelperError;
-    fn from_str(s: &str) -> NetHelperResult<Self> {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self> {
         if s.eq_ignore_ascii_case("net") {
             Ok(NetState::Net)
         } else if s.eq_ignore_ascii_case("auth4") {
@@ -191,7 +189,7 @@ impl std::str::FromStr for NetState {
         } else if s.eq_ignore_ascii_case("auth6") {
             Ok(NetState::Auth6)
         } else {
-            Err(NetHelperError::HostErr)
+            Err(NetHelperError::HostErr.into())
         }
     }
 }
@@ -214,16 +212,12 @@ trait_enum! {
 }
 
 impl TUNetConnect {
-    pub fn new(
-        s: NetState,
-        cred: Arc<NetCredential>,
-        client: HttpClient,
-    ) -> NetHelperResult<TUNetConnect> {
+    pub fn new(s: NetState, cred: Arc<NetCredential>, client: HttpClient) -> Result<TUNetConnect> {
         match s {
             NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(cred, client))),
             NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(cred, client))),
             NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(cred, client))),
-            _ => Err(NetHelperError::HostErr),
+            _ => Err(NetHelperError::HostErr.into()),
         }
     }
 }
