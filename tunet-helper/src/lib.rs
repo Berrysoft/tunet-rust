@@ -204,7 +204,7 @@ pub trait TUNetHelper: Send + Sync {
 
 trait_enum! {
     #[derive(Clone)]
-    pub enum TUNetConnect : TUNetHelper {
+    pub enum TUNetConnect: TUNetHelper {
         NetConnect,
         Auth4Connect,
         Auth6Connect,
