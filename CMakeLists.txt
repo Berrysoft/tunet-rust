@@ -23,7 +23,7 @@ if(${USE_CORROSION})
 
     corrosion_import_crate(MANIFEST_PATH tunet/Cargo.toml)
 
-    corrosion_install(TARGETS tunet)
+    corrosion_install(TARGETS tunet tunet-cui)
 else()
     add_library(tunet-model-native-static STATIC IMPORTED)
     set_property(TARGET tunet-model-native-static PROPERTY IMPORTED_LOCATION ${TUNET_MODEL_NATIVE_LIB_PATH})

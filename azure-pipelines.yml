@@ -144,6 +144,7 @@ jobs:
   - script: |
       mkdir -p $(Build.ArtifactStagingDirectory)/macos
       lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output $(Build.ArtifactStagingDirectory)/macos/tunet
+      lipo -create target/x86_64-apple-darwin/release/tunet-cui target/aarch64-apple-darwin/release/tunet-cui -output $(Build.ArtifactStagingDirectory)/macos/tunet-cui
       lipo -create target/x86_64-apple-darwin/release/libtunet_model_native.a target/aarch64-apple-darwin/release/libtunet_model_native.a -output $(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a
     displayName: "Create fat binary"
 
