@@ -1,11 +1,11 @@
 #![forbid(unsafe_code)]
 
 use async_trait::async_trait;
+use enum_dispatch::enum_dispatch;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
-use trait_enum::trait_enum;
 
 pub use anyhow::Result;
 pub use chrono::{
@@ -195,6 +195,7 @@ impl std::str::FromStr for NetState {
 }
 
 #[async_trait]
+#[enum_dispatch(TUNetConnect)]
 pub trait TUNetHelper: Send + Sync {
     async fn login(&self) -> Result<String>;
     async fn logout(&self) -> Result<String>;
@@ -202,13 +203,12 @@ pub trait TUNetHelper: Send + Sync {
     fn cred(&self) -> Arc<NetCredential>;
 }
 
-trait_enum! {
-    #[derive(Clone)]
-    pub enum TUNetConnect: TUNetHelper {
-        NetConnect,
-        Auth4Connect,
-        Auth6Connect,
-    }
+#[enum_dispatch]
+#[derive(Clone)]
+pub enum TUNetConnect {
+    NetConnect,
+    Auth4Connect,
+    Auth6Connect,
 }
 
 impl TUNetConnect {

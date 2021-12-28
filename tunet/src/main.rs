@@ -2,7 +2,7 @@
 
 mod commands;
 
-use commands::TUNet;
+use commands::{TUNet, TUNetCommand};
 use structopt::StructOpt;
 use tokio::runtime::Builder as RuntimeBuilder;
 use tunet_helper::Result;

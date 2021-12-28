@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use enum_dispatch::enum_dispatch;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
 use mac_address::MacAddressIterator;
@@ -8,7 +9,6 @@ use std::sync::Arc;
 use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
-use trait_enum::trait_enum;
 use tunet_helper::{usereg::*, *};
 use tunet_settings_cli::*;
 use tunet_suggest::TUNetHelperExt;
@@ -25,31 +25,31 @@ fn get_flux_color(f: &Flux, total: bool) -> Color {
 }
 
 #[async_trait]
+#[enum_dispatch(TUNet)]
 pub trait TUNetCommand {
     async fn run(&self) -> Result<()>;
 }
 
-trait_enum! {
-    #[derive(Debug, StructOpt)]
-    #[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
-    pub enum TUNet: TUNetCommand {
-        #[structopt(name = "login", about = "登录")]
-        Login,
-        #[structopt(name = "logout", about = "注销")]
-        Logout,
-        #[structopt(name = "status", about = "查看在线状态")]
-        Status,
-        #[structopt(name = "online", about = "查询在线IP")]
-        Online,
-        #[structopt(name = "connect", about = "上线IP")]
-        UseregConnect,
-        #[structopt(name = "drop", about = "下线IP")]
-        UseregDrop,
-        #[structopt(name = "detail", about = "流量明细")]
-        Detail,
-        #[structopt(name = "deletecred", about = "删除用户名和密码")]
-        DeleteCred,
-    }
+#[enum_dispatch]
+#[derive(Debug, StructOpt)]
+#[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
+pub enum TUNet {
+    #[structopt(name = "login", about = "登录")]
+    Login,
+    #[structopt(name = "logout", about = "注销")]
+    Logout,
+    #[structopt(name = "status", about = "查看在线状态")]
+    Status,
+    #[structopt(name = "online", about = "查询在线IP")]
+    Online,
+    #[structopt(name = "connect", about = "上线IP")]
+    UseregConnect,
+    #[structopt(name = "drop", about = "下线IP")]
+    UseregDrop,
+    #[structopt(name = "detail", about = "流量明细")]
+    Detail,
+    #[structopt(name = "deletecred", about = "删除用户名和密码")]
+    DeleteCred,
 }
 
 #[derive(Debug, StructOpt)]

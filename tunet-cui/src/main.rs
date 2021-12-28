@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
