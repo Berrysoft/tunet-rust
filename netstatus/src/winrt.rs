@@ -4,17 +4,16 @@ use windows::{core::*, Networking::Connectivity::*};
 fn current_impl() -> Result<NetStatus> {
     let profile = NetworkInformation::GetInternetConnectionProfile()?;
     let cl = profile.GetNetworkConnectivityLevel()?;
-    match cl {
-        NetworkConnectivityLevel::None => Ok(NetStatus::Unknown),
-        _ => {
-            if profile.IsWlanConnectionProfile()? {
-                let ssid = profile.WlanConnectionProfileDetails()?.GetConnectedSsid()?;
-                Ok(NetStatus::Wlan(ssid.to_string_lossy()))
-            } else if profile.IsWwanConnectionProfile()? {
-                Ok(NetStatus::Wwan)
-            } else {
-                Ok(NetStatus::Lan)
-            }
+    if cl.0 == NetworkConnectivityLevel::None.0 {
+        Ok(NetStatus::Unknown)
+    } else {
+        if profile.IsWlanConnectionProfile()? {
+            let ssid = profile.WlanConnectionProfileDetails()?.GetConnectedSsid()?;
+            Ok(NetStatus::Wlan(ssid.to_string_lossy()))
+        } else if profile.IsWwanConnectionProfile()? {
+            Ok(NetStatus::Wwan)
+        } else {
+            Ok(NetStatus::Lan)
         }
     }
 }

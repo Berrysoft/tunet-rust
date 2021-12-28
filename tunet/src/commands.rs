@@ -1,4 +1,3 @@
-use crate::settings::*;
 use async_trait::async_trait;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
@@ -11,6 +10,7 @@ use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
 use tunet_helper::{usereg::*, *};
+use tunet_settings_cli::*;
 use tunet_suggest::TUNetHelperExt;
 
 fn get_flux_color(f: &Flux, total: bool) -> Color {

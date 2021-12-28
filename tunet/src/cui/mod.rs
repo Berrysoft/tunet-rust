@@ -1,4 +1,3 @@
-use crate::settings::*;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
@@ -8,6 +7,7 @@ use futures_util::TryStreamExt;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
 use tunet_helper::*;
 use tunet_model::Action;
+use tunet_settings_cli::*;
 
 mod event;
 mod view;

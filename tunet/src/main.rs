@@ -1,7 +1,6 @@
 #![forbid(unsafe_code)]
 
 mod commands;
-mod settings;
 
 #[cfg(feature = "cui")]
 mod cui;
