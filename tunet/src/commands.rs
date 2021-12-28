@@ -48,9 +48,6 @@ pub enum TUNet {
     Detail(Detail),
     #[structopt(name = "deletecred", about = "删除用户名和密码")]
     DeleteCred(DeleteCred),
-    #[cfg(feature = "cui")]
-    #[structopt(name = "cui", about = "显示富控制台界面")]
-    Cui(Cui),
 }
 
 impl Deref for TUNet {
@@ -66,21 +63,7 @@ impl Deref for TUNet {
             Self::UseregDrop(c) => c,
             Self::Detail(c) => c,
             Self::DeleteCred(c) => c,
-            #[cfg(feature = "cui")]
-            Self::Cui(c) => c,
         }
-    }
-}
-
-impl TUNet {
-    #[cfg(feature = "cui")]
-    pub fn is_cui(&self) -> bool {
-        matches!(self, Self::Cui(_))
-    }
-
-    #[cfg(not(feature = "cui"))]
-    pub fn is_cui(&self) -> bool {
-        false
     }
 }
 
@@ -379,21 +362,5 @@ pub struct DeleteCred {}
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
         delete_cred()
-    }
-}
-
-#[cfg(feature = "cui")]
-#[derive(Debug, StructOpt)]
-pub struct Cui {
-    #[structopt(long, short = "s")]
-    /// 连接方式
-    host: Option<NetState>,
-}
-
-#[cfg(feature = "cui")]
-#[async_trait]
-impl TUNetCommand for Cui {
-    async fn run(&self) -> Result<()> {
-        crate::cui::run(self.host).await
     }
 }

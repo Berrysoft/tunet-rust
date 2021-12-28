@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::cui::*;
+use crate::*;
 use itertools::Itertools;
 use tui::{backend::Backend, style::*, Frame};
 use tunet_model::*;

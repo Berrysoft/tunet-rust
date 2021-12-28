@@ -1,0 +1,18 @@
+[package]
+name = "tunet-cui"
+version = "0.6.2"
+authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+tunet-helper = { path = "../tunet-helper" }
+tunet-settings-cli = { path = "../tunet-settings-cli" }
+tunet-model = { path = "../tunet-model" }
+tokio = { version = "1.14", features = [ "rt-multi-thread", "macros", "time" ] }
+futures-util = "0.3"
+itertools = "0.10"
+anyhow = "1.0"
+structopt = "0.3"
+crossterm = { version = "0.20", features = [ "event-stream" ] }
+tui = { version = "0.16", default-features = false, features = [ "crossterm" ] }

@@ -4,6 +4,8 @@ use crossterm::{
     terminal::*,
 };
 use futures_util::TryStreamExt;
+use structopt::StructOpt;
+use tokio::runtime::Builder as RuntimeBuilder;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
 use tunet_helper::*;
 use tunet_model::Action;
@@ -13,6 +15,22 @@ mod event;
 mod view;
 
 use event::*;
+
+#[derive(Debug, StructOpt)]
+#[structopt(about = "Specify options")]
+struct Opt {
+    #[structopt(long, short = "s")]
+    /// 连接方式
+    host: Option<NetState>,
+}
+
+fn main() -> Result<()> {
+    let opt = Opt::from_args_safe()?;
+    RuntimeBuilder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(run(opt.host))
+}
 
 pub async fn run(state: Option<NetState>) -> Result<()> {
     let mut event = Event::new()?;

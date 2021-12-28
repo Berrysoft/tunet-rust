@@ -1,6 +1,6 @@
 [package]
 name = "tunet"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -12,17 +12,8 @@ tunet-settings-cli = { path = "../tunet-settings-cli" }
 futures-util = "0.3"
 tokio = { version = "1.14", features = [ "rt", "macros" ] }
 async-trait = "0.1"
-anyhow = "1.0"
 mac_address = "1.1"
 structopt = "0.3"
 itertools = "0.10"
 termcolor = "1.1"
 termcolor_output = { git = "https://github.com/Berrysoft/termcolor_output.git" }
-
-tunet-model = { path = "../tunet-model", optional = true }
-crossterm = { version = "0.20", optional = true, features = [ "event-stream" ] }
-tui = { version = "0.16", default-features = false, features = [ "crossterm" ], optional = true }
-
-[features]
-default = [ "cui" ]
-cui = [ "tunet-model", "tui", "crossterm", "tokio/rt-multi-thread", "tokio/time" ]
