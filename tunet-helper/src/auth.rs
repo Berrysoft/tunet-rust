@@ -61,7 +61,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         let t = res.text().await?;
         match AC_ID_REGEX.captures(&t) {
             Some(cap) => Ok(cap[1].parse::<i32>()?),
-            _ => Err(NetHelperError::NoAcIdErr.into()),
+            _ => Err(NetHelperError::NoAcId.into()),
         }
     }
 
@@ -119,7 +119,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
                     .and_then(|v| v.into_str())
                     .unwrap_or_default())
             } else {
-                Err(NetHelperError::LogErr(
+                Err(NetHelperError::Log(
                     json.remove("error_msg")
                         .and_then(|v| v.into_str())
                         .unwrap_or_default(),
@@ -127,7 +127,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
                 .into())
             }
         } else {
-            Err(NetHelperError::LogErr(json.to_string()).into())
+            Err(NetHelperError::Log(json.to_string()).into())
         }
     }
 }

@@ -73,7 +73,7 @@ impl std::str::FromStr for NetDetailOrder {
         } else if s.eq_ignore_ascii_case("flux") {
             Ok(NetDetailOrder::Flux)
         } else {
-            Err(NetHelperError::OrderErr.into())
+            Err(NetHelperError::InvalidOrder.into())
         }
     }
 }

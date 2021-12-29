@@ -23,17 +23,17 @@ pub use net::NetConnect;
 #[derive(Debug, Error)]
 enum NetHelperError {
     #[error("无法获取 ac_id")]
-    NoAcIdErr,
+    NoAcId,
     #[error("操作失败：{0}")]
-    LogErr(String),
+    Log(String),
     #[error("登录状态异常")]
-    NoFluxErr,
+    NoFlux,
     #[error("无法识别的用户信息：{0}")]
-    ParseFluxErr(String),
+    InvalidFlux(String),
     #[error("排序方式无效")]
-    OrderErr,
+    InvalidOrder,
     #[error("无法确定登录方式")]
-    HostErr,
+    InvalidHost,
 }
 
 #[derive(Debug, Default)]
@@ -164,9 +164,9 @@ impl std::str::FromStr for NetFlux {
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
         } else if s.is_empty() {
-            Err(NetHelperError::NoFluxErr.into())
+            Err(NetHelperError::NoFlux.into())
         } else {
-            Err(NetHelperError::ParseFluxErr(s.to_string()).into())
+            Err(NetHelperError::InvalidFlux(s.to_string()).into())
         }
     }
 }
@@ -189,7 +189,7 @@ impl std::str::FromStr for NetState {
         } else if s.eq_ignore_ascii_case("auth6") {
             Ok(NetState::Auth6)
         } else {
-            Err(NetHelperError::HostErr.into())
+            Err(NetHelperError::InvalidHost.into())
         }
     }
 }
@@ -217,7 +217,7 @@ impl TUNetConnect {
             NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(cred, client))),
             NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(cred, client))),
             NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(cred, client))),
-            _ => Err(NetHelperError::HostErr.into()),
+            _ => Err(NetHelperError::InvalidHost.into()),
         }
     }
 }
