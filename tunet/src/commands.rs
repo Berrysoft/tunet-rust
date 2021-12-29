@@ -32,7 +32,7 @@ pub trait TUNetCommand {
 
 #[enum_dispatch]
 #[derive(Debug, StructOpt)]
-#[structopt(name = "TsinghuaNetRust", about = "清华大学校园网客户端")]
+#[structopt(name = "tunet", about = "清华大学校园网客户端")]
 pub enum TUNet {
     #[structopt(name = "login", about = "登录")]
     Login,

@@ -19,7 +19,7 @@ mod view;
 use event::*;
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Specify options")]
+#[structopt(name = "tunet-cui", about = "清华大学校园网客户端")]
 struct Opt {
     #[structopt(long, short = "s")]
     /// 连接方式
