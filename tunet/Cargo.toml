@@ -10,7 +10,7 @@ tunet-helper = { path = "../tunet-helper" }
 tunet-suggest = { path = "../tunet-suggest" }
 tunet-settings-cli = { path = "../tunet-settings-cli" }
 futures-util = "0.3"
-tokio = { version = "1.14", features = [ "rt", "macros" ] }
+tokio = { version = "1.14", features = [ "rt" ] }
 async-trait = "0.1"
 mac_address = "1.1"
 structopt = "0.3"
