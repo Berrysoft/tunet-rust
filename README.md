@@ -15,9 +15,9 @@
 
 ``` bash
 # 使用默认（自动判断）方式登录/注销
-./tunet cui
+./tunet-cui
 # 使用 auth4 方式登录/注销
-./tunet cui -s auth4
+./tunet-cui -s auth4
 ```
 
 ![Console](assets/console.png)

@@ -16,3 +16,6 @@ anyhow = "1.0"
 structopt = "0.3"
 crossterm = { version = "0.20", features = [ "event-stream" ] }
 tui = { version = "0.16", default-features = false, features = [ "crossterm" ] }
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"

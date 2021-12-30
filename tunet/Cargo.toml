@@ -18,3 +18,6 @@ itertools = "0.10"
 termcolor = "1.1"
 termcolor_output = { git = "https://github.com/Berrysoft/termcolor_output.git" }
 enum_dispatch = "0.3"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
