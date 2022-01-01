@@ -8,7 +8,7 @@ use tokio::runtime::Builder as RuntimeBuilder;
 use tunet_helper::Result;
 
 fn main() -> Result<()> {
-    let opt = TUNet::try_parse()?;
+    let opt = TUNet::parse();
     RuntimeBuilder::new_current_thread()
         .enable_all()
         .build()?

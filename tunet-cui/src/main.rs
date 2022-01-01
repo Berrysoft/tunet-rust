@@ -27,7 +27,7 @@ struct Opt {
 }
 
 fn main() -> Result<()> {
-    let opt = Opt::try_parse()?;
+    let opt = Opt::parse();
     RuntimeBuilder::new_multi_thread()
         .enable_all()
         .build()?
