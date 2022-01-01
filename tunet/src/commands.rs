@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use clap::Parser;
 use enum_dispatch::enum_dispatch;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
@@ -6,7 +7,6 @@ use mac_address::MacAddressIterator;
 use std::cmp::Reverse;
 use std::net::Ipv4Addr;
 use std::sync::Arc;
-use structopt::StructOpt;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
 use tunet_helper::{usereg::*, *};
@@ -31,30 +31,30 @@ pub trait TUNetCommand {
 }
 
 #[enum_dispatch]
-#[derive(Debug, StructOpt)]
-#[structopt(name = "tunet", about = "清华大学校园网客户端")]
+#[derive(Debug, Parser)]
+#[clap(about, version, author)]
 pub enum TUNet {
-    #[structopt(name = "login", about = "登录")]
+    #[clap(name = "login", about = "登录")]
     Login,
-    #[structopt(name = "logout", about = "注销")]
+    #[clap(name = "logout", about = "注销")]
     Logout,
-    #[structopt(name = "status", about = "查看在线状态")]
+    #[clap(name = "status", about = "查看在线状态")]
     Status,
-    #[structopt(name = "online", about = "查询在线IP")]
+    #[clap(name = "online", about = "查询在线IP")]
     Online,
-    #[structopt(name = "connect", about = "上线IP")]
+    #[clap(name = "connect", about = "上线IP")]
     UseregConnect,
-    #[structopt(name = "drop", about = "下线IP")]
+    #[clap(name = "drop", about = "下线IP")]
     UseregDrop,
-    #[structopt(name = "detail", about = "流量明细")]
+    #[clap(name = "detail", about = "流量明细")]
     Detail,
-    #[structopt(name = "deletecred", about = "删除用户名和密码")]
+    #[clap(name = "deletecred", about = "删除用户名和密码")]
     DeleteCred,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct Login {
-    #[structopt(long, short = "s")]
+    #[clap(long, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
@@ -71,9 +71,9 @@ impl TUNetCommand for Login {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct Logout {
-    #[structopt(long, short = "s")]
+    #[clap(long, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
@@ -89,9 +89,9 @@ impl TUNetCommand for Logout {
         Ok(())
     }
 }
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct Status {
-    #[structopt(long, short = "s")]
+    #[clap(long, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
@@ -139,7 +139,7 @@ impl TUNetCommand for Status {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct Online {}
 
 #[async_trait]
@@ -184,9 +184,9 @@ impl TUNetCommand for Online {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct UseregConnect {
-    #[structopt(long, short)]
+    #[clap(long, short)]
     /// IP地址
     address: Ipv4Addr,
 }
@@ -204,9 +204,9 @@ impl TUNetCommand for UseregConnect {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct UseregDrop {
-    #[structopt(long, short)]
+    #[clap(long, short)]
     /// IP地址
     address: Ipv4Addr,
 }
@@ -224,15 +224,15 @@ impl TUNetCommand for UseregDrop {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct Detail {
-    #[structopt(long, short, default_value = "logout")]
+    #[clap(long, short, default_value = "logout")]
     /// 排序方式
     order: NetDetailOrder,
-    #[structopt(long, short)]
+    #[clap(long, short)]
     /// 倒序
     descending: bool,
-    #[structopt(long, short)]
+    #[clap(long, short)]
     /// 按日期分组
     grouping: bool,
 }
@@ -340,7 +340,7 @@ impl TUNetCommand for Detail {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct DeleteCred {}
 
 #[async_trait]

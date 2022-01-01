@@ -1,12 +1,12 @@
 #![forbid(unsafe_code)]
 
+use clap::Parser;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::*,
 };
 use futures_util::TryStreamExt;
-use structopt::StructOpt;
 use tokio::runtime::Builder as RuntimeBuilder;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
 use tunet_helper::*;
@@ -18,16 +18,16 @@ mod view;
 
 use event::*;
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "tunet-cui", about = "清华大学校园网客户端")]
+#[derive(Debug, Parser)]
+#[clap(about, version, author)]
 struct Opt {
-    #[structopt(long, short = "s")]
+    #[clap(long, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
 
 fn main() -> Result<()> {
-    let opt = Opt::from_args_safe()?;
+    let opt = Opt::try_parse()?;
     RuntimeBuilder::new_multi_thread()
         .enable_all()
         .build()?
