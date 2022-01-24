@@ -15,7 +15,7 @@ itertools = "0.10"
 anyhow = "1.0"
 clap = { version = "3.0", features = ["derive"] }
 crossterm = { version = "0.20", features = [ "event-stream" ] }
-tui = { version = "0.16", default-features = false, features = [ "crossterm" ] }
+tui = { version = "0.17", default-features = false, features = [ "crossterm" ] }
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
