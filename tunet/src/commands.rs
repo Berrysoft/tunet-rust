@@ -4,9 +4,9 @@ use enum_dispatch::enum_dispatch;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
 use mac_address::MacAddressIterator;
-use std::cmp::Reverse;
 use std::net::Ipv4Addr;
 use std::sync::Arc;
+use std::{cmp::Reverse, ffi::OsString};
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
 use tunet_helper::{usereg::*, *};
@@ -354,7 +354,7 @@ impl TUNetCommand for DeleteCred {
     }
 }
 
-async fn run_external(command: &str) -> Result<()> {
+async fn run_external(command: &str, args: &[OsString]) -> Result<()> {
     let self_path = std::env::current_exe()?;
     let command = format!("tunet-{}", command);
     let command = if let Some(ext_path) = self_path.parent() {
@@ -364,26 +364,32 @@ async fn run_external(command: &str) -> Result<()> {
     } else {
         command.into()
     };
-    subprocess::Exec::cmd(command).join()?;
+    subprocess::Exec::cmd(command).args(args).join()?;
     Ok(())
 }
 
 #[derive(Debug, Parser)]
-pub struct Cui {}
+pub struct Cui {
+    #[clap(multiple_values = true)]
+    ext_cmd: Vec<OsString>,
+}
 
 #[async_trait]
 impl TUNetCommand for Cui {
     async fn run(&self) -> Result<()> {
-        run_external("cui").await
+        run_external("cui", &self.ext_cmd).await
     }
 }
 
 #[derive(Debug, Parser)]
-pub struct Gui {}
+pub struct Gui {
+    #[clap(multiple_values = true)]
+    ext_cmd: Vec<OsString>,
+}
 
 #[async_trait]
 impl TUNetCommand for Gui {
     async fn run(&self) -> Result<()> {
-        run_external("gui").await
+        run_external("gui", &self.ext_cmd).await
     }
 }
