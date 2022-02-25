@@ -11,6 +11,12 @@ macro_rules! pwstr {
     };
 }
 
+macro_rules! pcwstr {
+    ($s : expr) => {
+        PCWSTR($s.as_ptr() as _)
+    };
+}
+
 pub struct Keyring {
     key: U16CString,
 }
@@ -25,7 +31,7 @@ impl Keyring {
     pub fn get(&self) -> Result<String> {
         unsafe {
             let mut p_cred = null_mut();
-            CredReadW(pwstr!(self.key), CRED_TYPE_GENERIC.0, 0, &mut p_cred).ok()?;
+            CredReadW(pcwstr!(self.key), CRED_TYPE_GENERIC.0, 0, &mut p_cred).ok()?;
             let p_cred = p_cred.as_mut().unwrap();
             let bytes =
                 std::slice::from_raw_parts(p_cred.CredentialBlob, p_cred.CredentialBlobSize as _);
@@ -55,6 +61,6 @@ impl Keyring {
     }
 
     pub fn delete(&self) -> Result<()> {
-        unsafe { CredDeleteW(pwstr!(self.key), CRED_TYPE_GENERIC.0, 0).ok() }
+        unsafe { CredDeleteW(pcwstr!(self.key), CRED_TYPE_GENERIC.0, 0).ok() }
     }
 }
