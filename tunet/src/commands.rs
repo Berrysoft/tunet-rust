@@ -50,6 +50,10 @@ pub enum TUNet {
     Detail,
     #[clap(name = "deletecred", about = "删除用户名和密码")]
     DeleteCred,
+    #[clap(name = "cui", about = "启动命令行界面")]
+    Cui,
+    #[clap(name = "gui", about = "启动图形界面")]
+    Gui,
 }
 
 #[derive(Debug, Parser)]
@@ -347,5 +351,39 @@ pub struct DeleteCred {}
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
         delete_cred()
+    }
+}
+
+async fn run_external(command: &str) -> Result<()> {
+    let self_path = std::env::current_exe()?;
+    let command = format!("tunet-{}", command);
+    let command = if let Some(ext_path) = self_path.parent() {
+        let mut ext_path = ext_path.to_path_buf();
+        ext_path.push(command);
+        ext_path
+    } else {
+        command.into()
+    };
+    subprocess::Exec::cmd(command).join()?;
+    Ok(())
+}
+
+#[derive(Debug, Parser)]
+pub struct Cui {}
+
+#[async_trait]
+impl TUNetCommand for Cui {
+    async fn run(&self) -> Result<()> {
+        run_external("cui").await
+    }
+}
+
+#[derive(Debug, Parser)]
+pub struct Gui {}
+
+#[async_trait]
+impl TUNetCommand for Gui {
+    async fn run(&self) -> Result<()> {
+        run_external("gui").await
     }
 }
