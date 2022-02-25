@@ -21,7 +21,7 @@ jobs:
         target: 'x86_64-pc-windows-msvc'
         publishName: 'win.x86_64'
         vsArch: 'x64'
-        qtVersion: '6.2.2'
+        qtVersion: '6.3.0'
         qtDistFull: 'win64_msvc2019_64'
         cross: false
         cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
@@ -45,7 +45,7 @@ jobs:
         target: 'aarch64-pc-windows-msvc'
         publishName: 'win.aarch64'
         vsArch: 'x64_arm64'
-        qtVersion: '6.2.2'
+        qtVersion: '6.3.0'
         qtDistFull: 'win64_msvc2019_arm64'
         cross: true
         qtHostFull: 'win64_msvc2019_64'
@@ -131,7 +131,7 @@ jobs:
   - script: |
       brew install cmake ninja
       python3 -m pip install aqtinstall
-      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt mac desktop 6.2.2 clang_64 -m qtcharts
+      python3 -m aqt install-qt --outputdir $(Build.BinariesDirectory)/Qt mac desktop 6.3.0 clang_64 -m qtcharts
     displayName: "Install Qt"
 
   - script: |
@@ -151,12 +151,12 @@ jobs:
   - script: |
       mkdir build
       cd build
-      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.2.2/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DUSE_CORROSION=off -DTUNET_MODEL_NATIVE_LIB_PATH="$(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a"
+      cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/macos" -DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/6.3.0/macos" -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DUSE_CORROSION=off -DTUNET_MODEL_NATIVE_LIB_PATH="$(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a"
       ninja install
     displayName: "Build C++ part"
 
   - script: |
-      python3 macdeployqtfix/macdeployqtfix.py $(Build.BinariesDirectory)/macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui $(Build.BinariesDirectory)/Qt/6.2.2/macos -v
+      python3 macdeployqtfix/macdeployqtfix.py $(Build.BinariesDirectory)/macos/bin/tunet-gui.app/Contents/MacOS/tunet-gui $(Build.BinariesDirectory)/Qt/6.3.0/macos -v
       cd $(Build.BinariesDirectory)/macos/bin
       zip -r -y tunet-gui.app.zip tunet-gui.app
       cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/macos/
