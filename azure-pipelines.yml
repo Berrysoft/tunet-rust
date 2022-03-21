@@ -70,7 +70,10 @@ jobs:
   
   - script: |
       rustup target add $(target)
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" $(vsArch)
+      pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+      for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+      popd
+      call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" $(vsArch)
       mkdir build
       cd build
       cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DRust_CARGO_TARGET="$(target)" -DCMAKE_INSTALL_PREFIX="$(Build.BinariesDirectory)/$(publishName)" $(cmakeArgs)
