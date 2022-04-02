@@ -1,15 +1,20 @@
 use std::fmt::{Display, Formatter};
 
-#[cfg_attr(
-    target_os = "windows",
-    path = "winrt.rs",
-    cfg_attr(
-        target_os = "linux",
-        path = "netlink.rs",
-        cfg_attr(target_os = "macos", path = "sc.rs", path = "stub.rs")
-    )
-)]
-mod platform;
+cfg_if::cfg_if! {
+    if #[cfg(target_os = "windows")] {
+        #[path = "winrt.rs"]
+        mod platform;
+    } else if #[cfg(target_os = "linux")] {
+        #[path = "netlink.rs"]
+        mod platform;
+    } else if #[cfg(target_os = "macos")] {
+        #[path = "sc.rs"]
+        mod platform;
+    } else {
+        #[path = "stub.rs"]
+        mod platform;
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NetStatus {

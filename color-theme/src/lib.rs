@@ -1,9 +1,15 @@
-#[cfg_attr(
-    target_os = "windows",
-    path = "winrt.rs",
-    cfg_attr(target_os = "macos", path = "mac.rs", path = "stub.rs")
-)]
-mod platform;
+cfg_if::cfg_if! {
+    if #[cfg(target_os = "windows")] {
+        #[path = "winrt.rs"]
+        mod platform;
+    } else if #[cfg(target_os = "macos")] {
+        #[path = "mac.rs"]
+        mod platform;
+    } else {
+        #[path = "stub.rs"]
+        mod platform;
+    }
+}
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
