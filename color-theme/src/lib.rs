@@ -1,22 +1,9 @@
-#[cfg(target_os = "windows")]
-mod winrt;
-
-#[cfg(target_os = "macos")]
-mod mac;
-
-#[cfg(not(any(target_os = "windows", target_os = "macos")))]
-mod stub;
-
-mod platform {
-    #[cfg(target_os = "windows")]
-    pub use super::winrt::*;
-
-    #[cfg(target_os = "macos")]
-    pub use super::mac::*;
-
-    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-    pub use super::stub::*;
-}
+#[cfg_attr(
+    target_os = "windows",
+    path = "winrt.rs",
+    cfg_attr(target_os = "macos", path = "mac.rs", path = "stub.rs")
+)]
+mod platform;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]

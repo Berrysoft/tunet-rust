@@ -1,30 +1,15 @@
 use std::fmt::{Display, Formatter};
 
-#[cfg(target_os = "windows")]
-mod winrt;
-
-#[cfg(target_os = "macos")]
-mod sc;
-
-#[cfg(target_os = "linux")]
-mod netlink;
-
-#[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-mod stub;
-
-mod platform {
-    #[cfg(target_os = "windows")]
-    pub use super::winrt::*;
-
-    #[cfg(target_os = "macos")]
-    pub use super::sc::*;
-
-    #[cfg(target_os = "linux")]
-    pub use super::netlink::*;
-
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    pub use super::stub::*;
-}
+#[cfg_attr(
+    target_os = "windows",
+    path = "winrt.rs",
+    cfg_attr(
+        target_os = "linux",
+        path = "netlink.rs",
+        cfg_attr(target_os = "macos", path = "sc.rs", path = "stub.rs")
+    )
+)]
+mod platform;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NetStatus {
