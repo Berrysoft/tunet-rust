@@ -7,7 +7,7 @@
 支持 Qt5/6，以及 Qt 支持的桌面平台。前端使用 C++ 编写。
 
 |Windows|Linux|MacOS|MacOS（暗）|
-|-|-|-|-|
+|---|---|---|---|
 |![Windows](assets/windows.png)|![Linux](assets/linux.png)|![macos](assets/mac.light.png)|![macos](assets/mac.dark.png)|
 
 ## CUI（命令行图形界面）
@@ -68,7 +68,7 @@
 用户名和密码在第一次登录时根据提示输入，不同平台管理密码方法如下：
 
 |平台|方法|
-|-|-|
+|---|---|
 |Windows|[Windows Credential Manager](https://docs.microsoft.com/en-us/windows/win32/api/wincred/)|
 |Linux|[Keyrings](https://man7.org/linux/man-pages/man7/keyrings.7.html)|
 |macOS|[Keychain](https://developer.apple.com/documentation/security/keychain_services)|
@@ -87,7 +87,7 @@
 如果无法获取，则尝试连接特定的网址来判断。
 
 |平台|方法|
-|-|-|
+|---|---|
 |Windows|`Windows::Networking::Connectivity`|
 |Linux|[Netlink](https://wiki.linuxfoundation.org/networking/generic_netlink_howto)|
 |macOS|System Configuration 与 Core WLAN|
