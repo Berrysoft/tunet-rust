@@ -13,7 +13,7 @@ tokio = { version = "1.14", features = [ "rt-multi-thread", "macros", "time" ] }
 futures-util = "0.3"
 itertools = "0.10"
 anyhow = "1.0"
-clap = { version = "3.0", features = ["derive"] }
+clap = { version = "4.0", features = ["derive"] }
 crossterm = { version = "0.25", features = [ "event-stream" ] }
 tui = "0.19"
 

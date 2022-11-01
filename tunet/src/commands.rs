@@ -370,7 +370,6 @@ async fn run_external(command: &str, args: &[OsString]) -> Result<()> {
 
 #[derive(Debug, Parser)]
 pub struct Cui {
-    #[clap(multiple_values = true)]
     ext_cmd: Vec<OsString>,
 }
 
@@ -383,7 +382,6 @@ impl TUNetCommand for Cui {
 
 #[derive(Debug, Parser)]
 pub struct Gui {
-    #[clap(multiple_values = true)]
     ext_cmd: Vec<OsString>,
 }
 
