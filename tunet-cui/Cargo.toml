@@ -14,7 +14,7 @@ futures-util = "0.3"
 itertools = "0.10"
 anyhow = "1.0"
 clap = { version = "4.0", features = ["derive"] }
-crossterm = { version = "0.25", features = [ "event-stream" ] }
+crossterm = { version = "0.26", features = [ "event-stream" ] }
 tui = "0.19"
 
 [target.'cfg(windows)'.build-dependencies]
