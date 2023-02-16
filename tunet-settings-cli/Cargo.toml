@@ -8,4 +8,4 @@ license = "MIT"
 [dependencies]
 tunet-helper = { path = "../tunet-helper" }
 tunet-settings = { path = "../tunet-settings" }
-rpassword = "7.0"
+rpassword = "7.2"

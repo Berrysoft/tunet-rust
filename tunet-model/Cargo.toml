@@ -11,7 +11,7 @@ tunet-suggest = { path = "../tunet-suggest" }
 netstatus = { path = "../netstatus" }
 color-theme = { path = "../color-theme" }
 futures-util = "0.3"
-tokio = "1.14"
+tokio = "1"
 mac_address = "1.1"
 anyhow = "1.0"
 drop_guard = "0.3"

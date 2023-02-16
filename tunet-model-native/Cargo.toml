@@ -14,8 +14,8 @@ netstatus = { path = "../netstatus" }
 tunet-settings = { path = "../tunet-settings" }
 tunet-model = { path = "../tunet-model" }
 color-theme = { path = "../color-theme" }
-tokio = { version = "1.14", features = [ "rt-multi-thread" ] }
+tokio = { version = "1", features = [ "rt-multi-thread" ] }
 mac_address = "1.1"
 anyhow = "1.0"
 itertools = "0.10"
-widestring = "1.0.0-beta.1"
+widestring = "1.0"
