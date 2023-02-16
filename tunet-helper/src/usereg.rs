@@ -178,8 +178,7 @@ impl UseregHelper {
                     tds[0]
                         .parse()
                         .unwrap_or_else(|_| Ipv4Addr::new(0, 0, 0, 0)),
-                    NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT)
-                        .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
+                    NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT).unwrap_or_default(),
                     tds[6].parse().ok(),
                     tds[2].parse().unwrap_or_default(),
                 );
@@ -221,10 +220,8 @@ impl UseregHelper {
                 for tds in doc {
                     if !tds.is_empty() {
                         yield NetDetail::from_detail(
-                            NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT)
-                                .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
-                            NaiveDateTime::parse_from_str(&tds[2], DATE_TIME_FORMAT)
-                                .unwrap_or_else(|_| NaiveDateTime::from_timestamp(0, 0)),
+                            NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT).unwrap_or_default(),
+                            NaiveDateTime::parse_from_str(&tds[2], DATE_TIME_FORMAT).unwrap_or_default(),
                             tds[4].parse().unwrap_or_default(),
                         );
                         new_len += 1;
