@@ -152,12 +152,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             Axis::default()
                 .title(Span::from(format!("日期/{}月", now.month())))
                 .bounds([1.0, now.day() as f64])
-                .labels(
-                    (1..=now.day())
-                        .into_iter()
-                        .map(|d| Span::from(d.to_string()))
-                        .collect(),
-                ),
+                .labels((1..=now.day()).map(|d| Span::from(d.to_string())).collect()),
         )
         .y_axis(
             Axis::default()

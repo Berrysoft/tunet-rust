@@ -105,7 +105,8 @@ fn tunet_model_start_impl(
             if model.read().unwrap().del_at_exit() {
                 reader.delete()?;
             } else {
-                reader.save(model.read().unwrap().cred.clone()).await?;
+                let cred = model.read().unwrap().cred.clone();
+                reader.save(cred).await?;
             }
             Ok::<_, anyhow::Error>(res)
         } else {
@@ -301,7 +302,7 @@ pub unsafe extern "C" fn tunet_model_details_grouped_foreach(
             .map(|(key, group)| (key, group.map(|detail| detail.flux.0).sum::<u64>()))
         {
             let g = native::DetailGroup {
-                logout_date: date.and_hms(0, 0, 0).timestamp(),
+                logout_date: date.and_hms_opt(0, 0, 0).unwrap().timestamp(),
                 flux,
             };
             if !f(&g, data) {
