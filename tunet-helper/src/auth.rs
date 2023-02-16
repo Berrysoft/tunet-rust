@@ -3,8 +3,8 @@ use authtea::AuthTea;
 use data_encoding::{Encoding, HEXLOWER};
 use data_encoding_macro::new_encoding;
 use hmac::{Hmac, Mac};
-use lazy_static::lazy_static;
 use md5::Md5;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
@@ -23,9 +23,7 @@ const AUTH_BASE64: Encoding = new_encoding! {
     padding: '=',
 };
 
-lazy_static! {
-    static ref AC_ID_REGEX: Regex = Regex::new(r"/index_([0-9]+)\.html").unwrap();
-}
+static AC_ID_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"/index_([0-9]+)\.html").unwrap());
 
 impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
     pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {

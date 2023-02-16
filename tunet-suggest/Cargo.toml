@@ -9,4 +9,4 @@ license = "MIT"
 tunet-helper = { path = "../tunet-helper" }
 netstatus = { path = "../netstatus" }
 async-trait = "0.1"
-lazy_static = "1.4"
+once_cell = "1.17"
