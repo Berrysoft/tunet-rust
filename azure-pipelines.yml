@@ -49,7 +49,7 @@ jobs:
         qtDistFull: 'win64_msvc2019_arm64'
         cross: true
         qtHostFull: 'win64_msvc2019_64'
-        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_arm64;$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
+        cmakeArgs: '-DCMAKE_PREFIX_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_arm64;$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64" -DQT_HOST_PATH="$(Build.BinariesDirectory)/Qt/$(qtVersion)/msvc2019_64"'
   pool:
     vmImage: 'windows-latest'
   
