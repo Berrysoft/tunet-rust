@@ -6,9 +6,11 @@
 ## GUI
 支持 Qt5/6，以及 Qt 支持的桌面平台。前端使用 C++ 编写。
 
-| Windows                        | Linux                      | MacOS                          | MacOS（暗）                   |
-| ------------------------------ | -------------------------- | ------------------------------ | ----------------------------- |
-| ![Windows](assets/windows.png) | ![Linux](assets/linux.png) | ![macos](assets/mac.light.png) | ![macos](assets/mac.dark.png) |
+| Windows                        | Windows（暗*）                             | Linux                      | MacOS                          | MacOS（暗）                   |
+| ------------------------------ | ------------------------------------------ | -------------------------- | ------------------------------ | ----------------------------- |
+| ![Windows](assets/windows.png) | ![Windows](assets/windows.fusion.dark.png) | ![Linux](assets/linux.png) | ![macos](assets/mac.light.png) | ![macos](assets/mac.dark.png) |
+
+\* 需要使用 fusion 主题，可在命令行指定 `-style fusion`。
 
 ## CUI（命令行图形界面）
 使用如下命令启动：
