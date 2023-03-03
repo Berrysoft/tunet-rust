@@ -60,7 +60,7 @@ namespace TUNet
         m_about_layout.addWidget(&m_source_label);
 
         m_copyright_label.setAlignment(Qt::AlignHCenter);
-        m_copyright_label.setText(QStringLiteral(u"版权所有 © 2021-2022 Berrysoft"));
+        m_copyright_label.setText(QStringLiteral(u"版权所有 © 2021-2023 Berrysoft"));
         m_about_layout.addWidget(&m_copyright_label);
 
         m_dial_label.setAlignment(Qt::AlignHCenter);

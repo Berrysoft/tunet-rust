@@ -30,7 +30,7 @@ if(MSVC)
 endif()
 
 set(TUNET_VERSION ${PROJECT_VERSION})
-set(TUNET_COPYRIGHT "Copyright (c) 2021-2022 Berrysoft")
+set(TUNET_COPYRIGHT "Copyright (c) 2021-2023 Berrysoft")
 set(TUNET_DESCRIPTION "清华大学校园网客户端")
 
 find_package(Git)
