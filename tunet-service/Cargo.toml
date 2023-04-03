@@ -12,6 +12,10 @@ tunet-settings = { path = "../tunet-settings" }
 tokio = { version = "1", features = ["macros", "rt", "signal", "sync"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 clap = { version = "4", features = ["derive"] }
+log = "0.4"
+flexi_logger = { version = "0.25", default-features = false, features = [
+    "colors",
+] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.48", features = [
