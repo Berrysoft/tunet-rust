@@ -12,6 +12,7 @@ members = [
     "tunet-model-native",
     "tunet",
     "tunet-cui",
+    "tunet-service",
 ]
 
 resolver = "2"

@@ -1,0 +1,21 @@
+[package]
+name = "tunet-service"
+version = "0.1.0"
+authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+tunet-helper = { path = "../tunet-helper" }
+tunet-suggest = { path = "../tunet-suggest" }
+tunet-settings = { path = "../tunet-settings" }
+tokio = { version = "1", features = ["macros", "rt", "signal", "sync"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
+clap = { version = "4", features = ["derive"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.48", features = [
+    "Foundation",
+    "Networking_Connectivity",
+] }
+pin-project = "1.0"
