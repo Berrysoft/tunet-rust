@@ -9,9 +9,14 @@ cfg_if::cfg_if! {
 }
 
 use tokio_stream::Stream;
-use tunet_helper::Result;
+use tunet_helper::{NetFlux, Result};
 
 #[allow(clippy::needless_question_mark)]
 pub fn watch() -> Result<impl Stream<Item = ()>> {
     Ok(platform::watch()?)
+}
+
+#[allow(clippy::needless_question_mark)]
+pub fn succeeded(flux: NetFlux) -> Result<()> {
+    Ok(platform::succeeded(flux)?)
 }

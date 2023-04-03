@@ -20,7 +20,9 @@ flexi_logger = { version = "0.25", default-features = false, features = [
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.48", features = [
+    "Data_Xml_Dom",
     "Foundation",
     "Networking_Connectivity",
+    "UI_Notifications",
 ] }
 pin-project = "1.0"

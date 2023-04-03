@@ -1,4 +1,4 @@
-mod net_watcher;
+mod platform_helper;
 
 use clap::Parser;
 use flexi_logger::{LogSpecification, Logger};
@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     let cred = Arc::new(settings.read()?);
     let client = create_http_client()?;
     let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
-    let events = net_watcher::watch()?;
+    let events = platform_helper::watch()?;
     let mut events = pin!(events);
     loop {
         tokio::select! {
@@ -41,9 +41,8 @@ async fn main() -> Result<()> {
             }
             e = events.next() => {
                 if let Some(()) = e {
-                    match c.login().await {
-                        Ok(res) => log::info!("{}", res),
-                        Err(msg) => log::error!("{}", msg),
+                    if let Err(msg) = login_and_flux(&c).await {
+                        log::error!("{}", msg);
                     }
                 } else {
                     break;
@@ -51,5 +50,13 @@ async fn main() -> Result<()> {
             }
         }
     }
+    Ok(())
+}
+
+async fn login_and_flux(c: &TUNetConnect) -> Result<()> {
+    let res = c.login().await?;
+    log::info!("{}", res);
+    let flux = c.flux().await?;
+    platform_helper::succeeded(flux)?;
     Ok(())
 }
