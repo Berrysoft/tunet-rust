@@ -19,6 +19,7 @@ tokio = { version = "1", features = ["macros", "rt", "signal", "sync"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 pin-project = "1.0"
 clap = { version = "4", features = ["derive"] }
+enum_dispatch = "0.3"
 log = "0.4"
 flexi_logger = { version = "0.25", default-features = false, features = [
     "colors",

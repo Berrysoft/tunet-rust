@@ -50,7 +50,7 @@ fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
     let status_handle = service_control_handler::register(SERVICE_NAME, event_handler)?;
 
     let next_status = ServiceStatus {
-        service_type: ServiceType::USER_OWN_PROCESS,
+        service_type: ServiceType::OWN_PROCESS,
         current_state: ServiceState::Running,
         controls_accepted: ServiceControlAccept::STOP,
         exit_code: ServiceExitCode::Win32(0),
