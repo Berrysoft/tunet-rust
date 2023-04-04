@@ -2,7 +2,7 @@ use std::{
     os::windows::prelude::{AsRawHandle, FromRawHandle, OwnedHandle},
     ptr::null_mut,
 };
-use widestring::U16CString;
+use widestring::{u16str, U16CString, U16String};
 use windows::{
     core::*,
     Win32::{
@@ -11,7 +11,7 @@ use windows::{
         System::{
             Environment::CreateEnvironmentBlock,
             RemoteDesktop::{
-                WTSGetActiveConsoleSessionId, WTSQueryUserToken, WTSSendMessageA,
+                WTSGetActiveConsoleSessionId, WTSQueryUserToken, WTSSendMessageW,
                 WTS_CURRENT_SERVER_HANDLE,
             },
             Threading::{
@@ -70,13 +70,17 @@ pub fn notify() -> Result<()> {
 }
 
 pub fn error(s: impl AsRef<str>) -> Result<()> {
+    let title = u16str!("tunet-service");
+    let msg = U16String::from_str(s.as_ref());
     let mut res = MESSAGEBOX_RESULT(0);
     unsafe {
-        WTSSendMessageA(
+        WTSSendMessageW(
             WTS_CURRENT_SERVER_HANDLE,
             WTSGetActiveConsoleSessionId(),
-            "tunet-service".as_bytes(),
-            s.as_ref().as_bytes(),
+            PCWSTR(title.as_ptr()),
+            title.len() as _,
+            PCWSTR(msg.as_ptr()),
+            msg.len() as _,
             MB_OK,
             0,
             &mut res,
