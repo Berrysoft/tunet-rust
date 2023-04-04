@@ -34,6 +34,7 @@ struct Register;
 
 impl Command for Register {
     fn run(&self) -> Result<()> {
+        elevate()?;
         let manager =
             ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
         let service_info = ServiceInfo {
@@ -49,6 +50,7 @@ impl Command for Register {
             account_password: None,
         };
         manager.create_service(&service_info, ServiceAccess::QUERY_STATUS)?;
+        println!("Register successfully.");
         Ok(())
     }
 }
@@ -58,11 +60,13 @@ struct Unregister;
 
 impl Command for Unregister {
     fn run(&self) -> Result<()> {
+        elevate()?;
         let manager =
             ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
         manager
             .open_service(SERVICE_NAME, ServiceAccess::DELETE)?
             .delete()?;
+        println!("Unregister successfully.");
         Ok(())
     }
 }
@@ -73,5 +77,29 @@ struct Start;
 impl Command for Start {
     fn run(&self) -> Result<()> {
         service::start()
+    }
+}
+
+fn elevate() -> Result<()> {
+    if !is_elevated::is_elevated() {
+        let status = std::process::Command::new("powershell.exe")
+            .arg("-c")
+            .arg("Start-Process")
+            .arg(std::env::current_exe()?)
+            .arg("-Verb")
+            .arg("runas")
+            .arg("-ArgumentList")
+            .arg(
+                std::env::args()
+                    .skip(1)
+                    .map(|s| format!("\"{}\"", s))
+                    .collect::<Vec<_>>()
+                    .join(","),
+            )
+            .arg("-Wait")
+            .status()?;
+        std::process::exit(status.code().unwrap_or_default());
+    } else {
+        Ok(())
     }
 }
