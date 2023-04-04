@@ -3,8 +3,7 @@ mod toast;
 
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
-use once_cell::sync::OnceCell;
-use std::{path::PathBuf, sync::Arc};
+use std::{error::Error, sync::Arc};
 use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
 use tunet_settings::FileSettingsReader;
 use tunet_settings_cli::{read_cred, save_cred};
@@ -60,7 +59,12 @@ impl Command for Register {
             account_name: None,
             account_password: None,
         };
-        manager.create_service(&service_info, ServiceAccess::QUERY_STATUS)?;
+        manager
+            .create_service(
+                &service_info,
+                ServiceAccess::QUERY_STATUS | ServiceAccess::START,
+            )?
+            .start(&[] as &[&str])?;
         println!("Register successfully.");
         Ok(())
     }
@@ -74,24 +78,27 @@ impl Command for Unregister {
         elevate()?;
         let manager =
             ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
-        manager
-            .open_service(SERVICE_NAME, ServiceAccess::DELETE)?
-            .delete()?;
+        let service = manager.open_service(
+            SERVICE_NAME,
+            ServiceAccess::QUERY_STATUS | ServiceAccess::STOP | ServiceAccess::DELETE,
+        )?;
+        if let Err(e) = service.stop() {
+            println!("{}", e);
+            if let Some(e) = e.source() {
+                println!("{}", e);
+            }
+        }
+        service.delete()?;
         println!("Unregister successfully.");
         Ok(())
     }
 }
-
-static CONFIG_PATH: OnceCell<(PathBuf, PathBuf)> = OnceCell::new();
 
 #[derive(Debug, Parser)]
 struct Start;
 
 impl Command for Start {
     fn run(&self) -> Result<()> {
-        CONFIG_PATH
-            .set((std::env::current_exe()?, std::env::current_dir()?))
-            .unwrap();
         service::start()
     }
 }

@@ -22,8 +22,6 @@ use windows::{
     },
 };
 
-use crate::CONFIG_PATH;
-
 pub fn notify() -> Result<()> {
     unsafe {
         let session = WTSGetActiveConsoleSessionId();
@@ -45,11 +43,12 @@ pub fn notify() -> Result<()> {
         let mut si = STARTUPINFOW::default();
         si.cb = std::mem::size_of_val(&si) as _;
         let mut pi = PROCESS_INFORMATION::default();
-        let (app_path, app_dir) = CONFIG_PATH.get().unwrap();
-        let app_name = U16CString::from_os_str(app_path.to_path_buf().into_os_string()).unwrap();
+        let app_name =
+            U16CString::from_os_str(std::env::current_exe().unwrap().into_os_string()).unwrap();
         // Need to set the first arg as the exe itself.
         let mut command_line = U16CString::from_str("tunet-service.exe run-once").unwrap();
-        let app_dir = U16CString::from_os_str(app_dir.to_path_buf().into_os_string()).unwrap();
+        let app_dir =
+            U16CString::from_os_str(std::env::current_dir().unwrap().into_os_string()).unwrap();
         CreateProcessAsUserW(
             HANDLE(dup_token.as_raw_handle() as _),
             PCWSTR(app_name.as_ptr()),

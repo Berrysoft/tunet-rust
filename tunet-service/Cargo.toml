@@ -29,4 +29,3 @@ clap = { version = "4", features = ["derive"] }
 enum_dispatch = "0.3"
 windows-service = "0.6"
 is_elevated = "0.1"
-once_cell = "1.17"
