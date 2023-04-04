@@ -1,14 +1,71 @@
 mod net_watcher;
 mod notify;
 
+use crate::SERVICE_NAME;
 use clap::Parser;
 use flexi_logger::{LogSpecification, Logger};
-use std::{ffi::OsString, path::PathBuf, pin::pin, sync::Arc};
+use std::{ffi::OsString, path::PathBuf, pin::pin, sync::Arc, time::Duration};
 use tokio::{signal::windows::ctrl_c, sync::watch};
 use tokio_stream::{wrappers::WatchStream, StreamExt};
 use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
 use tunet_settings::FileSettingsReader;
 use tunet_suggest::TUNetHelperExt;
+use windows_service::{
+    define_windows_service,
+    service::{
+        ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus,
+        ServiceType,
+    },
+    service_control_handler::{self, ServiceControlHandlerResult},
+    service_dispatcher,
+};
+
+pub fn start() -> Result<()> {
+    service_dispatcher::start(SERVICE_NAME, ffi_service_entry)?;
+    Ok(())
+}
+
+define_windows_service!(ffi_service_entry, service_entry);
+
+fn service_entry(args: Vec<OsString>) {
+    if let Err(e) = service_entry_impl(args) {
+        log::error!("{}", e);
+    }
+}
+
+fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
+    let (tx, rx) = watch::channel(());
+
+    let event_handler = move |control_event| -> ServiceControlHandlerResult {
+        match control_event {
+            ServiceControl::Stop => {
+                tx.send(()).ok();
+                ServiceControlHandlerResult::NoError
+            }
+            ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
+            _ => ServiceControlHandlerResult::NotImplemented,
+        }
+    };
+
+    let status_handle = service_control_handler::register(SERVICE_NAME, event_handler)?;
+
+    let next_status = ServiceStatus {
+        service_type: ServiceType::USER_OWN_PROCESS,
+        current_state: ServiceState::Running,
+        controls_accepted: ServiceControlAccept::STOP,
+        exit_code: ServiceExitCode::Win32(0),
+        checkpoint: 0,
+        wait_hint: Duration::default(),
+        process_id: None,
+    };
+
+    status_handle.set_service_status(next_status)?;
+
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(service_main(args, rx))
+}
 
 #[derive(Debug, Parser)]
 struct Options {
@@ -16,7 +73,7 @@ struct Options {
     config: PathBuf,
 }
 
-pub async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()> {
+async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()> {
     let opt = Options::parse_from(args);
     let spec = LogSpecification::env_or_parse("debug")?;
     let _log_handle = Logger::with(spec)
