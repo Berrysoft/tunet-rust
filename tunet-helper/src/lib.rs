@@ -7,7 +7,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
 
-pub use anyhow::Result;
+pub use anyhow::{anyhow, Result};
 pub use chrono::{
     DateTime, Datelike, Duration as NaiveDuration, FixedOffset, Local, NaiveDate, NaiveDateTime,
     Timelike,

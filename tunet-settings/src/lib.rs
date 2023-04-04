@@ -39,10 +39,7 @@ pub struct FileSettingsReader {
 
 impl FileSettingsReader {
     pub fn new() -> Result<Self> {
-        Ok(Self {
-            path: Self::file_path()?,
-            keyring: Keyring::new(TUNET_NAME)?,
-        })
+        Self::with_path(Self::file_path()?)
     }
 
     pub fn file_path() -> Result<PathBuf> {
@@ -53,8 +50,11 @@ impl FileSettingsReader {
         Ok(p)
     }
 
-    pub fn file_exists() -> bool {
-        Self::file_path().map(|p| p.exists()).unwrap_or(false)
+    pub fn with_path(path: impl Into<PathBuf>) -> Result<Self> {
+        Ok(Self {
+            path: path.into(),
+            keyring: Keyring::new(TUNET_NAME)?,
+        })
     }
 
     pub async fn save(&mut self, settings: Arc<NetCredential>) -> Result<()> {
@@ -91,7 +91,7 @@ impl FileSettingsReader {
                 eprintln!("WARNING: {}", e);
             }
         });
-        if Self::file_exists() {
+        if self.path.exists() {
             remove_file(self.path.as_path())?;
         }
         Ok(())

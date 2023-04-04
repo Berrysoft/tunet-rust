@@ -21,9 +21,17 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
 if(${USE_CORROSION})
     add_subdirectory(corrosion)
 
-    corrosion_import_crate(MANIFEST_PATH tunet/Cargo.toml)
+    set(TUNET_CRATES tunet tunet-cui tunet-model-native)
+    if(WIN32)
+        list(APPEND TUNET_CRATES tunet-service)
+    endif()
+
+    corrosion_import_crate(MANIFEST_PATH tunet/Cargo.toml CRATES ${TUNET_CRATES})
 
     corrosion_install(TARGETS tunet tunet-cui)
+    if(WIN32)
+        corrosion_install(TARGETS tunet-service)
+    endif()
 else()
     add_library(tunet-model-native-static STATIC IMPORTED)
     set_property(TARGET tunet-model-native-static PROPERTY IMPORTED_LOCATION ${TUNET_MODEL_NATIVE_LIB_PATH})
