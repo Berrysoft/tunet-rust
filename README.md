@@ -78,6 +78,16 @@ $ ./tunet detail -o flux -dg
 > ./tunet detail -g --nuon | from nuon | sort-by flux -r
 ```
 
+### Windows 服务
+注册和注销服务需要管理员权限启动命令行。
+``` powershell
+# 注册服务
+PS> .\tunet-service register
+# 注销服务
+PS> .\tunet-service unregister
+```
+注意 `tunet-service.exe` 自身是服务程序，如需删除应先注销服务。
+
 ## keyring
 用户名和密码在第一次登录时根据提示输入，不同平台管理密码方法如下：
 
