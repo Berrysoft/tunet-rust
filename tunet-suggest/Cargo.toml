@@ -1,12 +1,13 @@
 [package]
 name = "tunet-suggest"
 version = "0.1.1"
-authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
-edition = "2021"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
-tunet-helper = { path = "../tunet-helper" }
-netstatus = { path = "../netstatus" }
-async-trait = "0.1"
-once_cell = "1.17"
+tunet-helper = { workspace = true }
+netstatus = { workspace = true }
+async-trait = { workspace = true }
+once_cell = { workspace = true }

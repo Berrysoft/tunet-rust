@@ -1,17 +1,16 @@
 [package]
 name = "color-theme"
 version = "0.1.0"
-authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
-edition = "2021"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
-cfg-if = "1.0"
+cfg-if = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.48", features = [
-    "UI_ViewManagement",
-] }
+windows = { workspace = true, features = ["UI_ViewManagement"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc = "0.2"
+objc = { workspace = true }

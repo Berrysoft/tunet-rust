@@ -1,21 +1,22 @@
 [package]
 name = "tunet-model-native"
 version = "0.1.2"
-authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
-edition = "2021"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [lib]
 crate-type = ["staticlib"]
 
 [dependencies]
-tunet-helper = { path = "../tunet-helper" }
-netstatus = { path = "../netstatus" }
-tunet-settings = { path = "../tunet-settings" }
-tunet-model = { path = "../tunet-model" }
-color-theme = { path = "../color-theme" }
-tokio = { version = "1", features = [ "rt-multi-thread" ] }
-mac_address = "1.1"
-anyhow = "1.0"
-itertools = "0.10"
-widestring = "1.0"
+color-theme = { workspace = true }
+netstatus = { workspace = true }
+tunet-helper = { workspace = true }
+tunet-settings = { workspace = true }
+tunet-model = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+mac_address = { workspace = true }
+anyhow = { workspace = true }
+itertools = { workspace = true }
+widestring = { workspace = true }

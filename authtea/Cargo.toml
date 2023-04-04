@@ -1,8 +1,9 @@
 [package]
 name = "authtea"
 version = "0.3.0"
-authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
-edition = "2021"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]

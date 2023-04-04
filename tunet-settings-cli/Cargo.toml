@@ -1,11 +1,12 @@
 [package]
 name = "tunet-settings-cli"
 version = "0.1.0"
-authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
-edition = "2021"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
-tunet-helper = { path = "../tunet-helper" }
-tunet-settings = { path = "../tunet-settings" }
-rpassword = "7.2"
+tunet-helper = { workspace = true }
+tunet-settings = { workspace = true }
+rpassword = "7"

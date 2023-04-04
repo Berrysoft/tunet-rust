@@ -1,16 +1,17 @@
 [package]
 name = "tunet-service"
 version = "0.1.0"
-authors = ["Berrysoft <Strawberry_Str@hotmail.com>"]
-edition = "2021"
-license = "MIT"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
-tunet-helper = { path = "../tunet-helper" }
-tunet-suggest = { path = "../tunet-suggest" }
-tunet-settings = { path = "../tunet-settings" }
-tunet-settings-cli = { path = "../tunet-settings-cli" }
-windows = { version = "0.48", features = [
+tunet-helper = { workspace = true }
+tunet-suggest = { workspace = true }
+tunet-settings = { workspace = true }
+tunet-settings-cli = { workspace = true }
+windows = { workspace = true, features = [
     "Data_Xml_Dom",
     "Foundation",
     "Networking_Connectivity",
@@ -21,11 +22,11 @@ windows = { version = "0.48", features = [
     "Win32_System_Threading",
     "Win32_UI_WindowsAndMessaging",
 ] }
-widestring = "1.0"
-tokio = { version = "1", features = ["macros", "rt", "signal", "sync"] }
-tokio-stream = { version = "0.1", features = ["sync"] }
-pin-project = "1.0"
-clap = { version = "4", features = ["derive"] }
-enum_dispatch = "0.3"
+widestring = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "signal", "sync"] }
+tokio-stream = { workspace = true, features = ["sync"] }
+pin-project = "1"
+clap = { workspace = true }
+enum_dispatch = { workspace = true }
 windows-service = "0.6"
 is_elevated = "0.1"
