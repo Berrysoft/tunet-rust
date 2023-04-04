@@ -48,7 +48,7 @@ fn service_entry_impl(config: &Path) -> Result<()> {
 
     let status_handle = service_control_handler::register(SERVICE_NAME, event_handler)?;
 
-    let next_status = ServiceStatus {
+    status_handle.set_service_status(ServiceStatus {
         service_type: ServiceType::OWN_PROCESS,
         current_state: ServiceState::Running,
         controls_accepted: ServiceControlAccept::STOP,
@@ -56,14 +56,24 @@ fn service_entry_impl(config: &Path) -> Result<()> {
         checkpoint: 0,
         wait_hint: Duration::default(),
         process_id: None,
-    };
-
-    status_handle.set_service_status(next_status)?;
+    })?;
 
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(service_main(config, rx))
+        .block_on(service_main(config, rx))?;
+
+    status_handle.set_service_status(ServiceStatus {
+        service_type: ServiceType::OWN_PROCESS,
+        current_state: ServiceState::Stopped,
+        controls_accepted: ServiceControlAccept::empty(),
+        exit_code: ServiceExitCode::Win32(0),
+        checkpoint: 0,
+        wait_hint: Duration::default(),
+        process_id: None,
+    })?;
+
+    Ok(())
 }
 
 async fn service_main(config: &Path, rx: watch::Receiver<()>) -> Result<()> {
@@ -78,7 +88,7 @@ async fn service_main(config: &Path, rx: watch::Receiver<()>) -> Result<()> {
     let client = create_http_client()?;
     let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
     let mut ctrlc = ctrl_c()?;
-    let mut stopc = WatchStream::new(rx);
+    let mut stopc = WatchStream::new(rx).skip(1);
     let events = net_watcher::watch()?;
     let mut events = pin!(events);
     loop {
