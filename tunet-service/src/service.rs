@@ -2,13 +2,10 @@ mod net_watcher;
 mod notify;
 
 use crate::SERVICE_NAME;
-use flexi_logger::{LogSpecification, Logger};
-use std::{ffi::OsString, path::Path, pin::pin, sync::Arc, time::Duration};
+use std::{ffi::OsString, pin::pin, time::Duration};
 use tokio::{signal::windows::ctrl_c, sync::watch};
 use tokio_stream::{wrappers::WatchStream, StreamExt};
-use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
-use tunet_settings::FileSettingsReader;
-use tunet_suggest::TUNetHelperExt;
+use tunet_helper::Result;
 use windows_service::{
     define_windows_service,
     service::{
@@ -27,12 +24,12 @@ pub fn start() -> Result<()> {
 define_windows_service!(ffi_service_entry, service_entry);
 
 fn service_entry(_args: Vec<OsString>) {
-    if let Err(e) = service_entry_impl(crate::CONFIG_PATH.get().unwrap()) {
-        log::error!("{}", e);
+    if let Err(e) = service_entry_impl() {
+        notify::error(e.to_string()).ok();
     }
 }
 
-fn service_entry_impl(config: &Path) -> Result<()> {
+fn service_entry_impl() -> Result<()> {
     let (tx, rx) = watch::channel(());
 
     let event_handler = move |control_event| -> ServiceControlHandlerResult {
@@ -61,7 +58,7 @@ fn service_entry_impl(config: &Path) -> Result<()> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(service_main(config, rx))?;
+        .block_on(service_main(rx))?;
 
     status_handle.set_service_status(ServiceStatus {
         service_type: ServiceType::OWN_PROCESS,
@@ -76,17 +73,7 @@ fn service_entry_impl(config: &Path) -> Result<()> {
     Ok(())
 }
 
-async fn service_main(config: &Path, rx: watch::Receiver<()>) -> Result<()> {
-    let spec = LogSpecification::env_or_parse("debug")?;
-    let _log_handle = Logger::with(spec)
-        .log_to_stdout()
-        .set_palette("b1;3;2;4;6".to_string())
-        .use_utc()
-        .start()?;
-    let settings = FileSettingsReader::with_path(config)?;
-    let cred = Arc::new(settings.read()?);
-    let client = create_http_client()?;
-    let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
+async fn service_main(rx: watch::Receiver<()>) -> Result<()> {
     let mut ctrlc = ctrl_c()?;
     let mut stopc = WatchStream::new(rx).skip(1);
     let events = net_watcher::watch()?;
@@ -94,17 +81,15 @@ async fn service_main(config: &Path, rx: watch::Receiver<()>) -> Result<()> {
     loop {
         tokio::select! {
             _ = ctrlc.recv() => {
-                log::info!("Ctrl-C received");
                 break;
             }
             _ = stopc.next() => {
-                log::info!("SCM stop received");
                 break;
             }
             e = events.next() => {
                 if let Some(()) = e {
-                    if let Err(msg) = login_and_flux(&c).await {
-                        log::error!("{}", msg);
+                    if let Err(msg) = notify::notify() {
+                        notify::error(msg.to_string()).ok();
                     }
                 } else {
                     break;
@@ -112,13 +97,5 @@ async fn service_main(config: &Path, rx: watch::Receiver<()>) -> Result<()> {
             }
         }
     }
-    Ok(())
-}
-
-async fn login_and_flux(c: &TUNetConnect) -> Result<()> {
-    let res = c.login().await?;
-    log::info!("{}", res);
-    let flux = c.flux().await?;
-    notify::succeeded(flux)?;
     Ok(())
 }

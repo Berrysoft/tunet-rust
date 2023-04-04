@@ -11,7 +11,6 @@ pub fn watch() -> Result<impl Stream<Item = ()>> {
     let (tx, rx) = watch::channel(());
     let token = NetworkInformation::NetworkStatusChanged(&NetworkStatusChangedEventHandler::new(
         move |_| {
-            log::debug!("NetworkStatusChanged");
             tx.send(()).ok();
             Ok(())
         },
@@ -41,7 +40,6 @@ struct NetworkStatusChangedToken(EventRegistrationToken);
 
 impl Drop for NetworkStatusChangedToken {
     fn drop(&mut self) {
-        log::debug!("RemoveNetworkStatusChanged");
         NetworkInformation::RemoveNetworkStatusChanged(self.0).unwrap()
     }
 }

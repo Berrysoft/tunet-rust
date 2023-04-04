@@ -15,17 +15,18 @@ windows = { version = "0.48", features = [
     "Foundation",
     "Networking_Connectivity",
     "UI_Notifications",
+    "Win32_Foundation",
+    "Win32_System_Environment",
+    "Win32_System_RemoteDesktop",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
 ] }
+widestring = "1.0"
 tokio = { version = "1", features = ["macros", "rt", "signal", "sync"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 pin-project = "1.0"
 clap = { version = "4", features = ["derive"] }
 enum_dispatch = "0.3"
-log = "0.4"
-flexi_logger = { version = "0.25", default-features = false, features = [
-    "colors",
-] }
 windows-service = "0.6"
 is_elevated = "0.1"
-press-btn-continue = "0.1"
 once_cell = "1.17"

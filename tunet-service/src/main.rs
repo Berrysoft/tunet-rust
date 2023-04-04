@@ -1,13 +1,14 @@
 mod service;
-
-use std::path::PathBuf;
+mod toast;
 
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
 use once_cell::sync::OnceCell;
-use tunet_helper::Result;
+use std::{path::PathBuf, sync::Arc};
+use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
 use tunet_settings::FileSettingsReader;
 use tunet_settings_cli::{read_cred, save_cred};
+use tunet_suggest::TUNetHelperExt;
 use windows_service::{
     service::{ServiceAccess, ServiceErrorControl, ServiceInfo, ServiceStartType, ServiceType},
     service_manager::{ServiceManager, ServiceManagerAccess},
@@ -32,6 +33,7 @@ enum Commands {
     Register,
     Unregister,
     Start,
+    RunOnce,
 }
 
 #[derive(Debug, Parser)]
@@ -44,7 +46,6 @@ impl Command for Register {
             .enable_all()
             .build()?
             .block_on(save_cred(read_cred()?))?;
-        let settings_path = FileSettingsReader::file_path()?;
         let manager =
             ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
         let service_info = ServiceInfo {
@@ -54,7 +55,7 @@ impl Command for Register {
             start_type: ServiceStartType::AutoStart,
             error_control: ServiceErrorControl::Normal,
             executable_path: std::env::current_exe()?,
-            launch_arguments: vec!["start".into(), "--config".into(), settings_path.into()],
+            launch_arguments: vec!["start".into()],
             dependencies: vec![],
             account_name: None,
             account_password: None,
@@ -81,18 +82,37 @@ impl Command for Unregister {
     }
 }
 
-static CONFIG_PATH: OnceCell<PathBuf> = OnceCell::new();
+static CONFIG_PATH: OnceCell<(PathBuf, PathBuf)> = OnceCell::new();
 
 #[derive(Debug, Parser)]
-struct Start {
-    #[clap(long)]
-    config: PathBuf,
-}
+struct Start;
 
 impl Command for Start {
     fn run(&self) -> Result<()> {
-        CONFIG_PATH.set(self.config.clone()).unwrap();
+        CONFIG_PATH
+            .set((std::env::current_exe()?, std::env::current_dir()?))
+            .unwrap();
         service::start()
+    }
+}
+
+#[derive(Debug, Parser)]
+struct RunOnce;
+
+impl Command for RunOnce {
+    fn run(&self) -> Result<()> {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(async {
+                let cred = Arc::new(FileSettingsReader::new()?.read()?);
+                let client = create_http_client()?;
+                let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
+                c.login().await?;
+                let flux = c.flux().await?;
+                toast::succeeded(flux)?;
+                Ok(())
+            })
     }
 }
 
