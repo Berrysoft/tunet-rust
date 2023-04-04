@@ -42,7 +42,7 @@ impl FileSettingsReader {
         Self::with_path(Self::file_path()?)
     }
 
-    fn file_path() -> Result<PathBuf> {
+    pub fn file_path() -> Result<PathBuf> {
         let mut p = config_dir().ok_or_else(|| anyhow::anyhow!("找不到配置文件目录"))?;
         p.push(TUNET_NAME);
         p.push("settings");

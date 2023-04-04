@@ -9,6 +9,7 @@ license = "MIT"
 tunet-helper = { path = "../tunet-helper" }
 tunet-suggest = { path = "../tunet-suggest" }
 tunet-settings = { path = "../tunet-settings" }
+tunet-settings-cli = { path = "../tunet-settings-cli" }
 windows = { version = "0.48", features = [
     "Data_Xml_Dom",
     "Foundation",
@@ -27,3 +28,4 @@ flexi_logger = { version = "0.25", default-features = false, features = [
 windows-service = "0.6"
 is_elevated = "0.1"
 press-btn-continue = "0.1"
+once_cell = "1.17"

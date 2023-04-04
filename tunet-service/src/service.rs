@@ -2,9 +2,8 @@ mod net_watcher;
 mod notify;
 
 use crate::SERVICE_NAME;
-use clap::Parser;
 use flexi_logger::{LogSpecification, Logger};
-use std::{ffi::OsString, path::PathBuf, pin::pin, sync::Arc, time::Duration};
+use std::{ffi::OsString, path::Path, pin::pin, sync::Arc, time::Duration};
 use tokio::{signal::windows::ctrl_c, sync::watch};
 use tokio_stream::{wrappers::WatchStream, StreamExt};
 use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
@@ -27,13 +26,13 @@ pub fn start() -> Result<()> {
 
 define_windows_service!(ffi_service_entry, service_entry);
 
-fn service_entry(args: Vec<OsString>) {
-    if let Err(e) = service_entry_impl(args) {
+fn service_entry(_args: Vec<OsString>) {
+    if let Err(e) = service_entry_impl(crate::CONFIG_PATH.get().unwrap()) {
         log::error!("{}", e);
     }
 }
 
-fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
+fn service_entry_impl(config: &Path) -> Result<()> {
     let (tx, rx) = watch::channel(());
 
     let event_handler = move |control_event| -> ServiceControlHandlerResult {
@@ -64,24 +63,17 @@ fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(service_main(args, rx))
+        .block_on(service_main(config, rx))
 }
 
-#[derive(Debug, Parser)]
-struct Options {
-    #[clap(long)]
-    config: PathBuf,
-}
-
-async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()> {
-    let opt = Options::parse_from(args);
+async fn service_main(config: &Path, rx: watch::Receiver<()>) -> Result<()> {
     let spec = LogSpecification::env_or_parse("debug")?;
     let _log_handle = Logger::with(spec)
         .log_to_stdout()
         .set_palette("b1;3;2;4;6".to_string())
         .use_utc()
         .start()?;
-    let settings = FileSettingsReader::with_path(opt.config)?;
+    let settings = FileSettingsReader::with_path(config)?;
     let cred = Arc::new(settings.read()?);
     let client = create_http_client()?;
     let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
