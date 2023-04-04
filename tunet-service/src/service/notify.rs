@@ -15,10 +15,11 @@ use windows::{
                 WTS_CURRENT_SERVER_HANDLE,
             },
             Threading::{
-                CreateProcessAsUserW, CREATE_UNICODE_ENVIRONMENT, PROCESS_INFORMATION, STARTUPINFOW,
+                CreateProcessAsUserW, CREATE_UNICODE_ENVIRONMENT, PROCESS_INFORMATION,
+                STARTF_USESHOWWINDOW, STARTUPINFOW,
             },
         },
-        UI::WindowsAndMessaging::{MB_OK, MESSAGEBOX_RESULT},
+        UI::WindowsAndMessaging::{MB_OK, MESSAGEBOX_RESULT, SW_HIDE},
     },
 };
 
@@ -42,6 +43,8 @@ pub fn notify() -> Result<()> {
         CreateEnvironmentBlock(&mut env, HANDLE(dup_token.as_raw_handle() as _), false).ok()?;
         let mut si = STARTUPINFOW::default();
         si.cb = std::mem::size_of_val(&si) as _;
+        si.dwFlags = STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_HIDE.0 as _;
         let mut pi = PROCESS_INFORMATION::default();
         let app_name =
             U16CString::from_os_str(std::env::current_exe().unwrap().into_os_string()).unwrap();
