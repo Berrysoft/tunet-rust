@@ -99,7 +99,7 @@ impl Command for RunOnce {
 }
 
 pub async fn run_once(quiet: bool) -> Result<()> {
-    let cred = Arc::new(FileSettingsReader::new()?.read()?);
+    let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
     let client = create_http_client()?;
     let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
     c.login().await?;
