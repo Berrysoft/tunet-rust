@@ -13,8 +13,8 @@ cfg-if = { workspace = true }
 windows = { workspace = true, features = ["Networking_Connectivity"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-libc = "0.2"
 objc = { workspace = true }
+system-configuration = "0.5"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 netlink_wi = "0.3"
