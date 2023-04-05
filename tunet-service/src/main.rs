@@ -21,7 +21,7 @@ use tunet_settings::FileSettingsReader;
 use tunet_settings_cli::{read_cred, save_cred};
 use tunet_suggest::TUNetHelperExt;
 
-const SERVICE_NAME: &str = "tunet-service";
+pub const SERVICE_NAME: &str = "tunet-service";
 
 fn main() -> Result<()> {
     let commands = Commands::parse();

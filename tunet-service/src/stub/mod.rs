@@ -10,7 +10,7 @@ pub mod notification {
     use tunet_helper::{NetFlux, Result};
 
     pub fn succeeded(flux: NetFlux) -> Result<()> {
-        println!("{}: {:?}", crate::SERVICE_NAME, flux);
+        println!("{:?}", flux);
         Ok(())
     }
 }
