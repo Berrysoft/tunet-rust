@@ -94,16 +94,18 @@ impl Command for RunOnce {
         tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?
-            .block_on(async {
-                let cred = Arc::new(FileSettingsReader::new()?.read()?);
-                let client = create_http_client()?;
-                let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
-                c.login().await?;
-                let flux = c.flux().await?;
-                if !self.quiet {
-                    notification::succeeded(flux)?;
-                }
-                Ok(())
-            })
+            .block_on(run_once(self.quiet))
     }
+}
+
+pub async fn run_once(quiet: bool) -> Result<()> {
+    let cred = Arc::new(FileSettingsReader::new()?.read()?);
+    let client = create_http_client()?;
+    let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
+    c.login().await?;
+    let flux = c.flux().await?;
+    if !quiet {
+        notification::succeeded(flux)?;
+    }
+    Ok(())
 }
