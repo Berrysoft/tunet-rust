@@ -140,14 +140,15 @@ jobs:
   - script: |
       rustup target add x86_64-apple-darwin
       rustup target add aarch64-apple-darwin
-      cargo build --workspace --exclude tunet-service --release --target x86_64-apple-darwin
-      cargo build --workspace --exclude tunet-service --release --target aarch64-apple-darwin
+      cargo build --release --target x86_64-apple-darwin
+      cargo build --release --target aarch64-apple-darwin
     displayName: "Build Rust part"
 
   - script: |
       mkdir -p $(Build.ArtifactStagingDirectory)/macos
       lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output $(Build.ArtifactStagingDirectory)/macos/tunet
       lipo -create target/x86_64-apple-darwin/release/tunet-cui target/aarch64-apple-darwin/release/tunet-cui -output $(Build.ArtifactStagingDirectory)/macos/tunet-cui
+      lipo -create target/x86_64-apple-darwin/release/tunet-service target/aarch64-apple-darwin/release/tunet-service -output $(Build.ArtifactStagingDirectory)/macos/tunet-service
       lipo -create target/x86_64-apple-darwin/release/libtunet_model_native.a target/aarch64-apple-darwin/release/libtunet_model_native.a -output $(Build.ArtifactStagingDirectory)/macos/libtunet_model_native.a
     displayName: "Create fat binary"
 
