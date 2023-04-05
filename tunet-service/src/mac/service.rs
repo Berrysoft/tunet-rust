@@ -1,11 +1,19 @@
 use core_foundation::runloop::{kCFRunLoopDefaultMode, CFRunLoop};
-use std::{ffi::CString, pin::pin};
+use std::{
+    ffi::CString,
+    pin::{pin, Pin},
+};
 use system_configuration::network_reachability::SCNetworkReachability;
 use tokio::{
     signal::unix::{signal, SignalKind},
     sync::watch,
+    time::Instant,
 };
-use tokio_stream::{wrappers::WatchStream, StreamExt};
+use tokio_stream::{
+    pending,
+    wrappers::{IntervalStream, WatchStream},
+    Stream, StreamExt,
+};
 use tunet_helper::{anyhow, Result};
 
 pub fn register(_interval: Option<humantime::Duration>) -> Result<()> {
@@ -16,16 +24,22 @@ pub fn unregister() -> Result<()> {
     Err(anyhow!("不支持的命令"))
 }
 
-pub fn start() -> Result<()> {
+pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(start_impl())
+        .block_on(start_impl(interval))
 }
 
-async fn start_impl() -> Result<()> {
+async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
     let mut ctrlc = signal(SignalKind::interrupt())?;
     let mut kill = signal(SignalKind::terminate())?;
+    let mut timer = if let Some(d) = interval {
+        Box::pin(IntervalStream::new(tokio::time::interval(*d)))
+            as Pin<Box<dyn Stream<Item = Instant>>>
+    } else {
+        Box::pin(pending())
+    };
     let (tx, rx) = watch::channel(());
     std::thread::spawn(move || -> Result<()> {
         let mut sc = SCNetworkReachability::from_host(&CString::new("0.0.0.0")?)
@@ -49,6 +63,11 @@ async fn start_impl() -> Result<()> {
             _ = kill.recv() => {
                 break;
             }
+            _ = timer.next() => {
+                if let Err(msg) = crate::run_once(true).await {
+                    eprintln!("{}", msg)
+                }
+            }
             e = events.next() => {
                 if let Some(()) = e {
                     if let Err(msg) = crate::run_once(false).await {
@@ -60,6 +79,5 @@ async fn start_impl() -> Result<()> {
             }
         }
     }
-    CFRunLoop::get_current().stop();
     Ok(())
 }

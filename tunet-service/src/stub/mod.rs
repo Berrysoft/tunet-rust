@@ -26,7 +26,7 @@ pub mod service {
         Err(anyhow!("不支持的命令"))
     }
 
-    pub fn start() -> Result<()> {
+    pub fn start(_interval: Option<humantime::Duration>) -> Result<()> {
         Err(anyhow!("不支持的命令"))
     }
 }

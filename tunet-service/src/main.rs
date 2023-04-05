@@ -75,11 +75,14 @@ impl Command for Unregister {
 }
 
 #[derive(Debug, Parser)]
-struct Start;
+struct Start {
+    #[clap(short, long, help = "Ignored on Windows.")]
+    interval: Option<humantime::Duration>,
+}
 
 impl Command for Start {
     fn run(&self) -> Result<()> {
-        service::start()
+        service::start(self.interval)
     }
 }
 

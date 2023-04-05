@@ -90,7 +90,7 @@ pub fn unregister() -> Result<()> {
     Ok(())
 }
 
-pub fn start() -> Result<()> {
+pub fn start(_interval: Option<humantime::Duration>) -> Result<()> {
     service_dispatcher::start(SERVICE_NAME, ffi_service_entry)?;
     Ok(())
 }
