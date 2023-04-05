@@ -1,3 +1,4 @@
+use core_foundation::runloop::{kCFRunLoopDefaultMode, CFRunLoop};
 use std::{ffi::CString, pin::pin};
 use system_configuration::network_reachability::SCNetworkReachability;
 use tokio::{
@@ -26,12 +27,18 @@ async fn start_impl() -> Result<()> {
     let mut ctrlc = signal(SignalKind::interrupt())?;
     let mut kill = signal(SignalKind::terminate())?;
     let (tx, rx) = watch::channel(());
-    let mut sc = SCNetworkReachability::from_host(&CString::new("127.0.0.1")?)
-        .ok_or_else(|| anyhow!("Cannot get network reachability"))?;
-    sc.set_callback(move |_| {
-        println!("Changed.");
-        tx.send(()).ok();
-    })?;
+    std::thread::spawn(move || -> Result<()> {
+        let mut sc = SCNetworkReachability::from_host(&CString::new("0.0.0.0")?)
+            .ok_or_else(|| anyhow!("Cannot get network reachability"))?;
+        sc.set_callback(move |_| {
+            tx.send(()).ok();
+        })?;
+        unsafe {
+            sc.schedule_with_runloop(&CFRunLoop::get_current(), kCFRunLoopDefaultMode)?;
+        }
+        CFRunLoop::run_current();
+        Ok(())
+    });
     let events = WatchStream::new(rx);
     let mut events = pin!(events);
     loop {
@@ -44,6 +51,7 @@ async fn start_impl() -> Result<()> {
             }
             e = events.next() => {
                 if let Some(()) = e {
+                    println!("Changed.");
                     if let Err(msg) = crate::run_once(false).await {
                         eprintln!("{}", msg)
                     }
@@ -53,5 +61,6 @@ async fn start_impl() -> Result<()> {
             }
         }
     }
+    CFRunLoop::get_current().stop();
     Ok(())
 }

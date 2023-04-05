@@ -70,7 +70,7 @@ impl Drop for CFObject {
 }
 
 unsafe fn get_ssid() -> Option<String> {
-    let client = StrongPtr::new(msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient]);
+    let client = StrongPtr::retain(msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient]);
     let interface = StrongPtr::new(msg_send![*client, interface]);
     let name: *mut Object = msg_send![*interface, ssid];
     if !name.is_null() {
