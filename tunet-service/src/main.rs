@@ -2,6 +2,9 @@ cfg_if::cfg_if! {
     if #[cfg(target_os = "windows")] {
         #[path = "windows/mod.rs"]
         mod platform;
+    } else if #[cfg(target_os = "macos")] {
+        #[path = "mac/mod.rs"]
+        mod platform;
     } else {
         #[path ="stub/mod.rs"]
         mod platform;
