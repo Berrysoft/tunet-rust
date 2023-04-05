@@ -51,7 +51,6 @@ async fn start_impl() -> Result<()> {
             }
             e = events.next() => {
                 if let Some(()) = e {
-                    println!("Changed.");
                     if let Err(msg) = crate::run_once(false).await {
                         eprintln!("{}", msg)
                     }
