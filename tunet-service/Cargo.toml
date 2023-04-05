@@ -11,6 +11,13 @@ tunet-helper = { workspace = true }
 tunet-suggest = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-settings-cli = { workspace = true }
+cfg-if = { workspace = true }
+clap = { workspace = true }
+humantime = "2"
+enum_dispatch = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "signal", "sync"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
 windows = { workspace = true, features = [
     "Data_Xml_Dom",
     "Foundation",
@@ -23,11 +30,7 @@ windows = { workspace = true, features = [
     "Win32_UI_WindowsAndMessaging",
 ] }
 widestring = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt", "signal", "sync"] }
 tokio-stream = { workspace = true, features = ["sync"] }
 pin-project = "1"
-clap = { workspace = true }
-humantime = "2"
-enum_dispatch = { workspace = true }
 windows-service = "0.6"
 is_elevated = "0.1"

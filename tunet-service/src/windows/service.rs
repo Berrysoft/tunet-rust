@@ -22,17 +22,72 @@ use tunet_helper::Result;
 use windows_service::{
     define_windows_service,
     service::{
-        ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus,
-        ServiceType,
+        ServiceAccess, ServiceControl, ServiceControlAccept, ServiceErrorControl, ServiceExitCode,
+        ServiceInfo, ServiceStartType, ServiceState, ServiceStatus, ServiceType,
     },
     service_control_handler::{self, ServiceControlHandlerResult},
     service_dispatcher,
+    service_manager::{ServiceManager, ServiceManagerAccess},
 };
 
-#[derive(Debug, Parser)]
-struct ServiceOptions {
-    #[clap(short, long)]
-    interval: Option<humantime::Duration>,
+pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
+    let manager =
+        ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
+    let service = if let Ok(service) = manager.open_service(
+        SERVICE_NAME,
+        ServiceAccess::QUERY_STATUS | ServiceAccess::START | ServiceAccess::STOP,
+    ) {
+        let status = service.query_status()?;
+        if status.current_state != ServiceState::Stopped {
+            service.stop()?;
+        }
+        loop {
+            let status = service.query_status()?;
+            if status.current_state == ServiceState::Stopped {
+                break;
+            }
+        }
+        service
+    } else {
+        let service_info = ServiceInfo {
+            name: SERVICE_NAME.into(),
+            display_name: "TsinghuaNet Background Task".into(),
+            service_type: ServiceType::OWN_PROCESS,
+            start_type: ServiceStartType::AutoStart,
+            error_control: ServiceErrorControl::Normal,
+            executable_path: std::env::current_exe()?,
+            launch_arguments: vec!["start".into()],
+            dependencies: vec![],
+            account_name: None,
+            account_password: None,
+        };
+        manager.create_service(
+            &service_info,
+            ServiceAccess::QUERY_STATUS | ServiceAccess::START,
+        )?
+    };
+    let service_args = if let Some(d) = interval {
+        vec!["--interval".to_string(), d.to_string()]
+    } else {
+        vec![]
+    };
+    service.start(&service_args)?;
+    Ok(())
+}
+
+pub fn unregister() -> Result<()> {
+    let manager =
+        ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
+    let service = manager.open_service(
+        SERVICE_NAME,
+        ServiceAccess::QUERY_STATUS | ServiceAccess::STOP | ServiceAccess::DELETE,
+    )?;
+    let status = service.query_status()?;
+    if status.current_state != ServiceState::Stopped {
+        service.stop()?;
+    }
+    service.delete()?;
+    Ok(())
 }
 
 pub fn start() -> Result<()> {
@@ -90,6 +145,12 @@ fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
     })?;
 
     Ok(())
+}
+
+#[derive(Debug, Parser)]
+struct ServiceOptions {
+    #[clap(short, long)]
+    interval: Option<humantime::Duration>,
 }
 
 async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()> {

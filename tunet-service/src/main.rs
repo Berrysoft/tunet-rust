@@ -1,5 +1,14 @@
-mod service;
-mod toast;
+cfg_if::cfg_if! {
+    if #[cfg(target_os = "windows")] {
+        #[path = "windows/mod.rs"]
+        mod platform;
+    } else {
+        #[path ="stub/mod.rs"]
+        mod platform;
+    }
+}
+
+use platform::*;
 
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
@@ -8,13 +17,6 @@ use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
 use tunet_settings::FileSettingsReader;
 use tunet_settings_cli::{read_cred, save_cred};
 use tunet_suggest::TUNetHelperExt;
-use windows_service::{
-    service::{
-        ServiceAccess, ServiceErrorControl, ServiceInfo, ServiceStartType, ServiceState,
-        ServiceType,
-    },
-    service_manager::{ServiceManager, ServiceManagerAccess},
-};
 
 const SERVICE_NAME: &str = "tunet-service";
 
@@ -46,53 +48,13 @@ struct Register {
 
 impl Command for Register {
     fn run(&self) -> Result<()> {
-        elevate()?;
+        elevator::elevate()?;
         tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?
             .block_on(save_cred(read_cred()?))?;
-        let manager =
-            ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
-        let service = if let Ok(service) = manager.open_service(
-            SERVICE_NAME,
-            ServiceAccess::QUERY_STATUS | ServiceAccess::START | ServiceAccess::STOP,
-        ) {
-            let status = service.query_status()?;
-            if status.current_state != ServiceState::Stopped {
-                service.stop()?;
-            }
-            loop {
-                let status = service.query_status()?;
-                if status.current_state == ServiceState::Stopped {
-                    break;
-                }
-            }
-            service
-        } else {
-            let service_info = ServiceInfo {
-                name: SERVICE_NAME.into(),
-                display_name: "TsinghuaNet Background Task".into(),
-                service_type: ServiceType::OWN_PROCESS,
-                start_type: ServiceStartType::AutoStart,
-                error_control: ServiceErrorControl::Normal,
-                executable_path: std::env::current_exe()?,
-                launch_arguments: vec!["start".into()],
-                dependencies: vec![],
-                account_name: None,
-                account_password: None,
-            };
-            manager.create_service(
-                &service_info,
-                ServiceAccess::QUERY_STATUS | ServiceAccess::START,
-            )?
-        };
-        let service_args = if let Some(d) = self.interval {
-            vec!["--interval".to_string(), d.to_string()]
-        } else {
-            vec![]
-        };
-        service.start(&service_args)?;
-        println!("Register successfully.");
+        service::register(self.interval)?;
+        println!("服务注册成功");
         Ok(())
     }
 }
@@ -102,19 +64,9 @@ struct Unregister;
 
 impl Command for Unregister {
     fn run(&self) -> Result<()> {
-        elevate()?;
-        let manager =
-            ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
-        let service = manager.open_service(
-            SERVICE_NAME,
-            ServiceAccess::QUERY_STATUS | ServiceAccess::STOP | ServiceAccess::DELETE,
-        )?;
-        let status = service.query_status()?;
-        if status.current_state != ServiceState::Stopped {
-            service.stop()?;
-        }
-        service.delete()?;
-        println!("Unregister successfully.");
+        elevator::elevate()?;
+        service::unregister()?;
+        println!("服务注销成功");
         Ok(())
     }
 }
@@ -146,33 +98,9 @@ impl Command for RunOnce {
                 c.login().await?;
                 let flux = c.flux().await?;
                 if !self.quiet {
-                    toast::succeeded(flux)?;
+                    notification::succeeded(flux)?;
                 }
                 Ok(())
             })
-    }
-}
-
-fn elevate() -> Result<()> {
-    if !is_elevated::is_elevated() {
-        let status = std::process::Command::new("powershell.exe")
-            .arg("-c")
-            .arg("Start-Process")
-            .arg(std::env::current_exe()?)
-            .arg("-Verb")
-            .arg("runas")
-            .arg("-ArgumentList")
-            .arg(
-                std::env::args()
-                    .skip(1)
-                    .map(|s| format!("\"{}\"", s))
-                    .collect::<Vec<_>>()
-                    .join(","),
-            )
-            .arg("-Wait")
-            .status()?;
-        std::process::exit(status.code().unwrap_or_default());
-    } else {
-        Ok(())
     }
 }
