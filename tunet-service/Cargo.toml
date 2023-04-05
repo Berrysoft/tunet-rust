@@ -27,6 +27,7 @@ tokio = { workspace = true, features = ["macros", "rt", "signal", "sync"] }
 tokio-stream = { workspace = true, features = ["sync"] }
 pin-project = "1"
 clap = { workspace = true }
+humantime = "2"
 enum_dispatch = { workspace = true }
 windows-service = "0.6"
 is_elevated = "0.1"

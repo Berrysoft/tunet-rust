@@ -55,7 +55,7 @@ impl Drop for OwnedSession {
     }
 }
 
-pub fn notify() -> Result<()> {
+pub fn notify(quiet: bool) -> Result<()> {
     unsafe {
         let mut buffer = null_mut();
         let mut count = 0;
@@ -93,7 +93,11 @@ pub fn notify() -> Result<()> {
             let mut pi = PROCESS_INFORMATION::default();
             let app_name = U16CString::from_os_str(std::env::current_exe()?.into_os_string())?;
             // Need to set the first arg as the exe itself.
-            let mut command_line = U16CString::from_str("tunet-service.exe run-once")?;
+            let mut command_line = U16CString::from_str(if quiet {
+                "tunet-service.exe run-once --quiet"
+            } else {
+                "tunet-service.exe run-once"
+            })?;
             let app_dir = U16CString::from_os_str(std::env::current_dir()?.into_os_string())?;
             CreateProcessAsUserW(
                 HANDLE(token.as_raw_handle() as _),

@@ -79,10 +79,11 @@ $ ./tunet detail -o flux -dg
 ```
 
 ### Windows 服务
-注册和注销服务需要管理员权限启动命令行。
 ``` powershell
 # 注册服务
 PS> .\tunet-service register
+# 注册服务，并定时5分钟连接一次
+PS> .\tunet-service register -i "5min"
 # 注销服务
 PS> .\tunet-service unregister
 ```

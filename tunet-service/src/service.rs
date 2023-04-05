@@ -2,9 +2,22 @@ mod net_watcher;
 mod notify;
 
 use crate::SERVICE_NAME;
-use std::{ffi::OsString, pin::pin, time::Duration};
-use tokio::{signal::windows::ctrl_c, sync::watch};
-use tokio_stream::{wrappers::WatchStream, StreamExt};
+use clap::Parser;
+use std::{
+    ffi::OsString,
+    pin::{pin, Pin},
+    time::Duration,
+};
+use tokio::{
+    signal::windows::ctrl_c,
+    sync::watch,
+    time::{interval, Instant},
+};
+use tokio_stream::{
+    pending,
+    wrappers::{IntervalStream, WatchStream},
+    Stream, StreamExt,
+};
 use tunet_helper::Result;
 use windows_service::{
     define_windows_service,
@@ -16,6 +29,12 @@ use windows_service::{
     service_dispatcher,
 };
 
+#[derive(Debug, Parser)]
+struct ServiceOptions {
+    #[clap(short, long)]
+    interval: Option<humantime::Duration>,
+}
+
 pub fn start() -> Result<()> {
     service_dispatcher::start(SERVICE_NAME, ffi_service_entry)?;
     Ok(())
@@ -23,13 +42,13 @@ pub fn start() -> Result<()> {
 
 define_windows_service!(ffi_service_entry, service_entry);
 
-fn service_entry(_args: Vec<OsString>) {
-    if let Err(e) = service_entry_impl() {
+fn service_entry(args: Vec<OsString>) {
+    if let Err(e) = service_entry_impl(args) {
         notify::error(e.to_string()).ok();
     }
 }
 
-fn service_entry_impl() -> Result<()> {
+fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
     let (tx, rx) = watch::channel(());
 
     let event_handler = move |control_event| -> ServiceControlHandlerResult {
@@ -58,7 +77,7 @@ fn service_entry_impl() -> Result<()> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(service_main(rx))?;
+        .block_on(service_main(args, rx))?;
 
     status_handle.set_service_status(ServiceStatus {
         service_type: ServiceType::OWN_PROCESS,
@@ -73,9 +92,15 @@ fn service_entry_impl() -> Result<()> {
     Ok(())
 }
 
-async fn service_main(rx: watch::Receiver<()>) -> Result<()> {
+async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()> {
+    let options = ServiceOptions::try_parse_from(args)?;
     let mut ctrlc = ctrl_c()?;
     let mut stopc = WatchStream::new(rx).skip(1);
+    let mut timer = if let Some(d) = options.interval {
+        Box::pin(IntervalStream::new(interval(*d))) as Pin<Box<dyn Stream<Item = Instant>>>
+    } else {
+        Box::pin(pending())
+    };
     let events = net_watcher::watch()?;
     let mut events = pin!(events);
     loop {
@@ -86,9 +111,12 @@ async fn service_main(rx: watch::Receiver<()>) -> Result<()> {
             _ = stopc.next() => {
                 break;
             }
+            _ = timer.next() => {
+                notify::notify(true).ok();
+            }
             e = events.next() => {
                 if let Some(()) = e {
-                    if let Err(msg) = notify::notify() {
+                    if let Err(msg) = notify::notify(false) {
                         notify::error(msg.to_string()).ok();
                     }
                 } else {

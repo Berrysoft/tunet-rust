@@ -3,13 +3,16 @@ mod toast;
 
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
 use tunet_settings::FileSettingsReader;
 use tunet_settings_cli::{read_cred, save_cred};
 use tunet_suggest::TUNetHelperExt;
 use windows_service::{
-    service::{ServiceAccess, ServiceErrorControl, ServiceInfo, ServiceStartType, ServiceType},
+    service::{
+        ServiceAccess, ServiceErrorControl, ServiceInfo, ServiceStartType, ServiceState,
+        ServiceType,
+    },
     service_manager::{ServiceManager, ServiceManagerAccess},
 };
 
@@ -36,7 +39,10 @@ enum Commands {
 }
 
 #[derive(Debug, Parser)]
-struct Register;
+struct Register {
+    #[clap(short, long)]
+    interval: Option<humantime::Duration>,
+}
 
 impl Command for Register {
     fn run(&self) -> Result<()> {
@@ -47,24 +53,45 @@ impl Command for Register {
             .block_on(save_cred(read_cred()?))?;
         let manager =
             ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
-        let service_info = ServiceInfo {
-            name: SERVICE_NAME.into(),
-            display_name: "TsinghuaNet Background Task".into(),
-            service_type: ServiceType::OWN_PROCESS,
-            start_type: ServiceStartType::AutoStart,
-            error_control: ServiceErrorControl::Normal,
-            executable_path: std::env::current_exe()?,
-            launch_arguments: vec!["start".into()],
-            dependencies: vec![],
-            account_name: None,
-            account_password: None,
-        };
-        manager
-            .create_service(
+        let service = if let Ok(service) = manager.open_service(
+            SERVICE_NAME,
+            ServiceAccess::QUERY_STATUS | ServiceAccess::START | ServiceAccess::STOP,
+        ) {
+            let status = service.query_status()?;
+            if status.current_state != ServiceState::Stopped {
+                service.stop()?;
+            }
+            loop {
+                let status = service.query_status()?;
+                if status.current_state == ServiceState::Stopped {
+                    break;
+                }
+            }
+            service
+        } else {
+            let service_info = ServiceInfo {
+                name: SERVICE_NAME.into(),
+                display_name: "TsinghuaNet Background Task".into(),
+                service_type: ServiceType::OWN_PROCESS,
+                start_type: ServiceStartType::AutoStart,
+                error_control: ServiceErrorControl::Normal,
+                executable_path: std::env::current_exe()?,
+                launch_arguments: vec!["start".into()],
+                dependencies: vec![],
+                account_name: None,
+                account_password: None,
+            };
+            manager.create_service(
                 &service_info,
                 ServiceAccess::QUERY_STATUS | ServiceAccess::START,
             )?
-            .start(&[] as &[&str])?;
+        };
+        let service_args = if let Some(d) = self.interval {
+            vec!["--interval".to_string(), d.to_string()]
+        } else {
+            vec![]
+        };
+        service.start(&service_args)?;
         println!("Register successfully.");
         Ok(())
     }
@@ -82,11 +109,9 @@ impl Command for Unregister {
             SERVICE_NAME,
             ServiceAccess::QUERY_STATUS | ServiceAccess::STOP | ServiceAccess::DELETE,
         )?;
-        if let Err(e) = service.stop() {
-            println!("{}", e);
-            if let Some(e) = e.source() {
-                println!("{}", e);
-            }
+        let status = service.query_status()?;
+        if status.current_state != ServiceState::Stopped {
+            service.stop()?;
         }
         service.delete()?;
         println!("Unregister successfully.");
@@ -104,7 +129,10 @@ impl Command for Start {
 }
 
 #[derive(Debug, Parser)]
-struct RunOnce;
+struct RunOnce {
+    #[clap(short, long, default_value = "false")]
+    quiet: bool,
+}
 
 impl Command for RunOnce {
     fn run(&self) -> Result<()> {
@@ -117,7 +145,9 @@ impl Command for RunOnce {
                 let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
                 c.login().await?;
                 let flux = c.flux().await?;
-                toast::succeeded(flux)?;
+                if !self.quiet {
+                    toast::succeeded(flux)?;
+                }
                 Ok(())
             })
     }
