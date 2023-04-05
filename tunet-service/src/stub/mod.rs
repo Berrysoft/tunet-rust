@@ -6,15 +6,6 @@ pub mod elevator {
     }
 }
 
-pub mod notification {
-    use tunet_helper::{NetFlux, Result};
-
-    pub fn succeeded(flux: NetFlux) -> Result<()> {
-        println!("{:?}", flux);
-        Ok(())
-    }
-}
-
 pub mod service {
     use tunet_helper::{anyhow, Result};
 

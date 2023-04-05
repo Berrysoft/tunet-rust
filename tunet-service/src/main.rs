@@ -13,6 +13,8 @@ cfg_if::cfg_if! {
 
 use platform::*;
 
+mod notification;
+
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
 use std::sync::Arc;
