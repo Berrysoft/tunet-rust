@@ -109,20 +109,19 @@ pub fn current() -> NetStatus {
                         None => NetStatus::Unknown,
                     };
                 }
-                if flag.has(SCNetworkReachabilityFlags::ConnectionOnDemand)
-                    || flag.has(SCNetworkReachabilityFlags::ConnectionOnTraffic)
+                if (flag.has(SCNetworkReachabilityFlags::ConnectionOnDemand)
+                    || flag.has(SCNetworkReachabilityFlags::ConnectionOnTraffic))
+                    && !flag.has(SCNetworkReachabilityFlags::InterventionRequired)
                 {
-                    if !flag.has(SCNetworkReachabilityFlags::InterventionRequired) {
-                        return match get_ssid() {
-                            Some(ssid) => NetStatus::Wlan(ssid),
-                            None => NetStatus::Unknown,
-                        };
-                    }
+                    return match get_ssid() {
+                        Some(ssid) => NetStatus::Wlan(ssid),
+                        None => NetStatus::Unknown,
+                    };
                 }
                 if flag.has_only(SCNetworkReachabilityFlags::IsWWAN) {
                     return NetStatus::Wwan;
                 }
-                return NetStatus::Unknown;
+                NetStatus::Unknown
             }
         }
     }
