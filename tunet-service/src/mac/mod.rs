@@ -1,5 +1,6 @@
 use core_foundation::runloop::{kCFRunLoopDefaultMode, CFRunLoop};
-use std::{ffi::CString, pin::pin};
+use serde::Serialize;
+use std::{ffi::CString, path::PathBuf, pin::pin};
 use system_configuration::network_reachability::SCNetworkReachability;
 use tokio::{
     signal::unix::{signal, SignalKind},
@@ -8,12 +9,58 @@ use tokio::{
 use tokio_stream::{wrappers::WatchStream, StreamExt};
 use tunet_helper::{anyhow, Result};
 
-pub fn register(_interval: Option<humantime::Duration>) -> Result<()> {
-    Err(anyhow!("不支持的命令"))
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "PascalCase")]
+struct Launchd {
+    label: String,
+    program_arguments: Vec<String>,
+    run_at_load: bool,
+}
+
+fn launchd_path() -> Result<PathBuf> {
+    let mut p = dirs::home_dir().ok_or_else(|| anyhow!("Cannot get home dir"))?;
+    p.push("Library");
+    p.push("LaunchAgents");
+    p.push("tunet-service.plist");
+    Ok(p)
+}
+
+pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
+    let mut args = vec![
+        std::env::current_exe()?.to_string_lossy().into_owned(),
+        "start".to_string(),
+    ];
+    if let Some(d) = interval {
+        args.push("--interval".to_string());
+        args.push(d.to_string());
+    }
+    let launchd = Launchd {
+        label: crate::SERVICE_NAME.to_string(),
+        program_arguments: args,
+        run_at_load: true,
+    };
+    let launchd_path = launchd_path()?;
+    plist::to_file_xml(&launchd_path, &launchd)?;
+    println!("Wrote launchd to {}", launchd_path.display());
+    std::process::Command::new("launchctl")
+        .arg("load")
+        .arg(&launchd_path)
+        .status()?;
+    Ok(())
 }
 
 pub fn unregister() -> Result<()> {
-    Err(anyhow!("不支持的命令"))
+    std::process::Command::new("launchctl")
+        .arg("stop")
+        .arg(crate::SERVICE_NAME)
+        .status()?;
+    let launchd_path = launchd_path()?;
+    std::process::Command::new("launchctl")
+        .arg("unload")
+        .arg(&launchd_path)
+        .status()?;
+    std::fs::remove_file(launchd_path)?;
+    Ok(())
 }
 
 pub fn start(interval: Option<humantime::Duration>) -> Result<()> {

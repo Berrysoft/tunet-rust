@@ -37,3 +37,6 @@ is_elevated = "0.1"
 [target.'cfg(target_os = "macos")'.dependencies]
 system-configuration = { workspace = true }
 core-foundation = { workspace = true }
+dirs = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+plist = "1"

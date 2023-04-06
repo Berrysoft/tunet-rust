@@ -48,6 +48,7 @@ enum_dispatch = "0.3"
 thiserror = "1"
 
 clap = { version = "4", features = ["derive"] }
+dirs = "5"
 
 futures-core = "0.3"
 futures-util = "0.3"
