@@ -1,6 +1,6 @@
 use core_foundation::runloop::{kCFRunLoopDefaultMode, CFRunLoop};
 use serde::Serialize;
-use std::{ffi::CString, path::PathBuf, pin::pin};
+use std::{ffi::CStr, path::PathBuf, pin::pin};
 use system_configuration::network_reachability::SCNetworkReachability;
 use tokio::{
     signal::unix::{signal, SignalKind},
