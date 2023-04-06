@@ -63,6 +63,9 @@ tokio = "1"
 tokio-stream = "0.1"
 
 objc = "0.2"
+core-foundation = "0.9"
+security-framework = "2"
+system-configuration = "0.5"
 
 widestring = "1"
 windows = "0.48"
