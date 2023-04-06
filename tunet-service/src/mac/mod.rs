@@ -26,6 +26,7 @@ fn launchd_path() -> Result<PathBuf> {
 }
 
 pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
+    unregister()?;
     let mut args = vec![
         std::env::current_exe()?.to_string_lossy().into_owned(),
         "start".to_string(),
@@ -55,11 +56,13 @@ pub fn unregister() -> Result<()> {
         .arg(crate::SERVICE_NAME)
         .status()?;
     let launchd_path = launchd_path()?;
-    std::process::Command::new("launchctl")
-        .arg("unload")
-        .arg(&launchd_path)
-        .status()?;
-    std::fs::remove_file(launchd_path)?;
+    if launchd_path.exists() {
+        std::process::Command::new("launchctl")
+            .arg("unload")
+            .arg(&launchd_path)
+            .status()?;
+        std::fs::remove_file(launchd_path)?;
+    }
     Ok(())
 }
 
