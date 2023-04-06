@@ -16,6 +16,7 @@ clap = { workspace = true }
 humantime = "2"
 enum_dispatch = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt", "signal", "sync"] }
+tokio-stream = { workspace = true, features = ["sync"] }
 notify-rust = { version = "4", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -29,7 +30,6 @@ windows = { workspace = true, features = [
     "Win32_UI_WindowsAndMessaging",
 ] }
 widestring = { workspace = true }
-tokio-stream = { workspace = true, features = ["sync"] }
 pin-project = "1"
 windows-service = "0.6"
 is_elevated = "0.1"
@@ -37,4 +37,3 @@ is_elevated = "0.1"
 [target.'cfg(target_os = "macos")'.dependencies]
 system-configuration = "0.5"
 core-foundation = "0.9"
-tokio-stream = { workspace = true, features = ["sync"] }

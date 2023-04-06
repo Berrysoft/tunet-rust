@@ -3,21 +3,9 @@ mod notify;
 
 use crate::SERVICE_NAME;
 use clap::Parser;
-use std::{
-    ffi::OsString,
-    pin::{pin, Pin},
-    time::Duration,
-};
-use tokio::{
-    signal::windows::ctrl_c,
-    sync::watch,
-    time::{interval, Instant},
-};
-use tokio_stream::{
-    pending,
-    wrappers::{IntervalStream, WatchStream},
-    Stream, StreamExt,
-};
+use std::{ffi::OsString, pin::pin, time::Duration};
+use tokio::{signal::windows::ctrl_c, sync::watch};
+use tokio_stream::{wrappers::WatchStream, StreamExt};
 use tunet_helper::Result;
 use windows_service::{
     define_windows_service,
@@ -157,11 +145,7 @@ async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()
     let options = ServiceOptions::try_parse_from(args)?;
     let mut ctrlc = ctrl_c()?;
     let mut stopc = WatchStream::new(rx).skip(1);
-    let mut timer = if let Some(d) = options.interval {
-        Box::pin(IntervalStream::new(interval(*d))) as Pin<Box<dyn Stream<Item = Instant>>>
-    } else {
-        Box::pin(pending())
-    };
+    let mut timer = crate::create_timer(options.interval);
     let events = net_watcher::watch()?;
     let mut events = pin!(events);
     loop {
