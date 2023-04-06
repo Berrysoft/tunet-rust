@@ -78,14 +78,14 @@ $ ./tunet detail -o flux -dg
 > ./tunet detail -g --nuon | from nuon | sort-by flux -r
 ```
 
-### Windows 服务
-``` powershell
+### Windows 服务/macOS launchd
+``` bash
 # 注册服务
-PS> .\tunet-service register
+$ ./tunet-service register
 # 注册服务，并定时5分钟连接一次
-PS> .\tunet-service register -i "5min"
+$ ./tunet-service register -i "5min"
 # 注销服务
-PS> .\tunet-service unregister
+$ ./tunet-service unregister
 ```
 注意 `tunet-service.exe` 自身是服务程序，如需删除应先注销服务。
 
