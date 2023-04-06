@@ -164,7 +164,8 @@ jobs:
       cd $(Build.BinariesDirectory)/macos/bin
       zip -r -y tunet-gui.app.zip tunet-gui.app
       cp tunet-gui.app.zip $(Build.ArtifactStagingDirectory)/macos/
-      zip -r $(Build.ArtifactStagingDirectory)/macos/mac.cli.zip $(Build.ArtifactStagingDirectory)/macos/bin
+      cd $(Build.ArtifactStagingDirectory)/macos
+      zip -r mac.cli.zip bin
     displayName: 'Archive'
 
   - task: PublishBuildArtifacts@1
