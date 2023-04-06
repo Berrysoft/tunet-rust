@@ -13,6 +13,7 @@ cfg_if::cfg_if! {
 
 use platform::*;
 
+mod elevator;
 mod notification;
 
 use clap::Parser;
