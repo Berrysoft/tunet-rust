@@ -1,24 +1,30 @@
 cfg_if::cfg_if! {
     if #[cfg(target_os = "windows")] {
         #[path = "windows/mod.rs"]
-        mod platform;
+        mod service;
+    } else if #[cfg(target_os = "macos")] {
+        #[path = "mac/mod.rs"]
+        mod service;
     } else {
         #[path ="stub/mod.rs"]
-        mod platform;
+        mod service;
     }
 }
 
-use platform::*;
+mod elevator;
+mod notification;
 
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
-use std::sync::Arc;
+use std::{pin::Pin, sync::Arc};
+use tokio::time::Instant;
+use tokio_stream::{wrappers::IntervalStream, Stream};
 use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
 use tunet_settings::FileSettingsReader;
 use tunet_settings_cli::{read_cred, save_cred};
 use tunet_suggest::TUNetHelperExt;
 
-const SERVICE_NAME: &str = "tunet-service";
+pub const SERVICE_NAME: &str = "tunet-service";
 
 fn main() -> Result<()> {
     let commands = Commands::parse();
@@ -72,11 +78,14 @@ impl Command for Unregister {
 }
 
 #[derive(Debug, Parser)]
-struct Start;
+struct Start {
+    #[clap(short, long, help = "Ignored on Windows.")]
+    interval: Option<humantime::Duration>,
+}
 
 impl Command for Start {
     fn run(&self) -> Result<()> {
-        service::start()
+        service::start(self.interval)
     }
 }
 
@@ -91,16 +100,27 @@ impl Command for RunOnce {
         tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?
-            .block_on(async {
-                let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
-                let client = create_http_client()?;
-                let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
-                c.login().await?;
-                let flux = c.flux().await?;
-                if !self.quiet {
-                    notification::succeeded(flux)?;
-                }
-                Ok(())
-            })
+            .block_on(run_once(self.quiet))
+    }
+}
+
+pub async fn run_once(quiet: bool) -> Result<()> {
+    let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
+    let client = create_http_client()?;
+    let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
+    c.login().await?;
+    let flux = c.flux().await?;
+    if !quiet {
+        notification::succeeded(flux)?;
+    }
+    Ok(())
+}
+
+pub fn create_timer(interval: Option<humantime::Duration>) -> Pin<Box<dyn Stream<Item = Instant>>> {
+    if let Some(d) = interval {
+        Box::pin(IntervalStream::new(tokio::time::interval(*d)))
+            as Pin<Box<dyn Stream<Item = Instant>>>
+    } else {
+        Box::pin(tokio_stream::pending())
     }
 }

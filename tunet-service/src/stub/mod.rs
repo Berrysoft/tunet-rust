@@ -1,32 +1,35 @@
-pub mod elevator {
-    use std::io::Result;
+use tokio::signal::ctrl_c;
+use tokio_stream::StreamExt;
+use tunet_helper::{anyhow, Result};
 
-    pub fn elevate() -> Result<()> {
-        Ok(())
-    }
+pub fn register(_interval: Option<humantime::Duration>) -> Result<()> {
+    Err(anyhow!("不支持的命令"))
 }
 
-pub mod notification {
-    use tunet_helper::{NetFlux, Result};
-
-    pub fn succeeded(flux: NetFlux) -> Result<()> {
-        println!("{}: {:?}", crate::SERVICE_NAME, flux);
-        Ok(())
-    }
+pub fn unregister() -> Result<()> {
+    Err(anyhow!("不支持的命令"))
 }
 
-pub mod service {
-    use tunet_helper::{anyhow, Result};
+pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(start_impl(interval))
+}
 
-    pub fn register(_interval: Option<humantime::Duration>) -> Result<()> {
-        Err(anyhow!("不支持的命令"))
+async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
+    let mut timer = crate::create_timer(interval);
+    loop {
+        tokio::select! {
+            _ = ctrl_c() => {
+                break;
+            }
+            _ = timer.next() => {
+                if let Err(msg) = crate::run_once(true).await {
+                    eprintln!("{}", msg)
+                }
+            }
+        }
     }
-
-    pub fn unregister() -> Result<()> {
-        Err(anyhow!("不支持的命令"))
-    }
-
-    pub fn start() -> Result<()> {
-        Err(anyhow!("不支持的命令"))
-    }
+    Ok(())
 }

@@ -48,6 +48,7 @@ enum_dispatch = "0.3"
 thiserror = "1"
 
 clap = { version = "4", features = ["derive"] }
+dirs = "5"
 
 futures-core = "0.3"
 futures-util = "0.3"
@@ -63,6 +64,9 @@ tokio = "1"
 tokio-stream = "0.1"
 
 objc = "0.2"
+core-foundation = "0.9"
+security-framework = "2"
+system-configuration = "0.5"
 
 widestring = "1"
 windows = "0.48"
