@@ -79,7 +79,8 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
     let mut timer = crate::create_timer(interval);
     let (tx, rx) = watch::channel(());
     std::thread::spawn(move || -> Result<()> {
-        let mut sc = SCNetworkReachability::from_host(&CString::new("0.0.0.0")?)
+        let host = unsafe { CStr::from_bytes_with_nul_unchecked(b"0.0.0.0\0") };
+        let mut sc = SCNetworkReachability::from_host(host)
             .ok_or_else(|| anyhow!("Cannot get network reachability"))?;
         sc.set_callback(move |_| {
             tx.send(()).ok();
