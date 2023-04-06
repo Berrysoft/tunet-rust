@@ -4,7 +4,7 @@ use windows::{core::*, Networking::Connectivity::*};
 fn current_impl() -> Result<NetStatus> {
     let profile = NetworkInformation::GetInternetConnectionProfile()?;
     let cl = profile.GetNetworkConnectivityLevel()?;
-    if cl.0 == NetworkConnectivityLevel::None.0 {
+    if cl == NetworkConnectivityLevel::None {
         Ok(NetStatus::Unknown)
     } else if profile.IsWlanConnectionProfile()? {
         let ssid = profile.WlanConnectionProfileDetails()?.GetConnectedSsid()?;
