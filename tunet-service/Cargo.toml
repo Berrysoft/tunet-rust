@@ -30,7 +30,6 @@ windows = { workspace = true, features = [
     "Win32_UI_WindowsAndMessaging",
 ] }
 widestring = { workspace = true }
-pin-project = "1"
 windows-service = "0.6"
 is_elevated = "0.1"
 
