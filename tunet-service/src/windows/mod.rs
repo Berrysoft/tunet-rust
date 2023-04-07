@@ -153,7 +153,6 @@ async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()
             Ok(())
         }),
     )?);
-    let rx = WatchStream::new(rx);
     let mut events = pin!(rx);
     loop {
         tokio::select! {
@@ -166,8 +165,8 @@ async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()
             _ = timer.next() => {
                 notify::notify(true).ok();
             }
-            e = events.next() => {
-                if let Some(()) = e {
+            e = events.changed() => {
+                if let Ok(()) = e {
                     if let Err(msg) = notify::notify(false) {
                         notify::error(msg.to_string()).ok();
                     }

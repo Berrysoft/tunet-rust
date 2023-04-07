@@ -15,11 +15,13 @@ cfg-if = { workspace = true }
 clap = { workspace = true }
 humantime = "2"
 enum_dispatch = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt", "signal", "sync"] }
-tokio-stream = { workspace = true, features = ["sync"] }
+tokio = { workspace = true, features = ["macros", "rt", "signal", "time"] }
+tokio-stream = { workspace = true, features = ["time"] }
 notify-rust = "4"
 
 [target.'cfg(target_os = "windows")'.dependencies]
+tokio = { workspace = true, features = ["sync"] }
+tokio-stream = { workspace = true, features = ["sync"] }
 windows = { workspace = true, features = [
     "Foundation",
     "Networking_Connectivity",
@@ -34,6 +36,7 @@ windows-service = "0.6"
 is_elevated = "0.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+tokio = { workspace = true, features = ["sync"] }
 system-configuration = { workspace = true }
 core-foundation = { workspace = true }
 dirs = { workspace = true }

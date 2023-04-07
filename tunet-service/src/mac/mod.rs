@@ -6,7 +6,7 @@ use tokio::{
     signal::unix::{signal, SignalKind},
     sync::watch,
 };
-use tokio_stream::{wrappers::WatchStream, StreamExt};
+use tokio_stream::StreamExt;
 use tunet_helper::{anyhow, Result};
 
 #[derive(Debug, Serialize)]
@@ -91,8 +91,7 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
         CFRunLoop::run_current();
         Ok(())
     });
-    let events = WatchStream::new(rx);
-    let mut events = pin!(events);
+    let mut events = pin!(rx);
     loop {
         tokio::select! {
             _ = ctrlc.recv() => {
@@ -106,8 +105,8 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
                     eprintln!("{}", msg)
                 }
             }
-            e = events.next() => {
-                if let Some(()) = e {
+            e = events.changed() => {
+                if let Ok(()) = e {
                     if let Err(msg) = crate::run_once(false).await {
                         eprintln!("{}", msg)
                     }
