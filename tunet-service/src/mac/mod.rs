@@ -1,6 +1,14 @@
-use core_foundation::runloop::{kCFRunLoopDefaultMode, CFRunLoop};
+use core_foundation::{
+    base::TCFType,
+    runloop::{kCFRunLoopDefaultMode, CFRunLoop, CFRunLoopRef},
+};
 use serde::Serialize;
-use std::{ffi::CStr, path::PathBuf, pin::pin};
+use std::{
+    ffi::CStr,
+    os::unix::thread::{JoinHandleExt, RawPthread},
+    path::PathBuf,
+    pin::pin,
+};
 use system_configuration::network_reachability::SCNetworkReachability;
 use tokio::{
     signal::unix::{signal, SignalKind},
@@ -78,7 +86,7 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
     let mut kill = signal(SignalKind::terminate())?;
     let mut timer = crate::create_timer(interval);
     let (tx, rx) = watch::channel(());
-    std::thread::spawn(move || -> Result<()> {
+    let loop_thread = std::thread::spawn(move || -> Result<()> {
         let host = unsafe { CStr::from_bytes_with_nul_unchecked(b"0.0.0.0\0") };
         let mut sc = SCNetworkReachability::from_host(host)
             .ok_or_else(|| anyhow!("Cannot get network reachability"))?;
@@ -116,5 +124,13 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
             }
         }
     }
-    Ok(())
+    unsafe { CFRunLoop::wrap_under_get_rule(_CFRunLoopGet0(loop_thread.as_pthread_t())) }.stop();
+    match loop_thread.join() {
+        Ok(res) => res,
+        Err(e) => std::panic::resume_unwind(e),
+    }
+}
+
+extern "C" {
+    fn _CFRunLoopGet0(thread: RawPthread) -> CFRunLoopRef;
 }
