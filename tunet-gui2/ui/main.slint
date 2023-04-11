@@ -1,0 +1,24 @@
+import { TabWidget, VerticalBox } from "std-widgets.slint";
+import { HomePage } from "home.slint";
+import { AboutPage } from "about.slint";
+
+export component App inherits Window {
+    preferred-width: 500px;
+    preferred-height: 500px;
+    title: "清华校园网";
+
+    HorizontalLayout {
+        TabWidget {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            Tab {
+                title: "主页";
+                HomePage {}
+            }
+            Tab {
+                title: "关于";
+                AboutPage {}
+            }
+        }
+    }
+}

@@ -1,0 +1,15 @@
+import { AboutSlint, HorizontalBox, VerticalBox} from "std-widgets.slint";
+
+export component AboutPage inherits VerticalBox {
+    HorizontalBox {
+        VerticalBox {
+            Text {
+                text: "清华大学校园网客户端";
+                horizontal-alignment: center;
+                font-size: 20px;
+                font-weight: 700;
+            }
+        }
+        AboutSlint {}
+    }
+}

@@ -1,0 +1,20 @@
+[package]
+name = "tunet-gui"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+tunet-helper = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
+slint = { version = "1", default-features = false, features = [
+    "std",
+    "compat-1-0",
+    "backend-winit",
+    "renderer-winit-skia",
+] }
+
+[build-dependencies]
+slint-build = "1"
