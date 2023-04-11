@@ -1,4 +1,8 @@
-import { AboutSlint, HorizontalBox, VerticalBox} from "std-widgets.slint";
+import { AboutSlint, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export global AboutModel {
+    in property <string> version: "0.0.0";
+}
 
 export component AboutPage inherits VerticalBox {
     HorizontalBox {
@@ -9,7 +13,11 @@ export component AboutPage inherits VerticalBox {
                 font-size: 20px;
                 font-weight: 700;
             }
+            Text {
+                text: "版本 " + AboutModel.version;
+                horizontal-alignment: center;
+            }
         }
-        AboutSlint {}
+        //AboutSlint {}
     }
 }

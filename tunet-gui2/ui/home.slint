@@ -1,6 +1,53 @@
-import { Button, HorizontalBox, VerticalBox } from "std-widgets.slint";
+import { Button, ComboBox, GridBox, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export struct NetInfo {
+    username: string,
+    flux: string,
+    online-time: string,
+    balance: string,
+}
+
+export global HomeModel {
+    in property <color> theme-color: orange;
+    in property <color> theme-color-t1: orange;
+    in property <color> theme-color-t2: orange;
+
+    in property <NetInfo> info: { username: "test", flux: 114514, online-time: 1919, balance: 8.10 };
+}
 
 export component HomePage inherits VerticalBox {
+    HorizontalBox {
+        ComboBox {
+            model: ["Net", "Auth4", "Auth6"];
+        }
+    }
+    GridBox {
+        Path {
+            commands: "M 50 100 A 50 50 0 1 1 50.001 100";
+            stroke: HomeModel.theme-color-t2;
+            stroke-width: 30px;
+            row: 0;
+            col: 0;
+            rowspan: 3;
+            colspan: 3;
+        }
+        VerticalBox {
+            row: 1;
+            col: 1;
+            Text {
+                text: "用户：" + HomeModel.info.username;
+            }
+            Text {
+                text: "流量：" + HomeModel.info.flux;
+            }
+            Text {
+                text: "时长：" + HomeModel.info.online-time;
+            }
+            Text {
+                text: "余额：" + HomeModel.info.balance;
+            }
+        }
+    }
     HorizontalBox {
         Button {
             text: "登录";

@@ -7,12 +7,14 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+color-theme = { workspace = true }
 tunet-helper = { workspace = true }
+tunet-settings = { workspace = true }
+tunet-suggest = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 slint = { version = "1", default-features = false, features = [
     "std",
     "compat-1-0",
-    "backend-winit",
     "renderer-winit-skia",
 ] }
 
