@@ -12,6 +12,8 @@ export global HomeModel {
     in property <color> theme-color-t1: orange;
     in property <color> theme-color-t2: orange;
 
+    in property <string> log: "";
+
     in property <NetInfo> info: { username: "test", flux: 114514, online-time: 1919, balance: 8.10 };
 }
 
@@ -47,6 +49,10 @@ export component HomePage inherits VerticalBox {
                 text: "余额：" + HomeModel.info.balance;
             }
         }
+    }
+    Text {
+        horizontal-alignment: center;
+        text: HomeModel.log;
     }
     HorizontalBox {
         Button {

@@ -1,7 +1,8 @@
 use std::sync::Arc;
-use tunet_helper::{anyhow, create_http_client, Result, TUNetConnect, TUNetHelper};
+use tokio::sync::{mpsc, Mutex};
+use tunet_helper::Result;
+use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
-use tunet_suggest::TUNetHelperExt;
 
 slint::include_modules!();
 
@@ -18,25 +19,69 @@ async fn main() -> Result<()> {
     app.global::<AboutModel>()
         .set_version(env!("CARGO_PKG_VERSION").into());
 
-    let weak_app = app.as_weak();
-    tokio::spawn(async move {
-        let cred = Arc::new(FileSettingsReader::new()?.read()?);
-        let client = create_http_client()?;
-        let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
-        let flux = c.flux().await?;
-        weak_app
-            .upgrade_in_event_loop(move |app| {
-                app.global::<HomeModel>().set_info(NetInfo {
-                    username: flux.username.into(),
-                    flux: flux.flux.to_string().into(),
-                    online_time: flux.online_time.to_string().into(),
-                    balance: flux.balance.to_string().into(),
+    let (tx, mut rx) = mpsc::channel(32);
+    let model = Arc::new(Mutex::new(Model::new(tx)?));
+    {
+        let weak_app = app.as_weak();
+        let weak_model = Arc::downgrade(&model);
+        let mut model = model.lock().await;
+        model.update = Some(Box::new(move |msg| {
+            if let Some(model) = weak_model.upgrade() {
+                let weak_app = weak_app.clone();
+                tokio::spawn(async move {
+                    let model = model.lock().await;
+                    update(&model, msg, weak_app)
                 });
-            })
-            .map_err(|e| anyhow!("{:?}", e))?;
-        Ok(()) as Result<()>
+            }
+        }));
+
+        let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
+        model.queue(Action::Credential(cred));
+        model.queue(Action::Timer);
+    }
+
+    tokio::spawn(async move {
+        while let Some(a) = rx.recv().await {
+            model.lock().await.handle(a);
+        }
     });
 
     app.run()?;
     Ok(())
+}
+
+fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
+    match msg {
+        UpdateMsg::Credential => {
+            model.queue(Action::State(None));
+            model.queue(Action::Online);
+            model.queue(Action::Details);
+        }
+        UpdateMsg::State => {
+            model.queue(Action::Flux);
+        }
+        UpdateMsg::Log => {
+            let log = model.log.as_ref().into();
+            weak_app
+                .upgrade_in_event_loop(move |app| {
+                    app.global::<HomeModel>().set_log(log);
+                })
+                .unwrap();
+        }
+        UpdateMsg::Flux => {
+            let flux = &model.flux;
+            let info = NetInfo {
+                username: flux.username.as_str().into(),
+                flux: flux.flux.to_string().into(),
+                online_time: flux.online_time.to_string().into(),
+                balance: flux.balance.to_string().into(),
+            };
+            weak_app
+                .upgrade_in_event_loop(move |app| {
+                    app.global::<HomeModel>().set_info(info);
+                })
+                .unwrap();
+        }
+        _ => {}
+    };
 }

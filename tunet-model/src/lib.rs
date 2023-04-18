@@ -15,7 +15,7 @@ use tokio::sync::mpsc::*;
 use tunet_helper::{usereg::*, *};
 use tunet_suggest as suggest;
 
-pub type UpdateCallback = Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>;
+pub type UpdateCallback = Box<dyn Fn(UpdateMsg) + Send + 'static>;
 
 pub struct Model {
     tx: Sender<Action>,
@@ -186,8 +186,7 @@ impl Model {
 
     pub fn update(&self, msg: UpdateMsg) {
         if let Some(f) = &self.update {
-            let f = f.clone();
-            tokio::task::spawn_blocking(move || f(msg));
+            f(msg);
         }
     }
 

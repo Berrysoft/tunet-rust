@@ -3,7 +3,6 @@ use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
 use futures_util::{pin_mut, Stream, StreamExt};
 use std::{
     pin::Pin,
-    sync::Arc,
     task::{Context, Poll},
 };
 use tokio::sync::mpsc::*;
@@ -48,7 +47,7 @@ impl Event {
     #[allow(clippy::single_match)]
     fn attach_callback(&mut self) {
         let tx = self.tx.clone();
-        self.model.update = Some(Arc::new(move |m| match m {
+        self.model.update = Some(Box::new(move |m| match m {
             UpdateMsg::State => {
                 let tx = tx.clone();
                 tokio::spawn(async move { tx.send(Ok(EventType::UpdateState)).await.ok() });

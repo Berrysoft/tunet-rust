@@ -1,8 +1,5 @@
 use mac_address::MacAddress;
-use std::{
-    ffi::c_void,
-    sync::{Arc, RwLock},
-};
+use std::{ffi::c_void, sync::RwLock};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
     NetState,
@@ -134,18 +131,17 @@ pub type DetailsGroupedByTimeForeachCallback =
 pub fn wrap_callback(
     func: UpdateCallback,
     data: *mut c_void,
-) -> Option<Arc<dyn Fn(UpdateMsg) + Send + Sync + 'static>> {
+) -> Option<Box<dyn Fn(UpdateMsg) + Send + 'static>> {
     struct TempWrapper {
         func: extern "C" fn(UpdateMsg, *mut c_void),
         data: *mut c_void,
     }
 
     unsafe impl Send for TempWrapper {}
-    unsafe impl Sync for TempWrapper {}
 
     func.map(move |func| {
         let wrapper = TempWrapper { func, data };
-        Arc::new(move |m| {
+        Box::new(move |m| {
             // The fields seems to be catched separately in edition 2021.
             // Catch the whole wrapper to avoid compile error.
             let w = &wrapper;

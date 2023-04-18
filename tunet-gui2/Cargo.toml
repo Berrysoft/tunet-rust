@@ -10,7 +10,7 @@ repository.workspace = true
 color-theme = { workspace = true }
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
-tunet-suggest = { workspace = true }
+tunet-model = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 slint = { version = "1", default-features = false, features = [
     "std",
