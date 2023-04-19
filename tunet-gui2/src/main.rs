@@ -7,7 +7,10 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::{mpsc, Mutex};
-use tunet_helper::{usereg::NetDateTime, Flux, Result};
+use tunet_helper::{
+    usereg::{NetDateTime, NetDetail, NetUser},
+    Flux, Result,
+};
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
 
@@ -200,22 +203,24 @@ async fn main() -> Result<()> {
 fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
     match msg {
         UpdateMsg::Credential => {
+            model.queue(Action::State(None));
+            model.queue(Action::Online);
+            model.queue(Action::Details);
+
             let username = model.cred.username.clone();
             weak_app
                 .upgrade_in_event_loop(move |app| {
                     app.global::<SettingsModel>().set_username(username.into());
                 })
                 .unwrap();
-            model.queue(Action::State(None));
-            model.queue(Action::Online);
-            model.queue(Action::Details);
         }
         UpdateMsg::State => {
+            model.queue(Action::Flux);
+
             let state = model.state as i32 - 1;
             weak_app
                 .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_state(state))
                 .unwrap();
-            model.queue(Action::Flux);
         }
         UpdateMsg::Log => {
             let log = model.log.as_ref().into();
@@ -251,45 +256,13 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
                 })
                 .collect::<Vec<_>>();
             weak_app
-                .upgrade_in_event_loop(move |app| {
-                    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> =
-                        Rc::new(VecModel::default());
-                    for (user, is_local) in onlines.into_iter().zip(is_local) {
-                        let items: Rc<VecModel<StandardListViewItem>> =
-                            Rc::new(VecModel::default());
-                        items.push(user.address.to_string().as_str().into());
-                        items.push(user.login_time.to_string().as_str().into());
-                        items.push(user.flux.to_string().as_str().into());
-                        items.push(
-                            user.mac_address
-                                .map(|addr| addr.to_string())
-                                .unwrap_or_default()
-                                .as_str()
-                                .into(),
-                        );
-                        items.push(if is_local { "本机" } else { "未知" }.into());
-                        row_data.push(items.into());
-                    }
-                    app.global::<SettingsModel>().set_onlines(row_data.into());
-                })
+                .upgrade_in_event_loop(move |app| update_online(app, onlines, is_local))
                 .unwrap();
         }
         UpdateMsg::Details => {
             let details = model.details.clone();
             weak_app
-                .upgrade_in_event_loop(move |app| {
-                    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> =
-                        Rc::new(VecModel::default());
-                    for d in details {
-                        let items: Rc<VecModel<StandardListViewItem>> =
-                            Rc::new(VecModel::default());
-                        items.push(d.login_time.to_string().as_str().into());
-                        items.push(d.logout_time.to_string().as_str().into());
-                        items.push(d.flux.to_string().as_str().into());
-                        row_data.push(items.into());
-                    }
-                    app.global::<DetailModel>().set_details(row_data.into());
-                })
+                .upgrade_in_event_loop(move |app| update_details(app, details))
                 .unwrap();
         }
         UpdateMsg::LogBusy => {
@@ -311,4 +284,36 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
                 .unwrap();
         }
     };
+}
+
+fn update_online(app: App, onlines: Vec<NetUser>, is_local: Vec<bool>) {
+    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> = Rc::new(VecModel::default());
+    for (user, is_local) in onlines.into_iter().zip(is_local) {
+        let items: Rc<VecModel<StandardListViewItem>> = Rc::new(VecModel::default());
+        items.push(user.address.to_string().as_str().into());
+        items.push(user.login_time.to_string().as_str().into());
+        items.push(user.flux.to_string().as_str().into());
+        items.push(
+            user.mac_address
+                .map(|addr| addr.to_string())
+                .unwrap_or_default()
+                .as_str()
+                .into(),
+        );
+        items.push(if is_local { "本机" } else { "未知" }.into());
+        row_data.push(items.into());
+    }
+    app.global::<SettingsModel>().set_onlines(row_data.into());
+}
+
+fn update_details(app: App, details: Vec<NetDetail>) {
+    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> = Rc::new(VecModel::default());
+    for d in details {
+        let items: Rc<VecModel<StandardListViewItem>> = Rc::new(VecModel::default());
+        items.push(d.login_time.to_string().as_str().into());
+        items.push(d.logout_time.to_string().as_str().into());
+        items.push(d.flux.to_string().as_str().into());
+        row_data.push(items.into());
+    }
+    app.global::<DetailModel>().set_details(row_data.into());
 }
