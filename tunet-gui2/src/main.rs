@@ -1,9 +1,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use slint::{Model as SlintModel, ModelRc, StandardListViewItem, VecModel};
-use std::{rc::Rc, sync::Arc};
+use slint::{Model as SlintModel, ModelRc, SortModel, StandardListViewItem, VecModel};
+use std::{
+    cmp::{Ordering, Reverse},
+    rc::Rc,
+    sync::Arc,
+};
 use tokio::sync::{mpsc, Mutex};
-use tunet_helper::Result;
+use tunet_helper::{usereg::NetDateTime, Flux, Result};
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
 
@@ -48,31 +52,53 @@ macro_rules! upgrade_queue {
     };
 }
 
-macro_rules! sort_impl {
-    ($left: expr, $right: expr, +) => {
-        $left.cmp(&$right)
-    };
-    ($left: expr, $right: expr, -) => {
-        $right.cmp(&$left)
-    };
+fn sort_by_key<M: SlintModel, K: Ord + 'static>(
+    model: M,
+    mut key_func: impl FnMut(&M::Data) -> K + 'static,
+) -> SortModel<M, impl FnMut(&M::Data, &M::Data) -> Ordering + 'static> {
+    model.sort_by(move |lhs, rhs| key_func(lhs).cmp(&key_func(rhs)))
+}
+
+macro_rules! sort_by_key {
+    ($data: expr, $index: expr, $keyf: expr) => {{
+        let keyf = $keyf;
+        let data: ModelRc<ModelRc<StandardListViewItem>> = std::rc::Rc::new(sort_by_key(
+            $data,
+            move |r: &ModelRc<StandardListViewItem>| {
+                let c = r.row_data($index as usize).unwrap();
+                keyf(c)
+            },
+        ))
+        .into();
+        data
+    }};
 }
 
 macro_rules! sort_callback {
-    ($app: expr, $model: expr, $mty: ty, $prop: ident, $order: tt) => {
+    ($app: expr, $mty: ty, $prop: ident, $sortf: expr) => {
         paste::paste! {{
             let weak_app = $app.as_weak();
-            let data = $model.[<get_ $prop>]();
+            let sortf = $sortf;
             move |index| {
-                let sort_data = std::rc::Rc::new(data.clone().sort_by(move |r_a, r_b| {
-                    let c_a = r_a.row_data(index as usize).unwrap();
-                    let c_b = r_b.row_data(index as usize).unwrap();
-                    sort_impl!(c_a.text, c_b.text, $order)
-                }));
                 if let Some(app) = weak_app.upgrade() {
-                    app.global::<$mty>().[<set_ $prop>](sort_data.into());
+                    let model = app.global::<$mty>();
+                    let data = model.[<get_ $prop>]();
+                    let sort_data = sortf(data.clone(), index);
+                    model.[<set_ $prop>](sort_data.into());
                 }
             }
         }}
+    };
+}
+
+macro_rules! sort_by_key_callback {
+    ($app: expr, $mty: ty, $prop: ident, $keyf: expr) => {
+        sort_callback!(
+            $app,
+            $mty,
+            $prop,
+            |data: ModelRc<ModelRc<StandardListViewItem>>, index| sort_by_key!(data, index, $keyf)
+        )
     };
 }
 
@@ -119,9 +145,42 @@ async fn main() -> Result<()> {
     home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
 
     detail_model.on_refresh(upgrade_queue!(model, || Action::Details));
+    // TODO: reduce parsing
+    detail_model.on_sort_ascending(sort_callback!(app, DetailModel, details, |data, index| {
+        match index {
+            0 | 1 => sort_by_key!(data, index, |item: StandardListViewItem| {
+                item.text.parse::<NetDateTime>().unwrap()
+            }),
+            2 => sort_by_key!(data, index, |item: StandardListViewItem| {
+                item.text.parse::<Flux>().unwrap()
+            }),
+            _ => unreachable!(),
+        }
+    }));
+    detail_model.on_sort_descending(sort_callback!(app, DetailModel, details, |data, index| {
+        match index {
+            0 | 1 => sort_by_key!(data, index, |item: StandardListViewItem| Reverse(
+                item.text.parse::<NetDateTime>().unwrap()
+            )),
+            2 => sort_by_key!(data, index, |item: StandardListViewItem| Reverse(
+                item.text.parse::<Flux>().unwrap()
+            )),
+            _ => unreachable!(),
+        }
+    }));
 
-    about_model.on_sort_ascending(sort_callback!(app, about_model, AboutModel, deps, +));
-    about_model.on_sort_descending(sort_callback!(app, about_model, AboutModel, deps, -));
+    about_model.on_sort_ascending(sort_by_key_callback!(
+        app,
+        AboutModel,
+        deps,
+        |item: StandardListViewItem| item.text
+    ));
+    about_model.on_sort_descending(sort_by_key_callback!(
+        app,
+        AboutModel,
+        deps,
+        |item: StandardListViewItem| Reverse(item.text)
+    ));
 
     tokio::spawn(async move {
         while let Some(a) = rx.recv().await {
