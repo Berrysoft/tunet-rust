@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::Result;
@@ -42,11 +44,43 @@ async fn main() -> Result<()> {
 
     {
         let weak_model = Arc::downgrade(&model);
+
+        let w = weak_model.clone();
         home_model.on_state_changed(move |s| {
-            if let Some(model) = weak_model.upgrade() {
+            if let Some(model) = w.upgrade() {
                 tokio::spawn(async move {
                     let model = model.lock().await;
                     model.queue(Action::State(Some(s.parse().unwrap())));
+                });
+            }
+        });
+
+        let w = weak_model.clone();
+        home_model.on_login(move || {
+            if let Some(model) = w.upgrade() {
+                tokio::spawn(async move {
+                    let model = model.lock().await;
+                    model.queue(Action::Login);
+                });
+            }
+        });
+
+        let w = weak_model.clone();
+        home_model.on_logout(move || {
+            if let Some(model) = w.upgrade() {
+                tokio::spawn(async move {
+                    let model = model.lock().await;
+                    model.queue(Action::Logout);
+                });
+            }
+        });
+
+        let w = weak_model;
+        home_model.on_refresh(move || {
+            if let Some(model) = w.upgrade() {
+                tokio::spawn(async move {
+                    let model = model.lock().await;
+                    model.queue(Action::Flux);
                 });
             }
         });

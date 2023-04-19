@@ -19,6 +19,10 @@ export global HomeModel {
     callback state_changed(string);
 
     in property <NetInfo> info: { username: "test", flux: 114514, online-time: 1919, balance: 8.10 };
+
+    callback login();
+    callback logout();
+    callback refresh();
 }
 
 export component HomePage inherits VerticalBox {
@@ -64,14 +68,17 @@ export component HomePage inherits VerticalBox {
         Button {
             text: "登录";
             enabled: !HomeModel.busy;
+            clicked => { HomeModel.login() }
         }
         Button {
             text: "注销";
             enabled: !HomeModel.busy;
+            clicked => { HomeModel.logout() }
         }
         Button {
             text: "刷新";
             enabled: !HomeModel.busy;
+            clicked => { HomeModel.refresh() }
         }
     }
 }
