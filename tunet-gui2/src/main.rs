@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use slint::Model as SlintModel;
-use std::sync::Arc;
+use slint::{Model as SlintModel, ModelRc, StandardListViewItem, VecModel};
+use std::{rc::Rc, sync::Arc};
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::Result;
 use tunet_model::{Action, Model, UpdateMsg};
@@ -82,11 +82,13 @@ async fn main() -> Result<()> {
 
     let color = color_theme::Color::accent();
     let home_model = app.global::<HomeModel>();
+    let detail_model = app.global::<DetailModel>();
+    let about_model = app.global::<AboutModel>();
+
     home_model.set_theme_color(slint::Color::from_argb_u8(255, color.r, color.g, color.b));
     home_model.set_theme_color_t1(slint::Color::from_argb_u8(191, color.r, color.g, color.b));
     home_model.set_theme_color_t2(slint::Color::from_argb_u8(140, color.r, color.g, color.b));
 
-    let about_model = app.global::<AboutModel>();
     about_model.set_version(env!("CARGO_PKG_VERSION").into());
 
     let (tx, mut rx) = mpsc::channel(32);
@@ -115,6 +117,8 @@ async fn main() -> Result<()> {
     home_model.on_login(upgrade_queue!(model, || Action::Login));
     home_model.on_logout(upgrade_queue!(model, || Action::Logout));
     home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
+
+    detail_model.on_refresh(upgrade_queue!(model, || Action::Details));
 
     about_model.on_sort_ascending(sort_callback!(app, about_model, AboutModel, deps, +));
     about_model.on_sort_descending(sort_callback!(app, about_model, AboutModel, deps, -));
@@ -165,10 +169,34 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
                 })
                 .unwrap();
         }
+        UpdateMsg::Details => {
+            let details = model.details.clone();
+            weak_app
+                .upgrade_in_event_loop(move |app| {
+                    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> =
+                        Rc::new(VecModel::default());
+                    for d in details {
+                        let items: Rc<VecModel<StandardListViewItem>> =
+                            Rc::new(VecModel::default());
+                        items.push(d.login_time.to_string().as_str().into());
+                        items.push(d.logout_time.to_string().as_str().into());
+                        items.push(d.flux.to_string().as_str().into());
+                        row_data.push(items.into());
+                    }
+                    app.global::<DetailModel>().set_details(row_data.into());
+                })
+                .unwrap();
+        }
         UpdateMsg::LogBusy => {
             let busy = model.log_busy();
             weak_app
                 .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_busy(busy))
+                .unwrap();
+        }
+        UpdateMsg::DetailBusy => {
+            let busy = model.detail_busy();
+            weak_app
+                .upgrade_in_event_loop(move |app| app.global::<DetailModel>().set_busy(busy))
                 .unwrap();
         }
         _ => {}

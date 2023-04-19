@@ -1,0 +1,32 @@
+import { Button, StandardTableView, VerticalBox } from "std-widgets.slint";
+
+export global DetailModel {
+    in property <bool> busy: false;
+
+    in property <[[StandardListViewItem]]> details: [];
+    callback sort_ascending(int);
+    callback sort_descending(int);
+    callback refresh();
+}
+
+export component DetailPage inherits VerticalBox {
+    StandardTableView {
+        columns: [
+            { title: "登录时间" },
+            { title: "注销时间" },
+            { title: "流量" },
+        ];
+        rows: DetailModel.details;
+        sort-ascending(index) => {
+            DetailModel.sort_ascending(index);
+        }
+        sort-descending(index) => {
+            DetailModel.sort-descending(index);
+        }
+    }
+    Button {
+        text: "刷新";
+        enabled: !DetailModel.busy;
+        clicked => { DetailModel.refresh() }
+    }
+}

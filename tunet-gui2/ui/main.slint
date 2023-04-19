@@ -1,8 +1,9 @@
 import { TabWidget, VerticalBox } from "std-widgets.slint";
 import { HomePage, NetInfo, HomeModel } from "home.slint";
+import { DetailPage, DetailModel } from "detail.slint";
 import { AboutPage, AboutModel } from "about.slint";
 
-export { NetInfo, HomeModel, AboutModel }
+export { NetInfo, HomeModel, DetailModel, AboutModel }
 
 export component App inherits Window {
     preferred-width: 500px;
@@ -14,6 +15,10 @@ export component App inherits Window {
             Tab {
                 title: "主页";
                 HomePage {}
+            }
+            Tab {
+                title: "明细";
+                DetailPage {}
             }
             Tab {
                 title: "关于";
