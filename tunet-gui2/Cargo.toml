@@ -17,6 +17,7 @@ slint = { version = "1", default-features = false, features = [
     "compat-1-0",
     "renderer-winit-skia",
 ] }
+paste = "1"
 
 [build-dependencies]
 slint-build = "1"

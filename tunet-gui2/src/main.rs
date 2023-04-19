@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use slint::Model as SlintModel;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::Result;
@@ -47,6 +48,34 @@ macro_rules! upgrade_queue {
     };
 }
 
+macro_rules! sort_impl {
+    ($left: expr, $right: expr, +) => {
+        $left.cmp(&$right)
+    };
+    ($left: expr, $right: expr, -) => {
+        $right.cmp(&$left)
+    };
+}
+
+macro_rules! sort_callback {
+    ($app: expr, $model: expr, $mty: ty, $prop: ident, $order: tt) => {
+        paste::paste! {{
+            let weak_app = $app.as_weak();
+            let data = $model.[<get_ $prop>]();
+            move |index| {
+                let sort_data = std::rc::Rc::new(data.clone().sort_by(move |r_a, r_b| {
+                    let c_a = r_a.row_data(index as usize).unwrap();
+                    let c_b = r_b.row_data(index as usize).unwrap();
+                    sort_impl!(c_a.text, c_b.text, $order)
+                }));
+                if let Some(app) = weak_app.upgrade() {
+                    app.global::<$mty>().[<set_ $prop>](sort_data.into());
+                }
+            }
+        }}
+    };
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = App::new()?;
@@ -57,8 +86,8 @@ async fn main() -> Result<()> {
     home_model.set_theme_color_t1(slint::Color::from_argb_u8(191, color.r, color.g, color.b));
     home_model.set_theme_color_t2(slint::Color::from_argb_u8(140, color.r, color.g, color.b));
 
-    app.global::<AboutModel>()
-        .set_version(env!("CARGO_PKG_VERSION").into());
+    let about_model = app.global::<AboutModel>();
+    about_model.set_version(env!("CARGO_PKG_VERSION").into());
 
     let (tx, mut rx) = mpsc::channel(32);
     let model = Arc::new(Mutex::new(Model::new(tx)?));
@@ -79,15 +108,16 @@ async fn main() -> Result<()> {
         model.queue(Action::Timer);
     }
 
-    {
-        home_model.on_state_changed(upgrade_queue!(model, |s| Action::State(Some(
-            s.parse().unwrap()
-        ))));
+    home_model.on_state_changed(upgrade_queue!(model, |s| Action::State(Some(
+        s.parse().unwrap()
+    ))));
 
-        home_model.on_login(upgrade_queue!(model, || Action::Login));
-        home_model.on_logout(upgrade_queue!(model, || Action::Logout));
-        home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
-    }
+    home_model.on_login(upgrade_queue!(model, || Action::Login));
+    home_model.on_logout(upgrade_queue!(model, || Action::Logout));
+    home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
+
+    about_model.on_sort_ascending(sort_callback!(app, about_model, AboutModel, deps, +));
+    about_model.on_sort_descending(sort_callback!(app, about_model, AboutModel, deps, -));
 
     tokio::spawn(async move {
         while let Some(a) = rx.recv().await {

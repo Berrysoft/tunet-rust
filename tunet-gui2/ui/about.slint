@@ -4,8 +4,56 @@ export global AboutModel {
     in property <string> version: "0.0.0";
 
     in property <[[StandardListViewItem]]> deps: [
-        [ { text: "slint" }, { text: "GPLv3" } ],
+        [ { text: "anyhow" }, { text: "MIT"} ],
+        [ { text: "async-stream" }, { text: "MIT"} ],
+        [ { text: "async-trait" }, { text: "MIT"} ],
+        [ { text: "chrono" }, { text: "MIT"} ],
+        [ { text: "clap" }, { text: "MIT"} ],
+        [ { text: "core-foundation" }, { text: "MIT"} ],
+        [ { text: "crossterm" }, { text: "MIT"} ],
+        [ { text: "data-encoding" }, { text: "MIT"} ],
+        [ { text: "data-encoding-macro" }, { text: "MIT"} ],
+        [ { text: "dirs" }, { text: "MIT"} ],
+        [ { text: "enum_dispatch" }, { text: "MIT"} ],
+        [ { text: "futures-core" }, { text: "MIT"} ],
+        [ { text: "futures-util" }, { text: "MIT"} ],
+        [ { text: "hmac" }, { text: "MIT"} ],
+        [ { text: "humantime" }, { text: "MIT"} ],
+        [ { text: "is_elevated" }, { text: "MIT"} ],
+        [ { text: "itertools" }, { text: "MIT"} ],
+        [ { text: "keyutils" }, { text: "BSD-3-Clause"} ],
+        [ { text: "libc" }, { text: "MIT"} ],
+        [ { text: "mac_address" }, { text: "MIT"} ],
+        [ { text: "md-5" }, { text: "MIT"} ],
+        [ { text: "netlink_wi" }, { text: "MIT"} ],
+        [ { text: "notify-rust" }, { text: "MIT"} ],
+        [ { text: "objc" }, { text: "MIT"} ],
+        [ { text: "once_cell" }, { text: "MIT"} ],
+        [ { text: "plist" }, { text: "MIT"} ],
+        [ { text: "regex" }, { text: "MIT"} ],
+        [ { text: "reqwest" }, { text: "MIT"} ],
+        [ { text: "rpassword" }, { text: "Apache-2.0"} ],
+        [ { text: "security-framework" }, { text: "MIT"} ],
+        [ { text: "select" }, { text: "MIT"} ],
+        [ { text: "serde" }, { text: "MIT"} ],
+        [ { text: "serde_json" }, { text: "MIT"} ],
+        [ { text: "sha-1" }, { text: "MIT"} ],
+        [ { text: "slint" }, { text: "GPL-3.0"} ],
+        [ { text: "subprocess" }, { text: "MIT"} ],
+        [ { text: "system-configuration" }, { text: "MIT"} ],
+        [ { text: "termcolor" }, { text: "MIT"} ],
+        [ { text: "termcolor_output" }, { text: "MIT"} ],
+        [ { text: "thiserror" }, { text: "MIT"} ],
+        [ { text: "tokio" }, { text: "MIT"} ],
+        [ { text: "tokio-stream" }, { text: "MIT"} ],
+        [ { text: "tui" }, { text: "MIT"} ],
+        [ { text: "url" }, { text: "MIT"} ],
+        [ { text: "widestring" }, { text: "MIT"} ],
+        [ { text: "windows" }, { text: "MIT"} ],
+        [ { text: "windows-service" }, { text: "MIT"} ],
     ];
+    callback sort_ascending(int);
+    callback sort_descending(int);
 }
 
 export component AboutPage inherits VerticalBox {
@@ -29,6 +77,7 @@ export component AboutPage inherits VerticalBox {
                 text: "服务热线（8:00~20:00）010-62784859";
                 horizontal-alignment: center;
             }
+            //Rectangle {}
         }
         //AboutSlint {}
     }
@@ -44,5 +93,11 @@ export component AboutPage inherits VerticalBox {
             { title: "许可证" },
         ];
         rows: AboutModel.deps;
+        sort-ascending(index) => {
+            AboutModel.sort_ascending(index);
+        }
+        sort-descending(index) => {
+            AboutModel.sort-descending(index);
+        }
     }
 }
