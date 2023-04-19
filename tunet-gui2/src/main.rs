@@ -8,6 +8,45 @@ use tunet_settings::FileSettingsReader;
 
 slint::include_modules!();
 
+macro_rules! upgrade_spawn_body {
+    ($m: ident, $w: expr, $t: expr) => {
+        if let Some($m) = $w.upgrade() {
+            tokio::spawn($t);
+        }
+    };
+}
+
+macro_rules! upgrade_spawn {
+    ($m: ident, || $t: expr) => {{
+        let weak_model = std::sync::Arc::downgrade(&$m);
+        move || upgrade_spawn_body!($m, weak_model, $t)
+    }};
+    ($m: ident, | $args: tt | $t: expr) => {{
+        let weak_model = std::sync::Arc::downgrade(&$m);
+        move |$args| upgrade_spawn_body!($m, weak_model, $t)
+    }};
+}
+
+macro_rules! upgrade_queue_body {
+    ($m: ident, $t: expr) => {
+        let model = $m.lock().await;
+        model.queue($t);
+    };
+}
+
+macro_rules! upgrade_queue {
+    ($m: ident, || $t: expr) => {
+        upgrade_spawn!($m, || async move {
+            upgrade_queue_body!($m, $t);
+        })
+    };
+    ($m: ident, | $args: tt | $t: expr) => {
+        upgrade_spawn!($m, |$args| async move {
+            upgrade_queue_body!($m, $t);
+        })
+    };
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = App::new()?;
@@ -25,17 +64,15 @@ async fn main() -> Result<()> {
     let model = Arc::new(Mutex::new(Model::new(tx)?));
     {
         let weak_app = app.as_weak();
-        let weak_model = Arc::downgrade(&model);
-        let mut model = model.lock().await;
-        model.update = Some(Box::new(move |msg| {
-            if let Some(model) = weak_model.upgrade() {
-                let weak_app = weak_app.clone();
-                tokio::spawn(async move {
-                    let model = model.lock().await;
-                    update(&model, msg, weak_app)
-                });
+        let update = upgrade_spawn!(model, |msg| {
+            let weak_app = weak_app.clone();
+            async move {
+                let model = model.lock().await;
+                update(&model, msg, weak_app)
             }
-        }));
+        });
+        let mut model = model.lock().await;
+        model.update = Some(Box::new(update));
 
         let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
         model.queue(Action::Credential(cred));
@@ -43,47 +80,13 @@ async fn main() -> Result<()> {
     }
 
     {
-        let weak_model = Arc::downgrade(&model);
+        home_model.on_state_changed(upgrade_queue!(model, |s| Action::State(Some(
+            s.parse().unwrap()
+        ))));
 
-        let w = weak_model.clone();
-        home_model.on_state_changed(move |s| {
-            if let Some(model) = w.upgrade() {
-                tokio::spawn(async move {
-                    let model = model.lock().await;
-                    model.queue(Action::State(Some(s.parse().unwrap())));
-                });
-            }
-        });
-
-        let w = weak_model.clone();
-        home_model.on_login(move || {
-            if let Some(model) = w.upgrade() {
-                tokio::spawn(async move {
-                    let model = model.lock().await;
-                    model.queue(Action::Login);
-                });
-            }
-        });
-
-        let w = weak_model.clone();
-        home_model.on_logout(move || {
-            if let Some(model) = w.upgrade() {
-                tokio::spawn(async move {
-                    let model = model.lock().await;
-                    model.queue(Action::Logout);
-                });
-            }
-        });
-
-        let w = weak_model;
-        home_model.on_refresh(move || {
-            if let Some(model) = w.upgrade() {
-                tokio::spawn(async move {
-                    let model = model.lock().await;
-                    model.queue(Action::Flux);
-                });
-            }
-        });
+        home_model.on_login(upgrade_queue!(model, || Action::Login));
+        home_model.on_logout(upgrade_queue!(model, || Action::Logout));
+        home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
     }
 
     tokio::spawn(async move {
