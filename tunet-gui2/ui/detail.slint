@@ -10,23 +10,25 @@ export global DetailModel {
 }
 
 export component DetailPage inherits VerticalBox {
-    StandardTableView {
-        columns: [
-            { title: "登录时间" },
-            { title: "注销时间" },
-            { title: "流量" },
-        ];
-        rows: DetailModel.details;
-        sort-ascending(index) => {
-            DetailModel.sort_ascending(index);
+    VerticalBox {
+        StandardTableView {
+            columns: [
+                { title: "登录时间" },
+                { title: "注销时间" },
+                { title: "流量" },
+            ];
+            rows: DetailModel.details;
+            sort-ascending(index) => {
+                DetailModel.sort_ascending(index);
+            }
+            sort-descending(index) => {
+                DetailModel.sort-descending(index);
+            }
         }
-        sort-descending(index) => {
-            DetailModel.sort-descending(index);
+        Button {
+            text: "刷新";
+            enabled: !DetailModel.busy;
+            clicked => { DetailModel.refresh() }
         }
-    }
-    Button {
-        text: "刷新";
-        enabled: !DetailModel.busy;
-        clicked => { DetailModel.refresh() }
     }
 }

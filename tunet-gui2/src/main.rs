@@ -109,6 +109,7 @@ async fn main() -> Result<()> {
     let color = color_theme::Color::accent();
     let home_model = app.global::<HomeModel>();
     let detail_model = app.global::<DetailModel>();
+    let settings_model = app.global::<SettingsModel>();
     let about_model = app.global::<AboutModel>();
 
     home_model.set_theme_color(slint::Color::from_argb_u8(255, color.r, color.g, color.b));
@@ -134,6 +135,8 @@ async fn main() -> Result<()> {
         let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
         model.queue(Action::Credential(cred));
         model.queue(Action::Timer);
+
+        settings_model.set_status(model.status.to_string().into());
     }
 
     home_model.on_state_changed(upgrade_queue!(model, |s| Action::State(Some(
@@ -169,6 +172,8 @@ async fn main() -> Result<()> {
         }
     }));
 
+    settings_model.on_refresh(upgrade_queue!(model, || Action::Online));
+
     about_model.on_sort_ascending(sort_by_key_callback!(
         app,
         AboutModel,
@@ -195,6 +200,12 @@ async fn main() -> Result<()> {
 fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
     match msg {
         UpdateMsg::Credential => {
+            let username = model.cred.username.clone();
+            weak_app
+                .upgrade_in_event_loop(move |app| {
+                    app.global::<SettingsModel>().set_username(username.into());
+                })
+                .unwrap();
             model.queue(Action::State(None));
             model.queue(Action::Online);
             model.queue(Action::Details);
@@ -228,6 +239,41 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
                 })
                 .unwrap();
         }
+        UpdateMsg::Online => {
+            let onlines = model.users.clone();
+            let is_local = onlines
+                .iter()
+                .map(|user| {
+                    model
+                        .mac_addrs
+                        .iter()
+                        .any(|it| Some(it) == user.mac_address.as_ref())
+                })
+                .collect::<Vec<_>>();
+            weak_app
+                .upgrade_in_event_loop(move |app| {
+                    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> =
+                        Rc::new(VecModel::default());
+                    for (user, is_local) in onlines.into_iter().zip(is_local) {
+                        let items: Rc<VecModel<StandardListViewItem>> =
+                            Rc::new(VecModel::default());
+                        items.push(user.address.to_string().as_str().into());
+                        items.push(user.login_time.to_string().as_str().into());
+                        items.push(user.flux.to_string().as_str().into());
+                        items.push(
+                            user.mac_address
+                                .map(|addr| addr.to_string())
+                                .unwrap_or_default()
+                                .as_str()
+                                .into(),
+                        );
+                        items.push(if is_local { "本机" } else { "未知" }.into());
+                        row_data.push(items.into());
+                    }
+                    app.global::<SettingsModel>().set_onlines(row_data.into());
+                })
+                .unwrap();
+        }
         UpdateMsg::Details => {
             let details = model.details.clone();
             weak_app
@@ -252,12 +298,17 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
                 .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_busy(busy))
                 .unwrap();
         }
+        UpdateMsg::OnlineBusy => {
+            let busy = model.online_busy();
+            weak_app
+                .upgrade_in_event_loop(move |app| app.global::<SettingsModel>().set_busy(busy))
+                .unwrap();
+        }
         UpdateMsg::DetailBusy => {
             let busy = model.detail_busy();
             weak_app
                 .upgrade_in_event_loop(move |app| app.global::<DetailModel>().set_busy(busy))
                 .unwrap();
         }
-        _ => {}
     };
 }

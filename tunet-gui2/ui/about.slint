@@ -1,4 +1,4 @@
-import { AboutSlint, HorizontalBox, VerticalBox , StandardTableView} from "std-widgets.slint";
+import { AboutSlint, HorizontalBox, StandardTableView, VerticalBox } from "std-widgets.slint";
 
 export global AboutModel {
     in property <string> version: "0.0.0";
@@ -81,23 +81,25 @@ export component AboutPage inherits VerticalBox {
         }
         //AboutSlint {}
     }
-    Text {
-        text: "使用的库";
-        horizontal-alignment: center;
-        font-size: 20px;
-        font-weight: 700;
-    }
-    StandardTableView {
-        columns: [
-            { title: "名称" },
-            { title: "许可证" },
-        ];
-        rows: AboutModel.deps;
-        sort-ascending(index) => {
-            AboutModel.sort_ascending(index);
+    VerticalBox {
+        Text {
+            text: "使用的库";
+            horizontal-alignment: center;
+            font-size: 20px;
+            font-weight: 700;
         }
-        sort-descending(index) => {
-            AboutModel.sort-descending(index);
+        StandardTableView {
+            columns: [
+                { title: "名称" },
+                { title: "许可证" },
+            ];
+            rows: AboutModel.deps;
+            sort-ascending(index) => {
+                AboutModel.sort_ascending(index);
+            }
+            sort-descending(index) => {
+                AboutModel.sort-descending(index);
+            }
         }
     }
 }
