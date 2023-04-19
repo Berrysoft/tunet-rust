@@ -1,7 +1,11 @@
-import { AboutSlint, HorizontalBox, VerticalBox } from "std-widgets.slint";
+import { AboutSlint, HorizontalBox, VerticalBox , StandardTableView} from "std-widgets.slint";
 
 export global AboutModel {
     in property <string> version: "0.0.0";
+
+    in property <[[StandardListViewItem]]> deps: [
+        [ { text: "slint" }, { text: "GPLv3" } ],
+    ];
 }
 
 export component AboutPage inherits VerticalBox {
@@ -17,7 +21,28 @@ export component AboutPage inherits VerticalBox {
                 text: "版本 " + AboutModel.version;
                 horizontal-alignment: center;
             }
+            Text {
+                text: "版权所有 © 2021-2023 Berrysoft";
+                horizontal-alignment: center;
+            }
+            Text {
+                text: "服务热线（8:00~20:00）010-62784859";
+                horizontal-alignment: center;
+            }
         }
         //AboutSlint {}
+    }
+    Text {
+        text: "使用的库";
+        horizontal-alignment: center;
+        font-size: 20px;
+        font-weight: 700;
+    }
+    StandardTableView {
+        columns: [
+            { title: "名称" },
+            { title: "许可证" },
+        ];
+        rows: AboutModel.deps;
     }
 }
