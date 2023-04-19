@@ -40,6 +40,18 @@ async fn main() -> Result<()> {
         model.queue(Action::Timer);
     }
 
+    {
+        let weak_model = Arc::downgrade(&model);
+        home_model.on_state_changed(move |s| {
+            if let Some(model) = weak_model.upgrade() {
+                tokio::spawn(async move {
+                    let model = model.lock().await;
+                    model.queue(Action::State(Some(s.parse().unwrap())));
+                });
+            }
+        });
+    }
+
     tokio::spawn(async move {
         while let Some(a) = rx.recv().await {
             model.lock().await.handle(a);
@@ -58,6 +70,10 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
             model.queue(Action::Details);
         }
         UpdateMsg::State => {
+            let state = model.state as i32 - 1;
+            weak_app
+                .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_state(state))
+                .unwrap();
             model.queue(Action::Flux);
         }
         UpdateMsg::Log => {
@@ -80,6 +96,12 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
                 .upgrade_in_event_loop(move |app| {
                     app.global::<HomeModel>().set_info(info);
                 })
+                .unwrap();
+        }
+        UpdateMsg::LogBusy => {
+            let busy = model.log_busy();
+            weak_app
+                .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_busy(busy))
                 .unwrap();
         }
         _ => {}
