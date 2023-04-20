@@ -34,6 +34,9 @@ slint = { version = "1", default-features = false, features = [
     "backend-winit",
     "renderer-winit-femtovg",
 ] }
+plotters = { version = "0.3", default-features = false, features = [
+    "fontconfig-dlopen",
+] }
 
 [build-dependencies]
 slint-build = "1"
