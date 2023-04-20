@@ -38,11 +38,12 @@ jobs:
 
   - task: CopyFiles@2
     inputs:
+      SourceFolder: $(Build.SourcesDirectory)/target/$(target)/release
       Contents: |
-        '$(Build.SourcesDirectory)/target/$(target)/release/tunet$(postfix)'
-        '$(Build.SourcesDirectory)/target/$(target)/release/tunet-cui$(postfix)'
-        '$(Build.SourcesDirectory)/target/$(target)/release/tunet-gui$(postfix)'
-        '$(Build.SourcesDirectory)/target/$(target)/release/tunet-service$(postfix)'
+        'tunet$(postfix)'
+        'tunet-cui$(postfix)'
+        'tunet-gui$(postfix)'
+        'tunet-service$(postfix)'
       TargetFolder: '$(Build.BinariesDirectory)'
       flattenFolders: true
       preserveTimestamp: true
@@ -81,7 +82,7 @@ jobs:
 
   - task: ArchiveFiles@2
     inputs:
-      rootFolderOrFile: '$(Build.SourcesDirectory)/target/release/'
+      rootFolderOrFile: '$(Build.BinariesDirectory)'
       includeRootFolder: false
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/mac.universal.zip'
