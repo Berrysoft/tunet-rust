@@ -15,9 +15,19 @@ tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 slint = { version = "1", default-features = false, features = [
     "std",
     "compat-1-0",
-    "renderer-winit-skia",
 ] }
 paste = "1"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+slint = { version = "1", default-features = false, features = [
+    "renderer-winit-skia",
+] }
+
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+slint = { version = "1", default-features = false, features = [
+    "backend-winit",
+    "renderer-winit-femtovg",
+] }
 
 [build-dependencies]
 slint-build = "1"

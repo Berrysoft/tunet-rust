@@ -2,14 +2,16 @@ import { Button, ComboBox, GridBox, HorizontalBox, VerticalBox } from "std-widge
 
 export struct NetInfo {
     username: string,
-    flux: string,
+    flux-gb: float,
+    flux-str: string,
     online-time: string,
-    balance: string,
+    balance: float,
+    balance-str: string,
 }
 
 export global HomeModel {
-    in property <color> theme-color: orange;
-    in property <color> theme-color-t1: orange;
+    in property <color> theme-color: yellowgreen;
+    in property <color> theme-color-t1: yellow;
     in property <color> theme-color-t2: orange;
 
     in property <string> log: "";
@@ -18,7 +20,22 @@ export global HomeModel {
     in-out property <int> state;
     callback state_changed(string);
 
-    in property <NetInfo> info: { username: "test", flux: 114514, online-time: 1919, balance: 8.10 };
+    in property <NetInfo> info: {
+        username: "",
+        flux-gb: 11.4514,
+        flux-str: "11.4514 G",
+        online-time: "00:19:19",
+        balance: 8.10,
+        balance-str: "¥8.10",
+    };
+
+    function free-angle() -> angle {
+        50.0 / (root.info.balance + Math.max(50.0, root.info.flux-gb)) * 360deg - 0.1deg
+    }
+
+    function flux-angle() -> angle {
+        root.info.flux-gb / (root.info.balance + Math.max(50.0, root.info.flux-gb)) * 360deg - 0.1deg
+    }
 
     callback login();
     callback logout();
@@ -35,13 +52,59 @@ export component HomePage inherits VerticalBox {
     }
     GridBox {
         Path {
-            commands: "M 50 100 A 50 50 0 1 1 50.001 100";
-            stroke: HomeModel.theme-color-t2;
-            stroke-width: 30px;
             row: 0;
             col: 0;
             rowspan: 3;
             colspan: 3;
+            stroke: HomeModel.theme-color-t2;
+            stroke-width: 30px;
+            MoveTo { x: 50; y: 100; }
+            ArcTo {
+                radius-x: 50;
+                radius-y: 50;
+                large-arc: true;
+                sweep: true;
+                x: 50.001;
+                y: 100;
+            }
+        }
+        Path {
+            row: 0;
+            col: 0;
+            rowspan: 3;
+            colspan: 3;
+            stroke: HomeModel.theme-color-t1;
+            stroke-width: 30px;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            MoveTo { x: 50; y: 100; }
+            ArcTo {
+                radius-x: 50;
+                radius-y: 50;
+                large-arc: HomeModel.free-angle() > 180deg;
+                sweep: true;
+                x: 50 * (1 - Math.sin(HomeModel.free-angle()));
+                y: 50 * (1 + Math.cos(HomeModel.free-angle()));
+            }
+        }
+        Path {
+            row: 0;
+            col: 0;
+            rowspan: 3;
+            colspan: 3;
+            stroke: HomeModel.theme-color;
+            stroke-width: 30px;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            MoveTo { x: 50; y: 100; }
+            ArcTo {
+                radius-x: 50;
+                radius-y: 50;
+                large-arc: HomeModel.flux-angle() > 180deg;
+                sweep: true;
+                x: 50 * (1 - Math.sin(HomeModel.flux-angle()));
+                y: 50 * (1 + Math.cos(HomeModel.flux-angle()));
+            }
         }
         VerticalBox {
             row: 1;
@@ -50,13 +113,13 @@ export component HomePage inherits VerticalBox {
                 text: "用户：" + HomeModel.info.username;
             }
             Text {
-                text: "流量：" + HomeModel.info.flux;
+                text: "流量：" + HomeModel.info.flux-str;
             }
             Text {
                 text: "时长：" + HomeModel.info.online-time;
             }
             Text {
-                text: "余额：" + HomeModel.info.balance;
+                text: "余额：" + HomeModel.info.balance-str;
             }
         }
     }

@@ -234,9 +234,11 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
             let flux = &model.flux;
             let info = NetInfo {
                 username: flux.username.as_str().into(),
-                flux: flux.flux.to_string().into(),
+                flux_gb: flux.flux.to_gb() as _,
+                flux_str: flux.flux.to_string().into(),
                 online_time: flux.online_time.to_string().into(),
-                balance: flux.balance.to_string().into(),
+                balance: flux.balance.0 as _,
+                balance_str: flux.balance.to_string().into(),
             };
             weak_app
                 .upgrade_in_event_loop(move |app| {
