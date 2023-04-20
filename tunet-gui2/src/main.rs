@@ -7,7 +7,7 @@ use plotters::{
     style::{Color, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
 };
 use slint::{
-    Image, Model as SlintModel, ModelRc, Rgb8Pixel, SharedPixelBuffer, SortModel,
+    Image, Model as SlintModel, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SortModel,
     StandardListViewItem, VecModel,
 };
 use std::{
@@ -416,5 +416,34 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
     }
 
     app.global::<ChartModel>()
-        .set_daily_chart(Image::from_rgb8(pixel_buffer));
+        .set_daily_chart(image_from_rgb8_with_transparency(pixel_buffer, back_color));
+}
+
+fn image_from_rgb8_with_transparency(
+    buffer: SharedPixelBuffer<Rgb8Pixel>,
+    filter: &RGBColor,
+) -> Image {
+    let filter = Rgb8Pixel {
+        r: filter.0,
+        g: filter.1,
+        b: filter.2,
+    };
+    let transparent = Rgba8Pixel {
+        r: 0,
+        g: 0,
+        b: 0,
+        a: 0,
+    };
+    let mut new_buffer = SharedPixelBuffer::<Rgba8Pixel>::new(buffer.width(), buffer.height());
+    for (oldc, newc) in buffer.as_slice().iter().zip(new_buffer.make_mut_slice()) {
+        if *oldc == filter {
+            *newc = transparent;
+        } else {
+            newc.r = oldc.r;
+            newc.g = oldc.g;
+            newc.b = oldc.b;
+            newc.a = 0xFF;
+        }
+    }
+    Image::from_rgba8(new_buffer)
 }
