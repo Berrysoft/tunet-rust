@@ -36,13 +36,21 @@ jobs:
       cargo build --release --target $(target)
     displayName: "Build"
 
-  - task: ArchiveFiles@2
+  - task: CopyFiles@2
     inputs:
-      rootFolderOrFile: |
+      Contents: |
         '$(Build.SourcesDirectory)/target/$(target)/release/tunet$(postfix)'
         '$(Build.SourcesDirectory)/target/$(target)/release/tunet-cui$(postfix)'
         '$(Build.SourcesDirectory)/target/$(target)/release/tunet-gui$(postfix)'
         '$(Build.SourcesDirectory)/target/$(target)/release/tunet-service$(postfix)'
+      TargetFolder: '$(Build.BinariesDirectory)'
+      flattenFolders: true
+      preserveTimestamp: true
+    displayName: 'Copy Binaries'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(Build.BinariesDirectory)'
       includeRootFolder: false
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/$(publishName).zip'
@@ -65,20 +73,15 @@ jobs:
     displayName: "Build"
 
   - script: |
-      mkdir -p target/release
-      lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output target/release/tunet
-      lipo -create target/x86_64-apple-darwin/release/tunet-cui target/aarch64-apple-darwin/release/tunet-cui -output target/release/tunet-cui
-      lipo -create target/x86_64-apple-darwin/release/tunet-gui target/aarch64-apple-darwin/release/tunet-gui -output target/release/tunet-gui
-      lipo -create target/x86_64-apple-darwin/release/tunet-service target/aarch64-apple-darwin/release/tunet-service -output target/release/tunet-service
+      lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output $(Build.BinariesDirectory)/tunet
+      lipo -create target/x86_64-apple-darwin/release/tunet-cui target/aarch64-apple-darwin/release/tunet-cui -output $(Build.BinariesDirectory)/tunet-cui
+      lipo -create target/x86_64-apple-darwin/release/tunet-gui target/aarch64-apple-darwin/release/tunet-gui -output $(Build.BinariesDirectory)/tunet-gui
+      lipo -create target/x86_64-apple-darwin/release/tunet-service target/aarch64-apple-darwin/release/tunet-service -output $(Build.BinariesDirectory)/tunet-service
     displayName: "Create fat binary"
 
   - task: ArchiveFiles@2
     inputs:
-      rootFolderOrFile: |
-        '$(Build.SourcesDirectory)/target/release/tunet'
-        '$(Build.SourcesDirectory)/target/release/tunet-cui'
-        '$(Build.SourcesDirectory)/target/release/tunet-gui'
-        '$(Build.SourcesDirectory)/target/release/tunet-service'
+      rootFolderOrFile: '$(Build.SourcesDirectory)/target/release/'
       includeRootFolder: false
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/mac.universal.zip'
