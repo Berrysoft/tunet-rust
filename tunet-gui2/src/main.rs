@@ -337,8 +337,11 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
     let color = color_theme::Color::accent();
     let color = RGBColor(color.r, color.g, color.b);
     let window_size = app.window().size();
-    let (width, height) = ((window_size.width as f64 * 1.1) as u32, window_size.height);
-    let scale = app.window().scale_factor();
+    let (width, height) = (
+        (window_size.width as f64 * 1.1) as u32 * 2,
+        window_size.height * 2,
+    );
+    let scale = app.window().scale_factor() * 2.0;
     let dark = app.global::<ChartModel>().get_dark();
     let text_color = if dark { &WHITE } else { &BLACK };
     let back_color = if dark { &BLACK } else { &WHITE };
@@ -367,13 +370,13 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
         let root = backend.into_drawing_area();
         root.fill(back_color).unwrap();
 
-        let label_style = (FontFamily::SansSerif, 16.0 * scale)
+        let label_style = (FontFamily::SansSerif, 20.0 * scale)
             .with_color(text_color)
             .into_text_style(&root);
 
         let mut chart = ChartBuilder::on(&root)
-            .x_label_area_size(20.0 * scale)
-            .y_label_area_size(50.0 * scale)
+            .x_label_area_size(30.0 * scale)
+            .y_label_area_size(60.0 * scale)
             .margin(5.0 * scale)
             .build_cartesian_2d(
                 RangedDate::from(date_range.0..date_range.1),
@@ -388,9 +391,8 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
                 filled: false,
                 stroke_width: scale as _,
             })
-            .x_desc("日期")
             .x_label_style(label_style.clone())
-            .y_desc("流量")
+            .x_label_formatter(&|d| d.format("%m-%d").to_string())
             .y_label_style(label_style)
             .y_label_formatter(&|f| Flux(*f).to_string())
             .draw()
