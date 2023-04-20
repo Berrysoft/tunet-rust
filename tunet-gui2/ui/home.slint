@@ -30,11 +30,11 @@ export global HomeModel {
     };
 
     function free-angle() -> angle {
-        50.0 / (root.info.balance + Math.max(50.0, root.info.flux-gb)) * 360deg - 0.1deg
+        Math.max(50.0 / (root.info.balance + Math.max(50.0, root.info.flux-gb)) * 360deg - 0.1deg, 0deg)
     }
 
     function flux-angle() -> angle {
-        root.info.flux-gb / (root.info.balance + Math.max(50.0, root.info.flux-gb)) * 360deg - 0.1deg
+        Math.max(root.info.flux-gb / (root.info.balance + Math.max(50.0, root.info.flux-gb)) * 360deg - 0.1deg, 0deg)
     }
 
     callback login();

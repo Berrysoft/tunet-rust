@@ -337,6 +337,7 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
     let color = color_theme::Color::accent();
     let color = RGBColor(color.r, color.g, color.b);
     let window_size = app.window().size();
+    let (width, height) = ((window_size.width as f64 * 1.1) as u32, window_size.height);
     let scale = app.window().scale_factor();
     let dark = app.global::<ChartModel>().get_dark();
     let text_color = if dark { &WHITE } else { &BLACK };
@@ -360,12 +361,8 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
     let date_range = (now.with_day(1).unwrap(), now);
     let flux_range = (0, max);
 
-    let mut pixel_buffer =
-        SharedPixelBuffer::<Rgb8Pixel>::new(window_size.width, window_size.height);
-    let backend = BitMapBackend::with_buffer(
-        pixel_buffer.make_mut_bytes(),
-        (window_size.width, window_size.height),
-    );
+    let mut pixel_buffer = SharedPixelBuffer::<Rgb8Pixel>::new(width, height);
+    let backend = BitMapBackend::with_buffer(pixel_buffer.make_mut_bytes(), (width, height));
     {
         let root = backend.into_drawing_area();
         root.fill(back_color).unwrap();
