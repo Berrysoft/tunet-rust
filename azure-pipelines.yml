@@ -31,17 +31,12 @@ jobs:
       cargo build --release --target $(target)
     displayName: "Build"
 
-  - task: CopyFiles@2
-    inputs:
-      SourceFolder: $(Build.SourcesDirectory)/target/$(target)/release
-      Contents: |
-        'tunet$(postfix)'
-        'tunet-cui$(postfix)'
-        'tunet-gui$(postfix)'
-        'tunet-service$(postfix)'
-      TargetFolder: '$(Build.BinariesDirectory)'
-      flattenFolders: true
-      preserveTimestamp: true
+  - pwsh: |
+      cd target/$(target)/release
+      cp tunet$(postfix) $(Build.BinariesDirectory)/
+      cp tunet-cui$(postfix) $(Build.BinariesDirectory)/
+      cp tunet-gui$(postfix) $(Build.BinariesDirectory)/
+      cp tunet-service$(postfix) $(Build.BinariesDirectory)/
     displayName: 'Copy Binaries'
 
   - task: ArchiveFiles@2
