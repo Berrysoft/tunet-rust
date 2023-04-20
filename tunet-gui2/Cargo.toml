@@ -22,20 +22,18 @@ plotters = { version = "0.3", default-features = false, features = [
     "bitmap_backend",
     "chrono",
     "line_series",
+    "fontconfig-dlopen",
 ] }
 
-[target.'cfg(target_os = "windows")'.dependencies]
+[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
 slint = { version = "1", default-features = false, features = [
     "renderer-winit-skia",
 ] }
 
-[target.'cfg(not(target_os = "windows"))'.dependencies]
+[target.'cfg(not(all(target_os = "windows", target_arch = "x86_64")))'.dependencies]
 slint = { version = "1", default-features = false, features = [
     "backend-winit",
     "renderer-winit-femtovg",
-] }
-plotters = { version = "0.3", default-features = false, features = [
-    "fontconfig-dlopen",
 ] }
 
 [build-dependencies]
