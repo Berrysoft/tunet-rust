@@ -186,6 +186,11 @@ async fn main() -> Result<()> {
     }));
 
     settings_model.on_refresh(upgrade_queue!(model, || Action::Online));
+    settings_model.on_del_and_exit(|| {
+        let mut reader = FileSettingsReader::new().unwrap();
+        reader.delete().unwrap();
+        std::process::exit(0);
+    });
 
     about_model.on_sort_ascending(sort_by_key_callback!(
         app,
@@ -200,13 +205,19 @@ async fn main() -> Result<()> {
         |item: StandardListViewItem| Reverse(item.text)
     ));
 
-    tokio::spawn(async move {
-        while let Some(a) = rx.recv().await {
-            model.lock().await.handle(a);
+    tokio::spawn({
+        let model = model.clone();
+        async move {
+            while let Some(a) = rx.recv().await {
+                model.lock().await.handle(a);
+            }
         }
     });
 
     app.run()?;
+    let mut reader = FileSettingsReader::new()?;
+    let cred = model.lock().await.cred.clone();
+    reader.save(cred).await?;
     Ok(())
 }
 

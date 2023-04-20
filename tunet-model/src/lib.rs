@@ -1,6 +1,5 @@
 #![forbid(unsafe_code)]
 
-use color_theme::Color as ThemeColor;
 use drop_guard::guard;
 use futures_util::{pin_mut, TryStreamExt};
 use mac_address::*;
@@ -24,7 +23,6 @@ pub struct Model {
     pub http: HttpClient,
     pub state: NetState,
     pub status: NetStatus,
-    pub accent: ThemeColor,
     pub log: Cow<'static, str>,
     log_busy: BusyBool,
     online_busy: BusyBool,
@@ -33,7 +31,6 @@ pub struct Model {
     pub users: Vec<NetUser>,
     pub details: Vec<NetDetail>,
     pub mac_addrs: Vec<MacAddress>,
-    pub del_at_exit: AtomicBool,
 }
 
 impl Model {
@@ -51,7 +48,6 @@ impl Model {
             http,
             state: NetState::Unknown,
             status: NetStatus::current(),
-            accent: ThemeColor::accent(),
             log: Cow::default(),
             log_busy: BusyBool::new(tx.clone(), UpdateMsg::LogBusy),
             online_busy: BusyBool::new(tx.clone(), UpdateMsg::OnlineBusy),
@@ -60,7 +56,6 @@ impl Model {
             users: Vec::default(),
             details: Vec::default(),
             mac_addrs,
-            del_at_exit: AtomicBool::new(false),
         })
     }
 
@@ -321,14 +316,6 @@ impl Model {
 
     pub fn detail_busy(&self) -> bool {
         self.detail_busy.get()
-    }
-
-    pub fn set_del_at_exit(&self, v: bool) {
-        self.del_at_exit.store(v, Ordering::Release);
-    }
-
-    pub fn del_at_exit(&self) -> bool {
-        self.del_at_exit.load(Ordering::Acquire)
     }
 }
 
