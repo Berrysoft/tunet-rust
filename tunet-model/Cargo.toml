@@ -10,7 +10,6 @@ repository.workspace = true
 tunet-helper = { workspace = true }
 tunet-suggest = { workspace = true }
 netstatus = { workspace = true }
-color-theme = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true }
 mac_address = { workspace = true }

@@ -14,14 +14,14 @@ export global HomeModel {
     in property <color> theme-color-t1: yellow;
     in property <color> theme-color-t2: orange;
 
-    in property <string> log: "";
+    in property <string> log: "This is a very long long long long long long long long long long long long long long long long long long long log.";
     in property <bool> busy: false;
 
     in-out property <int> state;
     callback state_changed(string);
 
     in property <NetInfo> info: {
-        username: "",
+        username: "aaaaaaaaaa",
         flux-gb: 11.4514,
         flux-str: "11.4514 G",
         online-time: "00:19:19",
@@ -125,6 +125,7 @@ export component HomePage inherits VerticalBox {
     }
     Text {
         horizontal-alignment: center;
+        wrap: word-wrap;
         text: HomeModel.log;
     }
     HorizontalBox {

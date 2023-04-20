@@ -4,7 +4,7 @@ use itertools::Itertools;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
     series::LineSeries,
-    style::{Color, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
+    style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
 };
 use slint::{
     Image, Model as SlintModel, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SortModel,
