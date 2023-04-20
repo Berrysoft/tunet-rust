@@ -1,16 +1,13 @@
-import { Button, VerticalBox } from "std-widgets.slint";
+import { Button, StyleMetrics, VerticalBox } from "std-widgets.slint";
 import { DetailModel } from "detail.slint";
 
 export global ChartModel {
-    in property <image> time-chart;
+    out property <bool> dark: StyleMetrics.dark-color-scheme;
     in property <image> daily-chart;
 }
 
 export component ChartPage inherits VerticalBox {
     VerticalBox {
-        Image {
-            source: ChartModel.time-chart;
-        }
         Image {
             source: ChartModel.daily-chart;
         }

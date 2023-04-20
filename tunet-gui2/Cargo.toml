@@ -12,11 +12,17 @@ tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-model = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
+itertools = { workspace = true }
 slint = { version = "1", default-features = false, features = [
     "std",
     "compat-1-0",
 ] }
 paste = "1"
+plotters = { version = "0.3", default-features = false, features = [
+    "bitmap_backend",
+    "chrono",
+    "line_series",
+] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 slint = { version = "1", default-features = false, features = [

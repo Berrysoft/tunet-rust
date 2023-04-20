@@ -1,15 +1,25 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use slint::{Model as SlintModel, ModelRc, SortModel, StandardListViewItem, VecModel};
+use itertools::Itertools;
+use plotters::{
+    prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
+    series::LineSeries,
+    style::{Color, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
+};
+use slint::{
+    Image, Model as SlintModel, ModelRc, Rgb8Pixel, SharedPixelBuffer, SortModel,
+    StandardListViewItem, VecModel,
+};
 use std::{
     cmp::{Ordering, Reverse},
+    collections::HashMap,
     rc::Rc,
     sync::Arc,
 };
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
     usereg::{NetDateTime, NetDetail, NetUser},
-    Flux, Result,
+    Datelike, Flux, Local, Result,
 };
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
@@ -264,7 +274,10 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
         UpdateMsg::Details => {
             let details = model.details.clone();
             weak_app
-                .upgrade_in_event_loop(move |app| update_details(app, details))
+                .upgrade_in_event_loop(move |app| {
+                    update_details(&app, &details);
+                    draw_daily(&app, &details);
+                })
                 .unwrap();
         }
         UpdateMsg::LogBusy => {
@@ -308,7 +321,7 @@ fn update_online(app: App, onlines: Vec<NetUser>, is_local: Vec<bool>) {
     app.global::<SettingsModel>().set_onlines(row_data.into());
 }
 
-fn update_details(app: App, details: Vec<NetDetail>) {
+fn update_details(app: &App, details: &[NetDetail]) {
     let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> = Rc::new(VecModel::default());
     for d in details {
         let items: Rc<VecModel<StandardListViewItem>> = Rc::new(VecModel::default());
@@ -318,4 +331,90 @@ fn update_details(app: App, details: Vec<NetDetail>) {
         row_data.push(items.into());
     }
     app.global::<DetailModel>().set_details(row_data.into());
+}
+
+fn draw_daily(app: &App, details: &[NetDetail]) {
+    let color = color_theme::Color::accent();
+    let color = RGBColor(color.r, color.g, color.b);
+    let window_size = app.window().size();
+    let scale = app.window().scale_factor();
+    let dark = app.global::<ChartModel>().get_dark();
+    let text_color = if dark { &WHITE } else { &BLACK };
+    let back_color = if dark { &BLACK } else { &WHITE };
+
+    let details = details
+        .iter()
+        .group_by(|d| d.logout_time.date())
+        .into_iter()
+        .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
+        .collect::<HashMap<_, _>>();
+    let mut grouped_details = vec![];
+    let now = Local::now().date_naive();
+    let mut max = 0;
+    for d in 1u32..=now.day() {
+        if let Some(f) = details.get(&d) {
+            max += *f;
+        }
+        grouped_details.push((now.with_day(d).unwrap(), max))
+    }
+    let date_range = (now.with_day(1).unwrap(), now);
+    let flux_range = (0, max);
+
+    let mut pixel_buffer =
+        SharedPixelBuffer::<Rgb8Pixel>::new(window_size.width, window_size.height);
+    let backend = BitMapBackend::with_buffer(
+        pixel_buffer.make_mut_bytes(),
+        (window_size.width, window_size.height),
+    );
+    {
+        let root = backend.into_drawing_area();
+        root.fill(back_color).unwrap();
+
+        let label_style = (FontFamily::SansSerif, 16.0 * scale)
+            .with_color(text_color)
+            .into_text_style(&root);
+
+        let mut chart = ChartBuilder::on(&root)
+            .x_label_area_size(20.0 * scale)
+            .y_label_area_size(50.0 * scale)
+            .margin(5.0 * scale)
+            .build_cartesian_2d(
+                RangedDate::from(date_range.0..date_range.1),
+                flux_range.0..flux_range.1,
+            )
+            .unwrap();
+        chart
+            .configure_mesh()
+            .disable_mesh()
+            .axis_style(ShapeStyle {
+                color: text_color.to_rgba(),
+                filled: false,
+                stroke_width: scale as _,
+            })
+            .x_desc("日期")
+            .x_label_style(label_style.clone())
+            .y_desc("流量")
+            .y_label_style(label_style)
+            .y_label_formatter(&|f| Flux(*f).to_string())
+            .draw()
+            .unwrap();
+        chart
+            .draw_series(
+                LineSeries::new(
+                    grouped_details,
+                    ShapeStyle {
+                        color: color.to_rgba(),
+                        filled: true,
+                        stroke_width: (scale * 2.0) as _,
+                    },
+                )
+                .point_size((scale * 3.0) as _),
+            )
+            .unwrap();
+
+        root.present().unwrap();
+    }
+
+    app.global::<ChartModel>()
+        .set_daily_chart(Image::from_rgb8(pixel_buffer));
 }
