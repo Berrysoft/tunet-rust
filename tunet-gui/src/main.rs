@@ -399,7 +399,8 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
         let mut chart = ChartBuilder::on(&root)
             .x_label_area_size(30.0 * scale)
             .y_label_area_size(60.0 * scale)
-            .margin(5.0 * scale)
+            .margin_top(5.0 * scale)
+            .margin_right(20.0 * scale)
             .build_cartesian_2d(
                 RangedDate::from(date_range.0..date_range.1),
                 flux_range.0..flux_range.1,
