@@ -254,6 +254,17 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
                 .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_state(state))
                 .unwrap();
         }
+        UpdateMsg::Status => {
+            model.queue(Action::State(None));
+
+            let status = model.status.clone();
+            weak_app
+                .upgrade_in_event_loop(move |app| {
+                    app.global::<HomeModel>()
+                        .set_status(status.to_string().into());
+                })
+                .unwrap();
+        }
         UpdateMsg::Log => {
             let log = model.log.as_ref().into();
             weak_app

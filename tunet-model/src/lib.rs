@@ -120,6 +120,11 @@ impl Model {
                 self.spawn_logout();
             }
             Action::Flux => {
+                let status = NetStatus::current();
+                if status != self.status {
+                    self.status = status;
+                    self.update(UpdateMsg::Status);
+                }
                 self.spawn_flux();
             }
             Action::LoginDone(s) | Action::LogoutDone(s) => {
@@ -346,6 +351,7 @@ pub enum Action {
 pub enum UpdateMsg {
     Credential,
     State,
+    Status,
     Log,
     Flux,
     Online,
