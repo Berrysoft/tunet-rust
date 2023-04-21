@@ -11,7 +11,7 @@ members = [
     "tunet-model",
     "tunet",
     "tunet-cui",
-    "tunet-gui2",
+    "tunet-gui",
     "tunet-service",
 ]
 
