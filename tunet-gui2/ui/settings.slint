@@ -6,10 +6,15 @@ export global SettingsModel {
 
     in property <bool> busy;
 
+    callback set_credential(string, string);
+
     callback del_and_exit();
 
     in property <[[StandardListViewItem]]> onlines: [];
     callback refresh();
+
+    callback connect_ip(string);
+    callback drop_ip(string);
 }
 
 export component SettingsPage inherits VerticalBox {
@@ -26,6 +31,7 @@ export component SettingsPage inherits VerticalBox {
     HorizontalBox {
         Button {
             text: "设置";
+            enabled: false;
         }
         del_at_exit_btn := Button {
             text: "删除并退出";
@@ -79,7 +85,7 @@ export component SettingsPage inherits VerticalBox {
     HorizontalBox {
         Button {
             text: "认证IP";
-            enabled: !SettingsModel.busy;
+            enabled: false;
         }
         Button {
             text: "下线IP";

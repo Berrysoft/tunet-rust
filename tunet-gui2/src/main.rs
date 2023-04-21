@@ -39,9 +39,9 @@ macro_rules! upgrade_spawn {
         let weak_model = std::sync::Arc::downgrade(&$m);
         move || upgrade_spawn_body!($m, weak_model, $t)
     }};
-    ($m: ident, | $args: tt | $t: expr) => {{
+    ($m: ident, | $($args: tt),* | $t: expr) => {{
         let weak_model = std::sync::Arc::downgrade(&$m);
-        move |$args| upgrade_spawn_body!($m, weak_model, $t)
+        move |$($args),*| upgrade_spawn_body!($m, weak_model, $t)
     }};
 }
 
@@ -58,8 +58,8 @@ macro_rules! upgrade_queue {
             upgrade_queue_body!($m, $t);
         })
     };
-    ($m: ident, | $args: tt | $t: expr) => {
-        upgrade_spawn!($m, |$args| async move {
+    ($m: ident, | $($args: tt),* | $t: expr) => {
+        upgrade_spawn!($m, |$($args),*| async move {
             upgrade_queue_body!($m, $t);
         })
     };
@@ -185,12 +185,23 @@ async fn main() -> Result<()> {
         }
     }));
 
-    settings_model.on_refresh(upgrade_queue!(model, || Action::Online));
+    settings_model.on_set_credential(upgrade_queue!(model, |username, password| {
+        Action::UpdateCredential(username.to_string(), password.to_string())
+    }));
     settings_model.on_del_and_exit(|| {
         let mut reader = FileSettingsReader::new().unwrap();
         reader.delete().unwrap();
         std::process::exit(0);
     });
+
+    settings_model.on_refresh(upgrade_queue!(model, || Action::Online));
+
+    settings_model.on_connect_ip(upgrade_queue!(model, |ip| Action::Connect(
+        ip.parse().unwrap()
+    )));
+    settings_model.on_drop_ip(upgrade_queue!(model, |ip| Action::Drop(
+        ip.parse().unwrap()
+    )));
 
     about_model.on_sort_ascending(sort_by_key_callback!(
         app,
