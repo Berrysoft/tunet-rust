@@ -16,6 +16,8 @@ itertools = { workspace = true }
 slint = { version = "1", default-features = false, features = [
     "std",
     "compat-1-0",
+    "backend-winit",
+    "renderer-winit-femtovg",
 ] }
 paste = "1"
 plotters = { version = "0.3", default-features = false, features = [
@@ -23,17 +25,6 @@ plotters = { version = "0.3", default-features = false, features = [
     "chrono",
     "line_series",
     "fontconfig-dlopen",
-] }
-
-[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
-slint = { version = "1", default-features = false, features = [
-    "renderer-winit-skia",
-] }
-
-[target.'cfg(not(all(target_os = "windows", target_arch = "x86_64")))'.dependencies]
-slint = { version = "1", default-features = false, features = [
-    "backend-winit",
-    "renderer-winit-femtovg",
 ] }
 
 [build-dependencies]
