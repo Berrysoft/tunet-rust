@@ -1,4 +1,4 @@
-import { Button, HorizontalBox, StandardButton, StandardTableView, VerticalBox } from "std-widgets.slint";
+import { Button, GridBox, HorizontalBox, LineEdit, StandardButton, StandardTableView, VerticalBox } from "std-widgets.slint";
 
 export global SettingsModel {
     in property <string> username;
@@ -24,33 +24,49 @@ export component SettingsPage inherits VerticalBox {
         font-size: 20px;
         font-weight: 700;
     }
-    Text {
-        text: SettingsModel.username != "" ? "用户：" + SettingsModel.username : "";
-        horizontal-alignment: center;
-    }
-    HorizontalBox {
+    GridBox {
+        un := LineEdit {
+            col: 0;
+            row: 0;
+            text: SettingsModel.username;
+            placeholder-text: "用户名";
+        }
+        pw := LineEdit {
+            col: 0;
+            row: 1;
+            input-type: password;
+            placeholder-text: "密码";
+        }
         Button {
-            text: "设置";
-            enabled: false;
+            col: 1;
+            row: 0;
+            text: "更新凭据";
+            clicked => { SettingsModel.set-credential(un.text, pw.text) }
         }
         del_at_exit_btn := Button {
+            col: 1;
+            row: 1;
             text: "删除并退出";
             clicked => { msgbox.show() }
         }
         msgbox := PopupWindow {
-            x: del_at_exit_btn.x;
+            x: del_at_exit_btn.x + del_at_exit_btn.width - 100pt;
             y: del_at_exit_btn.y + del_at_exit_btn.height;
             Rectangle {
+                width: confirm_layout.width;
+                height: confirm-layout.height;
                 background: confirm_layout.background;
             }
             confirm_layout := Dialog {
-                width: 100%;
-                height: 100%;
+                width: 100pt;
                 title: "删除凭据并退出";
                 Text {
                     text: "删除后程序将会退出。";
                 }
-                StandardButton { kind: yes; clicked => { SettingsModel.del_and_exit() } }
+                StandardButton {
+                    kind: yes;
+                    clicked => { SettingsModel.del_and_exit() }
+                }
             }
         }
     }
