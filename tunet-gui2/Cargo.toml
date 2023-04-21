@@ -19,6 +19,7 @@ slint = { version = "1", default-features = false, features = [
     "backend-winit",
     "renderer-winit-femtovg",
 ] }
+image = { version = "0.24", default-features = false, features = ["ico"] }
 paste = "1"
 plotters = { version = "0.3", default-features = false, features = [
     "bitmap_backend",
@@ -29,3 +30,6 @@ plotters = { version = "0.3", default-features = false, features = [
 
 [build-dependencies]
 slint-build = "1"
+
+[target.'cfg(target_os = "windows")'.build-dependencies]
+winres = { workspace = true }

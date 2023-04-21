@@ -18,5 +18,5 @@ clap = { workspace = true }
 crossterm = { version = "0.25", features = ["event-stream"] }
 tui = "0.19"
 
-[target.'cfg(windows)'.build-dependencies]
+[target.'cfg(target_os = "windows")'.build-dependencies]
 winres = { workspace = true }

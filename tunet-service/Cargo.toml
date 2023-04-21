@@ -42,3 +42,6 @@ core-foundation = { workspace = true }
 dirs = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 plist = "1"
+
+[target.'cfg(target_os = "windows")'.build-dependencies]
+winres = { workspace = true }
