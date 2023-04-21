@@ -2,7 +2,6 @@ import { Button, GridBox, HorizontalBox, LineEdit, StandardButton, StandardTable
 
 export global SettingsModel {
     in property <string> username;
-    in property <string> status;
 
     in property <bool> busy;
 
@@ -71,22 +70,27 @@ export component SettingsPage inherits VerticalBox {
         }
     }
     Text {
-        text: "网络状态";
+        text: "管理连接";
         horizontal-alignment: center;
         font-size: 20px;
         font-weight: 700;
     }
-    Text {
-        text: SettingsModel.status;
-        horizontal-alignment: center;
+    HorizontalBox {
+        iptext := LineEdit {
+            placeholder-text: "IP地址";
+        }
+        Button {
+            text: "认证IP";
+            enabled: !SettingsModel.busy;
+            clicked => { SettingsModel.connect-ip(iptext.text) }
+        }
+        Button {
+            text: "下线IP";
+            enabled: !SettingsModel.busy;
+            clicked => { SettingsModel.drop-ip(iptext.text) }
+        }
     }
     VerticalBox {
-        Text {
-            text: "管理连接";
-            horizontal-alignment: center;
-            font-size: 20px;
-            font-weight: 700;
-        }
         StandardTableView {
             columns: [
                 { title: "IP地址" },
@@ -96,16 +100,6 @@ export component SettingsPage inherits VerticalBox {
                 { title: "设备" },
             ];
             rows: SettingsModel.onlines;
-        }
-    }
-    HorizontalBox {
-        Button {
-            text: "认证IP";
-            enabled: false;
-        }
-        Button {
-            text: "下线IP";
-            enabled: false;
         }
         Button {
             text: "刷新";

@@ -17,6 +17,8 @@ export global HomeModel {
     in property <string> log: "This is a very long long long long long long long long long long long long long long long long long long long log.";
     in property <bool> busy: false;
 
+    in property <string> status: "有线网络";
+
     in-out property <int> state;
     callback state_changed(string);
 
@@ -120,6 +122,9 @@ export component HomePage inherits VerticalBox {
             }
             Text {
                 text: "余额：" + HomeModel.info.balance-str;
+            }
+            Text {
+                text: "网络：" + HomeModel.status;
             }
         }
     }

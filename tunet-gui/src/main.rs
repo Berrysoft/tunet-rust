@@ -149,7 +149,7 @@ async fn main() -> Result<()> {
         model.queue(Action::Credential(cred));
         model.queue(Action::Timer);
 
-        settings_model.set_status(model.status.to_string().into());
+        home_model.set_status(model.status.to_string().into());
     }
 
     home_model.on_state_changed(upgrade_queue!(model, |s| Action::State(Some(
