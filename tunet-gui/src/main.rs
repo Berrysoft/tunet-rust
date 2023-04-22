@@ -370,12 +370,10 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
     let color = color_theme::Color::accent();
     let color = RGBColor(color.r, color.g, color.b);
     let window_size = app.window().size();
-    let (width, height) = (
-        (window_size.width as f64 * 1.1) as u32 * 2,
-        window_size.height * 2,
-    );
+    let width = window_size.width * 2;
+    let height = ((width as f32 * 0.4) as u32).min(window_size.height);
     let scale = app.window().scale_factor() * 2.0;
-    let dark = app.global::<ChartModel>().get_dark();
+    let dark = app.global::<DetailModel>().get_dark();
     let text_color = if dark { &WHITE } else { &BLACK };
     let back_color = if dark { &BLACK } else { &WHITE };
 
@@ -403,14 +401,14 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
         let root = backend.into_drawing_area();
         root.fill(back_color).unwrap();
 
-        let label_style = (FontFamily::SansSerif, 20.0 * scale)
+        let label_style = (FontFamily::SansSerif, 16.0 * scale)
             .with_color(text_color)
             .into_text_style(&root);
 
         let mut chart = ChartBuilder::on(&root)
             .x_label_area_size(30.0 * scale)
             .y_label_area_size(60.0 * scale)
-            .margin_top(5.0 * scale)
+            .margin_top(10.0 * scale)
             .margin_right(20.0 * scale)
             .build_cartesian_2d(
                 RangedDate::from(date_range.0..date_range.1),
@@ -448,7 +446,7 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
         root.present().unwrap();
     }
 
-    app.global::<ChartModel>()
+    app.global::<DetailModel>()
         .set_daily_chart(image_from_rgb8_with_transparency(pixel_buffer, back_color));
 }
 

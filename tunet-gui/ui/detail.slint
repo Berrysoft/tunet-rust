@@ -1,7 +1,10 @@
-import { Button, StandardTableView, VerticalBox } from "std-widgets.slint";
+import { Button, StandardTableView, StyleMetrics, VerticalBox } from "std-widgets.slint";
 
 export global DetailModel {
     in property <bool> busy: false;
+
+    out property <bool> dark: StyleMetrics.dark-color-scheme;
+    in property <image> daily-chart;
 
     in property <[[StandardListViewItem]]> details: [];
     callback sort_ascending(int);
@@ -11,6 +14,9 @@ export global DetailModel {
 
 export component DetailPage inherits VerticalBox {
     VerticalBox {
+        Image {
+            source: DetailModel.daily-chart;
+        }
         StandardTableView {
             columns: [
                 { title: "登录时间" },
