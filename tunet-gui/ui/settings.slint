@@ -1,0 +1,110 @@
+import { Button, GridBox, HorizontalBox, LineEdit, StandardButton, StandardTableView, VerticalBox } from "std-widgets.slint";
+
+export global SettingsModel {
+    in property <string> username;
+
+    in property <bool> busy;
+
+    callback set_credential(string, string);
+
+    callback del_and_exit();
+
+    in property <[[StandardListViewItem]]> onlines: [];
+    callback refresh();
+
+    callback connect_ip(string);
+    callback drop_ip(string);
+}
+
+export component SettingsPage inherits VerticalBox {
+    Text {
+        text: "当前凭据";
+        horizontal-alignment: center;
+        font-size: 20px;
+        font-weight: 700;
+    }
+    GridBox {
+        un := LineEdit {
+            col: 0;
+            row: 0;
+            text: SettingsModel.username;
+            placeholder-text: "用户名";
+        }
+        pw := LineEdit {
+            col: 0;
+            row: 1;
+            input-type: password;
+            placeholder-text: "密码";
+        }
+        Button {
+            col: 1;
+            row: 0;
+            text: "更新凭据";
+            clicked => { SettingsModel.set-credential(un.text, pw.text) }
+        }
+        del_at_exit_btn := Button {
+            col: 1;
+            row: 1;
+            text: "删除并退出";
+            clicked => { msgbox.show() }
+        }
+        msgbox := PopupWindow {
+            x: del_at_exit_btn.x + del_at_exit_btn.width - 100pt;
+            y: del_at_exit_btn.y + del_at_exit_btn.height;
+            Rectangle {
+                width: confirm_layout.width;
+                height: confirm-layout.height;
+                background: confirm_layout.background;
+            }
+            confirm_layout := Dialog {
+                width: 100pt;
+                title: "删除凭据并退出";
+                Text {
+                    text: "删除后程序将会退出。";
+                }
+                StandardButton {
+                    kind: yes;
+                    clicked => { SettingsModel.del_and_exit() }
+                }
+            }
+        }
+    }
+    Text {
+        text: "管理连接";
+        horizontal-alignment: center;
+        font-size: 20px;
+        font-weight: 700;
+    }
+    HorizontalBox {
+        iptext := LineEdit {
+            placeholder-text: "IP地址";
+        }
+        Button {
+            text: "认证IP";
+            enabled: !SettingsModel.busy;
+            clicked => { SettingsModel.connect-ip(iptext.text) }
+        }
+        Button {
+            text: "下线IP";
+            enabled: !SettingsModel.busy;
+            clicked => { SettingsModel.drop-ip(iptext.text) }
+        }
+    }
+    VerticalBox {
+        StandardTableView {
+            columns: [
+                { title: "IP地址" },
+                { title: "登录时间" },
+                { title: "流量" },
+                { title: "MAC地址" },
+                { title: "设备" },
+            ];
+            rows: SettingsModel.onlines;
+        }
+        Button {
+            text: "刷新";
+            enabled: !SettingsModel.busy;
+            clicked => { SettingsModel.refresh() }
+        }
+    }
+}

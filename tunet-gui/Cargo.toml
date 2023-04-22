@@ -1,0 +1,35 @@
+[package]
+name = "tunet-gui"
+version = "0.7.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+color-theme = { workspace = true }
+tunet-helper = { workspace = true }
+tunet-settings = { workspace = true }
+tunet-model = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
+itertools = { workspace = true }
+slint = { version = "1", default-features = false, features = [
+    "std",
+    "compat-1-0",
+    "backend-winit",
+    "renderer-winit-femtovg",
+] }
+image = { version = "0.24", default-features = false, features = ["ico"] }
+paste = "1"
+plotters = { version = "0.3", default-features = false, features = [
+    "bitmap_backend",
+    "chrono",
+    "line_series",
+    "fontconfig-dlopen",
+] }
+
+[build-dependencies]
+slint-build = "1"
+
+[target.'cfg(target_os = "windows")'.build-dependencies]
+winres = { workspace = true }

@@ -1,0 +1,46 @@
+import { Button, StandardTableView, StyleMetrics, VerticalBox } from "std-widgets.slint";
+
+export global DetailModel {
+    in property <bool> busy: false;
+
+    out property <bool> dark: StyleMetrics.dark-color-scheme;
+    pure callback daily_chart(length /* width */, length /* height */, bool /* dark */) -> image;
+
+    in property <[[StandardListViewItem]]> details: [];
+    callback sort_ascending(int);
+    callback sort_descending(int);
+    callback refresh();
+}
+
+export component DetailPage inherits VerticalBox {
+    VerticalBox {
+        Rectangle {
+            Image {
+                x: 0px;
+                y: 0px;
+                width: 100%;
+                height: 100%;
+                source: DetailModel.daily_chart(self.width, self.height, StyleMetrics.dark-color-scheme);
+            }
+        }
+        StandardTableView {
+            columns: [
+                { title: "登录时间" },
+                { title: "注销时间" },
+                { title: "流量" },
+            ];
+            rows: DetailModel.details;
+            sort-ascending(index) => {
+                DetailModel.sort_ascending(index);
+            }
+            sort-descending(index) => {
+                DetailModel.sort-descending(index);
+            }
+        }
+        Button {
+            text: "刷新";
+            enabled: !DetailModel.busy;
+            clicked => { DetailModel.refresh() }
+        }
+    }
+}

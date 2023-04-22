@@ -8,18 +8,45 @@ use md5::{Digest, Md5};
 use select::document::Document;
 use select::predicate::*;
 use std::net::Ipv4Addr;
+use std::ops::Deref;
+use std::str::FromStr;
 use url::Url;
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NetDateTime(pub NaiveDateTime);
+
+impl FromStr for NetDateTime {
+    type Err = chrono::ParseError;
+
+    fn from_str(s: &str) -> chrono::ParseResult<Self> {
+        NaiveDateTime::parse_from_str(s, DATE_TIME_FORMAT).map(Self)
+    }
+}
+
+impl Display for NetDateTime {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        <NaiveDateTime as Display>::fmt(&self.0, f)
+    }
+}
+
+impl Deref for NetDateTime {
+    type Target = NaiveDateTime;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct NetUser {
     pub address: Ipv4Addr,
-    pub login_time: NaiveDateTime,
+    pub login_time: NetDateTime,
     pub mac_address: Option<MacAddress>,
     pub flux: Flux,
 }
 
 impl NetUser {
-    pub fn from_detail(a: Ipv4Addr, t: NaiveDateTime, m: Option<MacAddress>, f: Flux) -> Self {
+    pub fn from_detail(a: Ipv4Addr, t: NetDateTime, m: Option<MacAddress>, f: Flux) -> Self {
         NetUser {
             address: a,
             login_time: t,
@@ -31,13 +58,13 @@ impl NetUser {
 
 #[derive(Debug, Clone, Copy)]
 pub struct NetDetail {
-    pub login_time: NaiveDateTime,
-    pub logout_time: NaiveDateTime,
+    pub login_time: NetDateTime,
+    pub logout_time: NetDateTime,
     pub flux: Flux,
 }
 
 impl NetDetail {
-    pub fn from_detail(i: NaiveDateTime, o: NaiveDateTime, f: Flux) -> Self {
+    pub fn from_detail(i: NetDateTime, o: NetDateTime, f: Flux) -> Self {
         NetDetail {
             login_time: i,
             logout_time: o,
@@ -178,7 +205,7 @@ impl UseregHelper {
                     tds[0]
                         .parse()
                         .unwrap_or_else(|_| Ipv4Addr::new(0, 0, 0, 0)),
-                    NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT).unwrap_or_default(),
+                    tds[1].parse().unwrap_or_default(),
                     tds[6].parse().ok(),
                     tds[2].parse().unwrap_or_default(),
                 );
@@ -220,8 +247,8 @@ impl UseregHelper {
                 for tds in doc {
                     if !tds.is_empty() {
                         yield NetDetail::from_detail(
-                            NaiveDateTime::parse_from_str(&tds[1], DATE_TIME_FORMAT).unwrap_or_default(),
-                            NaiveDateTime::parse_from_str(&tds[2], DATE_TIME_FORMAT).unwrap_or_default(),
+                            tds[1].parse().unwrap_or_default(),
+                            tds[2].parse().unwrap_or_default(),
                             tds[4].parse().unwrap_or_default(),
                         );
                         new_len += 1;

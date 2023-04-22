@@ -1,6 +1,0 @@
-[submodule "corrosion"]
-	path = corrosion
-	url = https://github.com/AndrewGaspar/corrosion.git
-[submodule "macdeployqtfix"]
-	path = macdeployqtfix
-	url = https://github.com/Berrysoft/macdeployqtfix.git

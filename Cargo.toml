@@ -9,9 +9,9 @@ members = [
     "tunet-settings",
     "tunet-settings-cli",
     "tunet-model",
-    "tunet-model-native",
     "tunet",
     "tunet-cui",
+    "tunet-gui",
     "tunet-service",
 ]
 

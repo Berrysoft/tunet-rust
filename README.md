@@ -4,13 +4,13 @@
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
 ## GUI
-支持 Qt5/6，以及 Qt 支持的桌面平台。前端使用 C++ 编写。
+基于 [Slint](https://slint-ui.com/) 开发。
 
-| Windows                        | Windows（暗*）                             | Linux                      | MacOS                          | MacOS（暗）                   |
-| ------------------------------ | ------------------------------------------ | -------------------------- | ------------------------------ | ----------------------------- |
-| ![Windows](assets/windows.png) | ![Windows](assets/windows.fusion.dark.png) | ![Linux](assets/linux.png) | ![macos](assets/mac.light.png) | ![macos](assets/mac.dark.png) |
-
-\* 需要使用 fusion 主题，可在命令行指定 `-style fusion`。
+| 平台    | 亮                             | 暗                                  |
+| ------- | ------------------------------ | ----------------------------------- |
+| Windows | ![Windows](assets/windows.light.png) | ![Windows](assets/windows.dark.png) |
+| Linux   | ![Linux](assets/linux.light.png)     | （暂无图片）                        |
+| macOS   | ![macOS](assets/mac.light.png) | ![macOS](assets/mac.dark.png)       |
 
 ## CUI（命令行图形界面）
 使用如下命令启动：
@@ -117,46 +117,9 @@ $ ./tunet deletecred
 | Linux   | [Netlink](https://wiki.linuxfoundation.org/networking/generic_netlink_howto) |
 | macOS   | System Configuration 与 Core WLAN                                            |
 
-## 平台支持
-至少支持如下目标编译命令行程序：
-
-* i686-unknown-linux-gnu
-* x86_64-unknown-linux-gnu
-* arm-unknown-linux-gnueabihf
-* aarch64-unknown-linux-gnu
-* riscv64gc-unknown-linux-gnu
-* mips-unknown-linux-gnu
-* mipsel-unknown-linux-gnu
-* mips64-unknown-linux-gnuabi64
-* mips64el-unknown-linux-gnuabi64
-* powerpc-unknown-linux-gnu
-* powerpc64le-unknown-linux-gnu
-* s390x-unknown-linux-gnu
-* x86_64-apple-darwin
-* aarch64-apple-darwin
-* i686-pc-windows-msvc
-* x86_64-pc-windows-msvc
-* aarch64-pc-windows-msvc
-
-但是大部分目标并不提供预编译程序，如有需要请自行编译。
-
 ## 编译说明
-如果只需要命令行程序，使用 `cargo` 直接编译：
+使用 `cargo` 直接编译：
 ``` bash
 $ cargo build --release
 ```
 即可在 `target/release` 下找到编译好的程序。
-
-如果需要图形界面程序，应首先安装 Qt5/6 与 cmake，之后运行：
-``` bash
-$ mkdir build
-$ cd build
-# Qt6
-$ cmake ..
-# Qt5 需要额外参数
-$ cmake .. -DUSE_QT5=on
-# 编译
-$ cmake --build .
-```
-
-有关交叉编译的说明，参考 `cargo` 文档以及 [Corrosion](https://github.com/AndrewGaspar/corrosion)。

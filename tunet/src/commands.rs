@@ -450,7 +450,7 @@ impl TUNetCommand for Gui {
     }
 }
 
-fn naive_rfc3339(datetime: NaiveDateTime) -> String {
-    DateTime::<FixedOffset>::from_local(datetime, FixedOffset::east_opt(8 * 3600).unwrap())
+fn naive_rfc3339(datetime: NetDateTime) -> String {
+    DateTime::<FixedOffset>::from_local(datetime.0, FixedOffset::east_opt(8 * 3600).unwrap())
         .to_rfc3339()
 }

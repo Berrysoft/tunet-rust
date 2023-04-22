@@ -1,6 +1,6 @@
 [package]
 name = "tunet-cui"
-version = "0.6.3"
+version = "0.7.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -18,5 +18,5 @@ clap = { workspace = true }
 crossterm = { version = "0.25", features = ["event-stream"] }
 tui = "0.19"
 
-[target.'cfg(windows)'.build-dependencies]
+[target.'cfg(target_os = "windows")'.build-dependencies]
 winres = { workspace = true }
