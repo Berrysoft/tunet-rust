@@ -15,11 +15,12 @@ use std::{
     collections::HashMap,
     rc::Rc,
     sync::Arc,
+    sync::Mutex as SyncMutex,
 };
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
     usereg::{NetDateTime, NetDetail, NetUser},
-    Datelike, Flux, Local, Result,
+    Datelike, Flux, Local, NaiveDate, Result,
 };
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
@@ -133,13 +134,16 @@ async fn main() -> Result<()> {
 
     let (tx, mut rx) = mpsc::channel(32);
     let model = Arc::new(Mutex::new(Model::new(tx)?));
+    let context = Arc::new(SyncMutex::new(UpdateContext::default()));
     {
         let weak_app = app.as_weak();
+        let context = context.clone();
         let update = upgrade_spawn!(model, |msg| {
             let weak_app = weak_app.clone();
+            let context = context.clone();
             async move {
                 let model = model.lock().await;
-                update(&model, msg, weak_app)
+                update(&model, msg, weak_app, context)
             }
         });
         let mut model = model.lock().await;
@@ -159,6 +163,15 @@ async fn main() -> Result<()> {
     home_model.on_login(upgrade_queue!(model, || Action::Login));
     home_model.on_logout(upgrade_queue!(model, || Action::Logout));
     home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
+
+    detail_model.on_daily_chart({
+        let weak_app = app.as_weak();
+        move |width, height, dark| {
+            let app = weak_app.upgrade().unwrap();
+            let context = context.lock().unwrap();
+            draw_daily(&app, width, height, dark, &context.daily)
+        }
+    });
 
     detail_model.on_refresh(upgrade_queue!(model, || Action::Details));
     // TODO: reduce parsing
@@ -232,7 +245,17 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
+#[derive(Debug, Default)]
+struct UpdateContext {
+    daily: DetailDaily,
+}
+
+fn update(
+    model: &Model,
+    msg: UpdateMsg,
+    weak_app: slint::Weak<App>,
+    context: Arc<SyncMutex<UpdateContext>>,
+) {
     match msg {
         UpdateMsg::Credential => {
             model.queue(Action::State(None));
@@ -306,10 +329,10 @@ fn update(model: &Model, msg: UpdateMsg, weak_app: slint::Weak<App>) {
         }
         UpdateMsg::Details => {
             let details = model.details.clone();
+            context.lock().unwrap().daily = calculate_daily(&details);
             weak_app
                 .upgrade_in_event_loop(move |app| {
                     update_details(&app, &details);
-                    draw_daily(&app, &details);
                 })
                 .unwrap();
         }
@@ -366,17 +389,14 @@ fn update_details(app: &App, details: &[NetDetail]) {
     app.global::<DetailModel>().set_details(row_data.into());
 }
 
-fn draw_daily(app: &App, details: &[NetDetail]) {
-    let color = color_theme::Color::accent();
-    let color = RGBColor(color.r, color.g, color.b);
-    let window_size = app.window().size();
-    let width = window_size.width * 2;
-    let height = ((width as f32 * 0.4) as u32).min(window_size.height);
-    let scale = app.window().scale_factor() * 2.0;
-    let dark = app.global::<DetailModel>().get_dark();
-    let text_color = if dark { &WHITE } else { &BLACK };
-    let back_color = if dark { &BLACK } else { &WHITE };
+#[derive(Debug, Default)]
+struct DetailDaily {
+    details: Vec<(NaiveDate, u64)>,
+    now: NaiveDate,
+    max: u64,
+}
 
+fn calculate_daily(details: &[NetDetail]) -> DetailDaily {
     let details = details
         .iter()
         .group_by(|d| d.logout_time.date())
@@ -392,8 +412,23 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
         }
         grouped_details.push((now.with_day(d).unwrap(), max))
     }
-    let date_range = (now.with_day(1).unwrap(), now);
-    let flux_range = (0, max);
+    DetailDaily {
+        details: grouped_details,
+        now,
+        max,
+    }
+}
+
+fn draw_daily(app: &App, width: f32, height: f32, dark: bool, details: &DetailDaily) -> Image {
+    let color = color_theme::Color::accent();
+    let color = RGBColor(color.r, color.g, color.b);
+    let scale = app.window().scale_factor();
+    let (width, height) = ((width * scale) as u32, (height * scale) as u32);
+    let text_color = if dark { &WHITE } else { &BLACK };
+    let back_color = if dark { &BLACK } else { &WHITE };
+
+    let date_range = (details.now.with_day(1).unwrap(), details.now);
+    let flux_range = (0, details.max);
 
     let mut pixel_buffer = SharedPixelBuffer::<Rgb8Pixel>::new(width, height);
     let backend = BitMapBackend::with_buffer(pixel_buffer.make_mut_bytes(), (width, height));
@@ -432,7 +467,7 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
         chart
             .draw_series(
                 LineSeries::new(
-                    grouped_details,
+                    details.details.clone(),
                     ShapeStyle {
                         color: color.to_rgba(),
                         filled: true,
@@ -446,8 +481,7 @@ fn draw_daily(app: &App, details: &[NetDetail]) {
         root.present().unwrap();
     }
 
-    app.global::<DetailModel>()
-        .set_daily_chart(image_from_rgb8_with_transparency(pixel_buffer, back_color));
+    image_from_rgb8_with_transparency(pixel_buffer, back_color)
 }
 
 fn image_from_rgb8_with_transparency(
