@@ -57,7 +57,7 @@ jobs:
   - script: |
       sudo apt-get install $(crossPackages)
     displayName: "Install cross-build GCC"
-    condition: eq(variables.target, true)
+    condition: eq(variables.cross, true)
 
   - script: |
       rustup target add $(target)
