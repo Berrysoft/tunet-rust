@@ -8,8 +8,8 @@
 
 | 平台    | 亮                             | 暗                                  |
 | ------- | ------------------------------ | ----------------------------------- |
-| Windows | ![Windows](assets/windows.png) | ![Windows](assets/windows.dark.png) |
-| Linux   | ![Linux](assets/linux.png)     | （暂无图片）                        |
+| Windows | ![Windows](assets/windows.light.png) | ![Windows](assets/windows.dark.png) |
+| Linux   | ![Linux](assets/linux.light.png)     | （暂无图片）                        |
 | macOS   | ![macOS](assets/mac.light.png) | ![macOS](assets/mac.dark.png)       |
 
 ## CUI（命令行图形界面）
