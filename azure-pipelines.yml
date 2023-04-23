@@ -8,76 +8,46 @@ trigger:
       - assets/
       - README.md
 
+parameters:
+- name: packages
+  type: object
+  default:
+  - tunet
+  - tunet-cui
+  - tunet-gui
+  - tunet-service
+
 jobs:
-- job: Build
+- job: Build_Windows
   strategy:
     matrix:
-      win-x64:
+      x64:
         image: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
         publishName: 'win.x86_64'
-        postfix: '.exe'
-        rustflags: ''
-        cross: false
-      win-x86:
+      x86:
         image: 'windows-latest'
         target: 'i686-pc-windows-msvc'
         publishName: 'win.i686'
-        postfix: '.exe'
-        rustflags: ''
-        cross: false
-      win-arm64:
+      arm64:
         image: 'windows-latest'
         target: 'aarch64-pc-windows-msvc'
         publishName: 'win.aarch64'
-        postfix: '.exe'
-        rustflags: ''
-        cross: false
-      linux-x64:
-        image: 'ubuntu-20.04'
-        target: 'x86_64-unknown-linux-gnu'
-        publishName: 'linux.x86_64'
-        postfix: ''
-        rustflags: ''
-        cross: false
-      linux-arm64:
-        image: 'ubuntu-20.04'
-        target: 'aarch64-unknown-linux-gnu'
-        publishName: 'linux.aarch64'
-        postfix: ''
-        rustflags: '-C linker=aarch64-linux-gnu-gcc'
-        cross: true
-        crossPackages: crossbuild-essential-arm64 libc6-dev-arm64-cross
-      linux-riscv64:
-        image: 'ubuntu-20.04'
-        target: 'riscv64gc-unknown-linux-gnu'
-        publishName: 'linux.aarch64'
-        postfix: ''
-        rustflags: '-C linker=riscv64-linux-gnu-gcc'
-        cross: true
-        crossPackages: crossbuild-essential-riscv64 libc6-dev-riscv64-cross
   pool:
     vmImage: $(image)
   
   steps:
   - script: |
-      sudo apt-get install $(crossPackages)
-    displayName: "Install cross-build GCC"
-    condition: eq(variables.cross, true)
-
-  - script: |
       rustup target add $(target)
       cargo build --release --target $(target)
     displayName: "Build"
-    env:
-      RUSTFLAGS: $(rustflags)
 
   - pwsh: |
       cd target/$(target)/release
-      cp tunet$(postfix) $(Build.BinariesDirectory)/
-      cp tunet-cui$(postfix) $(Build.BinariesDirectory)/
-      cp tunet-gui$(postfix) $(Build.BinariesDirectory)/
-      cp tunet-service$(postfix) $(Build.BinariesDirectory)/
+      cp tunet.exe $(Build.BinariesDirectory)/
+      cp tunet-cui.exe $(Build.BinariesDirectory)/
+      cp tunet-gui.exe $(Build.BinariesDirectory)/
+      cp tunet-service.exe $(Build.BinariesDirectory)/
     displayName: 'Copy Binaries'
 
   - task: ArchiveFiles@2
@@ -87,6 +57,55 @@ jobs:
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/$(publishName).zip'
     displayName: 'Archive'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
+
+- job: Build_Linux
+  strategy:
+    matrix:
+      linux-x64:
+        image: 'ubuntu-20.04'
+        target: 'x86_64-unknown-linux-gnu'
+        publishName: 'linux.x86_64'
+        rustflags: ''
+        cross: ''
+      linux-arm64:
+        image: 'ubuntu-20.04'
+        target: 'aarch64-unknown-linux-gnu'
+        publishName: 'linux.aarch64'
+        rustflags: '-C linker=aarch64-linux-gnu-gcc'
+        cross: 'arm64'
+      linux-riscv64:
+        image: 'ubuntu-20.04'
+        target: 'riscv64gc-unknown-linux-gnu'
+        publishName: 'linux.aarch64'
+        rustflags: '-C linker=riscv64-linux-gnu-gcc'
+        cross: 'riscv64'
+  pool:
+    vmImage: $(image)
+  
+  steps:
+  - script: |
+      sudo dpkg --add-architecture $(cross)
+      sudo apt-get update
+      sudo apt-get install crossbuild-essential-$(cross) libc6-dev-$(cross)-cross libssl-dev:$(cross)
+    displayName: "Install cross-build packages"
+    condition: ne(variables.cross, '')
+
+  - script: cargo install cargo-deb
+    displayName: "Install cargo-deb"
+
+  - script: rustup target add $(target)
+    displayName: "Add rust target $(target)"
+
+  - ${{ each p in parameters.packages }}:
+    - script: |
+        cargo deb --target $(target) -o $(Build.ArtifactStagingDirectory) -p ${{ p }}
+      displayName: "Package ${{ p }}"
+      env:
+        RUSTFLAGS: $(rustflags)
 
   - task: PublishBuildArtifacts@1
     inputs:
