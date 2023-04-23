@@ -102,7 +102,7 @@ jobs:
       EOT
 
       sudo apt-get update
-      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl1.1:$(cross) libc6:$(cross)
+      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl1.1:$(cross) libc6:$(cross) libgcc-s1:$(cross)
     displayName: "Install cross-build packages"
     condition: ne(variables.cross, '')
 
