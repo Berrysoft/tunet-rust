@@ -24,17 +24,17 @@ jobs:
       x64:
         image: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
-        publishName: 'win.x86_64'
+        publishName: 'tunet.win.x86_64'
         wixArch: x64
       x86:
         image: 'windows-latest'
         target: 'i686-pc-windows-msvc'
-        publishName: 'win.i686'
+        publishName: 'tunet.win.i686'
         wixArch: x86
       arm64:
         image: 'windows-latest'
         target: 'aarch64-pc-windows-msvc'
-        publishName: 'win.aarch64'
+        publishName: 'tunet.win.aarch64'
         wixArch: arm64
   pool:
     vmImage: $(image)
@@ -64,7 +64,7 @@ jobs:
   - pwsh: |
       dotnet tool install --global wix --version 4.0.0
       wix extension add --global WixToolset.UI.wixext/4.0.0
-      wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -o $(Build.ArtifactStagingDirectory)/tunet.$(publishName).msi
+      wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -o $(Build.ArtifactStagingDirectory)/$(publishName).msi
     displayName: 'Package MSI'
 
   - task: PublishBuildArtifacts@1
@@ -151,7 +151,7 @@ jobs:
       rootFolderOrFile: '$(Build.BinariesDirectory)'
       includeRootFolder: false
       archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/mac.universal.zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/tunet.mac.universal.zip'
     displayName: 'Archive'
 
   - task: PublishBuildArtifacts@1
