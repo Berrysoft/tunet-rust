@@ -87,9 +87,6 @@ jobs:
     vmImage: $(image)
   
   steps:
-  - script: cargo install cargo-deb
-    displayName: "Install cargo-deb"
-
   - script: |
       sudo dpkg --add-architecture $(cross)
 
@@ -108,6 +105,11 @@ jobs:
       sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl1.1:$(cross) libc6:$(cross) libgcc-s1:$(cross)
     displayName: "Install cross-build packages"
     condition: ne(variables.cross, '')
+
+  - script: cargo install cargo-deb
+    displayName: "Install cargo-deb"
+    env:
+      RUSTFLAGS: ""
 
   - script: rustup target add $(target)
     displayName: "Add rust target $(target)"
