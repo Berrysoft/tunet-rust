@@ -69,27 +69,21 @@ jobs:
         image: 'ubuntu-20.04'
         target: 'x86_64-unknown-linux-gnu'
         publishName: 'linux.x86_64'
-        rflags: ''
         cross: ''
       linux-arm64:
         image: 'ubuntu-20.04'
         target: 'aarch64-unknown-linux-gnu'
         publishName: 'linux.aarch64'
-        rflags: '-C linker=aarch64-linux-gnu-gcc'
         cross: 'arm64'
       linux-riscv64:
         image: 'ubuntu-20.04'
         target: 'riscv64gc-unknown-linux-gnu'
         publishName: 'linux.aarch64'
-        rflags: '-C linker=riscv64-linux-gnu-gcc'
         cross: 'riscv64'
   pool:
     vmImage: $(image)
   
   steps:
-  - script: cargo install cargo-deb
-    displayName: "Install cargo-deb"
-
   - script: |
       sudo dpkg --add-architecture $(cross)
 
@@ -109,6 +103,9 @@ jobs:
     displayName: "Install cross-build packages"
     condition: ne(variables.cross, '')
 
+  - script: cargo install cargo-deb
+    displayName: "Install cargo-deb"
+
   - script: rustup target add $(target)
     displayName: "Add rust target $(target)"
 
@@ -116,8 +113,6 @@ jobs:
     - script: |
         cargo deb --target $(target) -o $(Build.ArtifactStagingDirectory) -p ${{ p }}
       displayName: "Package ${{ p }}"
-      env:
-        RUSTFLAGS: $(rflags)
 
   - task: PublishBuildArtifacts@1
     inputs:
