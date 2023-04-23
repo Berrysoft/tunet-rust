@@ -88,11 +88,21 @@ jobs:
   
   steps:
   - script: |
-      sudo pip3 install apt-mirror-updater
-      sudo apt-mirror-updater -c "http://mirrors.ocf.berkeley.edu/ubuntu-ports/"
       sudo dpkg --add-architecture $(cross)
+
+      sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list
+      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list
+      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list.d/*
+      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list.d/*
+      sudo tee /etc/apt/sources.list.d/$(cross)-cross-compile-sources.list > /dev/null <<EOT
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-updates main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-backports main restricted universe multiverse
+      EOT
+
       sudo apt-get update
-      sudo apt-get install crossbuild-essential-$(cross) libc6-dev-$(cross)-cross libssl-dev:$(cross)
+      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross)
     displayName: "Install cross-build packages"
     condition: ne(variables.cross, '')
 
