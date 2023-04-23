@@ -89,7 +89,7 @@ jobs:
   steps:
   - script: |
       sudo pip3 install apt-mirror-updater
-      sudo apt-mirror-updater -c "http://archive.ubuntu.com/ubuntu"
+      sudo apt-mirror-updater -c "http://mirrors.ocf.berkeley.edu/ubuntu-ports/"
       sudo dpkg --add-architecture $(cross)
       sudo apt-get update
       sudo apt-get install crossbuild-essential-$(cross) libc6-dev-$(cross)-cross libssl-dev:$(cross)
