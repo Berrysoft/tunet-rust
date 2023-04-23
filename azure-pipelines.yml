@@ -99,6 +99,8 @@ jobs:
       deb [arch=$(cross)] http://ports.ubuntu.com/ focal main restricted universe multiverse
       deb [arch=$(cross)] http://ports.ubuntu.com/ focal-updates main restricted universe multiverse
       deb [arch=$(cross)] http://ports.ubuntu.com/ focal-backports main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-proposed main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-security main restricted universe multiverse
       EOT
 
       sudo apt-get update
