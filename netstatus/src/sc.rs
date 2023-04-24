@@ -1,6 +1,5 @@
 use crate::*;
 use objc::{
-    rc::StrongPtr,
     runtime::{Class, Object},
     *,
 };
@@ -11,16 +10,14 @@ use system_configuration::network_reachability::{ReachabilityFlags, SCNetworkRea
 extern "C" {
     #[link_name = "OBJC_CLASS_$_CWWiFiClient"]
     static OBJC_CLASS__CWWiFiClient: Class;
-
 }
 
 unsafe fn get_ssid() -> Option<String> {
-    let client = StrongPtr::retain(msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient]);
-    let interface = StrongPtr::new(msg_send![*client, interface]);
-    let name: *mut Object = msg_send![*interface, ssid];
+    let client: *mut Object = msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient];
+    let interface: *mut Object = msg_send![client, interface];
+    let name: *mut Object = msg_send![interface, ssid];
     if !name.is_null() {
-        let name = StrongPtr::new(name);
-        let name = std::ffi::CStr::from_ptr(msg_send![*name, UTF8String])
+        let name = std::ffi::CStr::from_ptr(msg_send![name, UTF8String])
             .to_string_lossy()
             .into_owned();
         Some(name)

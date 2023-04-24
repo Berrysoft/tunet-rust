@@ -1,6 +1,5 @@
 use super::*;
 use objc::{
-    rc::StrongPtr,
     runtime::{Class, Object},
     *,
 };
@@ -17,9 +16,9 @@ extern "C" {
 
 pub fn accent() -> Color {
     unsafe {
-        let accent = StrongPtr::new(msg_send![&OBJC_CLASS__NSColor, controlAccentColor]);
+        let accent: *mut Object = msg_send![&OBJC_CLASS__NSColor, controlAccentColor];
         let color_space: *mut Object = msg_send![&OBJC_CLASS__NSColorSpace, genericRGBColorSpace];
-        let accent: *mut Object = msg_send![*accent, colorUsingColorSpace: color_space];
+        let accent: *mut Object = msg_send![accent, colorUsingColorSpace: color_space];
         let mut r: f64 = 0.0;
         let mut g: f64 = 0.0;
         let mut b: f64 = 0.0;
