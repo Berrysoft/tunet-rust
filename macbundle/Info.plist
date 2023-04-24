@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+
+	<key>CFBundleName</key>
+	<string>tunet</string>
+	<key>CFBundleDisplayName</key>
+	<string>清华校园网</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.berrysoft.tunet</string>
+	<key>CFBundleExecutable</key>
+	<string>tunet-gui</string>
+
+	<key>CFBundleVersion</key>
+	<string>0.7.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.7.0</string>
+
+	<key>LSMinimumSystemVersion</key>
+	<string>11.7</string>
+
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright (c) 2021-2023 Berrysoft</string>
+
+	<key>CFBundleIconFile</key>
+	<string>logo</string>
+
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
+
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+</dict>
+</plist>

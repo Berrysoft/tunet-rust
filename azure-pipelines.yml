@@ -8,76 +8,49 @@ trigger:
       - assets/
       - README.md
 
+parameters:
+- name: packages
+  type: object
+  default:
+  - tunet
+  - tunet-cui
+  - tunet-gui
+  - tunet-service
+
 jobs:
-- job: Build
+- job: Build_Windows
   strategy:
     matrix:
-      win-x64:
+      x64:
         image: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
-        publishName: 'win.x86_64'
-        postfix: '.exe'
-        rustflags: ''
-        cross: false
-      win-x86:
+        publishName: 'tunet.win.x86_64'
+        wixArch: x64
+      x86:
         image: 'windows-latest'
         target: 'i686-pc-windows-msvc'
-        publishName: 'win.i686'
-        postfix: '.exe'
-        rustflags: ''
-        cross: false
-      win-arm64:
+        publishName: 'tunet.win.i686'
+        wixArch: x86
+      arm64:
         image: 'windows-latest'
         target: 'aarch64-pc-windows-msvc'
-        publishName: 'win.aarch64'
-        postfix: '.exe'
-        rustflags: ''
-        cross: false
-      linux-x64:
-        image: 'ubuntu-20.04'
-        target: 'x86_64-unknown-linux-gnu'
-        publishName: 'linux.x86_64'
-        postfix: ''
-        rustflags: ''
-        cross: false
-      linux-arm64:
-        image: 'ubuntu-20.04'
-        target: 'aarch64-unknown-linux-gnu'
-        publishName: 'linux.aarch64'
-        postfix: ''
-        rustflags: '-C linker=aarch64-linux-gnu-gcc'
-        cross: true
-        crossPackages: crossbuild-essential-arm64 libc6-dev-arm64-cross
-      linux-riscv64:
-        image: 'ubuntu-20.04'
-        target: 'riscv64gc-unknown-linux-gnu'
-        publishName: 'linux.aarch64'
-        postfix: ''
-        rustflags: '-C linker=riscv64-linux-gnu-gcc'
-        cross: true
-        crossPackages: crossbuild-essential-riscv64 libc6-dev-riscv64-cross
+        publishName: 'tunet.win.aarch64'
+        wixArch: arm64
   pool:
     vmImage: $(image)
   
   steps:
   - script: |
-      sudo apt-get install $(crossPackages)
-    displayName: "Install cross-build GCC"
-    condition: eq(variables.cross, true)
-
-  - script: |
       rustup target add $(target)
       cargo build --release --target $(target)
     displayName: "Build"
-    env:
-      RUSTFLAGS: $(rustflags)
 
   - pwsh: |
       cd target/$(target)/release
-      cp tunet$(postfix) $(Build.BinariesDirectory)/
-      cp tunet-cui$(postfix) $(Build.BinariesDirectory)/
-      cp tunet-gui$(postfix) $(Build.BinariesDirectory)/
-      cp tunet-service$(postfix) $(Build.BinariesDirectory)/
+      cp tunet.exe $(Build.BinariesDirectory)/
+      cp tunet-cui.exe $(Build.BinariesDirectory)/
+      cp tunet-gui.exe $(Build.BinariesDirectory)/
+      cp tunet-service.exe $(Build.BinariesDirectory)/
     displayName: 'Copy Binaries'
 
   - task: ArchiveFiles@2
@@ -87,6 +60,68 @@ jobs:
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/$(publishName).zip'
     displayName: 'Archive'
+
+  - pwsh: |
+      dotnet tool install --global wix --version 4.0.0
+      wix extension add --global WixToolset.UI.wixext/4.0.0
+      wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -o $(Build.ArtifactStagingDirectory)/$(publishName).msi
+    displayName: 'Package MSI'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
+
+- job: Build_Ubuntu
+  strategy:
+    matrix:
+      x64:
+        image: 'ubuntu-20.04'
+        target: 'x86_64-unknown-linux-gnu'
+        publishName: 'linux.x86_64'
+        cross: ''
+      arm64:
+        image: 'ubuntu-20.04'
+        target: 'aarch64-unknown-linux-gnu'
+        publishName: 'linux.aarch64'
+        cross: 'arm64'
+      riscv64:
+        image: 'ubuntu-20.04'
+        target: 'riscv64gc-unknown-linux-gnu'
+        publishName: 'linux.aarch64'
+        cross: 'riscv64'
+  pool:
+    vmImage: $(image)
+  
+  steps:
+  - script: |
+      sudo dpkg --add-architecture $(cross)
+
+      sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list
+      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list
+      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list.d/*
+      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list.d/*
+      sudo tee /etc/apt/sources.list.d/$(cross)-cross-compile-sources.list > /dev/null <<EOT
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-updates main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-backports main restricted universe multiverse
+      EOT
+
+      sudo apt-get update
+      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl1.1:$(cross) libc6:$(cross) libgcc-s1:$(cross) libfreetype-dev:$(cross)
+    displayName: "Install cross-build packages"
+    condition: ne(variables.cross, '')
+
+  - script: cargo install cargo-deb
+    displayName: "Install cargo-deb"
+
+  - script: rustup target add $(target)
+    displayName: "Add rust target $(target)"
+
+  - ${{ each p in parameters.packages }}:
+    - script: |
+        cargo deb --target $(target) -o $(Build.ArtifactStagingDirectory) -p ${{ p }}
+      displayName: "Package ${{ p }}"
 
   - task: PublishBuildArtifacts@1
     inputs:
@@ -105,19 +140,9 @@ jobs:
     displayName: "Build"
 
   - script: |
-      lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output $(Build.BinariesDirectory)/tunet
-      lipo -create target/x86_64-apple-darwin/release/tunet-cui target/aarch64-apple-darwin/release/tunet-cui -output $(Build.BinariesDirectory)/tunet-cui
-      lipo -create target/x86_64-apple-darwin/release/tunet-gui target/aarch64-apple-darwin/release/tunet-gui -output $(Build.BinariesDirectory)/tunet-gui
-      lipo -create target/x86_64-apple-darwin/release/tunet-service target/aarch64-apple-darwin/release/tunet-service -output $(Build.BinariesDirectory)/tunet-service
-    displayName: "Create fat binary"
-
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: '$(Build.BinariesDirectory)'
-      includeRootFolder: false
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/mac.universal.zip'
-    displayName: 'Archive'
+      macbundle/bundle.sh
+      cp target/macbundle/tunet.app.zip $(Build.ArtifactStagingDirectory)/
+    displayName: "Create bundle"
 
   - task: PublishBuildArtifacts@1
     inputs:

@@ -1,0 +1,82 @@
+<?if $(arch) = x64 or $(arch) = arm64 ?>
+  <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+<?else ?>
+  <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+<?endif ?>
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="tunet" UpgradeCode="352cd480-6986-463f-81c6-085864d05a84" Manufacturer="Berrysoft" Language="2052" Codepage="936" Version="0.0.1" InstallerVersion="450">
+    <SummaryInformation Keywords="Installer" Manufacturer="Berrysoft" />
+
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
+
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" DiskPrompt="CD-ROM #1" />
+    <Property Id="DiskPrompt" Value="tunet installation" />
+
+    <Feature Id="feature_tunet_cli" Title="Command Line Interface (CLI)" Description="Installs CLI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+      <ComponentRef Id="tunet_cli_binary" />
+    </Feature>
+    <Feature Id="feature_tunet_cui" Title="Console User Interface (CUI)" Description="Installs CUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+      <ComponentRef Id="tunet_cui_binary" />
+      <Feature Id="feature_start_menu_shortcut_cui" Title="Start Menu Shortcuts" Description="Add start menu shortcuts for CUI." Level="1">
+        <ComponentRef Id="tunet_cui_shortcut" />
+      </Feature>
+    </Feature>
+    <Feature Id="feature_tunet_gui" Title="Graphical Interface (GUI)" Description="Installs GUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+      <ComponentRef Id="tunet_gui_binary" />
+      <Feature Id="feature_start_menu_shortcut_gui" Title="Start Menu Shortcuts" Description="Add start menu shortcuts for GUI." Level="1">
+        <ComponentRef Id="tunet_gui_shortcut" />
+      </Feature>
+    </Feature>
+    <Feature Id="feature_tunet_service" Title="Service Daemon" Description="Installs service executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+      <ComponentRef Id="tunet_service_binary" />
+    </Feature>
+    <Feature Id="feature_env_path" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executables to the PATH system environment variable. This allows the [ProductName] executables to be called from any location." Level="1">
+      <ComponentRef Id="path" />
+    </Feature>
+
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[APPLICATIONFOLDER]" After="CostFinalize" />
+    <UI>
+      <ui:WixUI Id="WixUI_FeatureTree" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="CustomizeDlg" Order="2" />
+      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />
+    </UI>
+
+    <StandardDirectory Id="$(PlatformProgramFilesFolder)">
+      <Directory Id="APPLICATIONFOLDER" Name="tunet">
+        <Directory Id="Bin" Name="bin" FileSource="target\$(target)\release">
+
+          <Component Id="path" Guid="8bb1709f-72cc-416c-8355-30351798a955" KeyPath="yes">
+            <Environment Id="PATH" Name="PATH" Value="[Bin]" Permanent="no" Part="last" Action="set" System="yes" />
+          </Component>
+
+          <Component Id="tunet_cli_binary">
+            <File Id="tunet_cli_exe" Name="tunet.exe" DiskId="1" KeyPath="yes" />
+          </Component>
+
+          <Component Id="tunet_cui_binary">
+            <File Id="tunet_cui_exe" Name="tunet-cui.exe" DiskId="1" KeyPath="yes" />
+          </Component>
+
+          <Component Id="tunet_gui_binary">
+            <File Id="tunet_gui_exe" Name="tunet-gui.exe" DiskId="1" KeyPath="yes" />
+          </Component>
+
+          <Component Id="tunet_service_binary">
+            <File Id="tunet_service_exe" Name="tunet-service.exe" DiskId="1" KeyPath="yes" />
+          </Component>
+
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="tunet_cui_shortcut" Guid="2d01e42c-6426-48cb-830f-2ec44d17f9bf">
+        <Shortcut Id="tunet_cui_exe_shortcut" Name="清华校园网 (CUI)" Description="清华大学校园网客户端 (Console UI)" Target="[!tunet_cui_exe]" WorkingDirectory="Bin" />
+      </Component>
+      <Component Id="tunet_gui_shortcut" Guid="2f8e941e-7641-40b1-9ba5-74e49d2ad351">
+        <Shortcut Id="tunet_gui_exe_shortcut" Name="清华校园网 (GUI)" Description="清华大学校园网客户端 (Graphical UI)" Target="[!tunet_gui_exe]" WorkingDirectory="Bin" />
+      </Component>
+    </StandardDirectory>
+  </Package>
+</Wix>
