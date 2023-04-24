@@ -20,7 +20,7 @@ cp ${current}/Info.plist ${content_dir}/
 echo Creating logo.icns
 resource_dir=${content_dir}/Resources
 mkdir -p ${resource_dir}
-cp ${current}/logo.icns ${resource_dir}/
+cp ${workspace}/logo.icns ${resource_dir}/
 
 binary_dir=${content_dir}/MacOS
 mkdir -p ${binary_dir}
