@@ -140,19 +140,9 @@ jobs:
     displayName: "Build"
 
   - script: |
-      lipo -create target/x86_64-apple-darwin/release/tunet target/aarch64-apple-darwin/release/tunet -output $(Build.BinariesDirectory)/tunet
-      lipo -create target/x86_64-apple-darwin/release/tunet-cui target/aarch64-apple-darwin/release/tunet-cui -output $(Build.BinariesDirectory)/tunet-cui
-      lipo -create target/x86_64-apple-darwin/release/tunet-gui target/aarch64-apple-darwin/release/tunet-gui -output $(Build.BinariesDirectory)/tunet-gui
-      lipo -create target/x86_64-apple-darwin/release/tunet-service target/aarch64-apple-darwin/release/tunet-service -output $(Build.BinariesDirectory)/tunet-service
-    displayName: "Create fat binary"
-
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: '$(Build.BinariesDirectory)'
-      includeRootFolder: false
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/tunet.mac.universal.zip'
-    displayName: 'Archive'
+      macbundle/bundle.sh
+      cp target/macbundle/tunet.app.zip $(Build.ArtifactStagingDirectory)/
+    displayName: "Create bundle"
 
   - task: PublishBuildArtifacts@1
     inputs:
