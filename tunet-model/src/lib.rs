@@ -2,9 +2,11 @@
 
 use drop_guard::guard;
 use futures_util::{pin_mut, TryStreamExt};
+use itertools::Itertools;
 use mac_address::*;
 use netstatus::*;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -13,6 +15,38 @@ use std::sync::{
 use tokio::sync::mpsc::*;
 use tunet_helper::{usereg::*, *};
 use tunet_suggest as suggest;
+
+#[derive(Debug, Default)]
+pub struct DetailDaily {
+    pub details: Vec<(NaiveDate, Flux)>,
+    pub now: NaiveDate,
+    pub max_flux: Flux,
+}
+
+impl DetailDaily {
+    pub fn new(details: &[NetDetail]) -> Self {
+        let details = details
+            .iter()
+            .group_by(|d| d.logout_time.date())
+            .into_iter()
+            .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
+            .collect::<HashMap<_, _>>();
+        let mut grouped_details = vec![];
+        let now = Local::now().date_naive();
+        let mut max = 0;
+        for d in 1u32..=now.day() {
+            if let Some(f) = details.get(&d) {
+                max += *f;
+            }
+            grouped_details.push((now.with_day(d).unwrap(), Flux(max)))
+        }
+        Self {
+            details: grouped_details,
+            now,
+            max_flux: Flux(max),
+        }
+    }
+}
 
 pub type UpdateCallback = Box<dyn Fn(UpdateMsg) + Send + 'static>;
 

@@ -13,7 +13,6 @@ tunet-settings-cli = { workspace = true }
 tunet-model = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 futures-util = { workspace = true }
-itertools = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 crossterm = { version = "0.25", features = ["event-stream"] }

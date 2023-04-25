@@ -1,6 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use itertools::Itertools;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
     series::LineSeries,
@@ -12,7 +11,6 @@ use slint::{
 };
 use std::{
     cmp::{Ordering, Reverse},
-    collections::HashMap,
     rc::Rc,
     sync::Arc,
     sync::Mutex as SyncMutex,
@@ -20,9 +18,9 @@ use std::{
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
-    Datelike, Flux, Local, NaiveDate, Result,
+    Datelike, Flux, Result,
 };
-use tunet_model::{Action, Model, UpdateMsg};
+use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
 
 slint::include_modules!();
@@ -254,13 +252,6 @@ async fn main() -> Result<()> {
 }
 
 #[derive(Debug, Default)]
-struct DetailDaily {
-    details: Vec<(NaiveDate, u64)>,
-    now: NaiveDate,
-    max: u64,
-}
-
-#[derive(Debug, Default)]
 struct UpdateContext {
     del_at_exit: bool,
     sorted_details: Vec<NetDetail>,
@@ -269,31 +260,8 @@ struct UpdateContext {
 
 impl UpdateContext {
     pub fn update_details(&mut self, details: Vec<NetDetail>) {
-        self.update_daily(&details);
+        self.daily = DetailDaily::new(&details);
         self.sorted_details = details;
-    }
-
-    fn update_daily(&mut self, details: &[NetDetail]) {
-        let details = details
-            .iter()
-            .group_by(|d| d.logout_time.date())
-            .into_iter()
-            .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
-            .collect::<HashMap<_, _>>();
-        let mut grouped_details = vec![];
-        let now = Local::now().date_naive();
-        let mut max = 0;
-        for d in 1u32..=now.day() {
-            if let Some(f) = details.get(&d) {
-                max += *f;
-            }
-            grouped_details.push((now.with_day(d).unwrap(), max))
-        }
-        self.daily = DetailDaily {
-            details: grouped_details,
-            now,
-            max,
-        }
     }
 
     pub fn sort(&mut self, column: i32, descending: bool) {
@@ -473,7 +441,7 @@ fn draw_daily(
     let back_color = if dark { &BLACK } else { &WHITE };
 
     let date_range = (details.now.with_day(1).unwrap(), details.now);
-    let flux_range = (0, details.max);
+    let flux_range = (0, details.max_flux.0);
 
     let mut pixel_buffer = SharedPixelBuffer::<Rgb8Pixel>::new(width, height);
     let backend = BitMapBackend::with_buffer(pixel_buffer.make_mut_bytes(), (width, height));
@@ -512,7 +480,7 @@ fn draw_daily(
         chart
             .draw_series(
                 LineSeries::new(
-                    details.details.clone(),
+                    details.details.iter().map(|(d, f)| (*d, f.0)),
                     ShapeStyle {
                         color: color.to_rgba(),
                         filled: true,
