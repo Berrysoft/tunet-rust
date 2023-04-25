@@ -19,7 +19,7 @@ use std::{
 };
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
-    usereg::{NetDateTime, NetDetail, NetUser},
+    usereg::{NetDetail, NetUser},
     Datelike, Flux, Local, NaiveDate, Result,
 };
 use tunet_model::{Action, Model, UpdateMsg};
@@ -166,6 +166,7 @@ async fn main() -> Result<()> {
 
     detail_model.on_daily_chart({
         let weak_app = app.as_weak();
+        let context = context.clone();
         move |width, height, dark, text_color| {
             let app = weak_app.upgrade().unwrap();
             let context = context.lock().unwrap();
@@ -174,29 +175,29 @@ async fn main() -> Result<()> {
     });
 
     detail_model.on_refresh(upgrade_queue!(model, || Action::Details));
-    // TODO: reduce parsing
-    detail_model.on_sort_ascending(sort_callback!(app, DetailModel, details, |data, index| {
-        match index {
-            0 | 1 => sort_by_key!(data, index, |item: StandardListViewItem| {
-                item.text.parse::<NetDateTime>().unwrap()
-            }),
-            2 => sort_by_key!(data, index, |item: StandardListViewItem| {
-                item.text.parse::<Flux>().unwrap()
-            }),
-            _ => unreachable!(),
+
+    detail_model.on_sort_ascending({
+        let weak_app = app.as_weak();
+        let context = context.clone();
+        move |index| {
+            if let Some(app) = weak_app.upgrade() {
+                let mut context = context.lock().unwrap();
+                context.sort(index, false);
+                update_details(&app, &context.sorted_details);
+            }
         }
-    }));
-    detail_model.on_sort_descending(sort_callback!(app, DetailModel, details, |data, index| {
-        match index {
-            0 | 1 => sort_by_key!(data, index, |item: StandardListViewItem| Reverse(
-                item.text.parse::<NetDateTime>().unwrap()
-            )),
-            2 => sort_by_key!(data, index, |item: StandardListViewItem| Reverse(
-                item.text.parse::<Flux>().unwrap()
-            )),
-            _ => unreachable!(),
+    });
+    detail_model.on_sort_descending({
+        let weak_app = app.as_weak();
+        let context = context.clone();
+        move |index| {
+            if let Some(app) = weak_app.upgrade() {
+                let mut context = context.lock().unwrap();
+                context.sort(index, true);
+                update_details(&app, &context.sorted_details);
+            }
         }
-    }));
+    });
 
     settings_model.on_set_credential(upgrade_queue!(model, |username, password| {
         Action::UpdateCredential(username.to_string(), password.to_string())
@@ -246,8 +247,64 @@ async fn main() -> Result<()> {
 }
 
 #[derive(Debug, Default)]
+struct DetailDaily {
+    details: Vec<(NaiveDate, u64)>,
+    now: NaiveDate,
+    max: u64,
+}
+
+#[derive(Debug, Default)]
 struct UpdateContext {
+    sorted_details: Vec<NetDetail>,
     daily: DetailDaily,
+}
+
+impl UpdateContext {
+    pub fn update_details(&mut self, details: Vec<NetDetail>) {
+        self.update_daily(&details);
+        self.sorted_details = details;
+    }
+
+    fn update_daily(&mut self, details: &[NetDetail]) {
+        let details = details
+            .iter()
+            .group_by(|d| d.logout_time.date())
+            .into_iter()
+            .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
+            .collect::<HashMap<_, _>>();
+        let mut grouped_details = vec![];
+        let now = Local::now().date_naive();
+        let mut max = 0;
+        for d in 1u32..=now.day() {
+            if let Some(f) = details.get(&d) {
+                max += *f;
+            }
+            grouped_details.push((now.with_day(d).unwrap(), max))
+        }
+        self.daily = DetailDaily {
+            details: grouped_details,
+            now,
+            max,
+        }
+    }
+
+    pub fn sort(&mut self, column: i32, descending: bool) {
+        if descending {
+            match column {
+                0 => self.sorted_details.sort_by_key(|d| Reverse(d.login_time)),
+                1 => self.sorted_details.sort_by_key(|d| Reverse(d.logout_time)),
+                2 => self.sorted_details.sort_by_key(|d| Reverse(d.flux)),
+                _ => unreachable!(),
+            }
+        } else {
+            match column {
+                0 => self.sorted_details.sort_by_key(|d| d.login_time),
+                1 => self.sorted_details.sort_by_key(|d| d.logout_time),
+                2 => self.sorted_details.sort_by_key(|d| d.flux),
+                _ => unreachable!(),
+            }
+        }
+    }
 }
 
 fn update(
@@ -328,11 +385,14 @@ fn update(
                 .unwrap();
         }
         UpdateMsg::Details => {
-            let details = model.details.clone();
-            context.lock().unwrap().daily = calculate_daily(&details);
+            context
+                .lock()
+                .unwrap()
+                .update_details(model.details.clone());
             weak_app
                 .upgrade_in_event_loop(move |app| {
-                    update_details(&app, &details);
+                    let context = context.lock().unwrap();
+                    update_details(&app, &context.sorted_details);
                 })
                 .unwrap();
         }
@@ -387,36 +447,6 @@ fn update_details(app: &App, details: &[NetDetail]) {
         row_data.push(items.into());
     }
     app.global::<DetailModel>().set_details(row_data.into());
-}
-
-#[derive(Debug, Default)]
-struct DetailDaily {
-    details: Vec<(NaiveDate, u64)>,
-    now: NaiveDate,
-    max: u64,
-}
-
-fn calculate_daily(details: &[NetDetail]) -> DetailDaily {
-    let details = details
-        .iter()
-        .group_by(|d| d.logout_time.date())
-        .into_iter()
-        .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
-        .collect::<HashMap<_, _>>();
-    let mut grouped_details = vec![];
-    let now = Local::now().date_naive();
-    let mut max = 0;
-    for d in 1u32..=now.day() {
-        if let Some(f) = details.get(&d) {
-            max += *f;
-        }
-        grouped_details.push((now.with_day(d).unwrap(), max))
-    }
-    DetailDaily {
-        details: grouped_details,
-        now,
-        max,
-    }
 }
 
 fn draw_daily(
