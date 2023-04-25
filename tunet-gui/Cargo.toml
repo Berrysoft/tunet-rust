@@ -22,10 +22,11 @@ slint = { version = "1", default-features = false, features = [
 ] }
 image = { version = "0.24", default-features = false, features = ["ico"] }
 paste = "1"
-plotters = { version = "0.3", default-features = false, features = [
+plotters = { git = "https://github.com/plotters-rs/plotters.git", default-features = false, features = [
     "bitmap_backend",
     "chrono",
     "line_series",
+    "ttf",
     "fontconfig-dlopen",
 ] }
 
