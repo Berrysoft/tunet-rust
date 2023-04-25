@@ -1,19 +1,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use i_slint_backend_winit::WinitWindowAccessor;
-use itertools::Itertools;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
     series::LineSeries,
     style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
 };
 use slint::{
-    Image, Model as SlintModel, ModelRc, PhysicalPosition, Rgb8Pixel, Rgba8Pixel,
+    quit_event_loop, Image, Model as SlintModel, ModelRc, PhysicalPosition, Rgb8Pixel, Rgba8Pixel,
     SharedPixelBuffer, SortModel, StandardListViewItem, VecModel,
 };
 use std::{
     cmp::{Ordering, Reverse},
-    collections::HashMap,
     rc::Rc,
     sync::Arc,
     sync::Mutex as SyncMutex,
@@ -21,9 +19,9 @@ use std::{
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
-    Datelike, Flux, Local, NaiveDate, Result,
+    Datelike, Flux, Result,
 };
-use tunet_model::{Action, Model, UpdateMsg};
+use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
 
 slint::include_modules!();
@@ -203,10 +201,12 @@ async fn main() -> Result<()> {
     settings_model.on_set_credential(upgrade_queue!(model, |username, password| {
         Action::UpdateCredential(username.to_string(), password.to_string())
     }));
-    settings_model.on_del_and_exit(|| {
-        let mut reader = FileSettingsReader::new().unwrap();
-        reader.delete().unwrap();
-        std::process::exit(0);
+    settings_model.on_del_and_exit({
+        let context = context.clone();
+        move || {
+            context.lock().unwrap().del_at_exit = true;
+            quit_event_loop().unwrap();
+        }
     });
 
     settings_model.on_refresh(upgrade_queue!(model, || Action::Online));
@@ -263,51 +263,26 @@ async fn main() -> Result<()> {
     app.run()?;
 
     let mut reader = FileSettingsReader::new()?;
-    let cred = model.lock().await.cred.clone();
-    reader.save(cred).await?;
+    if context.lock().unwrap().del_at_exit {
+        reader.delete()?;
+    } else {
+        let cred = model.lock().await.cred.clone();
+        reader.save(cred).await?;
+    }
     Ok(())
 }
 
 #[derive(Debug, Default)]
-struct DetailDaily {
-    details: Vec<(NaiveDate, u64)>,
-    now: NaiveDate,
-    max: u64,
-}
-
-#[derive(Debug, Default)]
 struct UpdateContext {
+    del_at_exit: bool,
     sorted_details: Vec<NetDetail>,
     daily: DetailDaily,
 }
 
 impl UpdateContext {
     pub fn update_details(&mut self, details: Vec<NetDetail>) {
-        self.update_daily(&details);
+        self.daily = DetailDaily::new(&details);
         self.sorted_details = details;
-    }
-
-    fn update_daily(&mut self, details: &[NetDetail]) {
-        let details = details
-            .iter()
-            .group_by(|d| d.logout_time.date())
-            .into_iter()
-            .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
-            .collect::<HashMap<_, _>>();
-        let mut grouped_details = vec![];
-        let now = Local::now().date_naive();
-        let mut max = 0;
-        for d in 1u32..=now.day() {
-            if let Some(f) = details.get(&d) {
-                max += *f;
-            }
-            grouped_details.push((now.with_day(d).unwrap(), max))
-        }
-        self.daily = DetailDaily {
-            details: grouped_details,
-            now,
-            max,
-        }
     }
 
     pub fn sort(&mut self, column: i32, descending: bool) {
@@ -487,7 +462,7 @@ fn draw_daily(
     let back_color = if dark { &BLACK } else { &WHITE };
 
     let date_range = (details.now.with_day(1).unwrap(), details.now);
-    let flux_range = (0, details.max);
+    let flux_range = (0, details.max_flux.0);
 
     let mut pixel_buffer = SharedPixelBuffer::<Rgb8Pixel>::new(width, height);
     let backend = BitMapBackend::with_buffer(pixel_buffer.make_mut_bytes(), (width, height));
@@ -526,7 +501,7 @@ fn draw_daily(
         chart
             .draw_series(
                 LineSeries::new(
-                    details.details.clone(),
+                    details.details.iter().map(|(d, f)| (*d, f.0)),
                     ShapeStyle {
                         color: color.to_rgba(),
                         filled: true,

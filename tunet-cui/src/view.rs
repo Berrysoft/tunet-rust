@@ -1,7 +1,4 @@
-use std::collections::HashMap;
-
 use crate::*;
-use itertools::Itertools;
 use tui::{backend::Backend, style::*, Frame};
 use tunet_model::*;
 
@@ -120,24 +117,15 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     .block(Block::default().title("连接详情").borders(Borders::all()));
     f.render_widget(table, title_chunks[1]);
 
-    let now = Local::now();
-
-    let mut max = Flux(0);
-    let mut details = vec![];
-
-    let details_group = m
-        .details
-        .iter()
-        .group_by(|d| d.logout_time.date())
+    let DetailDaily {
+        details,
+        now,
+        max_flux: max,
+    } = DetailDaily::new(&m.details);
+    let details = details
         .into_iter()
-        .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
-        .collect::<HashMap<_, _>>();
-    for d in 1u32..=now.day() {
-        if let Some(f) = details_group.get(&d) {
-            max.0 += *f;
-        }
-        details.push((d as f64, max.to_gb()));
-    }
+        .map(|(d, f)| (d.day() as f64, f.to_gb()))
+        .collect::<Vec<_>>();
 
     let max_flux = (max.to_gb() * 1.1).ceil().max(1.0) as u64;
 

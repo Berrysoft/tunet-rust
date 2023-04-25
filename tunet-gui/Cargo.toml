@@ -13,7 +13,6 @@ tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-model = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
-itertools = { workspace = true }
 slint = { version = "1", default-features = false, features = [
     "std",
     "compat-1-0",
