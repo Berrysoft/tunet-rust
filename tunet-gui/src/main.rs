@@ -7,8 +7,8 @@ use plotters::{
     style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
 };
 use slint::{
-    Image, Model as SlintModel, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SortModel,
-    StandardListViewItem, VecModel,
+    quit_event_loop, Image, Model as SlintModel, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer,
+    SortModel, StandardListViewItem, VecModel,
 };
 use std::{
     cmp::{Ordering, Reverse},
@@ -202,10 +202,12 @@ async fn main() -> Result<()> {
     settings_model.on_set_credential(upgrade_queue!(model, |username, password| {
         Action::UpdateCredential(username.to_string(), password.to_string())
     }));
-    settings_model.on_del_and_exit(|| {
-        let mut reader = FileSettingsReader::new().unwrap();
-        reader.delete().unwrap();
-        std::process::exit(0);
+    settings_model.on_del_and_exit({
+        let context = context.clone();
+        move || {
+            context.lock().unwrap().del_at_exit = true;
+            quit_event_loop().unwrap();
+        }
     });
 
     settings_model.on_refresh(upgrade_queue!(model, || Action::Online));
@@ -240,9 +242,14 @@ async fn main() -> Result<()> {
     });
 
     app.run()?;
+
     let mut reader = FileSettingsReader::new()?;
-    let cred = model.lock().await.cred.clone();
-    reader.save(cred).await?;
+    if context.lock().unwrap().del_at_exit {
+        reader.delete()?;
+    } else {
+        let cred = model.lock().await.cred.clone();
+        reader.save(cred).await?;
+    }
     Ok(())
 }
 
@@ -255,6 +262,7 @@ struct DetailDaily {
 
 #[derive(Debug, Default)]
 struct UpdateContext {
+    del_at_exit: bool,
     sorted_details: Vec<NetDetail>,
     daily: DetailDaily,
 }
