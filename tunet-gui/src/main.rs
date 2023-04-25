@@ -120,24 +120,6 @@ macro_rules! sort_by_key_callback {
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = App::new()?;
-    let window = app.window();
-
-    if let Some(new_pos) = window
-        .with_winit_window(|window| {
-            window.primary_monitor().map(|monitor| {
-                let monitor_pos = monitor.position();
-                let monitor_size = monitor.size();
-                let window_size = window.outer_size();
-                PhysicalPosition {
-                    x: monitor_pos.x + ((monitor_size.width - window_size.width) / 2) as i32,
-                    y: monitor_pos.y + ((monitor_size.height - window_size.height) / 2) as i32,
-                }
-            })
-        })
-        .flatten()
-    {
-        window.set_position(new_pos);
-    }
 
     let color = color_theme::Color::accent();
     let home_model = app.global::<HomeModel>();
@@ -257,7 +239,28 @@ async fn main() -> Result<()> {
         }
     });
 
+    app.show()?;
+
+    let window = app.window();
+    if let Some(new_pos) = window
+        .with_winit_window(|window| {
+            window.primary_monitor().map(|monitor| {
+                let monitor_pos = monitor.position();
+                let monitor_size = monitor.size();
+                let window_size = window.outer_size();
+                PhysicalPosition {
+                    x: monitor_pos.x + ((monitor_size.width - window_size.width) / 2) as i32,
+                    y: monitor_pos.y + ((monitor_size.height - window_size.height) / 2) as i32,
+                }
+            })
+        })
+        .flatten()
+    {
+        window.set_position(new_pos);
+    }
+
     app.run()?;
+
     let mut reader = FileSettingsReader::new()?;
     let cred = model.lock().await.cred.clone();
     reader.save(cred).await?;
