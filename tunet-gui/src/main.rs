@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use i_slint_backend_winit::WinitWindowAccessor;
 use itertools::Itertools;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
@@ -7,8 +8,8 @@ use plotters::{
     style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
 };
 use slint::{
-    Image, Model as SlintModel, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SortModel,
-    StandardListViewItem, VecModel,
+    Image, Model as SlintModel, ModelRc, PhysicalPosition, Rgb8Pixel, Rgba8Pixel,
+    SharedPixelBuffer, SortModel, StandardListViewItem, VecModel,
 };
 use std::{
     cmp::{Ordering, Reverse},
@@ -119,6 +120,24 @@ macro_rules! sort_by_key_callback {
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = App::new()?;
+    let window = app.window();
+
+    if let Some(new_pos) = window
+        .with_winit_window(|window| {
+            window.primary_monitor().map(|monitor| {
+                let monitor_pos = monitor.position();
+                let monitor_size = monitor.size();
+                let window_size = window.outer_size();
+                PhysicalPosition {
+                    x: monitor_pos.x + ((monitor_size.width - window_size.width) / 2) as i32,
+                    y: monitor_pos.y + ((monitor_size.height - window_size.height) / 2) as i32,
+                }
+            })
+        })
+        .flatten()
+    {
+        window.set_position(new_pos);
+    }
 
     let color = color_theme::Color::accent();
     let home_model = app.global::<HomeModel>();
