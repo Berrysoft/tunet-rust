@@ -166,10 +166,10 @@ async fn main() -> Result<()> {
 
     detail_model.on_daily_chart({
         let weak_app = app.as_weak();
-        move |width, height, dark| {
+        move |width, height, dark, text_color| {
             let app = weak_app.upgrade().unwrap();
             let context = context.lock().unwrap();
-            draw_daily(&app, width, height, dark, &context.daily)
+            draw_daily(&app, width, height, dark, text_color, &context.daily)
         }
     });
 
@@ -419,12 +419,19 @@ fn calculate_daily(details: &[NetDetail]) -> DetailDaily {
     }
 }
 
-fn draw_daily(app: &App, width: f32, height: f32, dark: bool, details: &DetailDaily) -> Image {
+fn draw_daily(
+    app: &App,
+    width: f32,
+    height: f32,
+    dark: bool,
+    text_color: slint::Color,
+    details: &DetailDaily,
+) -> Image {
     let color = color_theme::Color::accent();
     let color = RGBColor(color.r, color.g, color.b);
     let scale = app.window().scale_factor();
     let (width, height) = ((width * scale) as u32, (height * scale) as u32);
-    let text_color = if dark { &WHITE } else { &BLACK };
+    let text_color = RGBColor(text_color.red(), text_color.green(), text_color.blue());
     let back_color = if dark { &BLACK } else { &WHITE };
 
     let date_range = (details.now.with_day(1).unwrap(), details.now);
