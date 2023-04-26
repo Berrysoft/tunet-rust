@@ -470,15 +470,15 @@ fn draw_daily(
         let root = backend.into_drawing_area();
         root.fill(back_color).unwrap();
 
-        let label_style = (FontFamily::SansSerif, 16.0 * scale)
+        let label_style = (FontFamily::SansSerif, 20.0 * scale)
             .with_color(text_color)
             .into_text_style(&root);
 
         let mut chart = ChartBuilder::on(&root)
-            .x_label_area_size(30.0 * scale)
-            .y_label_area_size(60.0 * scale)
-            .margin_top(10.0 * scale)
-            .margin_right(20.0 * scale)
+            .x_label_area_size(35.0 * scale)
+            .y_label_area_size(75.0 * scale)
+            .margin_top(15.0 * scale)
+            .margin_right(25.0 * scale)
             .build_cartesian_2d(
                 RangedDate::from(date_range.0..date_range.1),
                 flux_range.0..flux_range.1,
