@@ -7,6 +7,40 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[package.metadata.deb]
+assets = [
+    [
+        "target/release/tunet",
+        "usr/bin/",
+        "755",
+    ],
+    [
+        "target/release/tunet-cui",
+        "usr/bin/",
+        "755",
+    ],
+    [
+        "target/release/tunet-gui",
+        "usr/bin/",
+        "755",
+    ],
+    [
+        "target/release/tunet-service",
+        "usr/bin/",
+        "755",
+    ],
+    [
+        "../logo.png",
+        "usr/share/icons/hicolor/apps/tunet.png",
+        "644",
+    ],
+    [
+        "tunet.desktop",
+        "usr/share/applications/tunet.desktop",
+        "755",
+    ],
+]
+
 [dependencies]
 tunet-helper = { workspace = true }
 tunet-suggest = { workspace = true }

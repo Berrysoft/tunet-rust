@@ -8,15 +8,6 @@ trigger:
       - assets/
       - README.md
 
-parameters:
-- name: packages
-  type: object
-  default:
-  - tunet
-  - tunet-cui
-  - tunet-gui
-  - tunet-service
-
 jobs:
 - job: Build_Windows
   strategy:
@@ -115,13 +106,14 @@ jobs:
   - script: cargo install cargo-deb
     displayName: "Install cargo-deb"
 
-  - script: rustup target add $(target)
-    displayName: "Add rust target $(target)"
+  - script: |
+      rustup target add $(target)
+      cargo build --release --target $(target)
+    displayName: "Build"
 
-  - ${{ each p in parameters.packages }}:
-    - script: |
-        cargo deb --target $(target) -o $(Build.ArtifactStagingDirectory) -p ${{ p }}
-      displayName: "Package ${{ p }}"
+  - script: |
+      cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory) -p tunet
+    displayName: "Package"
 
   - task: PublishBuildArtifacts@1
     inputs:
