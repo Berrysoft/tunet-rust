@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use tokio_stream::Stream;
 
 cfg_if::cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -27,6 +28,10 @@ pub enum NetStatus {
 impl NetStatus {
     pub fn current() -> Self {
         platform::current()
+    }
+
+    pub fn watch() -> impl Stream<Item = ()> {
+        platform::watch()
     }
 }
 

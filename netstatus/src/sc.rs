@@ -1,10 +1,23 @@
 use crate::*;
+use anyhow::{anyhow, Result};
+use core_foundation::{
+    base::TCFType,
+    runloop::{kCFRunLoopDefaultMode, CFRunLoop, CFRunLoopRef},
+};
 use objc::{
     runtime::{Class, Object},
     *,
 };
-use std::ffi::CStr;
+use pin_project::pin_project;
+use std::{
+    ffi::CStr,
+    os::unix::thread::{JoinHandleExt, RawPthread},
+    pin::Pin,
+    task::{Context, Poll},
+};
 use system_configuration::network_reachability::{ReachabilityFlags, SCNetworkReachability};
+use tokio::sync::watch;
+use tokio_stream::wrappers::WatchStream;
 
 #[link(name = "CoreWLAN", kind = "framework")]
 extern "C" {
@@ -49,4 +62,51 @@ pub fn current() -> NetStatus {
         }
     }
     NetStatus::Unknown
+}
+
+pub fn watch() -> impl Stream<Item = ()> {
+    let (tx, rx) = watch::channel(());
+    let loop_thread = std::thread::spawn(move || -> Result<()> {
+        let host = unsafe { CStr::from_bytes_with_nul_unchecked(b"0.0.0.0\0") };
+        let mut sc = SCNetworkReachability::from_host(host)
+            .ok_or_else(|| anyhow!("Cannot get network reachability"))?;
+        sc.set_callback(move |_| {
+            tx.send(()).ok();
+        })?;
+        unsafe {
+            sc.schedule_with_runloop(&CFRunLoop::get_current(), kCFRunLoopDefaultMode)?;
+        }
+        CFRunLoop::run_current();
+        Ok(())
+    });
+}
+
+#[pin_project]
+struct StatusWatchStream {
+    #[pin]
+    s: WatchStream<()>,
+    thread: JoinHandle<Result<()>>,
+}
+
+impl Stream for StatusWatchStream {
+    type Item = ();
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.project().s.poll_next(cx)
+    }
+}
+
+impl Drop for StatusWatchStream {
+    fn drop(&mut self) {
+        unsafe { CFRunLoop::wrap_under_get_rule(_CFRunLoopGet0(self.thread.as_pthread_t())) }
+            .stop();
+        match self.thread.join() {
+            Ok(res) => res.unwrap(),
+            Err(e) => std::panic::resume_unwind(e),
+        }
+    }
+}
+
+extern "C" {
+    fn _CFRunLoopGet0(thread: RawPthread) -> CFRunLoopRef;
 }

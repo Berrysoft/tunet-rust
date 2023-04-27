@@ -2,11 +2,10 @@ mod notify;
 
 use crate::SERVICE_NAME;
 use clap::Parser;
-use std::{ffi::OsString, pin::pin, time::Duration};
+use std::{ffi::OsString, time::Duration};
 use tokio::{signal::windows::ctrl_c, sync::watch};
 use tokio_stream::{wrappers::WatchStream, StreamExt};
 use tunet_helper::Result;
-use windows::{Foundation::EventRegistrationToken, Networking::Connectivity::*};
 use windows_service::{
     define_windows_service,
     service::{
@@ -146,14 +145,7 @@ async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()
     let mut ctrlc = ctrl_c()?;
     let mut stopc = WatchStream::new(rx).skip(1);
     let mut timer = crate::create_timer(options.interval);
-    let (tx, rx) = watch::channel(());
-    let _token = NetworkStatusChangedToken(NetworkInformation::NetworkStatusChanged(
-        &NetworkStatusChangedEventHandler::new(move |_| {
-            tx.send(()).ok();
-            Ok(())
-        }),
-    )?);
-    let mut events = pin!(rx);
+    let mut events = netstatus::NetStatus::watch();
     loop {
         tokio::select! {
             _ = ctrlc.recv() => {
@@ -165,8 +157,8 @@ async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()
             _ = timer.next() => {
                 notify::notify(true).ok();
             }
-            e = events.changed() => {
-                if let Ok(()) = e {
+            e = events.next() => {
+                if let Some(()) = e {
                     if let Err(msg) = notify::notify(false) {
                         notify::error(msg.to_string()).ok();
                     }
@@ -177,12 +169,4 @@ async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()
         }
     }
     Ok(())
-}
-
-struct NetworkStatusChangedToken(EventRegistrationToken);
-
-impl Drop for NetworkStatusChangedToken {
-    fn drop(&mut self) {
-        NetworkInformation::RemoveNetworkStatusChanged(self.0).unwrap()
-    }
 }

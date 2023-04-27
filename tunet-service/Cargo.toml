@@ -8,6 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+netstatus = { workspace = true }
 tunet-helper = { workspace = true }
 tunet-suggest = { workspace = true }
 tunet-settings = { workspace = true }
@@ -24,8 +25,6 @@ notify-rust = "4"
 tokio = { workspace = true, features = ["sync"] }
 tokio-stream = { workspace = true, features = ["sync"] }
 windows = { workspace = true, features = [
-    "Foundation",
-    "Networking_Connectivity",
     "Win32_Foundation",
     "Win32_System_Environment",
     "Win32_System_RemoteDesktop",
@@ -37,9 +36,6 @@ windows-service = "0.6"
 is_elevated = "0.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-tokio = { workspace = true, features = ["sync"] }
-system-configuration = { workspace = true }
-core-foundation = { workspace = true }
 dirs = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 plist = "1"

@@ -1,15 +1,5 @@
-use core_foundation::{
-    base::TCFType,
-    runloop::{kCFRunLoopDefaultMode, CFRunLoop, CFRunLoopRef},
-};
 use serde::Serialize;
-use std::{
-    ffi::CStr,
-    os::unix::thread::{JoinHandleExt, RawPthread},
-    path::PathBuf,
-    pin::pin,
-};
-use system_configuration::network_reachability::SCNetworkReachability;
+use std::{ffi::CStr, path::PathBuf, pin::pin};
 use tokio::{
     signal::unix::{signal, SignalKind},
     sync::watch,
@@ -85,21 +75,7 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
     let mut ctrlc = signal(SignalKind::interrupt())?;
     let mut kill = signal(SignalKind::terminate())?;
     let mut timer = crate::create_timer(interval);
-    let (tx, rx) = watch::channel(());
-    let loop_thread = std::thread::spawn(move || -> Result<()> {
-        let host = unsafe { CStr::from_bytes_with_nul_unchecked(b"0.0.0.0\0") };
-        let mut sc = SCNetworkReachability::from_host(host)
-            .ok_or_else(|| anyhow!("Cannot get network reachability"))?;
-        sc.set_callback(move |_| {
-            tx.send(()).ok();
-        })?;
-        unsafe {
-            sc.schedule_with_runloop(&CFRunLoop::get_current(), kCFRunLoopDefaultMode)?;
-        }
-        CFRunLoop::run_current();
-        Ok(())
-    });
-    let mut events = pin!(rx);
+    let mut events = netstatus::NetStatus::watch();
     loop {
         tokio::select! {
             _ = ctrlc.recv() => {
@@ -113,8 +89,8 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
                     eprintln!("{}", msg)
                 }
             }
-            e = events.changed() => {
-                if let Ok(()) = e {
+            e = events.next() => {
+                if let Some(()) = e {
                     if let Err(msg) = crate::run_once(false).await {
                         eprintln!("{}", msg)
                     }
@@ -124,13 +100,5 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
             }
         }
     }
-    unsafe { CFRunLoop::wrap_under_get_rule(_CFRunLoopGet0(loop_thread.as_pthread_t())) }.stop();
-    match loop_thread.join() {
-        Ok(res) => res,
-        Err(e) => std::panic::resume_unwind(e),
-    }
-}
-
-extern "C" {
-    fn _CFRunLoopGet0(thread: RawPthread) -> CFRunLoopRef;
+    Ok(())
 }
