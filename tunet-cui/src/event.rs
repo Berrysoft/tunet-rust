@@ -39,6 +39,7 @@ impl Event {
     }
 
     pub fn start(&self) {
+        self.spawn_watch_status();
         self.spawn_timer();
         self.spawn_online();
         self.spawn_details();
@@ -77,6 +78,10 @@ impl Event {
             }
             Ok::<_, anyhow::Error>(())
         });
+    }
+
+    fn spawn_watch_status(&self) {
+        self.model.queue(Action::WatchStatus);
     }
 
     fn spawn_timer(&self) {
