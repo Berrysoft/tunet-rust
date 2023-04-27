@@ -6,21 +6,19 @@
 ## GUI
 基于 [Slint](https://slint-ui.com/) 开发。
 
-| 平台    | 亮                             | 暗                                  |
-| ------- | ------------------------------ | ----------------------------------- |
+| 平台    | 亮                                   | 暗                                  |
+| ------- | ------------------------------------ | ----------------------------------- |
 | Windows | ![Windows](assets/windows.light.png) | ![Windows](assets/windows.dark.png) |
 | Linux   | ![Linux](assets/linux.light.png)     | （暂无图片）                        |
-| macOS   | ![macOS](assets/mac.light.png) | ![macOS](assets/mac.dark.png)       |
+| macOS   | ![macOS](assets/mac.light.png)       | ![macOS](assets/mac.dark.png)       |
 
 ## CUI（命令行图形界面）
 使用如下命令启动：
 
 ``` bash
 # 使用默认（自动判断）方式登录/注销
-$ ./tunet cui
 $ ./tunet-cui
 # 使用 auth4 方式登录/注销
-$ ./tunet cui -- -s auth4
 $ ./tunet-cui -s auth4
 ```
 

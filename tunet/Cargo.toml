@@ -54,7 +54,6 @@ itertools = { workspace = true }
 termcolor = "1"
 termcolor_output = { git = "https://github.com/Berrysoft/termcolor_output.git" }
 enum_dispatch = { workspace = true }
-subprocess = "0.2"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winres = { workspace = true }
