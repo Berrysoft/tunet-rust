@@ -31,7 +31,7 @@ assets = [
     ],
     [
         "../logo.png",
-        "usr/share/icons/hicolor/apps/tunet.png",
+        "usr/share/icons/hicolor/256x256/apps/tunet.png",
         "644",
     ],
     [
