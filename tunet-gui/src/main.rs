@@ -134,6 +134,7 @@ async fn main() -> Result<()> {
     let (tx, mut rx) = mpsc::channel(32);
     let model = Arc::new(Mutex::new(Model::new(tx)?));
     let context = Arc::new(SyncMutex::new(UpdateContext::default()));
+    let mut settings_reader = FileSettingsReader::new()?;
     {
         let weak_app = app.as_weak();
         let context = context.clone();
@@ -148,8 +149,9 @@ async fn main() -> Result<()> {
         let mut model = model.lock().await;
         model.update = Some(Box::new(update));
 
-        let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
-        model.queue(Action::Credential(cred));
+        if let Ok(cred) = settings_reader.read_with_password() {
+            model.queue(Action::Credential(Arc::new(cred)));
+        }
         model.queue(Action::Timer);
 
         home_model.set_status(model.status.to_string().into());
@@ -262,12 +264,11 @@ async fn main() -> Result<()> {
 
     app.run()?;
 
-    let mut reader = FileSettingsReader::new()?;
     if context.lock().unwrap().del_at_exit {
-        reader.delete()?;
+        settings_reader.delete()?;
     } else {
         let cred = model.lock().await.cred.clone();
-        reader.save(cred).await?;
+        settings_reader.save(cred).await?;
     }
     Ok(())
 }
