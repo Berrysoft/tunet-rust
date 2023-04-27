@@ -110,6 +110,8 @@ jobs:
       rustup target add $(target)
       cargo build --release --target $(target)
     displayName: "Build"
+    env:
+      PKG_CONFIG_ALLOW_CROSS: 1
 
   - script: |
       cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory) -p tunet
