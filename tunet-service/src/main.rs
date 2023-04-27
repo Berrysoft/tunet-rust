@@ -16,7 +16,8 @@ mod notification;
 
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
-use std::{pin::Pin, sync::Arc};
+use futures_util::future::Either;
+use std::sync::Arc;
 use tokio::time::Instant;
 use tokio_stream::{wrappers::IntervalStream, Stream};
 use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
@@ -116,11 +117,10 @@ pub async fn run_once(quiet: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn create_timer(interval: Option<humantime::Duration>) -> Pin<Box<dyn Stream<Item = Instant>>> {
+pub fn create_timer(interval: Option<humantime::Duration>) -> impl Stream<Item = Instant> {
     if let Some(d) = interval {
-        Box::pin(IntervalStream::new(tokio::time::interval(*d)))
-            as Pin<Box<dyn Stream<Item = Instant>>>
+        Either::Left(IntervalStream::new(tokio::time::interval(*d)))
     } else {
-        Box::pin(tokio_stream::pending())
+        Either::Right(tokio_stream::pending())
     }
 }

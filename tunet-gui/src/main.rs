@@ -152,6 +152,7 @@ async fn main() -> Result<()> {
         if let Ok(cred) = settings_reader.read_with_password() {
             model.queue(Action::Credential(Arc::new(cred)));
         }
+        model.queue(Action::WatchStatus);
         model.queue(Action::Timer);
 
         home_model.set_status(model.status.to_string().into());
@@ -335,11 +336,10 @@ fn update(
         UpdateMsg::Status => {
             model.queue(Action::State(None));
 
-            let status = model.status.clone();
+            let status = model.status.to_string();
             weak_app
                 .upgrade_in_event_loop(move |app| {
-                    app.global::<HomeModel>()
-                        .set_status(status.to_string().into());
+                    app.global::<HomeModel>().set_status(status.into());
                 })
                 .unwrap();
         }

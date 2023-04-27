@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use drop_guard::guard;
-use futures_util::{pin_mut, TryStreamExt};
+use futures_util::{pin_mut, StreamExt, TryStreamExt};
 use itertools::Itertools;
 use mac_address::*;
 use netstatus::*;
@@ -123,7 +123,7 @@ impl Model {
                         let http = self.http.clone();
                         let status = self.status.clone();
                         tokio::spawn(async move {
-                            let state = suggest::suggest_with_status(&http, status).await;
+                            let state = suggest::suggest_with_status(&http, &status).await;
                             tx.send(Action::State(Some(state))).await.ok()
                         });
                     }
@@ -132,6 +132,16 @@ impl Model {
                         self.update(UpdateMsg::State);
                     }
                 };
+            }
+            Action::WatchStatus => {
+                self.spawn_watch_status();
+            }
+            Action::Status => {
+                let status = NetStatus::current();
+                if status != self.status {
+                    self.status = status;
+                    self.update(UpdateMsg::Status);
+                }
             }
             Action::Timer => {
                 self.spawn_timer();
@@ -154,11 +164,6 @@ impl Model {
                 self.spawn_logout();
             }
             Action::Flux => {
-                let status = NetStatus::current();
-                if status != self.status {
-                    self.status = status;
-                    self.update(UpdateMsg::Status);
-                }
                 self.spawn_flux();
             }
             Action::LoginDone(s) | Action::LogoutDone(s) => {
@@ -222,6 +227,17 @@ impl Model {
         if let Some(f) = &self.update {
             f(msg);
         }
+    }
+
+    fn spawn_watch_status(&self) {
+        let tx = self.tx.clone();
+        tokio::spawn(async move {
+            let mut events = NetStatus::watch();
+            while let Some(()) = events.next().await {
+                tx.send(Action::Status).await?;
+            }
+            Ok::<_, anyhow::Error>(())
+        });
     }
 
     fn spawn_timer(&self) {
@@ -363,6 +379,8 @@ pub enum Action {
     Credential(Arc<NetCredential>),
     UpdateCredential(String, String),
     State(Option<NetState>),
+    WatchStatus,
+    Status,
     Timer,
     Tick,
     Login,

@@ -16,10 +16,10 @@ static SUGGEST_SSID_MAP: Lazy<BTreeMap<&'static str, NetState>> = Lazy::new(|| {
 });
 
 pub async fn suggest(client: &HttpClient) -> NetState {
-    suggest_with_status(client, NetStatus::current()).await
+    suggest_with_status(client, &NetStatus::current()).await
 }
 
-pub async fn suggest_with_status(client: &HttpClient, s: NetStatus) -> NetState {
+pub async fn suggest_with_status(client: &HttpClient, s: &NetStatus) -> NetState {
     let state = match s {
         NetStatus::Unknown => None,
         NetStatus::Wwan => Some(NetState::Unknown),
