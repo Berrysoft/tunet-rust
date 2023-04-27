@@ -14,6 +14,7 @@ use std::{
     os::unix::thread::{JoinHandleExt, RawPthread},
     pin::Pin,
     task::{Context, Poll},
+    thread::JoinHandle,
 };
 use system_configuration::network_reachability::{ReachabilityFlags, SCNetworkReachability};
 use tokio::sync::watch;
@@ -79,13 +80,19 @@ pub fn watch() -> impl Stream<Item = ()> {
         CFRunLoop::run_current();
         Ok(())
     });
+    StatusWatchStream {
+        s: WatchStream::new(rx),
+        thread: CFJThread {
+            handle: Some(loop_thread),
+        },
+    }
 }
 
 #[pin_project]
 struct StatusWatchStream {
     #[pin]
     s: WatchStream<()>,
-    thread: JoinHandle<Result<()>>,
+    thread: CFJThread,
 }
 
 impl Stream for StatusWatchStream {
@@ -96,13 +103,18 @@ impl Stream for StatusWatchStream {
     }
 }
 
-impl Drop for StatusWatchStream {
+struct CFJThread {
+    handle: Option<JoinHandle<Result<()>>>,
+}
+
+impl Drop for CFJThread {
     fn drop(&mut self) {
-        unsafe { CFRunLoop::wrap_under_get_rule(_CFRunLoopGet0(self.thread.as_pthread_t())) }
-            .stop();
-        match self.thread.join() {
-            Ok(res) => res.unwrap(),
-            Err(e) => std::panic::resume_unwind(e),
+        if let Some(handle) = self.handle.take() {
+            unsafe { CFRunLoop::wrap_under_get_rule(_CFRunLoopGet0(handle.as_pthread_t())) }.stop();
+            match handle.join() {
+                Ok(res) => res.unwrap(),
+                Err(e) => std::panic::resume_unwind(e),
+            }
         }
     }
 }

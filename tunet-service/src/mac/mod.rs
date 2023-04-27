@@ -1,9 +1,6 @@
 use serde::Serialize;
-use std::{ffi::CStr, path::PathBuf, pin::pin};
-use tokio::{
-    signal::unix::{signal, SignalKind},
-    sync::watch,
-};
+use std::path::PathBuf;
+use tokio::signal::unix::{signal, SignalKind};
 use tokio_stream::StreamExt;
 use tunet_helper::{anyhow, Result};
 
