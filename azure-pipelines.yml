@@ -84,34 +84,14 @@ jobs:
     vmImage: $(image)
   
   steps:
-  - script: |
-      sudo dpkg --add-architecture $(cross)
-
-      sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list
-      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list
-      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list.d/*
-      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list.d/*
-      sudo tee /etc/apt/sources.list.d/$(cross)-cross-compile-sources.list > /dev/null <<EOT
-      deb [arch=$(cross)] http://ports.ubuntu.com/ focal main restricted universe multiverse
-      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-updates main restricted universe multiverse
-      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-backports main restricted universe multiverse
-      EOT
-
-      sudo apt-get update
-      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl1.1:$(cross) libc6:$(cross) libgcc-s1:$(cross) libfreetype-dev:$(cross)
-    displayName: "Install cross-build packages"
-    condition: ne(variables.cross, '')
-
   - script: cargo install cargo-deb
     displayName: "Install cargo-deb"
 
-  - script: |
-      rustup target add $(target)
-      cargo build --release --target $(target)
+  - script: cargo install cross
+    displayName: "Install cross"
+
+  - script: cross build --release --target $(target)
     displayName: "Build"
-    env:
-      PKG_CONFIG_ALLOW_CROSS: 1
 
   - script: |
       cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory) -p tunet
