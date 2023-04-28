@@ -40,7 +40,10 @@ export component SettingsPage inherits VerticalBox {
             col: 1;
             row: 0;
             text: "更新凭据";
-            clicked => { SettingsModel.set-credential(un.text, pw.text) }
+            clicked => {
+                SettingsModel.set-credential(un.text, pw.text);
+                pw.text = "";
+            }
         }
         del_at_exit_btn := Button {
             col: 1;
