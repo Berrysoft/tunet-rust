@@ -72,7 +72,7 @@ jobs:
         cross: 'arm64'
       riscv64:
         target: 'riscv64gc-unknown-linux-gnu'
-        publishName: 'tunet.focal.aarch64'
+        publishName: 'tunet.focal.riscv64gc'
         cross: 'riscv64'
   pool:
     vmImage: 'ubuntu-20.04'
