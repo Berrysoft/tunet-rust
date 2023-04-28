@@ -44,7 +44,7 @@ assets = [
 [dependencies]
 tunet-helper = { workspace = true }
 tunet-suggest = { workspace = true }
-tunet-settings-cli = { workspace = true }
+tunet-settings = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }
 async-trait = { workspace = true }

@@ -12,7 +12,6 @@ netstatus = { workspace = true }
 tunet-helper = { workspace = true }
 tunet-suggest = { workspace = true }
 tunet-settings = { workspace = true }
-tunet-settings-cli = { workspace = true }
 cfg-if = { workspace = true }
 clap = { workspace = true }
 humantime = "2"

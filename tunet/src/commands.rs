@@ -10,7 +10,7 @@ use std::sync::Arc;
 use termcolor::{Color, ColorChoice, StandardStream};
 use termcolor_output as tco;
 use tunet_helper::{usereg::*, *};
-use tunet_settings_cli::*;
+use tunet_settings::*;
 use tunet_suggest::TUNetHelperExt;
 
 fn get_flux_color(f: &Flux, total: bool) -> Color {

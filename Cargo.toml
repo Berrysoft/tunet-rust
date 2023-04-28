@@ -7,7 +7,6 @@ members = [
     "tunet-helper",
     "tunet-suggest",
     "tunet-settings",
-    "tunet-settings-cli",
     "tunet-model",
     "tunet",
     "tunet-cui",
@@ -36,7 +35,6 @@ keyring = { path = "keyring" }
 tunet-helper = { path = "tunet-helper" }
 tunet-model = { path = "tunet-model" }
 tunet-settings = { path = "tunet-settings" }
-tunet-settings-cli = { path = "tunet-settings-cli" }
 tunet-suggest = { path = "tunet-suggest" }
 
 async-trait = "0.1"
@@ -55,7 +53,7 @@ futures-util = "0.3"
 
 itertools = "0.10"
 
-mac_address = { version = "1", package = "mac_address2" }
+mac_address = { version = "2", package = "mac_address2" }
 
 serde = "1"
 serde_json = "1"

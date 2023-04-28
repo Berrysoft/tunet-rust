@@ -11,7 +11,7 @@ use tokio::runtime::Builder as RuntimeBuilder;
 use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
 use tunet_helper::*;
 use tunet_model::Action;
-use tunet_settings_cli::*;
+use tunet_settings::*;
 
 mod event;
 mod view;
