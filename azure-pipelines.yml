@@ -62,20 +62,48 @@ jobs:
 - job: Build_Ubuntu
   strategy:
     matrix:
-      x64:
+      focal-x64:
+        image: 'ubuntu-20.04'
+        ubuntuDist: 'focal'
         target: 'x86_64-unknown-linux-gnu'
-        publishName: 'tunet.focal.x86_64'
+        arch: 'x86_64'
         cross: ''
-      arm64:
+      focal-arm64:
+        image: 'ubuntu-20.04'
+        ubuntuDist: 'focal'
         target: 'aarch64-unknown-linux-gnu'
-        publishName: 'tunet.focal.aarch64'
+        arch: 'aarch64'
         cross: 'arm64'
-      riscv64:
+        sslver: '1.1'
+      focal-riscv64:
+        image: 'ubuntu-20.04'
+        ubuntuDist: 'focal'
         target: 'riscv64gc-unknown-linux-gnu'
-        publishName: 'tunet.focal.riscv64gc'
+        arch: 'riscv64gc'
         cross: 'riscv64'
+        sslver: '1.1'
+      jammy-x64:
+        image: 'ubuntu-22.04'
+        ubuntuDist: 'jammy'
+        target: 'x86_64-unknown-linux-gnu'
+        arch: 'x86_64'
+        cross: ''
+      jammy-arm64:
+        image: 'ubuntu-22.04'
+        ubuntuDist: 'jammy'
+        target: 'aarch64-unknown-linux-gnu'
+        arch: 'aarch64'
+        cross: 'arm64'
+        sslver: '3'
+      jammy-riscv64:
+        image: 'ubuntu-22.04'
+        ubuntuDist: 'jammy'
+        target: 'riscv64gc-unknown-linux-gnu'
+        arch: 'riscv64gc'
+        cross: 'riscv64'
+        sslver: '3'
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: $(image)
   
   steps:
   - script: |
@@ -87,13 +115,13 @@ jobs:
       sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list.d/*
       sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list.d/*
       sudo tee /etc/apt/sources.list.d/$(cross)-cross-compile-sources.list > /dev/null <<EOT
-      deb [arch=$(cross)] http://ports.ubuntu.com/ focal main restricted universe multiverse
-      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-updates main restricted universe multiverse
-      deb [arch=$(cross)] http://ports.ubuntu.com/ focal-backports main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ $(ubuntuDist) main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ $(ubuntuDist)-updates main restricted universe multiverse
+      deb [arch=$(cross)] http://ports.ubuntu.com/ $(ubuntuDist)-backports main restricted universe multiverse
       EOT
 
       sudo apt-get update
-      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl1.1:$(cross) libc6:$(cross) libgcc-s1:$(cross) libfreetype-dev:$(cross)
+      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl$(sslver):$(cross) libc6:$(cross) libgcc-s1:$(cross) libfreetype-dev:$(cross)
     displayName: "Install cross-build packages"
     condition: ne(variables.cross, '')
 
@@ -108,7 +136,7 @@ jobs:
       PKG_CONFIG_ALLOW_CROSS: 1
 
   - script: |
-      cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/$(publishName).deb -p tunet
+      cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/tunet.$(ubuntuDist).$(arch).deb -p tunet
     displayName: "Package"
 
   - task: PublishBuildArtifacts@1
