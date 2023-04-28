@@ -17,7 +17,7 @@ slint = { version = "1", default-features = false, features = [
     "std",
     "compat-1-0",
     "backend-winit",
-    "renderer-winit-femtovg",
+    "renderer-winit-skia",
 ] }
 i-slint-backend-winit = "1"
 image = { version = "0.24", default-features = false, features = ["ico"] }
