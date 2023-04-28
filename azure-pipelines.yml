@@ -13,22 +13,19 @@ jobs:
   strategy:
     matrix:
       x64:
-        image: 'windows-latest'
         target: 'x86_64-pc-windows-msvc'
         publishName: 'tunet.win.x86_64'
         wixArch: x64
       x86:
-        image: 'windows-latest'
         target: 'i686-pc-windows-msvc'
         publishName: 'tunet.win.i686'
         wixArch: x86
       arm64:
-        image: 'windows-latest'
         target: 'aarch64-pc-windows-msvc'
         publishName: 'tunet.win.aarch64'
         wixArch: arm64
   pool:
-    vmImage: $(image)
+    vmImage: windows-latest
   
   steps:
   - script: |
@@ -55,7 +52,7 @@ jobs:
   - pwsh: |
       dotnet tool install --global wix --version 4.0.0
       wix extension add --global WixToolset.UI.wixext/4.0.0
-      wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -o $(Build.ArtifactStagingDirectory)/$(publishName).msi
+      wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -o $(Build.ArtifactStagingDirectory)/$(publishName).msi -pdbtype none
     displayName: 'Package MSI'
 
   - task: PublishBuildArtifacts@1
@@ -66,22 +63,19 @@ jobs:
   strategy:
     matrix:
       x64:
-        image: 'ubuntu-20.04'
         target: 'x86_64-unknown-linux-gnu'
-        publishName: 'linux.x86_64'
+        publishName: 'tunet.focal.x86_64'
         cross: ''
       arm64:
-        image: 'ubuntu-20.04'
         target: 'aarch64-unknown-linux-gnu'
-        publishName: 'linux.aarch64'
+        publishName: 'tunet.focal.aarch64'
         cross: 'arm64'
       riscv64:
-        image: 'ubuntu-20.04'
         target: 'riscv64gc-unknown-linux-gnu'
-        publishName: 'linux.aarch64'
+        publishName: 'tunet.focal.aarch64'
         cross: 'riscv64'
   pool:
-    vmImage: $(image)
+    vmImage: 'ubuntu-20.04'
   
   steps:
   - script: |
@@ -114,7 +108,7 @@ jobs:
       PKG_CONFIG_ALLOW_CROSS: 1
 
   - script: |
-      cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory) -p tunet
+      cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/$(publishName).deb -p tunet
     displayName: "Package"
 
   - task: PublishBuildArtifacts@1
@@ -138,7 +132,7 @@ jobs:
 
   - script: |
       macbundle/bundle.sh
-      cp target/macbundle/tunet.app.zip $(Build.ArtifactStagingDirectory)/
+      cp target/macbundle/tunet.app.zip $(Build.ArtifactStagingDirectory)/tunet.mac.app.zip
     displayName: "Create bundle"
 
   - task: PublishBuildArtifacts@1
