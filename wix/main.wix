@@ -5,7 +5,7 @@
 <?endif ?>
 
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package Name="tunet" UpgradeCode="352cd480-6986-463f-81c6-085864d05a84" Manufacturer="Berrysoft" Language="2052" Codepage="936" Version="0.7.1" InstallerVersion="450">
+  <Package Name="tunet" UpgradeCode="352cd480-6986-463f-81c6-085864d05a84" Manufacturer="Berrysoft" Language="2052" Codepage="936" Version="0.7.2" InstallerVersion="450">
     <SummaryInformation Keywords="Installer" Manufacturer="Berrysoft" />
 
     <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
