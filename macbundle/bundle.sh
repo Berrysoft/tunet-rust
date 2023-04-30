@@ -30,6 +30,7 @@ for b in "${binaries[@]}"
 do
     echo Creating $b
     lipo -create ${x86_target}/$b ${aarch64_target}/$b -output ${binary_dir}/$b
+    strip ${binary_dir}/$b
 done
 
 echo Zipping
