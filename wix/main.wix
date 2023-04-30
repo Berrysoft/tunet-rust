@@ -75,7 +75,9 @@
         <Shortcut Id="tunet_cui_exe_shortcut" Name="清华校园网 (CUI)" Description="清华大学校园网客户端 (Console UI)" Target="[!tunet_cui_exe]" WorkingDirectory="Bin" />
       </Component>
       <Component Id="tunet_gui_shortcut" Guid="2f8e941e-7641-40b1-9ba5-74e49d2ad351">
-        <Shortcut Id="tunet_gui_exe_shortcut" Name="清华校园网 (GUI)" Description="清华大学校园网客户端 (Graphical UI)" Target="[!tunet_gui_exe]" WorkingDirectory="Bin" />
+        <Shortcut Id="tunet_gui_exe_shortcut" Name="清华校园网 (GUI)" Description="清华大学校园网客户端 (Graphical UI)" Target="[!tunet_gui_exe]" WorkingDirectory="Bin">
+          <ShortcutProperty Key="System.AppUserModel.ID" Value="com.berrysoft.tunet"></ShortcutProperty>
+        </Shortcut>
       </Component>
     </StandardDirectory>
   </Package>
