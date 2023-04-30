@@ -18,15 +18,10 @@
     </Feature>
     <Feature Id="feature_tunet_cui" Title="Console User Interface (CUI)" Description="Installs CUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
       <ComponentRef Id="tunet_cui_binary" />
-      <Feature Id="feature_start_menu_shortcut_cui" Title="Start Menu Shortcuts" Description="Add start menu shortcuts for CUI." Level="1">
-        <ComponentRef Id="tunet_cui_shortcut" />
-      </Feature>
     </Feature>
     <Feature Id="feature_tunet_gui" Title="Graphical Interface (GUI)" Description="Installs GUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
       <ComponentRef Id="tunet_gui_binary" />
-      <Feature Id="feature_start_menu_shortcut_gui" Title="Start Menu Shortcuts" Description="Add start menu shortcuts for GUI." Level="1">
-        <ComponentRef Id="tunet_gui_shortcut" />
-      </Feature>
+      <ComponentRef Id="tunet_gui_shortcut" />
     </Feature>
     <Feature Id="feature_tunet_service" Title="Service Daemon" Description="Installs service executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
       <ComponentRef Id="tunet_service_binary" />
@@ -71,11 +66,8 @@
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
-      <Component Id="tunet_cui_shortcut" Guid="2d01e42c-6426-48cb-830f-2ec44d17f9bf">
-        <Shortcut Id="tunet_cui_exe_shortcut" Name="清华校园网 (CUI)" Description="清华大学校园网客户端 (Console UI)" Target="[!tunet_cui_exe]" WorkingDirectory="Bin" />
-      </Component>
       <Component Id="tunet_gui_shortcut" Guid="2f8e941e-7641-40b1-9ba5-74e49d2ad351">
-        <Shortcut Id="tunet_gui_exe_shortcut" Name="清华校园网 (GUI)" Description="清华大学校园网客户端 (Graphical UI)" Target="[!tunet_gui_exe]" WorkingDirectory="Bin">
+        <Shortcut Id="tunet_gui_exe_shortcut" Name="清华校园网" Description="清华大学校园网客户端" Target="[!tunet_gui_exe]" WorkingDirectory="Bin">
           <ShortcutProperty Key="System.AppUserModel.ID" Value="com.berrysoft.tunet"></ShortcutProperty>
         </Shortcut>
       </Component>
