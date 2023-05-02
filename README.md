@@ -4,7 +4,11 @@
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
 ## GUI
-基于 [Slint](https://slint-ui.com/) 开发。
+基于 [Slint](https://slint-ui.com/) 开发。使用如下命令启动：
+
+``` bash
+$ tunet-gui
+```
 
 | 平台    | 亮                                   | 暗                                  |
 | ------- | ------------------------------------ | ----------------------------------- |
@@ -17,9 +21,9 @@
 
 ``` bash
 # 使用默认（自动判断）方式登录/注销
-$ ./tunet-cui
+$ tunet-cui
 # 使用 auth4 方式登录/注销
-$ ./tunet-cui -s auth4
+$ tunet-cui -s auth4
 ```
 
 ![Console](assets/console.png)
@@ -28,62 +32,62 @@ $ ./tunet-cui -s auth4
 ### 登录/注销
 ``` bash
 # 使用默认（自动判断）方式登录
-$ ./tunet login
+$ tunet login
 # 使用默认（自动判断）方式注销
-$ ./tunet logout
+$ tunet logout
 # 使用 auth4 方式登录
-$ ./tunet login -s auth4
+$ tunet login -s auth4
 # 使用 auth4 方式注销
-$ ./tunet logout -s auth4
+$ tunet logout -s auth4
 ```
 ### 在线状态
 ``` bash
 # 使用默认（自动判断）方式
-$ ./tunet status
+$ tunet status
 # 使用 auth4 方式
-$ ./tunet status -s auth4
+$ tunet status -s auth4
 ```
 ### 查询/强制下线在线 IP
 ``` bash
 # 查询
-$ ./tunet online
+$ tunet online
 # IP 上线
-$ ./tunet connect -a IP地址
+$ tunet connect -a IP地址
 # IP 下线
-$ ./tunet drop -a IP地址
+$ tunet drop -a IP地址
 ```
 ### 流量明细
 ``` bash
 # 使用默认排序（注销时间，升序）查询明细
-$ ./tunet detail
+$ tunet detail
 # 使用登录时间（升序）查询明细
-$ ./tunet detail -o login
+$ tunet detail -o login
 # 使用流量降序查询明细
-$ ./tunet detail -o flux -d
+$ tunet detail -o flux -d
 # 使用流量降序查询明细，并按注销日期组合
-$ ./tunet detail -o flux -dg
+$ tunet detail -o flux -dg
 ```
 ### Nushell 集成
 `status`、`online`、`detail` 子命令支持 `--nuon` 参数，可以配合 Nushell 得到结构化的数据：
 ``` bash
 # 在线状态表格
-> ./tunet status --nuon | from nuon
+> tunet status --nuon | from nuon
 # 查询在线 IP 表格
-> ./tunet online --nuon | from nuon
+> tunet online --nuon | from nuon
 # 明细表格
-> ./tunet detail --nuon | from nuon
+> tunet detail --nuon | from nuon
 # 使用流量降序查询明细，并按注销日期组合
-> ./tunet detail -g --nuon | from nuon | sort-by flux -r
+> tunet detail -g --nuon | from nuon | sort-by flux -r
 ```
 
 ### Windows 服务/macOS launchd
 ``` bash
 # 注册服务
-$ ./tunet-service register
+$ tunet-service register
 # 注册服务，并定时5分钟连接一次
-$ ./tunet-service register -i "5min"
+$ tunet-service register -i "5min"
 # 注销服务
-$ ./tunet-service unregister
+$ tunet-service unregister
 ```
 注意 `tunet-service.exe` 自身是服务程序，如需删除应先注销服务。
 
@@ -112,7 +116,7 @@ $ sudo systemctl start tunet@foo
 
 请不要在不信任的电脑上保存密码。可以在图形界面点击“删除并退出”，或在命令行使用如下命令删除：
 ``` bash
-$ ./tunet deletecred
+$ tunet deletecred
 ```
 
 ## netstatus
