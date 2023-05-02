@@ -39,6 +39,11 @@ assets = [
         "usr/share/applications/tunet.desktop",
         "755",
     ],
+    [
+        "../tunet-service/tunet@.service",
+        "lib/systemd/system/tunet@.service",
+        "644",
+    ],
 ]
 
 [dependencies]

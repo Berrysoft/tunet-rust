@@ -1,0 +1,12 @@
+[Unit]
+Description=Service for Tsinghua University campus network.
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart=/usr/bin/tunet-service start -i 5s
+User=%i
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy = multi-user.target

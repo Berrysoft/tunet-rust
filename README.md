@@ -87,6 +87,16 @@ $ ./tunet-service unregister
 ```
 注意 `tunet-service.exe` 自身是服务程序，如需删除应先注销服务。
 
+### Systemd
+Debian 打包提供了 `tunet@.service` 文件。对于用户 `foo`，可以运行
+``` bash
+# 启用服务
+$ sudo systemctl enable tunet@foo
+# 启动服务
+$ sudo systemctl start tunet@foo
+```
+可以通过编辑该文件来调整重复登录的间隔。
+
 ## keyring
 用户名和密码在第一次登录时根据提示输入，不同平台管理密码方法如下：
 
