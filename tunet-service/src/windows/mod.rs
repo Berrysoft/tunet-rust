@@ -18,6 +18,8 @@ use windows_service::{
 };
 
 pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
+    winlog2::register(SERVICE_NAME)?;
+
     let manager =
         ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
     let service = if let Ok(service) = manager.open_service(
@@ -74,6 +76,8 @@ pub fn unregister() -> Result<()> {
         service.stop()?;
     }
     service.delete()?;
+
+    winlog2::deregister(SERVICE_NAME)?;
     Ok(())
 }
 
@@ -141,6 +145,7 @@ struct ServiceOptions {
 }
 
 async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()> {
+    winlog2::init(SERVICE_NAME)?;
     let options = ServiceOptions::try_parse_from(args)?;
     let mut ctrlc = ctrl_c()?;
     let mut stopc = WatchStream::new(rx).skip(1);
@@ -155,12 +160,14 @@ async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()
                 break;
             }
             _ = timer.next() => {
+                log::info!("Timer triggered.");
                 notify::notify(true).ok();
             }
             e = events.next() => {
+                log::info!("Net status changed.");
                 if let Some(()) = e {
                     if let Err(msg) = notify::notify(false) {
-                        notify::error(msg.to_string()).ok();
+                        log::error!("{}", msg);
                     }
                 } else {
                     break;

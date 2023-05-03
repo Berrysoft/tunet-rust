@@ -62,6 +62,7 @@ pub fn unregister() -> Result<()> {
 }
 
 pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
+    env_logger::try_init()?;
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
@@ -82,14 +83,16 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
                 break;
             }
             _ = timer.next() => {
+                log::info!("Timer triggered.");
                 if let Err(msg) = crate::run_once(true).await {
-                    eprintln!("{}", msg)
+                    log::error!("{}", msg);
                 }
             }
             e = events.next() => {
+                log::info!("Net status changed.");
                 if let Some(()) = e {
                     if let Err(msg) = crate::run_once(false).await {
-                        eprintln!("{}", msg)
+                        log::error!("{}", msg);
                     }
                 } else {
                     break;
