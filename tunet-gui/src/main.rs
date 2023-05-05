@@ -234,6 +234,8 @@ async fn main() -> Result<()> {
         |item: StandardListViewItem| Reverse(item.text)
     ));
 
+    app.show()?;
+
     tokio::spawn({
         let model = model.clone();
         async move {
@@ -242,8 +244,6 @@ async fn main() -> Result<()> {
             }
         }
     });
-
-    app.show()?;
 
     let window = app.window();
     if let Some(new_pos) = window
