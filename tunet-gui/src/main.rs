@@ -9,7 +9,7 @@ use plotters::{
 };
 use slint::{
     quit_event_loop, Image, Model as SlintModel, ModelRc, PhysicalPosition, Rgb8Pixel, Rgba8Pixel,
-    SharedPixelBuffer, SharedString, SortModel, StandardListViewItem, VecModel,
+    SharedPixelBuffer, SharedString, SortModel, StandardListViewItem, VecModel, Window,
 };
 use std::{
     cmp::{Ordering, Reverse},
@@ -26,6 +26,72 @@ use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
 
 slint::include_modules!();
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let app = App::new()?;
+
+    let context = UpdateContext::new(&app);
+    let (tx, rx) = mpsc::channel(32);
+    let model = context.create_model(tx).await?;
+    start_model(&model).await?;
+
+    {
+        let home_model = app.global::<HomeModel>();
+        bind_home_model(&home_model, &model);
+
+        let detail_model = app.global::<DetailModel>();
+        bind_detail_model(&detail_model, &model, &context);
+
+        let settings_model = app.global::<SettingsModel>();
+        bind_settings_model(&settings_model, &model, &context);
+
+        let about_model = app.global::<AboutModel>();
+        bind_about_model(&about_model, &context);
+    }
+
+    app.show()?;
+
+    start_model_loop(model.clone(), rx);
+
+    center_window(app.window());
+
+    app.run()?;
+
+    stop_model(&model, context.del_at_exit()).await?;
+    Ok(())
+}
+
+async fn start_model(model: &Mutex<Model>) -> Result<()> {
+    let model = model.lock().await;
+    let settings_reader = FileSettingsReader::new()?;
+    if let Ok(cred) = settings_reader.read_with_password() {
+        model.queue(Action::Credential(Arc::new(cred)));
+    }
+    model.queue(Action::Status);
+    model.queue(Action::WatchStatus);
+    model.queue(Action::Timer);
+    Ok(())
+}
+
+fn start_model_loop(model: Arc<Mutex<Model>>, mut rx: mpsc::Receiver<Action>) {
+    tokio::spawn(async move {
+        while let Some(a) = rx.recv().await {
+            model.lock().await.handle(a);
+        }
+    });
+}
+
+async fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {
+    let mut settings_reader = FileSettingsReader::new()?;
+    if del_at_exit {
+        settings_reader.delete()?;
+    } else {
+        let cred = model.lock().await.cred.clone();
+        settings_reader.save(cred).await?;
+    }
+    Ok(())
+}
 
 macro_rules! upgrade_spawn_body {
     ($m: ident, $w: expr, $t: expr) => {
@@ -91,7 +157,7 @@ macro_rules! sort_by_key {
 macro_rules! sort_callback {
     ($app: expr, $mty: ty, $prop: ident, $sortf: expr) => {
         paste::paste! {{
-            let weak_app = $app.as_weak();
+            let weak_app = $app.clone();
             let sortf = $sortf;
             move |index| {
                 if let Some(app) = weak_app.upgrade() {
@@ -116,45 +182,11 @@ macro_rules! sort_by_key_callback {
     };
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    let app = App::new()?;
-
+fn bind_home_model(home_model: &HomeModel, model: &Arc<Mutex<Model>>) {
     let color = color_theme::Color::accent();
-    let home_model = app.global::<HomeModel>();
-    let detail_model = app.global::<DetailModel>();
-    let settings_model = app.global::<SettingsModel>();
-    let about_model = app.global::<AboutModel>();
-
     home_model.set_theme_color(slint::Color::from_argb_u8(255, color.r, color.g, color.b));
     home_model.set_theme_color_t1(slint::Color::from_argb_u8(168, color.r, color.g, color.b));
     home_model.set_theme_color_t2(slint::Color::from_argb_u8(84, color.r, color.g, color.b));
-
-    about_model.set_version(env!("CARGO_PKG_VERSION").into());
-
-    let (tx, mut rx) = mpsc::channel(32);
-    let model = Arc::new(Mutex::new(Model::new(tx)?));
-    let context = UpdateContext::new(&app);
-    let mut settings_reader = FileSettingsReader::new()?;
-    {
-        let context = context.clone();
-        let update = upgrade_spawn!(model, |msg| {
-            let context = context.clone();
-            async move {
-                let model = model.lock().await;
-                context.update(&model, msg);
-            }
-        });
-        let mut model = model.lock().await;
-        model.update = Some(Box::new(update));
-
-        if let Ok(cred) = settings_reader.read_with_password() {
-            model.queue(Action::Credential(Arc::new(cred)));
-        }
-        model.queue(Action::Status);
-        model.queue(Action::WatchStatus);
-        model.queue(Action::Timer);
-    }
 
     home_model.on_state_changed(upgrade_queue!(model, |s| Action::State(Some(
         s.parse().unwrap()
@@ -163,7 +195,13 @@ async fn main() -> Result<()> {
     home_model.on_login(upgrade_queue!(model, || Action::Login));
     home_model.on_logout(upgrade_queue!(model, || Action::Logout));
     home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
+}
 
+fn bind_detail_model(
+    detail_model: &DetailModel,
+    model: &Arc<Mutex<Model>>,
+    context: &UpdateContext,
+) {
     detail_model.on_daily_chart({
         let context = context.clone();
         move |width, height, dark, text_color| {
@@ -185,7 +223,13 @@ async fn main() -> Result<()> {
             context.sort_details(index, true);
         }
     });
+}
 
+fn bind_settings_model(
+    settings_model: &SettingsModel,
+    model: &Arc<Mutex<Model>>,
+    context: &UpdateContext,
+) {
     settings_model.on_set_credential(upgrade_queue!(model, |username, password| {
         Action::UpdateCredential(username.to_string(), password.to_string())
     }));
@@ -205,58 +249,23 @@ async fn main() -> Result<()> {
     settings_model.on_drop_ip(upgrade_queue!(model, |ip| Action::Drop(
         ip.parse().unwrap()
     )));
+}
+
+fn bind_about_model(about_model: &AboutModel, context: &UpdateContext) {
+    about_model.set_version(env!("CARGO_PKG_VERSION").into());
 
     about_model.on_sort_ascending(sort_by_key_callback!(
-        app,
+        context.weak_app,
         AboutModel,
         deps,
         |item: StandardListViewItem| item.text
     ));
     about_model.on_sort_descending(sort_by_key_callback!(
-        app,
+        context.weak_app,
         AboutModel,
         deps,
         |item: StandardListViewItem| Reverse(item.text)
     ));
-
-    app.show()?;
-
-    tokio::spawn({
-        let model = model.clone();
-        async move {
-            while let Some(a) = rx.recv().await {
-                model.lock().await.handle(a);
-            }
-        }
-    });
-
-    let window = app.window();
-    if let Some(new_pos) = window
-        .with_winit_window(|window| {
-            window.primary_monitor().map(|monitor| {
-                let monitor_pos = monitor.position();
-                let monitor_size = monitor.size();
-                let window_size = window.outer_size();
-                PhysicalPosition {
-                    x: monitor_pos.x + ((monitor_size.width - window_size.width) / 2) as i32,
-                    y: monitor_pos.y + ((monitor_size.height - window_size.height) / 2) as i32,
-                }
-            })
-        })
-        .flatten()
-    {
-        window.set_position(new_pos);
-    }
-
-    app.run()?;
-
-    if context.del_at_exit() {
-        settings_reader.delete()?;
-    } else {
-        let cred = model.lock().await.cred.clone();
-        settings_reader.save(cred).await?;
-    }
-    Ok(())
 }
 
 #[derive(Clone)]
@@ -271,6 +280,23 @@ impl UpdateContext {
             weak_app: app.as_weak(),
             data: Arc::new(SyncMutex::new(UpdateData::default())),
         }
+    }
+
+    pub async fn create_model(&self, tx: mpsc::Sender<Action>) -> Result<Arc<Mutex<Model>>> {
+        let model = Arc::new(Mutex::new(Model::new(tx)?));
+        let context = self.clone();
+        let update = upgrade_spawn!(model, |msg| {
+            let context = context.clone();
+            async move {
+                let model = model.lock().await;
+                context.update(&model, msg);
+            }
+        });
+        {
+            let mut model = model.lock().await;
+            model.update = Some(Box::new(update));
+        }
+        Ok(model)
     }
 
     fn update_username(&self, username: impl Into<SharedString>) {
@@ -606,4 +632,23 @@ fn image_from_rgb8_with_transparency(
         }
     }
     Image::from_rgba8(new_buffer)
+}
+
+fn center_window(window: &Window) {
+    if let Some(new_pos) = window
+        .with_winit_window(|window| {
+            window.primary_monitor().map(|monitor| {
+                let monitor_pos = monitor.position();
+                let monitor_size = monitor.size();
+                let window_size = window.outer_size();
+                PhysicalPosition {
+                    x: monitor_pos.x + ((monitor_size.width - window_size.width) / 2) as i32,
+                    y: monitor_pos.y + ((monitor_size.height - window_size.height) / 2) as i32,
+                }
+            })
+        })
+        .flatten()
+    {
+        window.set_position(new_pos);
+    }
 }
