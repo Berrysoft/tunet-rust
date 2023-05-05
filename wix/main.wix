@@ -1,9 +1,3 @@
-<?if $(arch) = x64 or $(arch) = arm64 ?>
-  <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
-<?else ?>
-  <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
-<?endif ?>
-
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Name="tunet" UpgradeCode="352cd480-6986-463f-81c6-085864d05a84" Manufacturer="Berrysoft" Language="2052" Codepage="936" Version="0.7.3" InstallerVersion="450">
     <SummaryInformation Keywords="Installer" Manufacturer="Berrysoft" />
@@ -13,31 +7,34 @@
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" DiskPrompt="CD-ROM #1" />
     <Property Id="DiskPrompt" Value="tunet installation" />
 
-    <Feature Id="feature_tunet_cli" Title="Command Line Interface (CLI)" Description="Installs CLI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+    <Feature Id="feature_tunet_cli" Title="Command Line Interface (CLI)" Description="Installs CLI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
       <ComponentRef Id="tunet_cli_binary" />
     </Feature>
-    <Feature Id="feature_tunet_cui" Title="Console User Interface (CUI)" Description="Installs CUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+    <Feature Id="feature_tunet_cui" Title="Console User Interface (CUI)" Description="Installs CUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
       <ComponentRef Id="tunet_cui_binary" />
     </Feature>
-    <Feature Id="feature_tunet_gui" Title="Graphical Interface (GUI)" Description="Installs GUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+    <Feature Id="feature_tunet_gui" Title="Graphical Interface (GUI)" Description="Installs GUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
       <ComponentRef Id="tunet_gui_binary" />
       <ComponentRef Id="tunet_gui_shortcut" />
     </Feature>
-    <Feature Id="feature_tunet_service" Title="Service Daemon" Description="Installs service executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
+    <Feature Id="feature_tunet_service" Title="Service Daemon" Description="Installs service executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
       <ComponentRef Id="tunet_service_binary" />
+      <ComponentRef Id="tunet_gui_shortcut" />
     </Feature>
     <Feature Id="feature_env_path" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executables to the PATH system environment variable. This allows the [ProductName] executables to be called from any location." Level="1">
       <ComponentRef Id="path" />
     </Feature>
 
     <SetProperty Id="ARPINSTALLLOCATION" Value="[APPLICATIONFOLDER]" After="CostFinalize" />
+    <Icon Id='ProductICO' SourceFile='logo.ico'/>
+    <Property Id='ARPPRODUCTICON' Value='ProductICO' />
+    <Property Id='ARPHELPLINK' Value='https://github.com/Berrysoft/tunet-rust'/>
     <UI>
       <ui:WixUI Id="WixUI_FeatureTree" />
-      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="CustomizeDlg" Order="2" />
-      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />
     </UI>
+    <WixVariable Id='WixUILicenseRtf' Value='wix\License.rtf'/>
 
-    <StandardDirectory Id="$(PlatformProgramFilesFolder)">
+    <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="APPLICATIONFOLDER" Name="tunet">
         <Directory Id="Bin" Name="bin" FileSource="target\$(target)\release">
 

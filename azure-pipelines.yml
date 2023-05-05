@@ -52,7 +52,7 @@ jobs:
   - pwsh: |
       dotnet tool install --global wix --version 4.0.0
       wix extension add --global WixToolset.UI.wixext/4.0.0
-      wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -o $(Build.ArtifactStagingDirectory)/$(publishName).msi -pdbtype none
+      wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -culture zh-cn -o $(Build.ArtifactStagingDirectory)/$(publishName).msi -pdbtype none
     displayName: 'Package MSI'
 
   - task: PublishBuildArtifacts@1
