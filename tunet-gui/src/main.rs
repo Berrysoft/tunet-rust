@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use i_slint_backend_winit::WinitWindowAccessor;
+use mac_address::MacAddress;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
     series::LineSeries,
@@ -8,7 +9,7 @@ use plotters::{
 };
 use slint::{
     quit_event_loop, Image, Model as SlintModel, ModelRc, PhysicalPosition, Rgb8Pixel, Rgba8Pixel,
-    SharedPixelBuffer, SortModel, StandardListViewItem, VecModel,
+    SharedPixelBuffer, SharedString, SortModel, StandardListViewItem, VecModel,
 };
 use std::{
     cmp::{Ordering, Reverse},
@@ -19,7 +20,7 @@ use std::{
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
-    Datelike, Flux, Result,
+    Datelike, Flux, NetFlux, NetState, Result,
 };
 use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 use tunet_settings::FileSettingsReader;
@@ -133,17 +134,15 @@ async fn main() -> Result<()> {
 
     let (tx, mut rx) = mpsc::channel(32);
     let model = Arc::new(Mutex::new(Model::new(tx)?));
-    let context = Arc::new(SyncMutex::new(UpdateContext::default()));
+    let context = UpdateContext::new(&app);
     let mut settings_reader = FileSettingsReader::new()?;
     {
-        let weak_app = app.as_weak();
         let context = context.clone();
         let update = upgrade_spawn!(model, |msg| {
-            let weak_app = weak_app.clone();
             let context = context.clone();
             async move {
                 let model = model.lock().await;
-                update(&model, msg, weak_app, context)
+                context.update(&model, msg);
             }
         });
         let mut model = model.lock().await;
@@ -152,10 +151,9 @@ async fn main() -> Result<()> {
         if let Ok(cred) = settings_reader.read_with_password() {
             model.queue(Action::Credential(Arc::new(cred)));
         }
+        model.queue(Action::Status);
         model.queue(Action::WatchStatus);
         model.queue(Action::Timer);
-
-        home_model.set_status(model.status.to_string().into());
     }
 
     home_model.on_state_changed(upgrade_queue!(model, |s| Action::State(Some(
@@ -167,37 +165,24 @@ async fn main() -> Result<()> {
     home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
 
     detail_model.on_daily_chart({
-        let weak_app = app.as_weak();
         let context = context.clone();
         move |width, height, dark, text_color| {
-            let app = weak_app.upgrade().unwrap();
-            let context = context.lock().unwrap();
-            draw_daily(&app, width, height, dark, text_color, &context.daily)
+            context.draw_daily_chart(width, height, dark, text_color)
         }
     });
 
     detail_model.on_refresh(upgrade_queue!(model, || Action::Details));
 
     detail_model.on_sort_ascending({
-        let weak_app = app.as_weak();
         let context = context.clone();
         move |index| {
-            if let Some(app) = weak_app.upgrade() {
-                let mut context = context.lock().unwrap();
-                context.sort(index, false);
-                update_details(&app, &context.sorted_details);
-            }
+            context.sort_details(index, false);
         }
     });
     detail_model.on_sort_descending({
-        let weak_app = app.as_weak();
         let context = context.clone();
         move |index| {
-            if let Some(app) = weak_app.upgrade() {
-                let mut context = context.lock().unwrap();
-                context.sort(index, true);
-                update_details(&app, &context.sorted_details);
-            }
+            context.sort_details(index, true);
         }
     });
 
@@ -207,7 +192,7 @@ async fn main() -> Result<()> {
     settings_model.on_del_and_exit({
         let context = context.clone();
         move || {
-            context.lock().unwrap().del_at_exit = true;
+            context.set_del_at_exit();
             quit_event_loop().unwrap();
         }
     });
@@ -265,7 +250,7 @@ async fn main() -> Result<()> {
 
     app.run()?;
 
-    if context.lock().unwrap().del_at_exit {
+    if context.del_at_exit() {
         settings_reader.delete()?;
     } else {
         let cred = model.lock().await.cred.clone();
@@ -274,14 +259,198 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone)]
 struct UpdateContext {
+    weak_app: slint::Weak<App>,
+    data: Arc<SyncMutex<UpdateData>>,
+}
+
+impl UpdateContext {
+    pub fn new(app: &App) -> Self {
+        Self {
+            weak_app: app.as_weak(),
+            data: Arc::new(SyncMutex::new(UpdateData::default())),
+        }
+    }
+
+    fn update_username(&self, username: impl Into<SharedString>) {
+        let username = username.into();
+        self.weak_app
+            .upgrade_in_event_loop(move |app| {
+                app.global::<SettingsModel>().set_username(username);
+            })
+            .unwrap();
+    }
+
+    fn update_state(&self, state: NetState) {
+        let state = state as i32 - 1;
+        self.weak_app
+            .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_state(state))
+            .unwrap();
+    }
+
+    fn update_status(&self, status: impl Into<SharedString>) {
+        let status = status.into();
+        self.weak_app
+            .upgrade_in_event_loop(move |app| {
+                app.global::<HomeModel>().set_status(status);
+            })
+            .unwrap();
+    }
+
+    fn update_log(&self, log: impl Into<SharedString>) {
+        let log = log.into();
+        self.weak_app
+            .upgrade_in_event_loop(move |app| {
+                app.global::<HomeModel>().set_log(log);
+            })
+            .unwrap();
+    }
+
+    fn update_info(&self, flux: &NetFlux) {
+        let info = NetInfo {
+            username: flux.username.as_str().into(),
+            flux_gb: flux.flux.to_gb() as _,
+            flux_str: flux.flux.to_string().into(),
+            online_time: flux.online_time.to_string().into(),
+            balance: flux.balance.0 as _,
+            balance_str: flux.balance.to_string().into(),
+        };
+        self.weak_app
+            .upgrade_in_event_loop(move |app| {
+                app.global::<HomeModel>().set_info(info);
+            })
+            .unwrap();
+    }
+
+    fn update_online(&self, onlines: &[NetUser], mac_addrs: &[MacAddress]) {
+        let onlines = onlines.to_vec();
+        let is_local = onlines
+            .iter()
+            .map(|user| {
+                mac_addrs
+                    .iter()
+                    .any(|it| Some(it) == user.mac_address.as_ref())
+            })
+            .collect::<Vec<_>>();
+        self.weak_app
+            .upgrade_in_event_loop(move |app| update_online(app, onlines, is_local))
+            .unwrap();
+    }
+
+    fn update_details(&self, details: &[NetDetail]) {
+        self.data.lock().unwrap().update_details(details.to_vec());
+        self.weak_app
+            .upgrade_in_event_loop({
+                let data = self.data.clone();
+                move |app| {
+                    let data = data.lock().unwrap();
+                    update_details(&app, &data.sorted_details);
+                }
+            })
+            .unwrap();
+    }
+
+    fn sort_details(&self, column: i32, descending: bool) {
+        self.weak_app
+            .upgrade_in_event_loop({
+                let data = self.data.clone();
+                move |app| {
+                    let mut data = data.lock().unwrap();
+                    data.sort(column, descending);
+                    update_details(&app, &data.sorted_details);
+                }
+            })
+            .unwrap();
+    }
+
+    fn update_log_busy(&self, busy: bool) {
+        self.weak_app
+            .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_busy(busy))
+            .unwrap();
+    }
+
+    fn update_online_busy(&self, busy: bool) {
+        self.weak_app
+            .upgrade_in_event_loop(move |app| app.global::<SettingsModel>().set_busy(busy))
+            .unwrap();
+    }
+
+    fn update_detail_busy(&self, busy: bool) {
+        self.weak_app
+            .upgrade_in_event_loop(move |app| app.global::<DetailModel>().set_busy(busy))
+            .unwrap();
+    }
+
+    pub fn update(&self, model: &Model, msg: UpdateMsg) {
+        match msg {
+            UpdateMsg::Credential => {
+                model.queue(Action::State(None));
+                model.queue(Action::Online);
+                model.queue(Action::Details);
+                self.update_username(&model.cred.username);
+            }
+            UpdateMsg::State => {
+                model.queue(Action::Flux);
+                self.update_state(model.state);
+            }
+            UpdateMsg::Status => {
+                model.queue(Action::State(None));
+                self.update_status(model.status.to_string());
+            }
+            UpdateMsg::Log => {
+                self.update_log(model.log.as_ref());
+            }
+            UpdateMsg::Flux => {
+                self.update_info(&model.flux);
+            }
+            UpdateMsg::Online => {
+                self.update_online(&model.users, &model.mac_addrs);
+            }
+            UpdateMsg::Details => {
+                self.update_details(&model.details);
+            }
+            UpdateMsg::LogBusy => {
+                self.update_log_busy(model.log_busy());
+            }
+            UpdateMsg::OnlineBusy => {
+                self.update_online_busy(model.online_busy());
+            }
+            UpdateMsg::DetailBusy => {
+                self.update_detail_busy(model.detail_busy());
+            }
+        };
+    }
+
+    pub fn set_del_at_exit(&self) {
+        self.data.lock().unwrap().del_at_exit = true;
+    }
+
+    pub fn del_at_exit(&self) -> bool {
+        self.data.lock().unwrap().del_at_exit
+    }
+
+    pub fn draw_daily_chart(
+        &self,
+        width: f32,
+        height: f32,
+        dark: bool,
+        text_color: slint::Color,
+    ) -> Image {
+        let app = self.weak_app.upgrade().unwrap();
+        let data = self.data.lock().unwrap();
+        draw_daily(&app, width, height, dark, text_color, &data.daily)
+    }
+}
+
+#[derive(Debug, Default)]
+struct UpdateData {
     del_at_exit: bool,
     sorted_details: Vec<NetDetail>,
     daily: DetailDaily,
 }
 
-impl UpdateContext {
+impl UpdateData {
     pub fn update_details(&mut self, details: Vec<NetDetail>) {
         self.daily = DetailDaily::new(&details);
         self.sorted_details = details;
@@ -304,115 +473,6 @@ impl UpdateContext {
             }
         }
     }
-}
-
-fn update(
-    model: &Model,
-    msg: UpdateMsg,
-    weak_app: slint::Weak<App>,
-    context: Arc<SyncMutex<UpdateContext>>,
-) {
-    match msg {
-        UpdateMsg::Credential => {
-            model.queue(Action::State(None));
-            model.queue(Action::Online);
-            model.queue(Action::Details);
-
-            let username = model.cred.username.clone();
-            weak_app
-                .upgrade_in_event_loop(move |app| {
-                    app.global::<SettingsModel>().set_username(username.into());
-                })
-                .unwrap();
-        }
-        UpdateMsg::State => {
-            model.queue(Action::Flux);
-
-            let state = model.state as i32 - 1;
-            weak_app
-                .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_state(state))
-                .unwrap();
-        }
-        UpdateMsg::Status => {
-            model.queue(Action::State(None));
-
-            let status = model.status.to_string();
-            weak_app
-                .upgrade_in_event_loop(move |app| {
-                    app.global::<HomeModel>().set_status(status.into());
-                })
-                .unwrap();
-        }
-        UpdateMsg::Log => {
-            let log = model.log.as_ref().into();
-            weak_app
-                .upgrade_in_event_loop(move |app| {
-                    app.global::<HomeModel>().set_log(log);
-                })
-                .unwrap();
-        }
-        UpdateMsg::Flux => {
-            let flux = &model.flux;
-            let info = NetInfo {
-                username: flux.username.as_str().into(),
-                flux_gb: flux.flux.to_gb() as _,
-                flux_str: flux.flux.to_string().into(),
-                online_time: flux.online_time.to_string().into(),
-                balance: flux.balance.0 as _,
-                balance_str: flux.balance.to_string().into(),
-            };
-            weak_app
-                .upgrade_in_event_loop(move |app| {
-                    app.global::<HomeModel>().set_info(info);
-                })
-                .unwrap();
-        }
-        UpdateMsg::Online => {
-            let onlines = model.users.clone();
-            let is_local = onlines
-                .iter()
-                .map(|user| {
-                    model
-                        .mac_addrs
-                        .iter()
-                        .any(|it| Some(it) == user.mac_address.as_ref())
-                })
-                .collect::<Vec<_>>();
-            weak_app
-                .upgrade_in_event_loop(move |app| update_online(app, onlines, is_local))
-                .unwrap();
-        }
-        UpdateMsg::Details => {
-            context
-                .lock()
-                .unwrap()
-                .update_details(model.details.clone());
-            weak_app
-                .upgrade_in_event_loop(move |app| {
-                    let context = context.lock().unwrap();
-                    update_details(&app, &context.sorted_details);
-                })
-                .unwrap();
-        }
-        UpdateMsg::LogBusy => {
-            let busy = model.log_busy();
-            weak_app
-                .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_busy(busy))
-                .unwrap();
-        }
-        UpdateMsg::OnlineBusy => {
-            let busy = model.online_busy();
-            weak_app
-                .upgrade_in_event_loop(move |app| app.global::<SettingsModel>().set_busy(busy))
-                .unwrap();
-        }
-        UpdateMsg::DetailBusy => {
-            let busy = model.detail_busy();
-            weak_app
-                .upgrade_in_event_loop(move |app| app.global::<DetailModel>().set_busy(busy))
-                .unwrap();
-        }
-    };
 }
 
 fn update_online(app: App, onlines: Vec<NetUser>, is_local: Vec<bool>) {

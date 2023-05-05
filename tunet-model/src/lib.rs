@@ -81,7 +81,7 @@ impl Model {
             cred: Arc::new(NetCredential::default()),
             http,
             state: NetState::Unknown,
-            status: NetStatus::current(),
+            status: NetStatus::Unknown,
             log: Cow::default(),
             log_busy: BusyBool::new(tx.clone(), UpdateMsg::LogBusy),
             online_busy: BusyBool::new(tx.clone(), UpdateMsg::OnlineBusy),
