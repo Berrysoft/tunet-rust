@@ -9,52 +9,73 @@ use tunet_helper::Result;
 use windows_service::{
     define_windows_service,
     service::{
-        ServiceAccess, ServiceControl, ServiceControlAccept, ServiceErrorControl, ServiceExitCode,
-        ServiceInfo, ServiceStartType, ServiceState, ServiceStatus, ServiceType,
+        Service, ServiceAccess, ServiceControl, ServiceControlAccept, ServiceErrorControl,
+        ServiceExitCode, ServiceInfo, ServiceStartType, ServiceState, ServiceStatus, ServiceType,
     },
     service_control_handler::{self, ServiceControlHandlerResult},
     service_dispatcher,
     service_manager::{ServiceManager, ServiceManagerAccess},
 };
 
+fn open_manager() -> Result<ServiceManager> {
+    Ok(ServiceManager::local_computer(
+        None::<&str>,
+        ServiceManagerAccess::CREATE_SERVICE,
+    )?)
+}
+
+fn open_service(manager: &ServiceManager) -> Result<Service> {
+    Ok(manager.open_service(
+        SERVICE_NAME,
+        ServiceAccess::QUERY_STATUS | ServiceAccess::STOP | ServiceAccess::DELETE,
+    )?)
+}
+
+fn create_service(manager: &ServiceManager) -> Result<Service> {
+    let service_info = ServiceInfo {
+        name: SERVICE_NAME.into(),
+        display_name: "TsinghuaNet Background Task".into(),
+        service_type: ServiceType::OWN_PROCESS,
+        start_type: ServiceStartType::AutoStart,
+        error_control: ServiceErrorControl::Normal,
+        executable_path: std::env::current_exe()?,
+        launch_arguments: vec!["start".into()],
+        dependencies: vec![],
+        account_name: None,
+        account_password: None,
+    };
+    Ok(manager.create_service(
+        &service_info,
+        ServiceAccess::QUERY_STATUS | ServiceAccess::START,
+    )?)
+}
+
+fn delete_service(service: &Service) -> Result<()> {
+    let status = service.query_status()?;
+    if status.current_state != ServiceState::Stopped {
+        service.stop()?;
+    }
+    loop {
+        let status = service.query_status()?;
+        if status.current_state == ServiceState::Stopped {
+            break;
+        }
+    }
+    service.delete()?;
+    Ok(())
+}
+
 pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
     winlog2::register(SERVICE_NAME)?;
 
-    let manager =
-        ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
-    let service = if let Ok(service) = manager.open_service(
-        SERVICE_NAME,
-        ServiceAccess::QUERY_STATUS | ServiceAccess::START | ServiceAccess::STOP,
-    ) {
-        let status = service.query_status()?;
-        if status.current_state != ServiceState::Stopped {
-            service.stop()?;
-        }
-        loop {
-            let status = service.query_status()?;
-            if status.current_state == ServiceState::Stopped {
-                break;
-            }
-        }
-        service
-    } else {
-        let service_info = ServiceInfo {
-            name: SERVICE_NAME.into(),
-            display_name: "TsinghuaNet Background Task".into(),
-            service_type: ServiceType::OWN_PROCESS,
-            start_type: ServiceStartType::AutoStart,
-            error_control: ServiceErrorControl::Normal,
-            executable_path: std::env::current_exe()?,
-            launch_arguments: vec!["start".into()],
-            dependencies: vec![],
-            account_name: None,
-            account_password: None,
-        };
-        manager.create_service(
-            &service_info,
-            ServiceAccess::QUERY_STATUS | ServiceAccess::START,
-        )?
-    };
+    let manager = open_manager()?;
+
+    if let Ok(service) = open_service(&manager) {
+        delete_service(&service)?;
+    }
+
+    let service = create_service(&manager)?;
+
     let service_args = if let Some(d) = interval {
         vec!["--interval".to_string(), d.to_string()]
     } else {
@@ -65,17 +86,9 @@ pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
 }
 
 pub fn unregister() -> Result<()> {
-    let manager =
-        ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CREATE_SERVICE)?;
-    let service = manager.open_service(
-        SERVICE_NAME,
-        ServiceAccess::QUERY_STATUS | ServiceAccess::STOP | ServiceAccess::DELETE,
-    )?;
-    let status = service.query_status()?;
-    if status.current_state != ServiceState::Stopped {
-        service.stop()?;
-    }
-    service.delete()?;
+    let manager = open_manager()?;
+    let service = open_service(&manager)?;
+    delete_service(&service)?;
 
     winlog2::deregister(SERVICE_NAME)?;
     Ok(())

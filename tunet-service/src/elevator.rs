@@ -2,24 +2,11 @@ use std::io::Result;
 
 #[cfg(target_os = "windows")]
 pub fn elevate() -> Result<()> {
-    use std::process::{exit, Command};
+    use std::process::exit;
 
     if !is_elevated::is_elevated() {
-        let status = Command::new("powershell.exe")
-            .arg("-c")
-            .arg("Start-Process")
-            .arg(std::env::current_exe()?)
-            .arg("-Verb")
-            .arg("runas")
-            .arg("-ArgumentList")
-            .arg(
-                std::env::args()
-                    .skip(1)
-                    .map(|s| format!("\'{}\'", s))
-                    .collect::<Vec<_>>()
-                    .join(","),
-            )
-            .arg("-Wait")
+        let status = runas::Command::new(std::env::current_exe()?)
+            .args(&std::env::args_os().skip(1).collect::<Vec<_>>())
             .status()?;
         exit(status.code().unwrap_or_default());
     } else {
