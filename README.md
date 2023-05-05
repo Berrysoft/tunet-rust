@@ -92,6 +92,7 @@ $ tunet-service unregister
 注意 `tunet-service.exe` 自身是服务程序，如需删除应先注销服务。
 
 ### Systemd
+由于不同 Linux 发行版的服务机制不同，没有提供 `register` 和 `unregister` 命令。
 Debian 打包提供了 `tunet@.service` 文件。对于用户 `foo`，可以运行
 ``` bash
 # 启用服务
