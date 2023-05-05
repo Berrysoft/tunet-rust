@@ -1,6 +1,6 @@
 [package]
 name = "tunet-gui"
-version = "0.7.3"
+version = "0.7.4"
 description = "A GUI for Tsinghua University campus network."
 edition.workspace = true
 authors.workspace = true
