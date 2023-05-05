@@ -126,8 +126,8 @@ async fn main() -> Result<()> {
     let about_model = app.global::<AboutModel>();
 
     home_model.set_theme_color(slint::Color::from_argb_u8(255, color.r, color.g, color.b));
-    home_model.set_theme_color_t1(slint::Color::from_argb_u8(191, color.r, color.g, color.b));
-    home_model.set_theme_color_t2(slint::Color::from_argb_u8(140, color.r, color.g, color.b));
+    home_model.set_theme_color_t1(slint::Color::from_argb_u8(168, color.r, color.g, color.b));
+    home_model.set_theme_color_t2(slint::Color::from_argb_u8(84, color.r, color.g, color.b));
 
     about_model.set_version(env!("CARGO_PKG_VERSION").into());
 

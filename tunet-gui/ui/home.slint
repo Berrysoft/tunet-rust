@@ -30,13 +30,25 @@ export global HomeModel {
 }
 
 export component HomePage inherits VerticalBox {
-    property <angle> free-angle: Math.max(50.0 / (HomeModel.info.balance + Math.max(50.0, HomeModel.info.flux-gb)) * 360deg - 0.01deg, 0deg);
-    property <angle> flux-angle: Math.max(HomeModel.info.flux-gb / (HomeModel.info.balance + Math.max(50.0, HomeModel.info.flux-gb)) * 360deg - 0.01deg, 0deg);
+    property <angle> free-angle;
+    property <angle> flux-angle;
 
-    animate free-angle, flux-angle {
-        duration: 300ms;
-        easing: ease-out;
-    }
+    states [
+        busy when HomeModel.busy: {
+            free-angle: 360deg - 0.01deg;
+            flux-angle: 0;
+        }
+        ready when !HomeModel.busy: {
+            free-angle: Math.max(50.0 / (HomeModel.info.balance + Math.max(50.0, HomeModel.info.flux-gb)) * 360deg - 0.01deg, 0deg);
+            flux-angle: Math.max(HomeModel.info.flux-gb / (HomeModel.info.balance + Math.max(50.0, HomeModel.info.flux-gb)) * 360deg - 0.01deg, 0deg);
+            in {
+                animate free-angle, flux-angle {
+                    duration: 500ms;
+                    easing: ease-out;
+                }
+            }
+        }
+    ]
 
     HorizontalBox {
         ComboBox {
