@@ -153,8 +153,8 @@ export component HomePage inherits VerticalBox {
             text: "刷新";
             enabled: !HomeModel.busy;
             clicked => {
-                HomeModel.info.flux-gb = 0.0;
-                HomeModel.info.balance = 0.0;
+                // Refresh is too fast to response.
+                HomeModel.busy = true;
                 HomeModel.refresh()
             }
         }
