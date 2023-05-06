@@ -14,13 +14,14 @@ cfg_if::cfg_if! {
 mod elevator;
 mod notification;
 
+use anyhow::Result;
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
 use futures_util::future::Either;
 use std::sync::Arc;
 use tokio::time::Instant;
 use tokio_stream::{wrappers::IntervalStream, Stream};
-use tunet_helper::{create_http_client, Result, TUNetConnect, TUNetHelper};
+use tunet_helper::{create_http_client, TUNetConnect, TUNetHelper};
 use tunet_settings::{read_cred, save_cred, FileSettingsReader};
 use tunet_suggest::TUNetHelperExt;
 

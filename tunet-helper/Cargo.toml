@@ -1,6 +1,6 @@
 [package]
 name = "tunet-helper"
-version = "0.13.2"
+version = "0.14.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -30,4 +30,3 @@ once_cell = { workspace = true }
 regex = { version = "1", default-features = false, features = ["std"] }
 thiserror = { workspace = true }
 enum_dispatch = { workspace = true }
-anyhow = { workspace = true }

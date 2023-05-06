@@ -6,11 +6,11 @@ mod context;
 use bind::{bind_about_model, bind_detail_model, bind_home_model, bind_settings_model};
 use context::UpdateContext;
 
+use anyhow::Result;
 use i_slint_backend_winit::WinitWindowAccessor;
 use slint::{PhysicalPosition, Window};
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
-use tunet_helper::Result;
 use tunet_model::{Action, Model};
 use tunet_settings::FileSettingsReader;
 

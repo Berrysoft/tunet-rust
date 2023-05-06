@@ -1,4 +1,6 @@
-use keyutils::{keytypes::User, Keyring as LinuxKeyring, Result, SpecialKeyring};
+use keyutils::{keytypes::User, Keyring as LinuxKeyring, SpecialKeyring};
+
+pub use keyutils::{Error, Result};
 
 pub struct Keyring {
     keyring: LinuxKeyring,

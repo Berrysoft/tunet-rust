@@ -5,6 +5,8 @@ use windows::{
     Win32::{Foundation::*, Security::Credentials::*},
 };
 
+pub use windows::core::{Error, Result};
+
 macro_rules! pwstr {
     ($s : expr) => {
         PWSTR($s.as_ptr() as _)

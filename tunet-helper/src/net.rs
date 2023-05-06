@@ -19,7 +19,7 @@ impl NetConnect {
 
 #[async_trait]
 impl TUNetHelper for NetConnect {
-    async fn login(&self) -> Result<String> {
+    async fn login(&self) -> NetHelperResult<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
             md5.update(self.cred.password.as_bytes());
@@ -36,13 +36,13 @@ impl TUNetHelper for NetConnect {
         Ok(res.text().await?)
     }
 
-    async fn logout(&self) -> Result<String> {
+    async fn logout(&self) -> NetHelperResult<String> {
         let params = [("action", "logout")];
         let res = self.client.post(NET_LOG_URI).form(&params).send().await?;
         Ok(res.text().await?)
     }
 
-    async fn flux(&self) -> Result<NetFlux> {
+    async fn flux(&self) -> NetHelperResult<NetFlux> {
         let res = self.client.get(NET_FLUX_URI).send().await?;
         Ok(res.text().await?.parse()?)
     }

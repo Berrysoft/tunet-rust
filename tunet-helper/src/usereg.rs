@@ -91,8 +91,8 @@ impl NetDetailOrder {
 }
 
 impl std::str::FromStr for NetDetailOrder {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self> {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         if s.eq_ignore_ascii_case("login") || s.eq_ignore_ascii_case("logintime") {
             Ok(NetDetailOrder::LoginTime)
         } else if s.eq_ignore_ascii_case("logout") || s.eq_ignore_ascii_case("logouttime") {
@@ -100,7 +100,7 @@ impl std::str::FromStr for NetDetailOrder {
         } else if s.eq_ignore_ascii_case("flux") {
             Ok(NetDetailOrder::Flux)
         } else {
-            Err(NetHelperError::InvalidOrder.into())
+            Err(NetHelperError::InvalidOrder)
         }
     }
 }
@@ -124,7 +124,7 @@ impl UseregHelper {
         UseregHelper { cred, client }
     }
 
-    pub async fn login(&self) -> Result<String> {
+    pub async fn login(&self) -> NetHelperResult<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
             md5.update(self.cred.password.as_bytes());
@@ -144,7 +144,7 @@ impl UseregHelper {
         Ok(res.text().await?)
     }
 
-    pub async fn logout(&self) -> Result<String> {
+    pub async fn logout(&self) -> NetHelperResult<String> {
         let params = [("action", "logout")];
         let res = self
             .client
@@ -159,7 +159,7 @@ impl UseregHelper {
         self.cred.clone()
     }
 
-    pub async fn connect(&self, addr: Ipv4Addr) -> Result<String> {
+    pub async fn connect(&self, addr: Ipv4Addr) -> NetHelperResult<String> {
         let params = [
             ("n", "100"),
             ("is_pad", "1"),
@@ -177,7 +177,7 @@ impl UseregHelper {
         Ok(res.text().await?)
     }
 
-    pub async fn drop(&self, addr: Ipv4Addr) -> Result<String> {
+    pub async fn drop(&self, addr: Ipv4Addr) -> NetHelperResult<String> {
         let params = [("action", "drop"), ("user_ip", &addr.to_string())];
         let res = self
             .client
@@ -188,7 +188,7 @@ impl UseregHelper {
         Ok(res.text().await?)
     }
 
-    pub fn users(&self) -> impl Stream<Item = Result<NetUser>> {
+    pub fn users(&self) -> impl Stream<Item = NetHelperResult<NetUser>> {
         let client = self.client.clone();
         try_stream! {
             let res = client.get(USEREG_INFO_URI).send().await?;
@@ -213,7 +213,11 @@ impl UseregHelper {
         }
     }
 
-    pub fn details(&self, o: NetDetailOrder, des: bool) -> impl Stream<Item = Result<NetDetail>> {
+    pub fn details(
+        &self,
+        o: NetDetailOrder,
+        des: bool,
+    ) -> impl Stream<Item = NetHelperResult<NetDetail>> {
         let client = self.client.clone();
         let now = Local::now();
         let start_time = now.format("%Y-%m-01").to_string();

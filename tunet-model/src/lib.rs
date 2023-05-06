@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+use anyhow::Result;
 use drop_guard::guard;
 use futures_util::{pin_mut, StreamExt, TryStreamExt};
 use itertools::Itertools;

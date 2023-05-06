@@ -1,4 +1,6 @@
-use security_framework::{base::Result, os::macos::keychain::SecKeychain};
+use security_framework::os::macos::keychain::SecKeychain;
+
+pub use security_framework::base::{Error, Result};
 
 static TUNET_DUMMY_USERNAME: &str = "tunet-rust";
 

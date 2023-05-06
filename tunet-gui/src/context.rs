@@ -1,4 +1,5 @@
 use crate::{upgrade_spawn, App, DetailModel, HomeModel, NetInfo, SettingsModel};
+use anyhow::Result;
 use mac_address::MacAddress;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
@@ -13,7 +14,7 @@ use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex as SyncMutex};
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
-    Datelike, Flux, NetFlux, NetState, Result,
+    Datelike, Flux, NetFlux, NetState,
 };
 use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 

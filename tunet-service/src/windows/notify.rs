@@ -1,10 +1,10 @@
+use anyhow::Result;
 use std::{
     ffi::c_void,
     ops::Deref,
     os::windows::prelude::{AsRawHandle, FromRawHandle, OwnedHandle},
     ptr::null_mut,
 };
-use tunet_helper::Result;
 use widestring::{u16cstr, U16CString};
 use windows::{
     core::{PCWSTR, PWSTR},

@@ -8,7 +8,7 @@ pub trait TUNetHelperExt {
         s: Option<NetState>,
         cred: Arc<NetCredential>,
         client: HttpClient,
-    ) -> Result<TUNetConnect>;
+    ) -> NetHelperResult<TUNetConnect>;
 }
 
 #[async_trait]
@@ -17,7 +17,7 @@ impl TUNetHelperExt for TUNetConnect {
         s: Option<NetState>,
         cred: Arc<NetCredential>,
         client: HttpClient,
-    ) -> Result<TUNetConnect> {
+    ) -> NetHelperResult<TUNetConnect> {
         match s {
             None => {
                 let s = crate::suggest(&client).await;

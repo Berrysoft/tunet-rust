@@ -9,7 +9,22 @@ use std::fs::{remove_file, DirBuilder, File};
 use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 use std::sync::Arc;
+use thiserror::Error;
 use tunet_helper::*;
+
+#[derive(Debug, Error)]
+pub enum SettingsError {
+    #[error("找不到配置文件目录")]
+    ConfigDirNotFound,
+    #[error("系统错误：{0}")]
+    IoError(#[from] std::io::Error),
+    #[error("密码管理错误：{0}")]
+    Keyring(#[from] keyring::Error),
+    #[error("JSON 解析错误：{0}")]
+    Json(#[from] serde_json::Error),
+}
+
+pub type SettingsResult<T> = Result<T, SettingsError>;
 
 #[derive(Deserialize, Serialize)]
 struct Settings<'a> {
@@ -39,26 +54,26 @@ pub struct FileSettingsReader {
 }
 
 impl FileSettingsReader {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> SettingsResult<Self> {
         Self::with_path(Self::file_path()?)
     }
 
-    pub fn file_path() -> Result<PathBuf> {
-        let mut p = config_dir().ok_or_else(|| anyhow::anyhow!("找不到配置文件目录"))?;
+    pub fn file_path() -> SettingsResult<PathBuf> {
+        let mut p = config_dir().ok_or(SettingsError::ConfigDirNotFound)?;
         p.push(TUNET_NAME);
         p.push("settings");
         p.set_extension("json");
         Ok(p)
     }
 
-    pub fn with_path(path: impl Into<PathBuf>) -> Result<Self> {
+    pub fn with_path(path: impl Into<PathBuf>) -> SettingsResult<Self> {
         Ok(Self {
             path: path.into(),
             keyring: Keyring::new(TUNET_NAME)?,
         })
     }
 
-    pub async fn save(&mut self, settings: Arc<NetCredential>) -> Result<()> {
+    pub async fn save(&mut self, settings: Arc<NetCredential>) -> SettingsResult<()> {
         if let Some(p) = self.path.parent() {
             DirBuilder::new().recursive(true).create(p)?;
         }
@@ -86,7 +101,7 @@ impl FileSettingsReader {
         Ok(())
     }
 
-    pub fn delete(&mut self) -> Result<()> {
+    pub fn delete(&mut self) -> SettingsResult<()> {
         self.keyring.delete().unwrap_or_else(|e| {
             if cfg!(debug_assertions) {
                 eprintln!("WARNING: {}", e);
@@ -98,14 +113,14 @@ impl FileSettingsReader {
         Ok(())
     }
 
-    pub fn read(&self) -> Result<NetCredential> {
+    pub fn read(&self) -> SettingsResult<NetCredential> {
         let f = File::open(self.path.as_path())?;
         let reader = BufReader::new(f);
         let c: Settings = serde_json::from_reader(reader)?;
         Ok(c.into())
     }
 
-    pub fn read_with_password(&self) -> Result<NetCredential> {
+    pub fn read_with_password(&self) -> SettingsResult<NetCredential> {
         let mut settings = self.read()?;
         match self.keyring.get() {
             Ok(password) => settings.password = password,
@@ -122,7 +137,7 @@ impl FileSettingsReader {
 struct StdioSettingsReader;
 
 impl StdioSettingsReader {
-    fn read_username(&self) -> Result<String> {
+    fn read_username(&self) -> SettingsResult<String> {
         print!("请输入用户名：");
         stdout().flush()?;
         let mut u = String::new();
@@ -130,25 +145,25 @@ impl StdioSettingsReader {
         Ok(u.replace(&['\n', '\r'][..], ""))
     }
 
-    fn read_password(&self) -> Result<String> {
+    fn read_password(&self) -> SettingsResult<String> {
         print!("请输入密码：");
         stdout().flush()?;
         Ok(read_password()?)
     }
 
-    pub fn read(&self) -> Result<NetCredential> {
+    pub fn read(&self) -> SettingsResult<NetCredential> {
         let u = self.read_username()?;
         Ok(NetCredential::new(u, String::new(), Vec::new()))
     }
 
-    pub fn read_with_password(&self) -> Result<NetCredential> {
+    pub fn read_with_password(&self) -> SettingsResult<NetCredential> {
         let u = self.read_username()?;
         let p = self.read_password()?;
         Ok(NetCredential::new(u, p, Vec::new()))
     }
 }
 
-pub fn read_cred() -> Result<Arc<NetCredential>> {
+pub fn read_cred() -> SettingsResult<Arc<NetCredential>> {
     if let Ok(reader) = FileSettingsReader::new() {
         if let Ok(cred) = reader.read_with_password() {
             return Ok(Arc::new(cred));
@@ -157,7 +172,7 @@ pub fn read_cred() -> Result<Arc<NetCredential>> {
     Ok(Arc::new(StdioSettingsReader.read_with_password()?))
 }
 
-pub fn read_username() -> Result<Arc<NetCredential>> {
+pub fn read_username() -> SettingsResult<Arc<NetCredential>> {
     if let Ok(reader) = FileSettingsReader::new() {
         if let Ok(cred) = reader.read() {
             return Ok(Arc::new(cred));
@@ -166,11 +181,11 @@ pub fn read_username() -> Result<Arc<NetCredential>> {
     Ok(Arc::new(StdioSettingsReader.read()?))
 }
 
-pub async fn save_cred(cred: Arc<NetCredential>) -> Result<()> {
+pub async fn save_cred(cred: Arc<NetCredential>) -> SettingsResult<()> {
     FileSettingsReader::new()?.save(cred).await
 }
 
-pub fn delete_cred() -> Result<()> {
+pub fn delete_cred() -> SettingsResult<()> {
     let mut reader = FileSettingsReader::new()?;
     print!("是否删除设置文件？[y/N]");
     stdout().flush()?;

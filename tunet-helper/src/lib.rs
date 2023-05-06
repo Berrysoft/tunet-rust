@@ -7,7 +7,6 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
 
-pub use anyhow::{anyhow, Result};
 pub use chrono::{
     DateTime, Datelike, Duration as NaiveDuration, FixedOffset, Local, NaiveDate, NaiveDateTime,
     Timelike,
@@ -22,7 +21,7 @@ pub use auth::{Auth4Connect, Auth6Connect};
 pub use net::NetConnect;
 
 #[derive(Debug, Error)]
-enum NetHelperError {
+pub enum NetHelperError {
     #[error("无法获取 ac_id")]
     NoAcId,
     #[error("操作失败：{0}")]
@@ -35,7 +34,13 @@ enum NetHelperError {
     InvalidOrder,
     #[error("无法确定登录方式")]
     InvalidHost,
+    #[error("网络请求错误：{0}")]
+    Reqwest(#[from] reqwest::Error),
+    #[error("JSON 解析错误：{0}")]
+    Json(#[from] serde_json::Error),
 }
+
+pub type NetHelperResult<T> = Result<T, NetHelperError>;
 
 #[derive(Debug, Default)]
 pub struct NetCredential {
@@ -92,8 +97,8 @@ impl Display for Flux {
 }
 
 impl std::str::FromStr for Flux {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self> {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         let (flux, unit) = s.split_at(s.len() - 1);
         Ok(Flux(
             (flux.trim_end().parse::<f64>().unwrap_or_default()
@@ -150,8 +155,8 @@ pub struct NetFlux {
 }
 
 impl std::str::FromStr for NetFlux {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self> {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         let vec = s.split(',').collect::<Vec<_>>();
         if vec.len() >= 12 {
             Ok(NetFlux {
@@ -165,9 +170,9 @@ impl std::str::FromStr for NetFlux {
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
         } else if s.is_empty() {
-            Err(NetHelperError::NoFlux.into())
+            Err(NetHelperError::NoFlux)
         } else {
-            Err(NetHelperError::InvalidFlux(s.to_string()).into())
+            Err(NetHelperError::InvalidFlux(s.to_string()))
         }
     }
 }
@@ -181,8 +186,8 @@ pub enum NetState {
 }
 
 impl std::str::FromStr for NetState {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self> {
+    type Err = NetHelperError;
+    fn from_str(s: &str) -> NetHelperResult<Self> {
         if s.eq_ignore_ascii_case("net") {
             Ok(NetState::Net)
         } else if s.eq_ignore_ascii_case("auth4") {
@@ -190,7 +195,7 @@ impl std::str::FromStr for NetState {
         } else if s.eq_ignore_ascii_case("auth6") {
             Ok(NetState::Auth6)
         } else {
-            Err(NetHelperError::InvalidHost.into())
+            Err(NetHelperError::InvalidHost)
         }
     }
 }
@@ -198,9 +203,9 @@ impl std::str::FromStr for NetState {
 #[async_trait]
 #[enum_dispatch(TUNetConnect)]
 pub trait TUNetHelper: Send + Sync {
-    async fn login(&self) -> Result<String>;
-    async fn logout(&self) -> Result<String>;
-    async fn flux(&self) -> Result<NetFlux>;
+    async fn login(&self) -> NetHelperResult<String>;
+    async fn logout(&self) -> NetHelperResult<String>;
+    async fn flux(&self) -> NetHelperResult<NetFlux>;
     fn cred(&self) -> Arc<NetCredential>;
 }
 
@@ -213,17 +218,21 @@ pub enum TUNetConnect {
 }
 
 impl TUNetConnect {
-    pub fn new(s: NetState, cred: Arc<NetCredential>, client: HttpClient) -> Result<TUNetConnect> {
+    pub fn new(
+        s: NetState,
+        cred: Arc<NetCredential>,
+        client: HttpClient,
+    ) -> NetHelperResult<TUNetConnect> {
         match s {
             NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(cred, client))),
             NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(cred, client))),
             NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(cred, client))),
-            _ => Err(NetHelperError::InvalidHost.into()),
+            _ => Err(NetHelperError::InvalidHost),
         }
     }
 }
 
-pub fn create_http_client() -> Result<HttpClient> {
+pub fn create_http_client() -> NetHelperResult<HttpClient> {
     Ok(reqwest::ClientBuilder::new()
         .cookie_store(true)
         .redirect(reqwest::redirect::Policy::none())

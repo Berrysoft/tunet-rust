@@ -1,11 +1,11 @@
 mod notify;
 
 use crate::SERVICE_NAME;
+use anyhow::Result;
 use clap::Parser;
 use std::{ffi::OsString, time::Duration};
 use tokio::{signal::windows::ctrl_c, sync::watch};
 use tokio_stream::{wrappers::WatchStream, StreamExt};
-use tunet_helper::Result;
 use windows_service::{
     define_windows_service,
     service::{

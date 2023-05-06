@@ -12,6 +12,7 @@ color-theme = { workspace = true }
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-model = { workspace = true }
+anyhow = { workspace = true }
 mac_address = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 slint = { version = "1", default-features = false, features = [

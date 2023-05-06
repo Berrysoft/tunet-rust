@@ -1,5 +1,6 @@
+use anyhow::Result;
 use notify_rust::Notification;
-use tunet_helper::{NetFlux, Result};
+use tunet_helper::NetFlux;
 
 pub fn succeeded(flux: NetFlux) -> Result<()> {
     #[cfg(target_os = "macos")]

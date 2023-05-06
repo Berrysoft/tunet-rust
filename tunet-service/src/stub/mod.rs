@@ -1,6 +1,6 @@
+use anyhow::{anyhow, Result};
 use tokio::signal::ctrl_c;
 use tokio_stream::StreamExt;
-use tunet_helper::{anyhow, Result};
 
 pub fn register(_interval: Option<humantime::Duration>) -> Result<()> {
     Err(anyhow!("不支持的命令"))

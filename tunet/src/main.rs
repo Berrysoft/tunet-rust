@@ -2,10 +2,10 @@
 
 mod commands;
 
+use anyhow::Result;
 use clap::Parser;
 use commands::{TUNet, TUNetCommand};
 use tokio::runtime::Builder as RuntimeBuilder;
-use tunet_helper::Result;
 
 fn main() -> Result<()> {
     let opt = TUNet::parse();

@@ -50,6 +50,7 @@ assets = [
 tunet-helper = { workspace = true }
 tunet-suggest = { workspace = true }
 tunet-settings = { workspace = true }
+anyhow = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }
 async-trait = { workspace = true }

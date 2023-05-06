@@ -1,3 +1,4 @@
+use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
@@ -67,7 +68,8 @@ impl TUNetCommand for Login {
         let c = TUNetConnect::new_with_suggest(self.host, cred, client).await?;
         let res = c.login().await?;
         println!("{}", res);
-        save_cred(c.cred()).await
+        save_cred(c.cred()).await?;
+        Ok(())
     }
 }
 
@@ -215,7 +217,8 @@ impl TUNetCommand for Online {
                 )?;
             }
         }
-        save_cred(c.cred()).await
+        save_cred(c.cred()).await?;
+        Ok(())
     }
 }
 
@@ -235,7 +238,8 @@ impl TUNetCommand for UseregConnect {
         c.login().await?;
         let res = c.connect(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred()).await
+        save_cred(c.cred()).await?;
+        Ok(())
     }
 }
 
@@ -255,7 +259,8 @@ impl TUNetCommand for UseregDrop {
         c.login().await?;
         let res = c.drop(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred()).await
+        save_cred(c.cred()).await?;
+        Ok(())
     }
 }
 
@@ -320,7 +325,8 @@ impl Detail {
                 total_flux
             )?;
         }
-        save_cred(c.cred()).await
+        save_cred(c.cred()).await?;
+        Ok(())
     }
 
     async fn run_detail_grouping(&self) -> Result<()> {
@@ -383,7 +389,8 @@ impl Detail {
                 total_flux
             )?;
         }
-        save_cred(c.cred()).await
+        save_cred(c.cred()).await?;
+        Ok(())
     }
 }
 
@@ -404,7 +411,8 @@ pub struct DeleteCred {}
 #[async_trait]
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
-        delete_cred()
+        delete_cred()?;
+        Ok(())
     }
 }
 

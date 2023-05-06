@@ -14,6 +14,7 @@ tunet-suggest = { workspace = true }
 tunet-settings = { workspace = true }
 cfg-if = { workspace = true }
 clap = { workspace = true }
+anyhow = { workspace = true }
 humantime = "2"
 enum_dispatch = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt", "signal", "time"] }

@@ -34,7 +34,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         }
     }
 
-    async fn challenge(&self) -> Result<String> {
+    async fn challenge(&self) -> NetHelperResult<String> {
         let uri = Url::parse_with_params(
             U::challenge_uri(),
             &[
@@ -54,16 +54,22 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             .unwrap_or_default())
     }
 
-    async fn get_ac_id(&self) -> Result<i32> {
+    async fn get_ac_id_impl(&self) -> NetHelperResult<i32> {
         let res = self.client.get(U::redirect_uri()).send().await?;
         let t = res.text().await?;
-        match AC_ID_REGEX.captures(&t) {
-            Some(cap) => Ok(cap[1].parse::<i32>()?),
-            _ => Err(NetHelperError::NoAcId.into()),
-        }
+        AC_ID_REGEX
+            .captures(&t)
+            .and_then(|cap| cap[1].parse::<i32>().ok())
+            .ok_or(NetHelperError::NoAcId)
     }
 
-    async fn try_login(&self, ac_id: i32) -> Result<String> {
+    async fn get_ac_id(&self) -> NetHelperResult<i32> {
+        self.get_ac_id_impl()
+            .await
+            .map_err(|_| NetHelperError::NoAcId)
+    }
+
+    async fn try_login(&self, ac_id: i32) -> NetHelperResult<String> {
         let token = self.challenge().await?;
         let password_md5 = {
             let mut hmacmd5 = Hmac::<Md5>::new_from_slice(&[]).unwrap();
@@ -108,7 +114,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         Self::parse_response(&t)
     }
 
-    fn parse_response(t: &str) -> Result<String> {
+    fn parse_response(t: &str) -> NetHelperResult<String> {
         let mut json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
         if let Some(error) = json["error"].as_str() {
             if error == "ok" {
@@ -121,18 +127,17 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
                     json.remove("error_msg")
                         .and_then(|v| v.into_str())
                         .unwrap_or_default(),
-                )
-                .into())
+                ))
             }
         } else {
-            Err(NetHelperError::Log(json.to_string()).into())
+            Err(NetHelperError::Log(json.to_string()))
         }
     }
 }
 
 #[async_trait]
 impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
-    async fn login(&self) -> Result<String> {
+    async fn login(&self) -> NetHelperResult<String> {
         for ac_id in self.cred.ac_ids.read().await.iter() {
             let res = self.try_login(*ac_id).await;
             if res.is_ok() {
@@ -144,7 +149,7 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
         Ok(self.try_login(ac_id).await?)
     }
 
-    async fn logout(&self) -> Result<String> {
+    async fn logout(&self) -> NetHelperResult<String> {
         let params = [
             ("action", "logout"),
             ("ac_id", "1"),
@@ -157,7 +162,7 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
         Self::parse_response(&t)
     }
 
-    async fn flux(&self) -> Result<NetFlux> {
+    async fn flux(&self) -> NetHelperResult<NetFlux> {
         let res = self.client.get(U::flux_uri()).send().await?;
         Ok(res.text().await?.parse()?)
     }
