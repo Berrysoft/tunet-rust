@@ -1,5 +1,4 @@
 use crate::*;
-use anyhow::{anyhow, Result};
 use core_foundation::{
     base::TCFType,
     runloop::{kCFRunLoopDefaultMode, CFRunLoop, CFRunLoopRef},
@@ -10,7 +9,7 @@ use objc::{
 };
 use pin_project::pin_project;
 use std::{
-    ffi::CStr,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
     os::unix::thread::{JoinHandleExt, RawPthread},
     pin::Pin,
     task::{Context, Poll},
@@ -41,25 +40,23 @@ unsafe fn get_ssid() -> Option<String> {
 }
 
 pub fn current() -> NetStatus {
-    let host = unsafe { CStr::from_bytes_with_nul_unchecked(b"0.0.0.0\0") };
-    if let Some(sc) = SCNetworkReachability::from_host(host) {
-        if let Ok(flag) = sc.reachability() {
-            if !flag.contains(ReachabilityFlags::REACHABLE) {
-                return NetStatus::Unknown;
-            }
-            if !flag.contains(ReachabilityFlags::CONNECTION_REQUIRED)
-                || ((flag.contains(ReachabilityFlags::CONNECTION_ON_DEMAND)
-                    || flag.contains(ReachabilityFlags::CONNECTION_ON_TRAFFIC))
-                    && !flag.contains(ReachabilityFlags::INTERVENTION_REQUIRED))
-            {
-                return match unsafe { get_ssid() } {
-                    Some(ssid) => NetStatus::Wlan(ssid),
-                    None => NetStatus::Unknown,
-                };
-            }
-            if flag == ReachabilityFlags::IS_WWAN {
-                return NetStatus::Wwan;
-            }
+    let sc = SCNetworkReachability::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
+    if let Ok(flag) = sc.reachability() {
+        if !flag.contains(ReachabilityFlags::REACHABLE) {
+            return NetStatus::Unknown;
+        }
+        if !flag.contains(ReachabilityFlags::CONNECTION_REQUIRED)
+            || ((flag.contains(ReachabilityFlags::CONNECTION_ON_DEMAND)
+                || flag.contains(ReachabilityFlags::CONNECTION_ON_TRAFFIC))
+                && !flag.contains(ReachabilityFlags::INTERVENTION_REQUIRED))
+        {
+            return match unsafe { get_ssid() } {
+                Some(ssid) => NetStatus::Wlan(ssid),
+                None => NetStatus::Unknown,
+            };
+        }
+        if flag == ReachabilityFlags::IS_WWAN {
+            return NetStatus::Wwan;
         }
     }
     NetStatus::Unknown
@@ -67,18 +64,16 @@ pub fn current() -> NetStatus {
 
 pub fn watch() -> impl Stream<Item = ()> {
     let (tx, rx) = watch::channel(());
-    let loop_thread = std::thread::spawn(move || -> Result<()> {
-        let host = unsafe { CStr::from_bytes_with_nul_unchecked(b"0.0.0.0\0") };
-        let mut sc = SCNetworkReachability::from_host(host)
-            .ok_or_else(|| anyhow!("Cannot get network reachability"))?;
+    let loop_thread = std::thread::spawn(move || {
+        let mut sc =
+            SCNetworkReachability::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
         sc.set_callback(move |_| {
             tx.send(()).ok();
-        })?;
-        unsafe {
-            sc.schedule_with_runloop(&CFRunLoop::get_current(), kCFRunLoopDefaultMode)?;
-        }
+        })
+        .expect("cannot set callback");
+        sc.schedule_with_runloop(&CFRunLoop::get_current(), unsafe { kCFRunLoopDefaultMode })
+            .expect("cannot schedule with run loop");
         CFRunLoop::run_current();
-        Ok(())
     });
     StatusWatchStream {
         s: WatchStream::new(rx),
@@ -104,16 +99,15 @@ impl Stream for StatusWatchStream {
 }
 
 struct CFJThread {
-    handle: Option<JoinHandle<Result<()>>>,
+    handle: Option<JoinHandle<()>>,
 }
 
 impl Drop for CFJThread {
     fn drop(&mut self) {
         if let Some(handle) = self.handle.take() {
             unsafe { CFRunLoop::wrap_under_get_rule(_CFRunLoopGet0(handle.as_pthread_t())) }.stop();
-            match handle.join() {
-                Ok(res) => res.unwrap(),
-                Err(e) => std::panic::resume_unwind(e),
+            if let Err(e) = handle.join() {
+                std::panic::resume_unwind(e);
             }
         }
     }
