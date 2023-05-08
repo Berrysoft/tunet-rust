@@ -1,6 +1,6 @@
 [package]
 name = "netstatus"
-version = "0.1.1"
+version = "0.1.2"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 cfg-if = { workspace = true }
 tokio-stream = { workspace = true }
+log = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { workspace = true, features = [

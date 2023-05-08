@@ -81,9 +81,7 @@ impl FileSettingsReader {
         let writer = BufWriter::new(f);
         let ac_ids = settings.ac_ids.read().await;
         let c = if let Err(e) = self.keyring.set(&settings.password) {
-            if cfg!(debug_assertions) {
-                eprintln!("WARNING: {}", e);
-            }
+            log::warn!("{}", e);
             Settings {
                 username: Cow::Borrowed(&settings.username),
                 password: Cow::Borrowed(&settings.password),
@@ -102,11 +100,9 @@ impl FileSettingsReader {
     }
 
     pub fn delete(&mut self) -> SettingsResult<()> {
-        self.keyring.delete().unwrap_or_else(|e| {
-            if cfg!(debug_assertions) {
-                eprintln!("WARNING: {}", e);
-            }
-        });
+        self.keyring
+            .delete()
+            .unwrap_or_else(|e| log::warn!("{}", e));
         if self.path.exists() {
             remove_file(self.path.as_path())?;
         }
@@ -125,9 +121,7 @@ impl FileSettingsReader {
         match self.keyring.get() {
             Ok(password) => settings.password = password,
             Err(e) => {
-                if cfg!(debug_assertions) {
-                    eprintln!("WARNING: {}", e);
-                }
+                log::warn!("{}", e);
             }
         }
         Ok(settings)

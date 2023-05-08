@@ -19,9 +19,7 @@ fn current_impl() -> Result<NetStatus> {
 
 pub fn current() -> NetStatus {
     current_impl().unwrap_or_else(|e| {
-        if cfg!(debug_assertions) {
-            eprintln!("WARNING: {}", e);
-        }
+        log::warn!("{}", e);
         NetStatus::Unknown
     })
 }

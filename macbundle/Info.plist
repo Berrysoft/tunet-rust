@@ -17,9 +17,9 @@
 	<string>tunet-gui</string>
 
 	<key>CFBundleVersion</key>
-	<string>0.7.5</string>
+	<string>0.7.6</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.7.5</string>
+	<string>0.7.6</string>
 
 	<key>LSMinimumSystemVersion</key>
 	<string>11.7</string>

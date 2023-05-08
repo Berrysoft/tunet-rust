@@ -26,9 +26,7 @@ fn current_impl() -> Result<NetStatus> {
 
 pub fn current() -> NetStatus {
     current_impl().unwrap_or_else(|e| {
-        if cfg!(debug_assertions) {
-            eprintln!("WARNING: {}", e.message());
-        }
+        log::warn!("{}", e.message());
         NetStatus::Unknown
     })
 }
@@ -49,9 +47,7 @@ fn watch_impl() -> Result<impl Stream<Item = ()>> {
 
 pub fn watch() -> impl Stream<Item = ()> {
     watch_impl().map(Either::Left).unwrap_or_else(|e| {
-        if cfg!(debug_assertions) {
-            eprintln!("WARNING: {}", e.message());
-        }
+        log::warn!("{}", e.message());
         Either::Right(pending())
     })
 }

@@ -13,9 +13,7 @@ fn accent_impl() -> Result<Color> {
 
 pub fn accent() -> Color {
     accent_impl().unwrap_or_else(|e| {
-        if cfg!(debug_assertions) {
-            eprintln!("WARNING: {}", e.message());
-        }
+        log::warn!("{}", e.message());
         Color {
             r: 0,
             g: 120,

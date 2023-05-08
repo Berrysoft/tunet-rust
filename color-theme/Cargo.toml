@@ -1,6 +1,6 @@
 [package]
 name = "color-theme"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -11,6 +11,7 @@ cfg-if = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { workspace = true, features = ["UI_ViewManagement"] }
+log = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = { workspace = true }

@@ -70,9 +70,9 @@ pub fn watch() -> impl Stream<Item = ()> {
         sc.set_callback(move |_| {
             tx.send(()).ok();
         })
-        .expect("cannot set callback");
+        .unwrap_or_else(|e| log::warn!("{}", e));
         sc.schedule_with_runloop(&CFRunLoop::get_current(), unsafe { kCFRunLoopDefaultMode })
-            .expect("cannot schedule with run loop");
+            .unwrap_or_else(|e| log::warn!("{}", e));
         CFRunLoop::run_current();
     });
     StatusWatchStream {

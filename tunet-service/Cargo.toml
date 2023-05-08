@@ -1,6 +1,6 @@
 [package]
 name = "tunet-service"
-version = "0.7.5"
+version = "0.7.6"
 description = "A service daemon for Tsinghua University campus network."
 edition.workspace = true
 authors.workspace = true
@@ -21,7 +21,7 @@ tokio = { workspace = true, features = ["macros", "rt", "signal", "time"] }
 tokio-stream = { workspace = true, features = ["time"] }
 futures-util = { workspace = true }
 notify-rust = "4"
-log = "0.4"
+log = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 tokio = { workspace = true, features = ["sync"] }
