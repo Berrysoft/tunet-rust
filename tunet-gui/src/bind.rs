@@ -1,4 +1,6 @@
-use crate::{context::UpdateContext, AboutModel, DetailModel, HomeModel, SettingsModel};
+use crate::{
+    accent_color, context::UpdateContext, AboutModel, DetailModel, HomeModel, SettingsModel,
+};
 use slint::{
     quit_event_loop, ComponentHandle, Model as SlintModel, ModelExt, ModelRc, SortModel,
     StandardListViewItem,
@@ -109,7 +111,7 @@ macro_rules! sort_by_key_callback {
 }
 
 pub fn bind_home_model(home_model: &HomeModel, model: &Arc<Mutex<Model>>) {
-    let color = color_theme::Color::accent();
+    let color = accent_color();
     home_model.set_theme_color(slint::Color::from_argb_u8(255, color.r, color.g, color.b));
     home_model.set_theme_color_t1(slint::Color::from_argb_u8(168, color.r, color.g, color.b));
     home_model.set_theme_color_t2(slint::Color::from_argb_u8(84, color.r, color.g, color.b));

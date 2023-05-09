@@ -1,4 +1,4 @@
-use crate::{upgrade_spawn, App, DetailModel, HomeModel, NetInfo, SettingsModel};
+use crate::{accent_color, upgrade_spawn, App, DetailModel, HomeModel, NetInfo, SettingsModel};
 use anyhow::Result;
 use mac_address::MacAddress;
 use plotters::{
@@ -295,7 +295,7 @@ fn draw_daily(
     text_color: slint::Color,
     details: &DetailDaily,
 ) -> Image {
-    let color = color_theme::Color::accent();
+    let color = accent_color();
     let color = RGBColor(color.r, color.g, color.b);
     let scale = app.window().scale_factor();
     let (width, height) = ((width * scale) as u32, (height * scale) as u32);

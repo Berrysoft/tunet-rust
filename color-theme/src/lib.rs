@@ -1,6 +1,6 @@
 cfg_if::cfg_if! {
     if #[cfg(target_os = "windows")] {
-        #[path = "winrt.rs"]
+        #[path = "win.rs"]
         mod platform;
     } else if #[cfg(target_os = "macos")] {
         #[path = "mac.rs"]
@@ -20,7 +20,7 @@ pub struct Color {
 }
 
 impl Color {
-    pub fn accent() -> Self {
+    pub fn accent() -> Option<Self> {
         platform::accent()
     }
 }

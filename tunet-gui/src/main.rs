@@ -100,3 +100,11 @@ fn center_window(window: &Window) {
         window.set_position(new_pos);
     }
 }
+
+fn accent_color() -> color_theme::Color {
+    color_theme::Color::accent().unwrap_or(color_theme::Color {
+        r: 0,
+        g: 120,
+        b: 212,
+    })
+}

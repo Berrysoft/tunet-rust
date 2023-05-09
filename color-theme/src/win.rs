@@ -11,13 +11,12 @@ fn accent_impl() -> Result<Color> {
     })
 }
 
-pub fn accent() -> Color {
-    accent_impl().unwrap_or_else(|e| {
-        log::warn!("{}", e.message());
-        Color {
-            r: 0,
-            g: 120,
-            b: 215,
+pub fn accent() -> Option<Color> {
+    match accent_impl() {
+        Ok(c) => Some(c),
+        Err(e) => {
+            log::warn!("{}", e.message());
+            None
         }
-    })
+    }
 }
