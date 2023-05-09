@@ -6,7 +6,7 @@ use std::{
     ptr::null_mut,
 };
 use windows::{
-    core::{HSTRING, PCWSTR, PWSTR},
+    core::{HSTRING, PWSTR},
     w,
     Win32::{
         Foundation::HANDLE,
@@ -29,6 +29,15 @@ use windows::{
 
 struct OwnedEnvironmentBlock(*mut c_void);
 
+impl OwnedEnvironmentBlock {
+    pub fn new(token: &impl AsRawHandle) -> Result<Self> {
+        let mut env = null_mut();
+        unsafe { CreateEnvironmentBlock(&mut env, HANDLE(token.as_raw_handle() as _), false) }
+            .ok()?;
+        Ok(Self(env))
+    }
+}
+
 impl Drop for OwnedEnvironmentBlock {
     fn drop(&mut self) {
         unsafe {
@@ -38,6 +47,16 @@ impl Drop for OwnedEnvironmentBlock {
 }
 
 struct OwnedSession(*mut WTS_SESSION_INFOW, u32);
+
+impl OwnedSession {
+    pub fn enumerate() -> Result<Self> {
+        let mut buffer = null_mut();
+        let mut count = 0;
+        unsafe { WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &mut buffer, &mut count) }
+            .ok()?;
+        Ok(Self(buffer, count))
+    }
+}
 
 impl Deref for OwnedSession {
     type Target = [WTS_SESSION_INFOW];
@@ -55,70 +74,97 @@ impl Drop for OwnedSession {
     }
 }
 
-pub fn notify(quiet: bool) -> Result<()> {
+fn session_state(session_id: u32) -> Result<WTS_CONNECTSTATE_CLASS> {
+    let mut pstate: *mut WTS_CONNECTSTATE_CLASS = null_mut();
+    let mut bytesread = 0;
     unsafe {
-        let mut buffer = null_mut();
-        let mut count = 0;
-        WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &mut buffer, &mut count).ok()?;
-        let sessions = OwnedSession(buffer, count);
-        for session in &*sessions {
-            let session_id = session.SessionId;
-            let mut pstate: *mut WTS_CONNECTSTATE_CLASS = null_mut();
-            let mut bytesread = 0;
-            WTSQuerySessionInformationW(
-                WTS_CURRENT_SERVER_HANDLE,
-                session_id,
-                WTSConnectState,
-                &mut pstate as *mut _ as _,
-                &mut bytesread,
-            )
-            .ok()?;
-            let state = *pstate;
-            WTSFreeMemory(pstate as _);
-            if state != WTSActive {
-                continue;
-            }
-            let mut token = HANDLE::default();
-            if WTSQueryUserToken(session_id, &mut token).ok().is_err() {
-                continue;
-            }
-            let token = OwnedHandle::from_raw_handle(token.0 as _);
-            let mut env = null_mut();
-            CreateEnvironmentBlock(&mut env, HANDLE(token.as_raw_handle() as _), false).ok()?;
-            let env = OwnedEnvironmentBlock(env);
-            let mut si = STARTUPINFOW::default();
-            si.cb = std::mem::size_of_val(&si) as _;
-            si.dwFlags = STARTF_USESHOWWINDOW;
-            si.wShowWindow = SW_HIDE.0 as _;
-            let mut pi = PROCESS_INFORMATION::default();
-            let app_name = HSTRING::from(std::env::current_exe()?.into_os_string());
-            // Need to set the first arg as the exe itself.
-            let mut command_line = if quiet {
-                "tunet-service.exe run-once --quiet"
-            } else {
-                "tunet-service.exe run-once"
-            }
-            .encode_utf16()
-            .chain([0u16])
-            .collect::<Vec<u16>>();
-            let app_dir = HSTRING::from(std::env::current_dir()?.into_os_string());
-            CreateProcessAsUserW(
-                HANDLE(token.as_raw_handle() as _),
-                &app_name,
-                PWSTR(command_line.as_mut_ptr()),
-                None,
-                None,
-                false,
-                CREATE_UNICODE_ENVIRONMENT,
-                Some(env.0),
-                &app_dir,
-                &si,
-                &mut pi,
-            )
-            .ok()?;
-            let _thread = OwnedHandle::from_raw_handle(pi.hThread.0 as _);
-            let _process = OwnedHandle::from_raw_handle(pi.hProcess.0 as _);
+        WTSQuerySessionInformationW(
+            WTS_CURRENT_SERVER_HANDLE,
+            session_id,
+            WTSConnectState,
+            &mut pstate as *mut _ as _,
+            &mut bytesread,
+        )
+        .ok()?;
+        let state = *pstate;
+        WTSFreeMemory(pstate as _);
+        Ok(state)
+    }
+}
+
+fn user_token(session_id: u32) -> Result<OwnedHandle> {
+    let mut token = HANDLE::default();
+    unsafe {
+        WTSQueryUserToken(session_id, &mut token).ok()?;
+        Ok(OwnedHandle::from_raw_handle(token.0 as _))
+    }
+}
+
+fn command_as(
+    app_name: impl Into<HSTRING>,
+    command_line: &str,
+    app_dir: impl Into<HSTRING>,
+    token: &impl AsRawHandle,
+    env: &OwnedEnvironmentBlock,
+) -> Result<(OwnedHandle, OwnedHandle)> {
+    let mut si = STARTUPINFOW::default();
+    si.cb = std::mem::size_of_val(&si) as _;
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE.0 as _;
+    let mut pi = PROCESS_INFORMATION::default();
+
+    let app_name = app_name.into();
+    // Need to set the first arg as the exe itself.
+    let mut command_line = command_line
+        .encode_utf16()
+        .chain([0u16])
+        .collect::<Vec<u16>>();
+    let app_dir = app_dir.into();
+
+    unsafe {
+        CreateProcessAsUserW(
+            HANDLE(token.as_raw_handle() as _),
+            &app_name,
+            PWSTR(command_line.as_mut_ptr()),
+            None,
+            None,
+            false,
+            CREATE_UNICODE_ENVIRONMENT,
+            Some(env.0),
+            &app_dir,
+            &si,
+            &mut pi,
+        )
+        .ok()?;
+        let thread = OwnedHandle::from_raw_handle(pi.hThread.0 as _);
+        let process = OwnedHandle::from_raw_handle(pi.hProcess.0 as _);
+        Ok((thread, process))
+    }
+}
+
+pub fn notify(quiet: bool) -> Result<()> {
+    let sessions = OwnedSession::enumerate()?;
+    for session in &*sessions {
+        let session_id = session.SessionId;
+        let state = session_state(session_id)?;
+        if state != WTSActive {
+            continue;
         }
+        let token = match user_token(session_id) {
+            Ok(token) => token,
+            Err(_) => continue,
+        };
+        let env = OwnedEnvironmentBlock::new(&token)?;
+
+        let app_name = std::env::current_exe()?.into_os_string();
+        // Need to set the first arg as the exe itself.
+        let command_line = if quiet {
+            "tunet-service.exe run-once --quiet"
+        } else {
+            "tunet-service.exe run-once"
+        };
+        let app_dir = std::env::current_dir()?.into_os_string();
+        command_as(app_name, command_line, app_dir, &token, &env)?;
     }
     Ok(())
 }
