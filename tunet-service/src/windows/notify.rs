@@ -5,9 +5,9 @@ use std::{
     os::windows::prelude::{AsRawHandle, FromRawHandle, OwnedHandle},
     ptr::null_mut,
 };
-use widestring::{u16cstr, U16CString};
 use windows::{
-    core::{PCWSTR, PWSTR},
+    core::{HSTRING, PCWSTR, PWSTR},
+    w,
     Win32::{
         Foundation::HANDLE,
         System::{
@@ -91,24 +91,27 @@ pub fn notify(quiet: bool) -> Result<()> {
             si.dwFlags = STARTF_USESHOWWINDOW;
             si.wShowWindow = SW_HIDE.0 as _;
             let mut pi = PROCESS_INFORMATION::default();
-            let app_name = U16CString::from_os_str(std::env::current_exe()?.into_os_string())?;
+            let app_name = HSTRING::from(std::env::current_exe()?.into_os_string());
             // Need to set the first arg as the exe itself.
-            let mut command_line = U16CString::from_str(if quiet {
+            let mut command_line = if quiet {
                 "tunet-service.exe run-once --quiet"
             } else {
                 "tunet-service.exe run-once"
-            })?;
-            let app_dir = U16CString::from_os_str(std::env::current_dir()?.into_os_string())?;
+            }
+            .encode_utf16()
+            .chain([0u16])
+            .collect::<Vec<u16>>();
+            let app_dir = HSTRING::from(std::env::current_dir()?.into_os_string());
             CreateProcessAsUserW(
                 HANDLE(token.as_raw_handle() as _),
-                PCWSTR(app_name.as_ptr()),
+                &app_name,
                 PWSTR(command_line.as_mut_ptr()),
                 None,
                 None,
                 false,
                 CREATE_UNICODE_ENVIRONMENT,
                 Some(env.0),
-                PCWSTR(app_dir.as_ptr()),
+                &app_dir,
                 &si,
                 &mut pi,
             )
@@ -121,16 +124,16 @@ pub fn notify(quiet: bool) -> Result<()> {
 }
 
 pub fn error(s: impl AsRef<str>) -> Result<()> {
-    let title = u16cstr!("tunet-service");
-    let msg = U16CString::from_str(s.as_ref())?;
+    let title = w!("tunet-service");
+    let msg = HSTRING::from(s.as_ref());
     let mut res = MESSAGEBOX_RESULT(0);
     unsafe {
         WTSSendMessageW(
             WTS_CURRENT_SERVER_HANDLE,
             WTSGetActiveConsoleSessionId(),
-            PCWSTR(title.as_ptr()),
-            (title.len() * 2) as _,
-            PCWSTR(msg.as_ptr()),
+            title,
+            (title.as_wide().len() * 2) as _,
+            &msg,
             (msg.len() * 2) as _,
             MB_OK,
             0,
