@@ -2,6 +2,7 @@
 
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
+use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use thiserror::Error;
@@ -22,8 +23,6 @@ pub use net::NetConnect;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
-    #[error("无法获取 ac_id")]
-    NoAcId,
     #[error("操作失败：{0}")]
     Log(String),
     #[error("登录状态异常")]
@@ -46,11 +45,11 @@ pub type NetHelperResult<T> = Result<T, NetHelperError>;
 pub struct NetCredential {
     pub username: String,
     pub password: String,
-    pub ac_ids: RwLock<Vec<i32>>,
+    pub ac_ids: RwLock<BTreeSet<i32>>,
 }
 
 impl NetCredential {
-    pub fn new(username: String, password: String, ac_ids: Vec<i32>) -> Self {
+    pub fn new(username: String, password: String, ac_ids: BTreeSet<i32>) -> Self {
         Self {
             username,
             password,

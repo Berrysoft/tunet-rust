@@ -9,6 +9,7 @@ use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use std::marker::PhantomData;
+use tokio::time::sleep;
 use url::Url;
 
 #[derive(Clone)]
@@ -54,19 +55,11 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             .unwrap_or_default())
     }
 
-    async fn get_ac_id_impl(&self) -> NetHelperResult<i32> {
-        let res = self.client.get(U::redirect_uri()).send().await?;
-        let t = res.text().await?;
-        AC_ID_REGEX
-            .captures(&t)
-            .and_then(|cap| cap[1].parse::<i32>().ok())
-            .ok_or(NetHelperError::NoAcId)
-    }
-
-    async fn get_ac_id(&self) -> NetHelperResult<i32> {
-        self.get_ac_id_impl()
-            .await
-            .map_err(|_| NetHelperError::NoAcId)
+    async fn get_ac_id(&self) -> Option<i32> {
+        let res = self.client.get(U::redirect_uri()).send().await.ok()?;
+        let t = res.text().await.ok()?;
+        let cap = AC_ID_REGEX.captures(&t)?;
+        cap[1].parse::<i32>().ok()
     }
 
     async fn try_login(&self, ac_id: i32) -> NetHelperResult<String> {
@@ -143,9 +136,11 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
             if res.is_ok() {
                 return res;
             }
+            // The server limits the requests.
+            sleep(std::time::Duration::from_secs(3)).await;
         }
-        let ac_id = self.get_ac_id().await?;
-        self.cred.ac_ids.write().await.push(ac_id);
+        let ac_id = self.get_ac_id().await.unwrap_or(1);
+        self.cred.ac_ids.write().await.insert(ac_id);
         Ok(self.try_login(ac_id).await?)
     }
 

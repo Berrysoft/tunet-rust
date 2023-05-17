@@ -14,6 +14,7 @@ use std::sync::{
     Arc,
 };
 use tokio::sync::mpsc::*;
+use tokio::time::sleep;
 use tunet_helper::{usereg::*, *};
 use tunet_suggest as suggest;
 
@@ -273,6 +274,7 @@ impl Model {
                     tx.send(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
                     if ok {
+                        sleep(std::time::Duration::from_secs(1)).await;
                         Self::flux_impl(client, tx, true).await?;
                     }
                     Ok::<_, anyhow::Error>(())

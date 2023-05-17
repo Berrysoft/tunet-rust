@@ -5,6 +5,7 @@ use keyring::Keyring;
 use rpassword::read_password;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use std::fs::{remove_file, DirBuilder, File};
 use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
@@ -33,16 +34,12 @@ struct Settings<'a> {
     #[serde(default)]
     pub password: Cow<'a, str>,
     #[serde(default)]
-    pub ac_ids: Cow<'a, [i32]>,
+    pub ac_ids: BTreeSet<i32>,
 }
 
 impl From<Settings<'_>> for NetCredential {
     fn from(s: Settings) -> Self {
-        Self::new(
-            s.username.into_owned(),
-            s.password.into_owned(),
-            s.ac_ids.into_owned(),
-        )
+        Self::new(s.username.into_owned(), s.password.into_owned(), s.ac_ids)
     }
 }
 
@@ -85,14 +82,14 @@ impl FileSettingsReader {
             Settings {
                 username: Cow::Borrowed(&settings.username),
                 password: Cow::Borrowed(&settings.password),
-                ac_ids: Cow::Borrowed(ac_ids.as_ref()),
+                ac_ids: ac_ids.clone(),
             }
         } else {
             // Don't write password.
             Settings {
                 username: Cow::Borrowed(&settings.username),
                 password: Cow::default(),
-                ac_ids: Cow::Borrowed(ac_ids.as_ref()),
+                ac_ids: ac_ids.clone(),
             }
         };
         serde_json::to_writer(writer, &c)?;
@@ -147,13 +144,13 @@ impl StdioSettingsReader {
 
     pub fn read(&self) -> SettingsResult<NetCredential> {
         let u = self.read_username()?;
-        Ok(NetCredential::new(u, String::new(), Vec::new()))
+        Ok(NetCredential::new(u, String::new(), BTreeSet::new()))
     }
 
     pub fn read_with_password(&self) -> SettingsResult<NetCredential> {
         let u = self.read_username()?;
         let p = self.read_password()?;
-        Ok(NetCredential::new(u, p, Vec::new()))
+        Ok(NetCredential::new(u, p, BTreeSet::new()))
     }
 }
 
