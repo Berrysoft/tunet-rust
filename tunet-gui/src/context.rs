@@ -2,14 +2,11 @@ use crate::{accent_color, upgrade_spawn, App, DetailModel, HomeModel, NetInfo, S
 use anyhow::Result;
 use mac_address::MacAddress;
 use plotters::{
-    prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, RangedDate},
+    prelude::{ChartBuilder, IntoDrawingArea, RangedDate, SVGBackend},
     series::LineSeries,
-    style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle, BLACK, WHITE},
+    style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle},
 };
-use slint::{
-    ComponentHandle, Image, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString,
-    StandardListViewItem, VecModel,
-};
+use slint::{ComponentHandle, Image, ModelRc, SharedString, StandardListViewItem, VecModel};
 use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex as SyncMutex};
 use tokio::sync::{mpsc, Mutex};
 use tunet_helper::{
@@ -210,16 +207,10 @@ impl UpdateContext {
         self.data.lock().unwrap().del_at_exit
     }
 
-    pub fn draw_daily_chart(
-        &self,
-        width: f32,
-        height: f32,
-        dark: bool,
-        text_color: slint::Color,
-    ) -> Image {
+    pub fn draw_daily_chart(&self, width: f32, height: f32, text_color: slint::Color) -> Image {
         let app = self.weak_app.upgrade().unwrap();
         let data = self.data.lock().unwrap();
-        draw_daily(&app, width, height, dark, text_color, &data.daily)
+        draw_daily(&app, width, height, text_color, &data.daily).unwrap()
     }
 }
 
@@ -291,25 +282,22 @@ fn draw_daily(
     app: &App,
     width: f32,
     height: f32,
-    dark: bool,
     text_color: slint::Color,
     details: &DetailDaily,
-) -> Image {
+) -> Result<Image> {
     let color = accent_color();
     let color = RGBColor(color.r, color.g, color.b);
     let scale = app.window().scale_factor();
     let (width, height) = ((width * scale) as u32, (height * scale) as u32);
     let text_color = RGBColor(text_color.red(), text_color.green(), text_color.blue());
-    let back_color = if dark { &BLACK } else { &WHITE };
 
     let date_range = (details.now.with_day(1).unwrap(), details.now);
     let flux_range = (0, details.max_flux.0);
 
-    let mut pixel_buffer = SharedPixelBuffer::<Rgb8Pixel>::new(width, height);
-    let backend = BitMapBackend::with_buffer(pixel_buffer.make_mut_bytes(), (width, height));
+    let mut buffer = String::new();
+    let backend = SVGBackend::with_string(&mut buffer, (width, height));
     {
         let root = backend.into_drawing_area();
-        root.fill(back_color).unwrap();
 
         let label_style = (FontFamily::SansSerif, 20.0 * scale)
             .with_color(text_color)
@@ -323,8 +311,7 @@ fn draw_daily(
             .build_cartesian_2d(
                 RangedDate::from(date_range.0..date_range.1),
                 flux_range.0..flux_range.1,
-            )
-            .unwrap();
+            )?;
         chart
             .configure_mesh()
             .disable_mesh()
@@ -337,53 +324,21 @@ fn draw_daily(
             .x_label_formatter(&|d| d.format("%m-%d").to_string())
             .y_label_style(label_style)
             .y_label_formatter(&|f| Flux(*f).to_string())
-            .draw()
-            .unwrap();
-        chart
-            .draw_series(
-                LineSeries::new(
-                    details.details.iter().map(|(d, f)| (*d, f.0)),
-                    ShapeStyle {
-                        color: color.to_rgba(),
-                        filled: true,
-                        stroke_width: (scale * 2.0) as _,
-                    },
-                )
-                .point_size((scale * 3.0) as _),
+            .draw()?;
+        chart.draw_series(
+            LineSeries::new(
+                details.details.iter().map(|(d, f)| (*d, f.0)),
+                ShapeStyle {
+                    color: color.to_rgba(),
+                    filled: true,
+                    stroke_width: (scale * 2.0) as _,
+                },
             )
-            .unwrap();
+            .point_size((scale * 3.0) as _),
+        )?;
 
-        root.present().unwrap();
+        root.present()?;
     }
 
-    image_from_rgb8_with_transparency(pixel_buffer, back_color)
-}
-
-fn image_from_rgb8_with_transparency(
-    buffer: SharedPixelBuffer<Rgb8Pixel>,
-    filter: &RGBColor,
-) -> Image {
-    let filter = Rgb8Pixel {
-        r: filter.0,
-        g: filter.1,
-        b: filter.2,
-    };
-    let transparent = Rgba8Pixel {
-        r: 0,
-        g: 0,
-        b: 0,
-        a: 0,
-    };
-    let mut new_buffer = SharedPixelBuffer::<Rgba8Pixel>::new(buffer.width(), buffer.height());
-    for (oldc, newc) in buffer.as_slice().iter().zip(new_buffer.make_mut_slice()) {
-        if *oldc == filter {
-            *newc = transparent;
-        } else {
-            newc.r = oldc.r;
-            newc.g = oldc.g;
-            newc.b = oldc.b;
-            newc.a = 0xFF;
-        }
-    }
-    Image::from_rgba8(new_buffer)
+    Image::load_from_svg_data(buffer.as_bytes()).map_err(|_| anyhow::anyhow!("Cannot load SVG."))
 }

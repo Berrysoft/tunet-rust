@@ -132,9 +132,7 @@ pub fn bind_detail_model(
 ) {
     detail_model.on_daily_chart({
         let context = context.clone();
-        move |width, height, dark, text_color| {
-            context.draw_daily_chart(width, height, dark, text_color)
-        }
+        move |width, height, text_color| context.draw_daily_chart(width, height, text_color)
     });
 
     detail_model.on_refresh(upgrade_queue!(model, || Action::Details));
