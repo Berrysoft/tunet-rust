@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use dirs::config_dir;
-use keyring::Keyring;
+use keyring::Entry;
 use rpassword::read_password;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -32,27 +32,18 @@ struct Settings<'a> {
     #[serde(default)]
     pub username: Cow<'a, str>,
     #[serde(default)]
-    pub password: Cow<'a, str>,
-    #[serde(default)]
     pub ac_ids: BTreeSet<i32>,
-}
-
-impl From<Settings<'_>> for NetCredential {
-    fn from(s: Settings) -> Self {
-        Self::new(s.username.into_owned(), s.password.into_owned(), s.ac_ids)
-    }
 }
 
 static TUNET_NAME: &str = "tunet";
 
 pub struct FileSettingsReader {
     path: PathBuf,
-    keyring: Keyring,
 }
 
 impl FileSettingsReader {
     pub fn new() -> SettingsResult<Self> {
-        Self::with_path(Self::file_path()?)
+        Ok(Self::with_path(Self::file_path()?))
     }
 
     pub fn file_path() -> SettingsResult<PathBuf> {
@@ -63,11 +54,8 @@ impl FileSettingsReader {
         Ok(p)
     }
 
-    pub fn with_path(path: impl Into<PathBuf>) -> SettingsResult<Self> {
-        Ok(Self {
-            path: path.into(),
-            keyring: Keyring::new(TUNET_NAME)?,
-        })
+    pub fn with_path(path: impl Into<PathBuf>) -> Self {
+        Self { path: path.into() }
     }
 
     pub async fn save(&mut self, settings: Arc<NetCredential>) -> SettingsResult<()> {
@@ -77,51 +65,56 @@ impl FileSettingsReader {
         let f = File::create(self.path.as_path())?;
         let writer = BufWriter::new(f);
         let ac_ids = settings.ac_ids.read().await;
-        let c = if let Err(e) = self.keyring.set(&settings.password) {
-            log::warn!("{}", e);
-            Settings {
-                username: Cow::Borrowed(&settings.username),
-                password: Cow::Borrowed(&settings.password),
-                ac_ids: ac_ids.clone(),
-            }
-        } else {
-            // Don't write password.
-            Settings {
-                username: Cow::Borrowed(&settings.username),
-                password: Cow::default(),
-                ac_ids: ac_ids.clone(),
-            }
+        let entry = Entry::new(TUNET_NAME, &settings.username)?;
+        entry.set_password(&settings.password)?;
+        let c = Settings {
+            username: Cow::Borrowed(&settings.username),
+            ac_ids: ac_ids.clone(),
         };
         serde_json::to_writer(writer, &c)?;
         Ok(())
     }
 
+    fn read_impl(&self) -> SettingsResult<Settings> {
+        let f = File::open(self.path.as_path())?;
+        let reader = BufReader::new(f);
+        Ok(serde_json::from_reader(reader)?)
+    }
+
     pub fn delete(&mut self) -> SettingsResult<()> {
-        self.keyring
-            .delete()
-            .unwrap_or_else(|e| log::warn!("{}", e));
         if self.path.exists() {
+            let c = self.read_impl()?;
+            let entry = Entry::new(TUNET_NAME, &c.username)?;
+            entry.delete_password()?;
             remove_file(self.path.as_path())?;
         }
         Ok(())
     }
 
     pub fn read(&self) -> SettingsResult<NetCredential> {
-        let f = File::open(self.path.as_path())?;
-        let reader = BufReader::new(f);
-        let c: Settings = serde_json::from_reader(reader)?;
-        Ok(c.into())
+        let c = self.read_impl()?;
+        Ok(NetCredential::new(
+            c.username.into_owned(),
+            String::new(),
+            c.ac_ids,
+        ))
     }
 
     pub fn read_with_password(&self) -> SettingsResult<NetCredential> {
-        let mut settings = self.read()?;
-        match self.keyring.get() {
-            Ok(password) => settings.password = password,
+        let c = self.read_impl()?;
+        let entry = Entry::new(TUNET_NAME, &c.username)?;
+        let password = match entry.get_password() {
+            Ok(p) => p,
             Err(e) => {
                 log::warn!("{}", e);
+                Default::default()
             }
-        }
-        Ok(settings)
+        };
+        Ok(NetCredential::new(
+            c.username.into_owned(),
+            password,
+            c.ac_ids,
+        ))
     }
 }
 
@@ -133,7 +126,7 @@ impl StdioSettingsReader {
         stdout().flush()?;
         let mut u = String::new();
         stdin().read_line(&mut u)?;
-        Ok(u.replace(&['\n', '\r'][..], ""))
+        Ok(u.trim().to_string())
     }
 
     fn read_password(&self) -> SettingsResult<String> {
@@ -149,7 +142,11 @@ impl StdioSettingsReader {
 
     pub fn read_with_password(&self) -> SettingsResult<NetCredential> {
         let u = self.read_username()?;
-        let p = self.read_password()?;
+        let entry = Entry::new(TUNET_NAME, &u)?;
+        let p = match entry.get_password() {
+            Ok(p) => p,
+            Err(_) => self.read_password()?,
+        };
         Ok(NetCredential::new(u, p, BTreeSet::new()))
     }
 }
@@ -182,7 +179,7 @@ pub fn delete_cred() -> SettingsResult<()> {
     stdout().flush()?;
     let mut s = String::new();
     stdin().read_line(&mut s)?;
-    if s.replace(&['\n', '\r'][..], "").eq_ignore_ascii_case("y") {
+    if s.trim().eq_ignore_ascii_case("y") {
         reader.delete()?;
         println!("已删除");
     }

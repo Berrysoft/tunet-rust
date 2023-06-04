@@ -28,6 +28,7 @@ tokio = { workspace = true, features = ["sync"] }
 tokio-stream = { workspace = true, features = ["sync"] }
 windows = { workspace = true, features = [
     "Win32_Foundation",
+    "Win32_Security",
     "Win32_System_Environment",
     "Win32_System_RemoteDesktop",
     "Win32_System_Threading",
