@@ -307,7 +307,7 @@ fn draw_daily(
             .x_label_area_size(35.0 * scale)
             .y_label_area_size(70.0 * scale)
             .margin_top(10.0 * scale)
-            .margin_right(10.0 * scale)
+            .margin_right(20.0 * scale)
             .build_cartesian_2d(
                 RangedDate::from(date_range.0..date_range.1),
                 flux_range.0..flux_range.1,
