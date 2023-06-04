@@ -57,8 +57,7 @@ async-trait = { workspace = true }
 mac_address = { workspace = true }
 clap = { workspace = true }
 itertools = { workspace = true }
-termcolor = "1"
-termcolor_output = { git = "https://github.com/Berrysoft/termcolor_output.git" }
+console = "0.15"
 enum_dispatch = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
