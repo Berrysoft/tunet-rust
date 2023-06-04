@@ -3,7 +3,6 @@ members = [
     "authtea",
     "netstatus",
     "color-theme",
-    "keyring",
     "tunet-helper",
     "tunet-suggest",
     "tunet-settings",
@@ -31,7 +30,6 @@ opt-level = "z"
 authtea = { path = "authtea" }
 color-theme = { path = "color-theme" }
 netstatus = { path = "netstatus" }
-keyring = { path = "keyring" }
 
 tunet-helper = { path = "tunet-helper" }
 tunet-model = { path = "tunet-model" }
@@ -55,6 +53,7 @@ futures-util = "0.3"
 
 itertools = "0.10"
 
+keyring = "2"
 mac_address = { version = "2", package = "mac_address2" }
 
 serde = "1"
@@ -65,7 +64,6 @@ tokio-stream = "0.1"
 
 objc = "0.2"
 core-foundation = "0.9"
-security-framework = "2"
 system-configuration = "0.5"
 
 windows = "0.48"

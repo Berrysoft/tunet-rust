@@ -31,7 +31,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         Self {
             cred,
             client,
-            _p: PhantomData::default(),
+            _p: PhantomData,
         }
     }
 
