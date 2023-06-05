@@ -107,15 +107,11 @@ impl Model {
                 self.update(UpdateMsg::Credential);
             }
             Action::UpdateCredential(u, p) => {
-                let cred = self.cred.clone();
                 let tx = self.tx.clone();
                 tokio::spawn(async move {
-                    let ac_ids = cred.ac_ids.read().await.clone();
-                    tx.send(Action::Credential(Arc::new(NetCredential::new(
-                        u, p, ac_ids,
-                    ))))
-                    .await
-                    .ok()
+                    tx.send(Action::Credential(Arc::new(NetCredential::new(u, p))))
+                        .await
+                        .ok()
                 });
             }
             Action::State(s) => {

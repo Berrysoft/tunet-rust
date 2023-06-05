@@ -77,7 +77,7 @@ async fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {
         settings_reader.delete()?;
     } else {
         let cred = model.lock().await.cred.clone();
-        settings_reader.save(cred).await?;
+        settings_reader.save(cred)?;
     }
     Ok(())
 }
