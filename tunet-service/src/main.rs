@@ -56,10 +56,7 @@ struct Register {
 impl Command for Register {
     fn run(&self) -> Result<()> {
         elevator::elevate()?;
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?
-            .block_on(save_cred(read_cred()?))?;
+        save_cred(read_cred()?)?;
         service::register(self.interval)?;
         println!("服务注册成功");
         Ok(())

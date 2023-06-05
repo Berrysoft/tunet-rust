@@ -67,7 +67,7 @@ impl TUNetCommand for Login {
         let c = TUNetConnect::new_with_suggest(self.host, cred, client).await?;
         let res = c.login().await?;
         println!("{}", res);
-        save_cred(c.cred()).await?;
+        save_cred(c.cred())?;
         Ok(())
     }
 }
@@ -182,7 +182,7 @@ impl TUNetCommand for Online {
                 );
             }
         }
-        save_cred(c.cred()).await?;
+        save_cred(c.cred())?;
         Ok(())
     }
 }
@@ -203,7 +203,7 @@ impl TUNetCommand for UseregConnect {
         c.login().await?;
         let res = c.connect(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred()).await?;
+        save_cred(c.cred())?;
         Ok(())
     }
 }
@@ -224,7 +224,7 @@ impl TUNetCommand for UseregDrop {
         c.login().await?;
         let res = c.drop(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred()).await?;
+        save_cred(c.cred())?;
         Ok(())
     }
 }
@@ -284,7 +284,7 @@ impl Detail {
                     .fg(get_flux_color(&total_flux, true))
             );
         }
-        save_cred(c.cred()).await?;
+        save_cred(c.cred())?;
         Ok(())
     }
 
@@ -342,7 +342,7 @@ impl Detail {
                     .fg(get_flux_color(&total_flux, true))
             );
         }
-        save_cred(c.cred()).await?;
+        save_cred(c.cred())?;
         Ok(())
     }
 }

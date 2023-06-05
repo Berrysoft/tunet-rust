@@ -9,7 +9,6 @@ use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use std::marker::PhantomData;
-use tokio::time::sleep;
 use url::Url;
 
 #[derive(Clone)]
@@ -23,6 +22,8 @@ const AUTH_BASE64: Encoding = new_encoding! {
     symbols: "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA",
     padding: '=',
 };
+
+static REDIRECT_URI: &str = "http://www.tsinghua.edu.cn/";
 
 static AC_ID_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"/index_([0-9]+)\.html").unwrap());
 
@@ -56,7 +57,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
     }
 
     async fn get_ac_id(&self) -> Option<i32> {
-        let res = self.client.get(U::redirect_uri()).send().await.ok()?;
+        let res = self.client.get(REDIRECT_URI).send().await.ok()?;
         let t = res.text().await.ok()?;
         let cap = AC_ID_REGEX.captures(&t)?;
         cap[1].parse::<i32>().ok()
@@ -131,16 +132,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
 #[async_trait]
 impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
     async fn login(&self) -> NetHelperResult<String> {
-        for ac_id in self.cred.ac_ids.read().await.iter() {
-            let res = self.try_login(*ac_id).await;
-            if res.is_ok() {
-                return res;
-            }
-            // The server limits the requests.
-            sleep(std::time::Duration::from_secs(3)).await;
-        }
         let ac_id = self.get_ac_id().await.unwrap_or(1);
-        self.cred.ac_ids.write().await.insert(ac_id);
         Ok(self.try_login(ac_id).await?)
     }
 
@@ -171,7 +163,6 @@ pub trait AuthConnectUri {
     fn log_uri() -> &'static str;
     fn challenge_uri() -> &'static str;
     fn flux_uri() -> &'static str;
-    fn redirect_uri() -> &'static str;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -192,11 +183,6 @@ impl AuthConnectUri for Auth4Uri {
     fn flux_uri() -> &'static str {
         "https://auth4.tsinghua.edu.cn/rad_user_info.php"
     }
-
-    #[inline]
-    fn redirect_uri() -> &'static str {
-        "http://3.3.3.3/"
-    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -216,11 +202,6 @@ impl AuthConnectUri for Auth6Uri {
     #[inline]
     fn flux_uri() -> &'static str {
         "https://auth6.tsinghua.edu.cn/rad_user_info.php"
-    }
-
-    #[inline]
-    fn redirect_uri() -> &'static str {
-        "http://[333::3]/"
     }
 }
 

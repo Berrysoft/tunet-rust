@@ -2,11 +2,9 @@
 
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
-use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use thiserror::Error;
-use tokio::sync::RwLock;
 
 pub use chrono::{
     DateTime, Datelike, Duration as NaiveDuration, FixedOffset, Local, NaiveDate, NaiveDateTime,
@@ -45,16 +43,11 @@ pub type NetHelperResult<T> = Result<T, NetHelperError>;
 pub struct NetCredential {
     pub username: String,
     pub password: String,
-    pub ac_ids: RwLock<BTreeSet<i32>>,
 }
 
 impl NetCredential {
-    pub fn new(username: String, password: String, ac_ids: BTreeSet<i32>) -> Self {
-        Self {
-            username,
-            password,
-            ac_ids: RwLock::new(ac_ids),
-        }
+    pub fn new(username: String, password: String) -> Self {
+        Self { username, password }
     }
 }
 
