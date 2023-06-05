@@ -5,14 +5,14 @@ use std::collections::BTreeMap;
 use tunet_helper::*;
 
 static SUGGEST_SSID_MAP: Lazy<BTreeMap<&'static str, NetState>> = Lazy::new(|| {
-    let mut map = BTreeMap::new();
-    map.insert("Tsinghua", NetState::Auth4);
-    map.insert("Tsinghua-5G", NetState::Auth4);
-    map.insert("Tsinghua-IPv4", NetState::Auth4);
-    map.insert("Tsinghua-IPv6", NetState::Auth6);
-    map.insert("Tsinghua-Secure", NetState::Net);
-    map.insert("Wifi.郑裕彤讲堂", NetState::Net);
-    map
+    BTreeMap::from([
+        ("Tsinghua", NetState::Auth4),
+        ("Tsinghua-5G", NetState::Auth4),
+        ("Tsinghua-IPv4", NetState::Auth4),
+        ("Tsinghua-IPv6", NetState::Auth6),
+        ("Tsinghua-Secure", NetState::Net),
+        ("Wifi.郑裕彤讲堂", NetState::Net),
+    ])
 });
 
 pub async fn suggest(client: &HttpClient) -> NetState {
