@@ -3,7 +3,6 @@
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 use thiserror::Error;
 
 pub use chrono::{
@@ -38,18 +37,6 @@ pub enum NetHelperError {
 }
 
 pub type NetHelperResult<T> = Result<T, NetHelperError>;
-
-#[derive(Debug, Default)]
-pub struct NetCredential {
-    pub username: String,
-    pub password: String,
-}
-
-impl NetCredential {
-    pub fn new(username: String, password: String) -> Self {
-        Self { username, password }
-    }
-}
 
 #[repr(transparent)]
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -195,10 +182,9 @@ impl std::str::FromStr for NetState {
 #[async_trait]
 #[enum_dispatch(TUNetConnect)]
 pub trait TUNetHelper: Send + Sync {
-    async fn login(&self) -> NetHelperResult<String>;
-    async fn logout(&self) -> NetHelperResult<String>;
+    async fn login(&self, u: &str, p: &str) -> NetHelperResult<String>;
+    async fn logout(&self, u: &str) -> NetHelperResult<String>;
     async fn flux(&self) -> NetHelperResult<NetFlux>;
-    fn cred(&self) -> Arc<NetCredential>;
 }
 
 #[enum_dispatch]
@@ -210,15 +196,11 @@ pub enum TUNetConnect {
 }
 
 impl TUNetConnect {
-    pub fn new(
-        s: NetState,
-        cred: Arc<NetCredential>,
-        client: HttpClient,
-    ) -> NetHelperResult<TUNetConnect> {
+    pub fn new(s: NetState, client: HttpClient) -> NetHelperResult<TUNetConnect> {
         match s {
-            NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(cred, client))),
-            NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(cred, client))),
-            NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(cred, client))),
+            NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(client))),
+            NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(client))),
+            NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(client))),
             _ => Err(NetHelperError::InvalidHost),
         }
     }

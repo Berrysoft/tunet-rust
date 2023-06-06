@@ -47,15 +47,15 @@ async fn main() -> Result<()> {
 
     app.run()?;
 
-    stop_model(&model, context.del_at_exit()).await?;
+    stop_model(context.del_at_exit())?;
     Ok(())
 }
 
 async fn start_model(model: &Mutex<Model>) -> Result<()> {
     let model = model.lock().await;
     let settings_reader = FileSettingsReader::new()?;
-    if let Ok(cred) = settings_reader.read_with_password() {
-        model.queue(Action::Credential(Arc::new(cred)));
+    if let Ok((u, p)) = settings_reader.read_full() {
+        model.queue(Action::Credential(u, p));
     }
     model.queue(Action::Status);
     model.queue(Action::WatchStatus);
@@ -71,13 +71,10 @@ fn start_model_loop(model: Arc<Mutex<Model>>, mut rx: mpsc::Receiver<Action>) {
     });
 }
 
-async fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {
+fn stop_model(del_at_exit: bool) -> Result<()> {
     let mut settings_reader = FileSettingsReader::new()?;
     if del_at_exit {
         settings_reader.delete()?;
-    } else {
-        let cred = model.lock().await.cred.clone();
-        settings_reader.save(cred)?;
     }
     Ok(())
 }

@@ -7,7 +7,6 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-tunet-helper = { workspace = true }
 keyring = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }

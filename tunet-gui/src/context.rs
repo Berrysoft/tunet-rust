@@ -165,7 +165,7 @@ impl UpdateContext {
                 model.queue(Action::State(None));
                 model.queue(Action::Online);
                 model.queue(Action::Details);
-                self.update_username(&model.cred.username);
+                self.update_username(&model.username);
             }
             UpdateMsg::State => {
                 model.queue(Action::Flux);

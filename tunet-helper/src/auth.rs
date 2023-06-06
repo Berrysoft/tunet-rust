@@ -13,7 +13,6 @@ use url::Url;
 
 #[derive(Clone)]
 pub struct AuthConnect<U: AuthConnectUri + Send + Sync> {
-    cred: Arc<NetCredential>,
     client: HttpClient,
     _p: PhantomData<U>,
 }
@@ -28,19 +27,18 @@ static REDIRECT_URI: &str = "http://www.tsinghua.edu.cn/";
 static AC_ID_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"/index_([0-9]+)\.html").unwrap());
 
 impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
-    pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {
+    pub fn new(client: HttpClient) -> Self {
         Self {
-            cred,
             client,
             _p: PhantomData,
         }
     }
 
-    async fn challenge(&self) -> NetHelperResult<String> {
+    async fn challenge(&self, u: &str) -> NetHelperResult<String> {
         let uri = Url::parse_with_params(
             U::challenge_uri(),
             &[
-                ("username", self.cred.username.as_ref()),
+                ("username", u),
                 ("double_stack", "1"),
                 ("ip", ""),
                 ("callback", "callback"),
@@ -63,8 +61,8 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         cap[1].parse::<i32>().ok()
     }
 
-    async fn try_login(&self, ac_id: i32) -> NetHelperResult<String> {
-        let token = self.challenge().await?;
+    async fn try_login(&self, ac_id: i32, u: &str, p: &str) -> NetHelperResult<String> {
+        let token = self.challenge(u).await?;
         let password_md5 = {
             let mut hmacmd5 = Hmac::<Md5>::new_from_slice(&[]).unwrap();
             hmacmd5.update(token.as_bytes());
@@ -72,8 +70,8 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         };
         let password_md5 = HEXLOWER.encode(&password_md5);
         let encode_json = json!({
-            "username": self.cred.username,
-            "password": self.cred.password,
+            "username": u,
+            "password": p,
             "ip": "",
             "acid": ac_id,
             "enc_ver": "srun_bx1"
@@ -87,7 +85,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             let mut sha1 = Sha1::new();
             sha1.update(format!(
                 "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                token, self.cred.username, password_md5, info, ac_id
+                token, u, password_md5, info, ac_id
             ));
             sha1.finalize()
         };
@@ -97,7 +95,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             ("double_stack", "1"),
             ("n", "200"),
             ("type", "1"),
-            ("username", &self.cred.username),
+            ("username", u),
             ("password", &format!("{{MD5}}{}", password_md5)),
             ("info", &info),
             ("chksum", &HEXLOWER.encode(&chksum)),
@@ -131,17 +129,17 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
 
 #[async_trait]
 impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
-    async fn login(&self) -> NetHelperResult<String> {
+    async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
         let ac_id = self.get_ac_id().await.unwrap_or(1);
-        Ok(self.try_login(ac_id).await?)
+        Ok(self.try_login(ac_id, u, p).await?)
     }
 
-    async fn logout(&self) -> NetHelperResult<String> {
+    async fn logout(&self, u: &str) -> NetHelperResult<String> {
         let params = [
             ("action", "logout"),
             ("ac_id", "1"),
             ("double_stack", "1"),
-            ("username", &self.cred.username),
+            ("username", u),
             ("callback", "callback"),
         ];
         let res = self.client.post(U::log_uri()).form(&params).send().await?;
@@ -152,10 +150,6 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
     async fn flux(&self) -> NetHelperResult<NetFlux> {
         let res = self.client.get(U::flux_uri()).send().await?;
         Ok(res.text().await?.parse()?)
-    }
-
-    fn cred(&self) -> Arc<NetCredential> {
-        self.cred.clone()
     }
 }
 

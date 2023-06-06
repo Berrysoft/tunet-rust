@@ -55,7 +55,8 @@ pub type UpdateCallback = Box<dyn Fn(UpdateMsg) + Send + 'static>;
 pub struct Model {
     tx: Sender<Action>,
     pub update: Option<UpdateCallback>,
-    pub cred: Arc<NetCredential>,
+    pub username: String,
+    password: String,
     pub http: HttpClient,
     pub state: NetState,
     pub status: NetStatus,
@@ -79,8 +80,9 @@ impl Model {
 
         Ok(Self {
             update: None,
+            username: String::default(),
+            password: String::default(),
             tx: tx.clone(),
-            cred: Arc::new(NetCredential::default()),
             http,
             state: NetState::Unknown,
             status: NetStatus::Unknown,
@@ -102,17 +104,10 @@ impl Model {
 
     pub fn handle(&mut self, action: Action) {
         match action {
-            Action::Credential(cred) => {
-                self.cred = cred;
+            Action::Credential(u, p) => {
+                self.username = u;
+                self.password = p;
                 self.update(UpdateMsg::Credential);
-            }
-            Action::UpdateCredential(u, p) => {
-                let tx = self.tx.clone();
-                tokio::spawn(async move {
-                    tx.send(Action::Credential(Arc::new(NetCredential::new(u, p))))
-                        .await
-                        .ok()
-                });
             }
             Action::State(s) => {
                 match s {
@@ -191,8 +186,9 @@ impl Model {
             Action::Connect(addr) => {
                 let tx = self.tx.clone();
                 let usereg = self.usereg();
+                let (u, p) = (self.username.clone(), self.password.clone());
                 tokio::spawn(async move {
-                    usereg.login().await?;
+                    usereg.login(&u, &p).await?;
                     usereg.connect(addr).await?;
                     tx.send(Action::Online).await?;
                     Ok::<_, anyhow::Error>(())
@@ -201,8 +197,9 @@ impl Model {
             Action::Drop(addr) => {
                 let tx = self.tx.clone();
                 let usereg = self.usereg();
+                let (u, p) = (self.username.clone(), self.password.clone());
                 tokio::spawn(async move {
-                    usereg.login().await?;
+                    usereg.login(&u, &p).await?;
                     usereg.drop(addr).await?;
                     tx.send(Action::Online).await?;
                     Ok::<_, anyhow::Error>(())
@@ -252,20 +249,21 @@ impl Model {
     }
 
     fn client(&self) -> Option<TUNetConnect> {
-        TUNetConnect::new(self.state, self.cred.clone(), self.http.clone()).ok()
+        TUNetConnect::new(self.state, self.http.clone()).ok()
     }
 
     fn usereg(&self) -> UseregHelper {
-        UseregHelper::new(self.cred.clone(), self.http.clone())
+        UseregHelper::new(self.http.clone())
     }
 
     fn spawn_login(&self) {
         if let Some(lock) = self.log_busy.lock() {
             let tx = self.tx.clone();
+            let (u, p) = (self.username.clone(), self.password.clone());
             if let Some(client) = self.client() {
                 tokio::spawn(async move {
                     let _lock = lock;
-                    let res = client.login().await;
+                    let res = client.login(&u, &p).await;
                     let ok = res.is_ok();
                     tx.send(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
@@ -282,10 +280,11 @@ impl Model {
     fn spawn_logout(&self) {
         if let Some(lock) = self.log_busy.lock() {
             let tx = self.tx.clone();
+            let u = self.username.clone();
             if let Some(client) = self.client() {
                 tokio::spawn(async move {
                     let _lock = lock;
-                    let res = client.logout().await;
+                    let res = client.logout(&u).await;
                     let ok = res.is_ok();
                     tx.send(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
@@ -332,9 +331,10 @@ impl Model {
         if let Some(lock) = self.online_busy.lock() {
             let tx = self.tx.clone();
             let usereg = self.usereg();
+            let (u, p) = (self.username.clone(), self.password.clone());
             tokio::spawn(async move {
                 let _lock = lock;
-                usereg.login().await?;
+                usereg.login(&u, &p).await?;
                 let users = usereg.users();
                 pin_mut!(users);
                 tx.send(Action::OnlineDone(users.try_collect().await?))
@@ -348,9 +348,10 @@ impl Model {
         if let Some(lock) = self.detail_busy.lock() {
             let tx = self.tx.clone();
             let usereg = self.usereg();
+            let (u, p) = (self.username.clone(), self.password.clone());
             tokio::spawn(async move {
                 let _lock = lock;
-                usereg.login().await?;
+                usereg.login(&u, &p).await?;
                 let details = usereg.details(NetDetailOrder::LogoutTime, false);
                 pin_mut!(details);
                 tx.send(Action::DetailsDone(details.try_collect().await?))
@@ -375,8 +376,7 @@ impl Model {
 
 #[derive(Debug)]
 pub enum Action {
-    Credential(Arc<NetCredential>),
-    UpdateCredential(String, String),
+    Credential(String, String),
     State(Option<NetState>),
     WatchStatus,
     Status,

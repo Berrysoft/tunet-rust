@@ -7,8 +7,8 @@ use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
 use mac_address::{MacAddress, MacAddressIterator};
 use std::cmp::Reverse;
+use std::io::{stdin, stdout, Write};
 use std::net::Ipv4Addr;
-use std::sync::Arc;
 use tunet_helper::{usereg::*, *};
 use tunet_settings::*;
 use tunet_suggest::TUNetHelperExt;
@@ -63,11 +63,12 @@ pub struct Login {
 impl TUNetCommand for Login {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let cred = read_cred()?;
-        let c = TUNetConnect::new_with_suggest(self.host, cred, client).await?;
-        let res = c.login().await?;
+        let mut reader = FileSettingsReader::new()?;
+        let (u, p) = reader.read_ask_full()?;
+        let c = TUNetConnect::new_with_suggest(self.host, client).await?;
+        let res = c.login(&u, &p).await?;
         println!("{}", res);
-        save_cred(c.cred())?;
+        reader.save(&u, &p)?;
         Ok(())
     }
 }
@@ -83,9 +84,10 @@ pub struct Logout {
 impl TUNetCommand for Logout {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let cred = read_username()?;
-        let c = TUNetConnect::new_with_suggest(self.host, cred, client).await?;
-        let res = c.logout().await?;
+        let reader = FileSettingsReader::new()?;
+        let u = reader.read_ask_username()?;
+        let c = TUNetConnect::new_with_suggest(self.host, client).await?;
+        let res = c.logout(&u).await?;
         println!("{}", res);
         Ok(())
     }
@@ -104,9 +106,7 @@ pub struct Status {
 impl TUNetCommand for Status {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let c =
-            TUNetConnect::new_with_suggest(self.host, Arc::new(NetCredential::default()), client)
-                .await?;
+        let c = TUNetConnect::new_with_suggest(self.host, client).await?;
         let f = c.flux().await?;
         if self.nuon {
             println!(
@@ -147,9 +147,10 @@ fn is_self(mac_addrs: &[MacAddress], u: &NetUser) -> bool {
 impl TUNetCommand for Online {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let cred = read_cred()?;
-        let c = UseregHelper::new(cred, client);
-        c.login().await?;
+        let mut reader = FileSettingsReader::new()?;
+        let (u, p) = reader.read_ask_full()?;
+        let c = UseregHelper::new(client);
+        c.login(&u, &p).await?;
         let us = c.users();
         let mac_addrs = MacAddressIterator::new()
             .map(|it| it.collect::<Vec<_>>())
@@ -182,7 +183,7 @@ impl TUNetCommand for Online {
                 );
             }
         }
-        save_cred(c.cred())?;
+        reader.save(&u, &p)?;
         Ok(())
     }
 }
@@ -198,12 +199,13 @@ pub struct UseregConnect {
 impl TUNetCommand for UseregConnect {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let cred = read_cred()?;
-        let c = UseregHelper::new(cred, client);
-        c.login().await?;
+        let mut reader = FileSettingsReader::new()?;
+        let (u, p) = reader.read_ask_full()?;
+        let c = UseregHelper::new(client);
+        c.login(&u, &p).await?;
         let res = c.connect(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred())?;
+        reader.save(&u, &p)?;
         Ok(())
     }
 }
@@ -219,12 +221,13 @@ pub struct UseregDrop {
 impl TUNetCommand for UseregDrop {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let cred = read_cred()?;
-        let c = UseregHelper::new(cred, client);
-        c.login().await?;
+        let mut reader = FileSettingsReader::new()?;
+        let (u, p) = reader.read_ask_full()?;
+        let c = UseregHelper::new(client);
+        c.login(&u, &p).await?;
         let res = c.drop(self.address).await?;
         println!("{}", res);
-        save_cred(c.cred())?;
+        reader.save(&u, &p)?;
         Ok(())
     }
 }
@@ -248,9 +251,10 @@ pub struct Detail {
 impl Detail {
     async fn run_detail(&self) -> Result<()> {
         let client = create_http_client()?;
-        let cred = read_cred()?;
-        let c = UseregHelper::new(cred, client);
-        c.login().await?;
+        let mut reader = FileSettingsReader::new()?;
+        let (u, p) = reader.read_ask_full()?;
+        let c = UseregHelper::new(client);
+        c.login(&u, &p).await?;
         let details = c.details(self.order, self.descending);
         pin_mut!(details);
         if self.nuon {
@@ -284,15 +288,16 @@ impl Detail {
                     .fg(get_flux_color(&total_flux, true))
             );
         }
-        save_cred(c.cred())?;
+        reader.save(&u, &p)?;
         Ok(())
     }
 
     async fn run_detail_grouping(&self) -> Result<()> {
         let client = create_http_client()?;
-        let cred = read_cred()?;
-        let c = UseregHelper::new(cred, client);
-        c.login().await?;
+        let mut reader = FileSettingsReader::new()?;
+        let (u, p) = reader.read_ask_full()?;
+        let c = UseregHelper::new(client);
+        c.login(&u, &p).await?;
         let details = c
             .details(NetDetailOrder::LogoutTime, self.descending)
             .try_collect::<Vec<_>>()
@@ -342,7 +347,7 @@ impl Detail {
                     .fg(get_flux_color(&total_flux, true))
             );
         }
-        save_cred(c.cred())?;
+        reader.save(&u, &p)?;
         Ok(())
     }
 }
@@ -364,7 +369,15 @@ pub struct DeleteCred {}
 #[async_trait]
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
-        delete_cred()?;
+        let mut reader = FileSettingsReader::new()?;
+        print!("是否删除设置文件？[y/N]");
+        stdout().flush()?;
+        let mut s = String::new();
+        stdin().read_line(&mut s)?;
+        if s.trim().eq_ignore_ascii_case("y") {
+            reader.delete()?;
+            println!("已删除");
+        }
         Ok(())
     }
 }

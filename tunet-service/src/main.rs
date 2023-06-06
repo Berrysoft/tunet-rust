@@ -18,11 +18,10 @@ use anyhow::Result;
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
 use futures_util::future::Either;
-use std::sync::Arc;
 use tokio::time::Instant;
 use tokio_stream::{wrappers::IntervalStream, Stream};
 use tunet_helper::{create_http_client, TUNetConnect, TUNetHelper};
-use tunet_settings::{read_cred, save_cred, FileSettingsReader};
+use tunet_settings::FileSettingsReader;
 use tunet_suggest::TUNetHelperExt;
 
 pub const SERVICE_NAME: &str = "tunet-service";
@@ -56,7 +55,9 @@ struct Register {
 impl Command for Register {
     fn run(&self) -> Result<()> {
         elevator::elevate()?;
-        save_cred(read_cred()?)?;
+        let mut reader = FileSettingsReader::new()?;
+        let (u, p) = reader.read_ask_full()?;
+        reader.save(&u, &p)?;
         service::register(self.interval)?;
         println!("服务注册成功");
         Ok(())
@@ -103,10 +104,10 @@ impl Command for RunOnce {
 }
 
 pub async fn run_once(quiet: bool) -> Result<()> {
-    let cred = Arc::new(FileSettingsReader::new()?.read_with_password()?);
+    let (u, p) = FileSettingsReader::new()?.read_full()?;
     let client = create_http_client()?;
-    let c = TUNetConnect::new_with_suggest(None, cred, client).await?;
-    c.login().await?;
+    let c = TUNetConnect::new_with_suggest(None, client).await?;
+    c.login(&u, &p).await?;
     let flux = c.flux().await?;
     if !quiet {
         notification::succeeded(flux)?;

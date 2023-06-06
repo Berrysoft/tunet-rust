@@ -38,7 +38,9 @@ fn main() -> Result<()> {
 pub async fn run(state: Option<NetState>) -> Result<()> {
     let mut event = Event::new()?;
 
-    event.model.queue(Action::Credential(read_cred()?));
+    let mut reader = FileSettingsReader::new()?;
+    let (u, p) = reader.read_ask_full()?;
+    event.model.queue(Action::Credential(u.clone(), p.clone()));
     event.model.queue(Action::State(state));
 
     enable_raw_mode()?;
@@ -47,7 +49,7 @@ pub async fn run(state: Option<NetState>) -> Result<()> {
     let res = main_loop(&mut event).await;
 
     let res = if let Ok(()) = res {
-        save_cred(event.model.cred.clone()).map_err(anyhow::Error::from)
+        reader.save(&u, &p).map_err(anyhow::Error::from)
     } else {
         res
     };

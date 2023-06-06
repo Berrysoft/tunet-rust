@@ -107,7 +107,6 @@ impl std::str::FromStr for NetDetailOrder {
 
 #[derive(Clone)]
 pub struct UseregHelper {
-    cred: Arc<NetCredential>,
     client: HttpClient,
 }
 
@@ -120,19 +119,19 @@ static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 const USEREG_OFF: usize = 1000;
 
 impl UseregHelper {
-    pub fn new(cred: Arc<NetCredential>, client: HttpClient) -> Self {
-        UseregHelper { cred, client }
+    pub fn new(client: HttpClient) -> Self {
+        UseregHelper { client }
     }
 
-    pub async fn login(&self) -> NetHelperResult<String> {
+    pub async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
         let password_md5 = {
             let mut md5 = Md5::new();
-            md5.update(self.cred.password.as_bytes());
+            md5.update(p.as_bytes());
             md5.finalize()
         };
         let params = [
             ("action", "login"),
-            ("user_login_name", &self.cred.username),
+            ("user_login_name", u),
             ("user_password", &HEXLOWER.encode(&password_md5)),
         ];
         let res = self
@@ -153,10 +152,6 @@ impl UseregHelper {
             .send()
             .await?;
         Ok(res.text().await?)
-    }
-
-    pub fn cred(&self) -> Arc<NetCredential> {
-        self.cred.clone()
     }
 
     pub async fn connect(&self, addr: Ipv4Addr) -> NetHelperResult<String> {

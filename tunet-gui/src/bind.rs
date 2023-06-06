@@ -11,6 +11,7 @@ use std::{
 };
 use tokio::sync::Mutex;
 use tunet_model::{Action, Model};
+use tunet_settings::FileSettingsReader;
 
 #[macro_export]
 macro_rules! upgrade_spawn_body {
@@ -156,8 +157,14 @@ pub fn bind_settings_model(
     model: &Arc<Mutex<Model>>,
     context: &UpdateContext,
 ) {
-    settings_model.on_set_credential(upgrade_queue!(model, |username, password| {
-        Action::UpdateCredential(username.to_string(), password.to_string())
+    settings_model.on_set_credential(upgrade_spawn!(model, |username, password| async move {
+        let model = model.lock().await;
+        let mut reader = FileSettingsReader::new().unwrap();
+        reader.save(&username, &password).unwrap();
+        model.queue(Action::Credential(
+            username.to_string(),
+            password.to_string(),
+        ));
     }));
     settings_model.on_del_and_exit({
         let context = context.clone();

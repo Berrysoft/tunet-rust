@@ -8,9 +8,7 @@ use std::borrow::Cow;
 use std::fs::{remove_file, DirBuilder, File};
 use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
-use std::sync::Arc;
 use thiserror::Error;
-use tunet_helper::*;
 
 #[derive(Debug, Error)]
 pub enum SettingsError {
@@ -55,16 +53,16 @@ impl FileSettingsReader {
         Self { path: path.into() }
     }
 
-    pub fn save(&mut self, settings: Arc<NetCredential>) -> SettingsResult<()> {
+    pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {
         if let Some(p) = self.path.parent() {
             DirBuilder::new().recursive(true).create(p)?;
         }
         let f = File::create(self.path.as_path())?;
         let writer = BufWriter::new(f);
-        let entry = Entry::new(TUNET_NAME, &settings.username)?;
-        entry.set_password(&settings.password)?;
+        let entry = Entry::new(TUNET_NAME, u)?;
+        entry.set_password(p)?;
         let c = Settings {
-            username: Cow::Borrowed(&settings.username),
+            username: Cow::Borrowed(u),
         };
         serde_json::to_writer(writer, &c)?;
         Ok(())
@@ -86,12 +84,12 @@ impl FileSettingsReader {
         Ok(())
     }
 
-    pub fn read(&self) -> SettingsResult<NetCredential> {
+    pub fn read_username(&self) -> SettingsResult<String> {
         let c = self.read_impl()?;
-        Ok(NetCredential::new(c.username.into_owned(), String::new()))
+        Ok(c.username.into_owned())
     }
 
-    pub fn read_with_password(&self) -> SettingsResult<NetCredential> {
+    pub fn read_full(&self) -> SettingsResult<(String, String)> {
         let c = self.read_impl()?;
         let entry = Entry::new(TUNET_NAME, &c.username)?;
         let password = match entry.get_password() {
@@ -101,14 +99,24 @@ impl FileSettingsReader {
                 Default::default()
             }
         };
-        Ok(NetCredential::new(c.username.into_owned(), password))
+        Ok((c.username.into_owned(), password))
+    }
+
+    pub fn read_ask_username(&self) -> SettingsResult<String> {
+        self.read_username()
+            .or_else(|_| StdioSettingsReader.read_username())
+    }
+
+    pub fn read_ask_full(&self) -> SettingsResult<(String, String)> {
+        self.read_full()
+            .or_else(|_| StdioSettingsReader.read_full())
     }
 }
 
 struct StdioSettingsReader;
 
 impl StdioSettingsReader {
-    fn read_username(&self) -> SettingsResult<String> {
+    pub fn read_username(&self) -> SettingsResult<String> {
         print!("请输入用户名：");
         stdout().flush()?;
         let mut u = String::new();
@@ -122,53 +130,13 @@ impl StdioSettingsReader {
         Ok(read_password()?)
     }
 
-    pub fn read(&self) -> SettingsResult<NetCredential> {
-        let u = self.read_username()?;
-        Ok(NetCredential::new(u, String::new()))
-    }
-
-    pub fn read_with_password(&self) -> SettingsResult<NetCredential> {
+    pub fn read_full(&self) -> SettingsResult<(String, String)> {
         let u = self.read_username()?;
         let entry = Entry::new(TUNET_NAME, &u)?;
         let p = match entry.get_password() {
             Ok(p) => p,
             Err(_) => self.read_password()?,
         };
-        Ok(NetCredential::new(u, p))
+        Ok((u, p))
     }
-}
-
-pub fn read_cred() -> SettingsResult<Arc<NetCredential>> {
-    if let Ok(reader) = FileSettingsReader::new() {
-        if let Ok(cred) = reader.read_with_password() {
-            return Ok(Arc::new(cred));
-        }
-    }
-    Ok(Arc::new(StdioSettingsReader.read_with_password()?))
-}
-
-pub fn read_username() -> SettingsResult<Arc<NetCredential>> {
-    if let Ok(reader) = FileSettingsReader::new() {
-        if let Ok(cred) = reader.read() {
-            return Ok(Arc::new(cred));
-        }
-    }
-    Ok(Arc::new(StdioSettingsReader.read()?))
-}
-
-pub fn save_cred(cred: Arc<NetCredential>) -> SettingsResult<()> {
-    FileSettingsReader::new()?.save(cred)
-}
-
-pub fn delete_cred() -> SettingsResult<()> {
-    let mut reader = FileSettingsReader::new()?;
-    print!("是否删除设置文件？[y/N]");
-    stdout().flush()?;
-    let mut s = String::new();
-    stdin().read_line(&mut s)?;
-    if s.trim().eq_ignore_ascii_case("y") {
-        reader.delete()?;
-        println!("已删除");
-    }
-    Ok(())
 }
