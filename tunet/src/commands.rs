@@ -62,7 +62,7 @@ pub struct Login {
 impl TUNetCommand for Login {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         let c = TUNetConnect::new_with_suggest(self.host, client).await?;
         let res = c.login(&u, &p).await?;
@@ -83,7 +83,7 @@ pub struct Logout {
 impl TUNetCommand for Logout {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let reader = FileSettingsReader::new()?;
+        let reader = SettingsReader::new()?;
         let u = reader.read_ask_username()?;
         let c = TUNetConnect::new_with_suggest(self.host, client).await?;
         let res = c.logout(&u).await?;
@@ -146,7 +146,7 @@ fn is_self(mac_addrs: &[MacAddress], u: &NetUser) -> bool {
 impl TUNetCommand for Online {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         let c = UseregHelper::new(client);
         c.login(&u, &p).await?;
@@ -198,7 +198,7 @@ pub struct UseregConnect {
 impl TUNetCommand for UseregConnect {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         let c = UseregHelper::new(client);
         c.login(&u, &p).await?;
@@ -220,7 +220,7 @@ pub struct UseregDrop {
 impl TUNetCommand for UseregDrop {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         let c = UseregHelper::new(client);
         c.login(&u, &p).await?;
@@ -250,7 +250,7 @@ pub struct Detail {
 impl Detail {
     async fn run_detail(&self) -> Result<()> {
         let client = create_http_client()?;
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         let c = UseregHelper::new(client);
         c.login(&u, &p).await?;
@@ -293,7 +293,7 @@ impl Detail {
 
     async fn run_detail_grouping(&self) -> Result<()> {
         let client = create_http_client()?;
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         let c = UseregHelper::new(client);
         c.login(&u, &p).await?;
@@ -368,7 +368,7 @@ pub struct DeleteCred {}
 #[async_trait]
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let u = reader.read_username()?;
         print!("是否删除设置文件？[y/N]");
         stdout().flush()?;

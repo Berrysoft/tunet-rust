@@ -21,7 +21,7 @@ use futures_util::future::Either;
 use tokio::time::Instant;
 use tokio_stream::{wrappers::IntervalStream, Stream};
 use tunet_helper::{create_http_client, TUNetConnect, TUNetHelper};
-use tunet_settings::FileSettingsReader;
+use tunet_settings::SettingsReader;
 
 pub const SERVICE_NAME: &str = "tunet-service";
 
@@ -54,7 +54,7 @@ struct Register {
 impl Command for Register {
     fn run(&self) -> Result<()> {
         elevator::elevate()?;
-        let mut reader = FileSettingsReader::new()?;
+        let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         reader.save(&u, &p)?;
         service::register(self.interval)?;
@@ -103,7 +103,7 @@ impl Command for RunOnce {
 }
 
 pub async fn run_once(quiet: bool) -> Result<()> {
-    match FileSettingsReader::new()?.read_full() {
+    match SettingsReader::new()?.read_full() {
         Ok((u, p)) => {
             let client = create_http_client()?;
             let c = TUNetConnect::new_with_suggest(None, client).await?;

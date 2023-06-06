@@ -12,7 +12,7 @@ use slint::{PhysicalPosition, Window};
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 use tunet_model::{Action, Model};
-use tunet_settings::FileSettingsReader;
+use tunet_settings::SettingsReader;
 
 slint::include_modules!();
 
@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
 
 async fn start_model(model: &Mutex<Model>) -> Result<()> {
     let model = model.lock().await;
-    let settings_reader = FileSettingsReader::new()?;
+    let settings_reader = SettingsReader::new()?;
     if let Ok((u, p)) = settings_reader.read_full() {
         model.queue(Action::Credential(u, p));
     }
@@ -72,7 +72,7 @@ fn start_model_loop(model: Arc<Mutex<Model>>, mut rx: mpsc::Receiver<Action>) {
 }
 
 async fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {
-    let mut settings_reader = FileSettingsReader::new()?;
+    let mut settings_reader = SettingsReader::new()?;
     if del_at_exit {
         let model = model.lock().await;
         settings_reader.delete(&model.username)?;

@@ -38,7 +38,7 @@ fn main() -> Result<()> {
 pub async fn run(state: Option<NetState>) -> Result<()> {
     let mut event = Event::new()?;
 
-    let mut reader = FileSettingsReader::new()?;
+    let mut reader = SettingsReader::new()?;
     let (u, p) = reader.read_ask_full()?;
     event.model.queue(Action::Credential(u.clone(), p.clone()));
     event.model.queue(Action::State(state));

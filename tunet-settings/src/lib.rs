@@ -32,11 +32,11 @@ struct Settings<'a> {
 
 static TUNET_NAME: &str = "tunet";
 
-pub struct FileSettingsReader {
+pub struct SettingsReader {
     path: PathBuf,
 }
 
-impl FileSettingsReader {
+impl SettingsReader {
     pub fn new() -> SettingsResult<Self> {
         Ok(Self::with_path(Self::file_path()?))
     }
