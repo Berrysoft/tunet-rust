@@ -369,12 +369,13 @@ pub struct DeleteCred {}
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
         let mut reader = FileSettingsReader::new()?;
+        let u = reader.read_username()?;
         print!("是否删除设置文件？[y/N]");
         stdout().flush()?;
         let mut s = String::new();
         stdin().read_line(&mut s)?;
         if s.trim().eq_ignore_ascii_case("y") {
-            reader.delete()?;
+            reader.delete(&u)?;
             println!("已删除");
         }
         Ok(())

@@ -160,11 +160,13 @@ pub fn bind_settings_model(
     settings_model.on_set_credential(upgrade_spawn!(model, |username, password| async move {
         let model = model.lock().await;
         let mut reader = FileSettingsReader::new().unwrap();
+        let password = if password.is_empty() {
+            reader.read_password(&username).unwrap_or_default()
+        } else {
+            password.to_string()
+        };
         reader.save(&username, &password).unwrap();
-        model.queue(Action::Credential(
-            username.to_string(),
-            password.to_string(),
-        ));
+        model.queue(Action::Credential(username.to_string(), password));
     }));
     settings_model.on_del_and_exit({
         let context = context.clone();

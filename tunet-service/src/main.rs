@@ -103,13 +103,19 @@ impl Command for RunOnce {
 }
 
 pub async fn run_once(quiet: bool) -> Result<()> {
-    let (u, p) = FileSettingsReader::new()?.read_full()?;
-    let client = create_http_client()?;
-    let c = TUNetConnect::new_with_suggest(None, client).await?;
-    c.login(&u, &p).await?;
-    let flux = c.flux().await?;
-    if !quiet {
-        notification::succeeded(flux)?;
+    match FileSettingsReader::new()?.read_full() {
+        Ok((u, p)) => {
+            let client = create_http_client()?;
+            let c = TUNetConnect::new_with_suggest(None, client).await?;
+            c.login(&u, &p).await?;
+            let flux = c.flux().await?;
+            if !quiet {
+                notification::succeeded(flux)?;
+            }
+        }
+        Err(e) => {
+            log::error!("{}", e);
+        }
     }
     Ok(())
 }

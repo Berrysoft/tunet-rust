@@ -41,7 +41,7 @@ impl FileSettingsReader {
         Ok(Self::with_path(Self::file_path()?))
     }
 
-    pub fn file_path() -> SettingsResult<PathBuf> {
+    fn file_path() -> SettingsResult<PathBuf> {
         let mut p = config_dir().ok_or(SettingsError::ConfigDirNotFound)?;
         p.push(TUNET_NAME);
         p.push("settings");
@@ -68,55 +68,35 @@ impl FileSettingsReader {
         Ok(())
     }
 
-    fn read_impl(&self) -> SettingsResult<Settings> {
-        let f = File::open(self.path.as_path())?;
-        let reader = BufReader::new(f);
-        Ok(serde_json::from_reader(reader)?)
-    }
-
-    pub fn delete(&mut self) -> SettingsResult<()> {
+    pub fn delete(&mut self, u: &str) -> SettingsResult<()> {
+        let entry = Entry::new(TUNET_NAME, u)?;
+        entry.delete_password()?;
         if self.path.exists() {
-            let c = self.read_impl()?;
-            let entry = Entry::new(TUNET_NAME, &c.username)?;
-            entry.delete_password()?;
             remove_file(self.path.as_path())?;
         }
         Ok(())
     }
 
     pub fn read_username(&self) -> SettingsResult<String> {
-        let c = self.read_impl()?;
+        let f = File::open(self.path.as_path())?;
+        let reader = BufReader::new(f);
+        let c: Settings = serde_json::from_reader(reader)?;
         Ok(c.username.into_owned())
     }
 
+    pub fn read_password(&self, u: &str) -> SettingsResult<String> {
+        let entry = Entry::new(TUNET_NAME, u)?;
+        let password = entry.get_password()?;
+        Ok(password)
+    }
+
     pub fn read_full(&self) -> SettingsResult<(String, String)> {
-        let c = self.read_impl()?;
-        let entry = Entry::new(TUNET_NAME, &c.username)?;
-        let password = match entry.get_password() {
-            Ok(p) => p,
-            Err(e) => {
-                log::warn!("{}", e);
-                Default::default()
-            }
-        };
-        Ok((c.username.into_owned(), password))
+        let u = self.read_username()?;
+        let password = self.read_password(&u)?;
+        Ok((u, password))
     }
 
-    pub fn read_ask_username(&self) -> SettingsResult<String> {
-        self.read_username()
-            .or_else(|_| StdioSettingsReader.read_username())
-    }
-
-    pub fn read_ask_full(&self) -> SettingsResult<(String, String)> {
-        self.read_full()
-            .or_else(|_| StdioSettingsReader.read_full())
-    }
-}
-
-struct StdioSettingsReader;
-
-impl StdioSettingsReader {
-    pub fn read_username(&self) -> SettingsResult<String> {
+    pub fn ask_username(&self) -> SettingsResult<String> {
         print!("请输入用户名：");
         stdout().flush()?;
         let mut u = String::new();
@@ -124,19 +104,23 @@ impl StdioSettingsReader {
         Ok(u.trim().to_string())
     }
 
-    fn read_password(&self) -> SettingsResult<String> {
+    pub fn ask_password(&self) -> SettingsResult<String> {
         print!("请输入密码：");
         stdout().flush()?;
         Ok(read_password()?)
     }
 
-    pub fn read_full(&self) -> SettingsResult<(String, String)> {
-        let u = self.read_username()?;
-        let entry = Entry::new(TUNET_NAME, &u)?;
-        let p = match entry.get_password() {
-            Ok(p) => p,
-            Err(_) => self.read_password()?,
-        };
+    pub fn read_ask_username(&self) -> SettingsResult<String> {
+        self.read_username().or_else(|_| self.ask_username())
+    }
+
+    pub fn read_ask_password(&self, u: &str) -> SettingsResult<String> {
+        self.read_password(u).or_else(|_| self.ask_password())
+    }
+
+    pub fn read_ask_full(&self) -> SettingsResult<(String, String)> {
+        let u = self.read_ask_username()?;
+        let p = self.read_ask_password(&u)?;
         Ok((u, p))
     }
 }

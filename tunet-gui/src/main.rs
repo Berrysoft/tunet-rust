@@ -47,7 +47,7 @@ async fn main() -> Result<()> {
 
     app.run()?;
 
-    stop_model(context.del_at_exit())?;
+    stop_model(&model, context.del_at_exit()).await?;
     Ok(())
 }
 
@@ -71,10 +71,11 @@ fn start_model_loop(model: Arc<Mutex<Model>>, mut rx: mpsc::Receiver<Action>) {
     });
 }
 
-fn stop_model(del_at_exit: bool) -> Result<()> {
+async fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {
     let mut settings_reader = FileSettingsReader::new()?;
     if del_at_exit {
-        settings_reader.delete()?;
+        let model = model.lock().await;
+        settings_reader.delete(&model.username)?;
     }
     Ok(())
 }
