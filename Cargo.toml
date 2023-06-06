@@ -53,7 +53,7 @@ futures-util = "0.3"
 
 itertools = "0.10"
 
-keyring = "2"
+keyring = { version = "2", features = ["linux-no-secret-service"] }
 mac_address = { version = "2", package = "mac_address2" }
 
 serde = "1"
