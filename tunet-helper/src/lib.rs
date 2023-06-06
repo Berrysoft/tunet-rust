@@ -13,6 +13,7 @@ pub use reqwest::Client as HttpClient;
 
 mod auth;
 mod net;
+pub mod suggest;
 pub mod usereg;
 
 pub use auth::{Auth4Connect, Auth6Connect};
@@ -202,6 +203,19 @@ impl TUNetConnect {
             NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(client))),
             NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(client))),
             _ => Err(NetHelperError::InvalidHost),
+        }
+    }
+
+    pub async fn new_with_suggest(
+        s: Option<NetState>,
+        client: HttpClient,
+    ) -> NetHelperResult<TUNetConnect> {
+        match s {
+            None => {
+                let s = suggest::suggest(&client).await;
+                Self::new(s, client)
+            }
+            Some(s) => Self::new(s, client),
         }
     }
 }

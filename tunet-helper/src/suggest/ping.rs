@@ -1,4 +1,4 @@
-use tunet_helper::*;
+use crate::*;
 
 async fn can_connect(client: &HttpClient, uri: &str) -> bool {
     client.head(uri).send().await.is_ok()

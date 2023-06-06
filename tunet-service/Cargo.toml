@@ -10,7 +10,6 @@ repository.workspace = true
 [dependencies]
 netstatus = { workspace = true }
 tunet-helper = { workspace = true }
-tunet-suggest = { workspace = true }
 tunet-settings = { workspace = true }
 cfg-if = { workspace = true }
 clap = { workspace = true }

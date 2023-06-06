@@ -22,7 +22,6 @@ use tokio::time::Instant;
 use tokio_stream::{wrappers::IntervalStream, Stream};
 use tunet_helper::{create_http_client, TUNetConnect, TUNetHelper};
 use tunet_settings::FileSettingsReader;
-use tunet_suggest::TUNetHelperExt;
 
 pub const SERVICE_NAME: &str = "tunet-service";
 

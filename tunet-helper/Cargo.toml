@@ -8,6 +8,7 @@ repository.workspace = true
 
 [dependencies]
 authtea = { workspace = true }
+netstatus = { workspace = true }
 async-trait = { workspace = true }
 async-stream = "0.3"
 futures-core = { workspace = true }

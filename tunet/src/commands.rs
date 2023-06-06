@@ -11,7 +11,6 @@ use std::io::{stdin, stdout, Write};
 use std::net::Ipv4Addr;
 use tunet_helper::{usereg::*, *};
 use tunet_settings::*;
-use tunet_suggest::TUNetHelperExt;
 
 fn get_flux_color(f: &Flux, total: bool) -> Color {
     let flux = f.0;

@@ -8,7 +8,6 @@ repository.workspace = true
 
 [dependencies]
 tunet-helper = { workspace = true }
-tunet-suggest = { workspace = true }
 netstatus = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true }
