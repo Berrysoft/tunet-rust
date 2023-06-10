@@ -9,7 +9,13 @@ use crossterm::{
 };
 use futures_util::TryStreamExt;
 use tokio::runtime::Builder as RuntimeBuilder;
-use tui::{backend::CrosstermBackend, layout::*, text::*, widgets::*, Terminal};
+use tui::{
+    backend::{Backend, CrosstermBackend},
+    layout::*,
+    text::*,
+    widgets::*,
+    Terminal,
+};
 use tunet_helper::*;
 use tunet_model::Action;
 use tunet_settings::*;
@@ -29,24 +35,26 @@ struct Opt {
 
 fn main() -> Result<()> {
     let opt = Opt::parse();
-    RuntimeBuilder::new_multi_thread()
-        .enable_all()
-        .build()?
-        .block_on(run(opt.host))
+    run(opt.host)
 }
 
-pub async fn run(state: Option<NetState>) -> Result<()> {
-    let mut event = Event::new()?;
-
+pub fn run(state: Option<NetState>) -> Result<()> {
     let mut reader = SettingsReader::new()?;
     let (u, p) = reader.read_ask_full()?;
-    event.model.queue(Action::Credential(u.clone(), p.clone()));
-    event.model.queue(Action::State(state));
 
     enable_raw_mode()?;
     execute!(std::io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
 
-    let res = main_loop(&mut event).await;
+    let backend = CrosstermBackend::new(std::io::stdout());
+    let mut terminal = Terminal::new(backend)?;
+    terminal.hide_cursor()?;
+    terminal.clear()?;
+
+    let res = RuntimeBuilder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()?
+        .block_on(main_loop(&mut terminal, &u, &p, state));
 
     let res = if let Ok(()) = res {
         reader.save(&u, &p).map_err(anyhow::Error::from)
@@ -59,11 +67,17 @@ pub async fn run(state: Option<NetState>) -> Result<()> {
     res
 }
 
-async fn main_loop(event: &mut Event) -> Result<()> {
-    let backend = CrosstermBackend::new(std::io::stdout());
-    let mut terminal = Terminal::new(backend)?;
-    terminal.hide_cursor()?;
-    terminal.clear()?;
+async fn main_loop<B: Backend>(
+    terminal: &mut Terminal<B>,
+    u: &str,
+    p: &str,
+    state: Option<NetState>,
+) -> Result<()> {
+    let mut event = Event::new()?;
+    event
+        .model
+        .queue(Action::Credential(u.to_string(), p.to_string()));
+    event.model.queue(Action::State(state));
 
     let mut interval = tokio::time::interval(std::time::Duration::from_micros(100));
     event.start();
