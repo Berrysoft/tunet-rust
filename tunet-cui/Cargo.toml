@@ -16,7 +16,7 @@ futures-util = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 crossterm = { version = "0.26", features = ["event-stream"] }
-tui = { version = "0.20", package = "ratatui" }
+tui = { version = "0.21", package = "ratatui" }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winres = { workspace = true }

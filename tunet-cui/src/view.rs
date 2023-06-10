@@ -30,7 +30,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
 
     let graph = {
         Paragraph::new(vec![
-            Spans::from(vec![
+            Line::from(vec![
                 Span::styled("用户 ", subtitle_style),
                 Span::styled(
                     &m.flux.username,
@@ -39,7 +39,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                         .add_modifier(Modifier::BOLD),
                 ),
             ]),
-            Spans::from(vec![
+            Line::from(vec![
                 Span::styled("流量 ", subtitle_style),
                 Span::styled(
                     m.flux.flux.to_string(),
@@ -48,14 +48,14 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                         .add_modifier(Modifier::BOLD),
                 ),
             ]),
-            Spans::from(vec![
+            Line::from(vec![
                 Span::styled("时长 ", subtitle_style),
                 Span::styled(
                     m.flux.online_time.to_string(),
                     Style::default().fg(Color::Green),
                 ),
             ]),
-            Spans::from(vec![
+            Line::from(vec![
                 Span::styled("余额 ", subtitle_style),
                 Span::styled(
                     m.flux.balance.to_string(),
@@ -72,7 +72,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
             .iter()
             .map(|u| {
                 ListItem::new(Text::from(vec![
-                    Spans::from(vec![
+                    Line::from(vec![
                         Span::styled("IP 地址  ", subtitle_style),
                         Span::styled(
                             u.address.to_string(),
@@ -81,18 +81,18 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                                 .add_modifier(Modifier::BOLD),
                         ),
                     ]),
-                    Spans::from(vec![
+                    Line::from(vec![
                         Span::styled("登录时间 ", subtitle_style),
                         Span::styled(u.login_time.to_string(), Style::default().fg(Color::Green)),
                     ]),
-                    Spans::from(vec![
+                    Line::from(vec![
                         Span::styled("流量     ", subtitle_style),
                         Span::styled(
                             u.flux.to_string(),
                             Style::default().fg(get_flux_color(u.flux.0, true)),
                         ),
                     ]),
-                    Spans::from({
+                    Line::from({
                         let mut spans = vec![
                             Span::styled("MAC 地址 ", subtitle_style),
                             Span::styled(
@@ -109,7 +109,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
                         }
                         spans
                     }),
-                    Spans::default(),
+                    Line::default(),
                 ]))
             })
             .collect::<Vec<_>>(),
@@ -182,7 +182,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
         spans.push(Span::raw("正在刷新图表"));
     }
 
-    let status = Paragraph::new(Spans::from(spans))
+    let status = Paragraph::new(Line::from(spans))
         .block(Block::default().style(Style::default().bg(Color::LightCyan).fg(Color::Black)));
     f.render_widget(status, global_chunks[1]);
 }
