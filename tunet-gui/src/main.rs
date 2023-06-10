@@ -16,7 +16,7 @@ use tunet_settings::SettingsReader;
 
 slint::include_modules!();
 
-#[tokio::main]
+#[tokio::main(worker_threads = 1)]
 async fn main() -> Result<()> {
     let app = App::new()?;
 
