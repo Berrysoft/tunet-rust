@@ -110,11 +110,10 @@ pub struct UseregHelper {
     client: HttpClient,
 }
 
-// Use HTTP because TLS1.0/1.1 aren't supported.
-static USEREG_LOG_URI: &str = "http://usereg.tsinghua.edu.cn/do.php";
-static USEREG_INFO_URI: &str = "http://usereg.tsinghua.edu.cn/online_user_ipv4.php";
-static USEREG_CONNECT_URI: &str = "http://usereg.tsinghua.edu.cn/ip_login.php";
-static USEREG_DETAIL_URI: &str = "http://usereg.tsinghua.edu.cn/user_detail_list.php";
+static USEREG_LOG_URI: &str = "https://usereg.tsinghua.edu.cn/do.php";
+static USEREG_INFO_URI: &str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
+static USEREG_CONNECT_URI: &str = "https://usereg.tsinghua.edu.cn/ip_login.php";
+static USEREG_DETAIL_URI: &str = "https://usereg.tsinghua.edu.cn/user_detail_list.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 const USEREG_OFF: usize = 1000;
 

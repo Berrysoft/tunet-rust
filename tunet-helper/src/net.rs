@@ -7,8 +7,8 @@ pub struct NetConnect {
     client: HttpClient,
 }
 
-static NET_LOG_URI: &str = "http://net.tsinghua.edu.cn/do_login.php";
-static NET_FLUX_URI: &str = "http://net.tsinghua.edu.cn/rad_user_info.php";
+static NET_LOG_URI: &str = "https://net.tsinghua.edu.cn/do_login.php";
+static NET_FLUX_URI: &str = "https://net.tsinghua.edu.cn/rad_user_info.php";
 
 impl NetConnect {
     pub fn new(client: HttpClient) -> Self {
