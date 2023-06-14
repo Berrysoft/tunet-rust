@@ -100,10 +100,10 @@ class _MyHomePageState extends State<MyHomePage> {
             // Here, the generic type that the FutureBuilder manages is
             // explicitly named, because if omitted the snapshot will have the
             // type of AsyncSnapshot<Object?>.
-            FutureBuilder<List<dynamic>>(
+            FutureBuilder<Runtime>(
               // We await two unrelated futures here, so the type has to be
               // List<dynamic>.
-              future: Future.wait([runtime]),
+              future: runtime,
               builder: (context, snap) {
                 final style = Theme.of(context).textTheme.headlineMedium;
                 if (snap.error != null) {
@@ -122,24 +122,32 @@ class _MyHomePageState extends State<MyHomePage> {
 
                 // Finally, retrieve the data expected in the same order provided
                 // to the FutureBuilder.future.
-                final Runtime runtime = data[0];
+                final Runtime runtime = data;
                 return StreamBuilder<UpdateMsgWrap>(
                   stream: runtime.start(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      UpdateMsg? data = snapshot.data?.field0;
-                      if (data != null) {
-                        switch (data) {
-                          case UpdateMsg.State:
-                            runtime.queueFlux();
-                            break;
-                          default:
-                            break;
-                        }
-                        return Text('$data', style: style);
+                  builder: (context, snap) {
+                    final UpdateMsg? data = snap.data?.field0;
+                    if (data != null) {
+                      switch (data) {
+                        case UpdateMsg.State:
+                          runtime.queueFlux();
+                          break;
+                        case UpdateMsg.Flux:
+                          return FutureBuilder<NetFlux>(
+                              future: runtime.flux(),
+                              builder: (context, snap) {
+                                final NetFlux? data = snap.data;
+                                if (data != null) {
+                                  final String username = data.username;
+                                  return Text(username, style: style);
+                                }
+                                return Text("No flux.", style: style);
+                              });
+                        default:
+                          break;
                       }
+                      return Text('$data', style: style);
                     }
-
                     return Text("No message.", style: style);
                   },
                 );

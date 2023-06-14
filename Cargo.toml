@@ -43,6 +43,10 @@ cfg-if = "1"
 enum_dispatch = "0.3"
 thiserror = "1"
 
+chrono = { version = "0.4", default-features = false, features = [
+    "clock",
+    "std",
+] }
 clap = { version = "4", features = ["derive"] }
 dirs = "5"
 log = "0.4"

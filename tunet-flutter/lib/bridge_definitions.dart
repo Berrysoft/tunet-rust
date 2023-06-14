@@ -22,9 +22,17 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kQueueFluxMethodRuntimeConstMeta;
 
+  Future<NetFlux> fluxMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kFluxMethodRuntimeConstMeta;
+
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
   OpaqueTypeFinalizer get MutexModelFinalizer;
+
+  DropFnType get dropOpaqueMutexOptionHandle;
+  ShareFnType get shareOpaqueMutexOptionHandle;
+  OpaqueTypeFinalizer get MutexOptionHandleFinalizer;
 
   DropFnType get dropOpaqueMutexOptionMpscReceiverAction;
   ShareFnType get shareOpaqueMutexOptionMpscReceiverAction;
@@ -46,6 +54,21 @@ class MutexModel extends FrbOpaque {
 }
 
 @sealed
+class MutexOptionHandle extends FrbOpaque {
+  final Native bridge;
+  MutexOptionHandle.fromRaw(int ptr, int size, this.bridge)
+      : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueMutexOptionHandle;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueMutexOptionHandle;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer => bridge.MutexOptionHandleFinalizer;
+}
+
+@sealed
 class MutexOptionMpscReceiverAction extends FrbOpaque {
   final Native bridge;
   MutexOptionMpscReceiverAction.fromRaw(int ptr, int size, this.bridge)
@@ -61,15 +84,55 @@ class MutexOptionMpscReceiverAction extends FrbOpaque {
       bridge.MutexOptionMpscReceiverActionFinalizer;
 }
 
+class Balance {
+  final double field0;
+
+  const Balance({
+    required this.field0,
+  });
+}
+
+class Flux {
+  final int field0;
+
+  const Flux({
+    required this.field0,
+  });
+}
+
+class NetFlux {
+  final String username;
+  final Flux flux;
+  final NewDuration onlineTime;
+  final Balance balance;
+
+  const NetFlux({
+    required this.username,
+    required this.flux,
+    required this.onlineTime,
+    required this.balance,
+  });
+}
+
+class NewDuration {
+  final Duration field0;
+
+  const NewDuration({
+    required this.field0,
+  });
+}
+
 class Runtime {
   final Native bridge;
   final MutexOptionMpscReceiverAction rx;
   final MutexModel model;
+  final MutexOptionHandle handle;
 
   const Runtime({
     required this.bridge,
     required this.rx,
     required this.model,
+    required this.handle,
   });
 
   static Future<Runtime> newRuntime({required Native bridge, dynamic hint}) =>
@@ -80,6 +143,10 @@ class Runtime {
       );
 
   Future<void> queueFlux({dynamic hint}) => bridge.queueFluxMethodRuntime(
+        that: this,
+      );
+
+  Future<NetFlux> flux({dynamic hint}) => bridge.fluxMethodRuntime(
         that: this,
       );
 }

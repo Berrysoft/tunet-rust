@@ -24,10 +24,7 @@ data-encoding = "2"
 data-encoding-macro = "0.1"
 serde_json = { workspace = true }
 select = "0.6"
-chrono = { version = "0.4", default-features = false, features = [
-    "clock",
-    "std",
-] }
+chrono = { workspace = true }
 mac_address = { workspace = true }
 once_cell = { workspace = true }
 regex = { version = "1", default-features = false, features = ["std"] }

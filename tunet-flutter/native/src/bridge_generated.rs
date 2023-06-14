@@ -60,24 +60,70 @@ fn wire_queue_flux__method__Runtime_impl(
         },
     )
 }
+fn wire_flux__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "flux__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(mirror_NetFlux(Runtime::flux(&api_that)))
+        },
+    )
+}
 // Section: wrapper structs
+
+#[derive(Clone)]
+struct mirror_Balance(Balance);
+
+#[derive(Clone)]
+struct mirror_Flux(Flux);
+
+#[derive(Clone)]
+struct mirror_NetFlux(NetFlux);
+
+#[derive(Clone)]
+struct mirror_NewDuration(NewDuration);
 
 #[derive(Clone)]
 struct mirror_UpdateMsg(UpdateMsg);
 
 // Section: static checks
 
-const _: fn() = || match None::<UpdateMsg>.unwrap() {
-    UpdateMsg::Credential => {}
-    UpdateMsg::State => {}
-    UpdateMsg::Status => {}
-    UpdateMsg::Log => {}
-    UpdateMsg::Flux => {}
-    UpdateMsg::Online => {}
-    UpdateMsg::Details => {}
-    UpdateMsg::LogBusy => {}
-    UpdateMsg::OnlineBusy => {}
-    UpdateMsg::DetailBusy => {}
+const _: fn() = || {
+    {
+        let Balance_ = None::<Balance>.unwrap();
+        let _: f64 = Balance_.0;
+    }
+    {
+        let Flux_ = None::<Flux>.unwrap();
+        let _: u64 = Flux_.0;
+    }
+    {
+        let NetFlux = None::<NetFlux>.unwrap();
+        let _: String = NetFlux.username;
+        let _: Flux = NetFlux.flux;
+        let _: NewDuration = NetFlux.online_time;
+        let _: Balance = NetFlux.balance;
+    }
+    {
+        let NewDuration_ = None::<NewDuration>.unwrap();
+        let _: chrono::Duration = NewDuration_.0;
+    }
+    match None::<UpdateMsg>.unwrap() {
+        UpdateMsg::Credential => {}
+        UpdateMsg::State => {}
+        UpdateMsg::Status => {}
+        UpdateMsg::Log => {}
+        UpdateMsg::Flux => {}
+        UpdateMsg::Online => {}
+        UpdateMsg::Details => {}
+        UpdateMsg::LogBusy => {}
+        UpdateMsg::OnlineBusy => {}
+        UpdateMsg::DetailBusy => {}
+    }
 };
 // Section: allocate functions
 
@@ -100,9 +146,48 @@ where
 
 // Section: impl IntoDart
 
+impl support::IntoDart for mirror_Balance {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0 .0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_Balance {}
+
+impl support::IntoDart for mirror_Flux {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0 .0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_Flux {}
+
+impl support::IntoDart for mirror_NetFlux {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.0.username.into_dart(),
+            mirror_Flux(self.0.flux).into_dart(),
+            mirror_NewDuration(self.0.online_time).into_dart(),
+            mirror_Balance(self.0.balance).into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_NetFlux {}
+
+impl support::IntoDart for mirror_NewDuration {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0 .0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_NewDuration {}
+
 impl support::IntoDart for Runtime {
     fn into_dart(self) -> support::DartAbi {
-        vec![self.rx.into_dart(), self.model.into_dart()].into_dart()
+        vec![
+            self.rx.into_dart(),
+            self.model.into_dart(),
+            self.handle.into_dart(),
+        ]
+        .into_dart()
     }
 }
 impl support::IntoDartExceptPrimitive for Runtime {}

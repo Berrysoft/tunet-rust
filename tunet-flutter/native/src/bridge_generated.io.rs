@@ -16,11 +16,21 @@ pub extern "C" fn wire_queue_flux__method__Runtime(port_: i64, that: *mut wire_R
     wire_queue_flux__method__Runtime_impl(port_, that)
 }
 
+#[no_mangle]
+pub extern "C" fn wire_flux__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_flux__method__Runtime_impl(port_, that)
+}
+
 // Section: allocate functions
 
 #[no_mangle]
 pub extern "C" fn new_MutexModel() -> wire_MutexModel {
     wire_MutexModel::new_with_null_ptr()
+}
+
+#[no_mangle]
+pub extern "C" fn new_MutexOptionHandle() -> wire_MutexOptionHandle {
+    wire_MutexOptionHandle::new_with_null_ptr()
 }
 
 #[no_mangle]
@@ -51,6 +61,21 @@ pub extern "C" fn share_opaque_MutexModel(ptr: *const c_void) -> *const c_void {
 }
 
 #[no_mangle]
+pub extern "C" fn drop_opaque_MutexOptionHandle(ptr: *const c_void) {
+    unsafe {
+        Arc::<Mutex<Option<Handle>>>::decrement_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn share_opaque_MutexOptionHandle(ptr: *const c_void) -> *const c_void {
+    unsafe {
+        Arc::<Mutex<Option<Handle>>>::increment_strong_count(ptr as _);
+        ptr
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn drop_opaque_MutexOptionMpscReceiverAction(ptr: *const c_void) {
     unsafe {
         Arc::<Mutex<Option<mpsc::Receiver<Action>>>>::decrement_strong_count(ptr as _);
@@ -72,6 +97,11 @@ impl Wire2Api<RustOpaque<Mutex<Model>>> for wire_MutexModel {
         unsafe { support::opaque_from_dart(self.ptr as _) }
     }
 }
+impl Wire2Api<RustOpaque<Mutex<Option<Handle>>>> for wire_MutexOptionHandle {
+    fn wire2api(self) -> RustOpaque<Mutex<Option<Handle>>> {
+        unsafe { support::opaque_from_dart(self.ptr as _) }
+    }
+}
 impl Wire2Api<RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>>
     for wire_MutexOptionMpscReceiverAction
 {
@@ -90,6 +120,7 @@ impl Wire2Api<Runtime> for wire_Runtime {
         Runtime {
             rx: self.rx.wire2api(),
             model: self.model.wire2api(),
+            handle: self.handle.wire2api(),
         }
     }
 }
@@ -98,6 +129,12 @@ impl Wire2Api<Runtime> for wire_Runtime {
 #[repr(C)]
 #[derive(Clone)]
 pub struct wire_MutexModel {
+    ptr: *const core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_MutexOptionHandle {
     ptr: *const core::ffi::c_void,
 }
 
@@ -112,6 +149,7 @@ pub struct wire_MutexOptionMpscReceiverAction {
 pub struct wire_Runtime {
     rx: wire_MutexOptionMpscReceiverAction,
     model: wire_MutexModel,
+    handle: wire_MutexOptionHandle,
 }
 
 // Section: impl NewWithNullPtr
@@ -133,6 +171,13 @@ impl NewWithNullPtr for wire_MutexModel {
         }
     }
 }
+impl NewWithNullPtr for wire_MutexOptionHandle {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            ptr: core::ptr::null(),
+        }
+    }
+}
 impl NewWithNullPtr for wire_MutexOptionMpscReceiverAction {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -146,6 +191,7 @@ impl NewWithNullPtr for wire_Runtime {
         Self {
             rx: wire_MutexOptionMpscReceiverAction::new_with_null_ptr(),
             model: wire_MutexModel::new_with_null_ptr(),
+            handle: wire_MutexOptionHandle::new_with_null_ptr(),
         }
     }
 }
