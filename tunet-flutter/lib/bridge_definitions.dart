@@ -18,6 +18,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kStartMethodRuntimeConstMeta;
 
+  Future<void> queueFluxMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueFluxMethodRuntimeConstMeta;
+
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
   OpaqueTypeFinalizer get MutexModelFinalizer;
@@ -72,6 +76,10 @@ class Runtime {
       bridge.newStaticMethodRuntime(hint: hint);
 
   Stream<UpdateMsgWrap> start({dynamic hint}) => bridge.startMethodRuntime(
+        that: this,
+      );
+
+  Future<void> queueFlux({dynamic hint}) => bridge.queueFluxMethodRuntime(
         that: this,
       );
 }

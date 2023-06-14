@@ -38,6 +38,8 @@ void wire_new__static_method__Runtime(int64_t port_);
 
 void wire_start__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
+void wire_queue_flux__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
 struct wire_MutexModel new_MutexModel(void);
 
 struct wire_MutexOptionMpscReceiverAction new_MutexOptionMpscReceiverAction(void);
@@ -58,6 +60,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) wire_new__static_method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_start__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_queue_flux__method__Runtime);
     dummy_var ^= ((int64_t) (void*) new_MutexModel);
     dummy_var ^= ((int64_t) (void*) new_MutexOptionMpscReceiverAction);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_0);

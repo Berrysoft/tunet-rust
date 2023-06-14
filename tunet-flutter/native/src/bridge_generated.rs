@@ -44,6 +44,22 @@ fn wire_start__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runt
         },
     )
 }
+fn wire_queue_flux__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_flux__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::queue_flux(&api_that))
+        },
+    )
+}
 // Section: wrapper structs
 
 #[derive(Clone)]

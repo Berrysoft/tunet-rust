@@ -62,6 +62,24 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<void> queueFluxMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_queue_flux__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueFluxMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueFluxMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_flux__method__Runtime",
+        argNames: ["that"],
+      );
+
   DropFnType get dropOpaqueMutexModel => _platform.inner.drop_opaque_MutexModel;
   ShareFnType get shareOpaqueMutexModel =>
       _platform.inner.share_opaque_MutexModel;
@@ -101,6 +119,10 @@ class NativeImpl implements Native {
       rx: _wire2api_MutexOptionMpscReceiverAction(arr[0]),
       model: _wire2api_MutexModel(arr[1]),
     );
+  }
+
+  void _wire2api_unit(dynamic raw) {
+    return;
   }
 
   UpdateMsg _wire2api_update_msg(dynamic raw) {
@@ -307,6 +329,24 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_Runtime>)>>('wire_start__method__Runtime');
   late final _wire_start__method__Runtime = _wire_start__method__RuntimePtr
       .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_queue_flux__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_queue_flux__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_queue_flux__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_queue_flux__method__Runtime');
+  late final _wire_queue_flux__method__Runtime =
+      _wire_queue_flux__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
   wire_MutexModel new_MutexModel() {
     return _new_MutexModel();

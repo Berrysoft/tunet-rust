@@ -10,7 +10,12 @@ repository.workspace = true
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
+tunet-helper = { workspace = true }
 tunet-model = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
+log = { workspace = true }
 flutter_rust_bridge = "1"
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.13"

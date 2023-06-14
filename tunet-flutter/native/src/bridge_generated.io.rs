@@ -11,6 +11,11 @@ pub extern "C" fn wire_start__method__Runtime(port_: i64, that: *mut wire_Runtim
     wire_start__method__Runtime_impl(port_, that)
 }
 
+#[no_mangle]
+pub extern "C" fn wire_queue_flux__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_queue_flux__method__Runtime_impl(port_, that)
+}
+
 // Section: allocate functions
 
 #[no_mangle]

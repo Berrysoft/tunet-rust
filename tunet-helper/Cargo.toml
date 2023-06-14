@@ -34,12 +34,12 @@ regex = { version = "1", default-features = false, features = ["std"] }
 thiserror = { workspace = true }
 enum_dispatch = { workspace = true }
 
-[target.'cfg(target_os="android")'.dependencies]
+[target.'cfg(target_os = "android")'.dependencies]
 reqwest = { version = "0.11", default-features = false, features = [
     "rustls-tls",
 ] }
 
-[target.'cfg(not(target_os="android"))'.dependencies]
+[target.'cfg(not(target_os = "android"))'.dependencies]
 reqwest = { version = "0.11", default-features = false, features = [
     "native-tls",
 ] }

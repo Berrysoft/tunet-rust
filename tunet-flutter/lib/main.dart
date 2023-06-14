@@ -92,7 +92,6 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text("You're running on"),
             // To render the results of a Future, a FutureBuilder is used which
             // turns a Future into an AsyncSnapshot, which can be used to
             // extract the error state, the loading state and the data if
@@ -113,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   debugPrint(snap.error.toString());
                   return Tooltip(
                     message: snap.error.toString(),
-                    child: Text('Unknown OS', style: style),
+                    child: Text('Unknown message', style: style),
                   );
                 }
 
@@ -124,15 +123,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 // Finally, retrieve the data expected in the same order provided
                 // to the FutureBuilder.future.
                 final Runtime runtime = data[0];
-                return StreamBuilder<dynamic>(
+                return StreamBuilder<UpdateMsgWrap>(
                   stream: runtime.start(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      UpdateMsg data = snapshot.data;
-                      return Text('$data', style: style);
+                      UpdateMsg? data = snapshot.data?.field0;
+                      if (data != null) {
+                        switch (data) {
+                          case UpdateMsg.State:
+                            runtime.queueFlux();
+                            break;
+                          default:
+                            break;
+                        }
+                        return Text('$data', style: style);
+                      }
                     }
 
-                    return const CircularProgressIndicator();
+                    return Text("No message.", style: style);
                   },
                 );
               },
