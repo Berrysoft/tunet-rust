@@ -21,30 +21,48 @@ use std::sync::Arc;
 
 // Section: wire functions
 
-fn wire_platform_impl(port_: MessagePort) {
+fn wire_new__static_method__Runtime_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "platform",
+            debug_name: "new__static_method__Runtime",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
-        move || move |task_callback| Ok(platform()),
+        move || move |task_callback| Runtime::new(),
     )
 }
-fn wire_rust_release_mode_impl(port_: MessagePort) {
+fn wire_start__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "rust_release_mode",
+            debug_name: "start__method__Runtime",
             port: Some(port_),
-            mode: FfiCallMode::Normal,
+            mode: FfiCallMode::Stream,
         },
-        move || move |task_callback| Ok(rust_release_mode()),
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::start(&api_that, task_callback.stream_sink()))
+        },
     )
 }
 // Section: wrapper structs
 
+#[derive(Clone)]
+struct mirror_UpdateMsg(UpdateMsg);
+
 // Section: static checks
 
+const _: fn() = || match None::<UpdateMsg>.unwrap() {
+    UpdateMsg::Credential => {}
+    UpdateMsg::State => {}
+    UpdateMsg::Status => {}
+    UpdateMsg::Log => {}
+    UpdateMsg::Flux => {}
+    UpdateMsg::Online => {}
+    UpdateMsg::Details => {}
+    UpdateMsg::LogBusy => {}
+    UpdateMsg::OnlineBusy => {}
+    UpdateMsg::DetailBusy => {}
+};
 // Section: allocate functions
 
 // Section: related functions
@@ -63,24 +81,41 @@ where
         (!self.is_null()).then(|| self.wire2api())
     }
 }
+
 // Section: impl IntoDart
 
-impl support::IntoDart for Platform {
+impl support::IntoDart for Runtime {
     fn into_dart(self) -> support::DartAbi {
-        match self {
-            Self::Unknown => 0,
-            Self::Android => 1,
-            Self::Ios => 2,
-            Self::Windows => 3,
-            Self::Unix => 4,
-            Self::MacIntel => 5,
-            Self::MacApple => 6,
-            Self::Wasm => 7,
+        vec![self.rx.into_dart(), self.model.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for Runtime {}
+
+impl support::IntoDart for mirror_UpdateMsg {
+    fn into_dart(self) -> support::DartAbi {
+        match self.0 {
+            UpdateMsg::Credential => 0,
+            UpdateMsg::State => 1,
+            UpdateMsg::Status => 2,
+            UpdateMsg::Log => 3,
+            UpdateMsg::Flux => 4,
+            UpdateMsg::Online => 5,
+            UpdateMsg::Details => 6,
+            UpdateMsg::LogBusy => 7,
+            UpdateMsg::OnlineBusy => 8,
+            UpdateMsg::DetailBusy => 9,
         }
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for Platform {}
+impl support::IntoDartExceptPrimitive for mirror_UpdateMsg {}
+impl support::IntoDart for UpdateMsgWrap {
+    fn into_dart(self) -> support::DartAbi {
+        vec![mirror_UpdateMsg(self.0).into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for UpdateMsgWrap {}
+
 // Section: executor
 
 support::lazy_static! {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
+import 'ffi.dart';
 
 void main() {
   runApp(const MyApp());
@@ -51,14 +51,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   // These futures belong to the state and are only initialized once,
   // in the initState method.
-  late Future<Platform> platform;
-  late Future<bool> isRelease;
+  late Future<Runtime> runtime;
 
   @override
   void initState() {
     super.initState();
-    platform = api.platform();
-    isRelease = api.rustReleaseMode();
+    runtime = Runtime.newRuntime(bridge: api);
   }
 
   @override
@@ -106,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
             FutureBuilder<List<dynamic>>(
               // We await two unrelated futures here, so the type has to be
               // List<dynamic>.
-              future: Future.wait([platform, isRelease]),
+              future: Future.wait([runtime]),
               builder: (context, snap) {
                 final style = Theme.of(context).textTheme.headlineMedium;
                 if (snap.error != null) {
@@ -125,19 +123,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
                 // Finally, retrieve the data expected in the same order provided
                 // to the FutureBuilder.future.
-                final Platform platform = data[0];
-                final release = data[1] ? 'Release' : 'Debug';
-                final text = const {
-                      Platform.Android: 'Android',
-                      Platform.Ios: 'iOS',
-                      Platform.MacApple: 'MacOS with Apple Silicon',
-                      Platform.MacIntel: 'MacOS',
-                      Platform.Windows: 'Windows',
-                      Platform.Unix: 'Unix',
-                      Platform.Wasm: 'the Web',
-                    }[platform] ??
-                    'Unknown OS';
-                return Text('$text ($release)', style: style);
+                final Runtime runtime = data[0];
+                return StreamBuilder<dynamic>(
+                  stream: runtime.start(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      UpdateMsg data = snapshot.data;
+                      return Text('$data', style: style);
+                    }
+
+                    return const CircularProgressIndicator();
+                  },
+                );
               },
             )
           ],

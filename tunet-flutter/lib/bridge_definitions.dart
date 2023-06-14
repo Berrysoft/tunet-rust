@@ -9,22 +9,90 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  Future<Platform> platform({dynamic hint});
+  Future<Runtime> newStaticMethodRuntime({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kPlatformConstMeta;
+  FlutterRustBridgeTaskConstMeta get kNewStaticMethodRuntimeConstMeta;
 
-  Future<bool> rustReleaseMode({dynamic hint});
+  Stream<UpdateMsgWrap> startMethodRuntime(
+      {required Runtime that, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kRustReleaseModeConstMeta;
+  FlutterRustBridgeTaskConstMeta get kStartMethodRuntimeConstMeta;
+
+  DropFnType get dropOpaqueMutexModel;
+  ShareFnType get shareOpaqueMutexModel;
+  OpaqueTypeFinalizer get MutexModelFinalizer;
+
+  DropFnType get dropOpaqueMutexOptionMpscReceiverAction;
+  ShareFnType get shareOpaqueMutexOptionMpscReceiverAction;
+  OpaqueTypeFinalizer get MutexOptionMpscReceiverActionFinalizer;
 }
 
-enum Platform {
-  Unknown,
-  Android,
-  Ios,
-  Windows,
-  Unix,
-  MacIntel,
-  MacApple,
-  Wasm,
+@sealed
+class MutexModel extends FrbOpaque {
+  final Native bridge;
+  MutexModel.fromRaw(int ptr, int size, this.bridge) : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueMutexModel;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueMutexModel;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer => bridge.MutexModelFinalizer;
+}
+
+@sealed
+class MutexOptionMpscReceiverAction extends FrbOpaque {
+  final Native bridge;
+  MutexOptionMpscReceiverAction.fromRaw(int ptr, int size, this.bridge)
+      : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueMutexOptionMpscReceiverAction;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueMutexOptionMpscReceiverAction;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer =>
+      bridge.MutexOptionMpscReceiverActionFinalizer;
+}
+
+class Runtime {
+  final Native bridge;
+  final MutexOptionMpscReceiverAction rx;
+  final MutexModel model;
+
+  const Runtime({
+    required this.bridge,
+    required this.rx,
+    required this.model,
+  });
+
+  static Future<Runtime> newRuntime({required Native bridge, dynamic hint}) =>
+      bridge.newStaticMethodRuntime(hint: hint);
+
+  Stream<UpdateMsgWrap> start({dynamic hint}) => bridge.startMethodRuntime(
+        that: this,
+      );
+}
+
+enum UpdateMsg {
+  Credential,
+  State,
+  Status,
+  Log,
+  Flux,
+  Online,
+  Details,
+  LogBusy,
+  OnlineBusy,
+  DetailBusy,
+}
+
+class UpdateMsgWrap {
+  final UpdateMsg field0;
+
+  const UpdateMsgWrap({
+    required this.field0,
+  });
 }

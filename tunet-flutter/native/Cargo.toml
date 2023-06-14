@@ -12,4 +12,5 @@ crate-type = ["cdylib", "staticlib"]
 [dependencies]
 tunet-model = { workspace = true }
 anyhow = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
 flutter_rust_bridge = "1"

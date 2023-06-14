@@ -9,6 +9,19 @@ typedef int64_t DartPort;
 
 typedef bool (*DartPostCObjectFnType)(DartPort port_id, void *message);
 
+typedef struct wire_MutexOptionMpscReceiverAction {
+  const void *ptr;
+} wire_MutexOptionMpscReceiverAction;
+
+typedef struct wire_MutexModel {
+  const void *ptr;
+} wire_MutexModel;
+
+typedef struct wire_Runtime {
+  struct wire_MutexOptionMpscReceiverAction rx;
+  struct wire_MutexModel model;
+} wire_Runtime;
+
 typedef struct DartCObject *WireSyncReturn;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
@@ -21,16 +34,37 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
-void wire_platform(int64_t port_);
+void wire_new__static_method__Runtime(int64_t port_);
 
-void wire_rust_release_mode(int64_t port_);
+void wire_start__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
+struct wire_MutexModel new_MutexModel(void);
+
+struct wire_MutexOptionMpscReceiverAction new_MutexOptionMpscReceiverAction(void);
+
+struct wire_Runtime *new_box_autoadd_runtime_0(void);
+
+void drop_opaque_MutexModel(const void *ptr);
+
+const void *share_opaque_MutexModel(const void *ptr);
+
+void drop_opaque_MutexOptionMpscReceiverAction(const void *ptr);
+
+const void *share_opaque_MutexOptionMpscReceiverAction(const void *ptr);
 
 void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
-    dummy_var ^= ((int64_t) (void*) wire_platform);
-    dummy_var ^= ((int64_t) (void*) wire_rust_release_mode);
+    dummy_var ^= ((int64_t) (void*) wire_new__static_method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_start__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) new_MutexModel);
+    dummy_var ^= ((int64_t) (void*) new_MutexOptionMpscReceiverAction);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_0);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_MutexModel);
+    dummy_var ^= ((int64_t) (void*) share_opaque_MutexModel);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_MutexOptionMpscReceiverAction);
+    dummy_var ^= ((int64_t) (void*) share_opaque_MutexOptionMpscReceiverAction);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     dummy_var ^= ((int64_t) (void*) get_dart_object);

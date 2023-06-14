@@ -26,53 +26,94 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Future<Platform> platform({dynamic hint}) {
+  Future<Runtime> newStaticMethodRuntime({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_platform(port_),
-      parseSuccessData: _wire2api_platform,
-      constMeta: kPlatformConstMeta,
+      callFfi: (port_) =>
+          _platform.inner.wire_new__static_method__Runtime(port_),
+      parseSuccessData: (d) => _wire2api_runtime(d),
+      constMeta: kNewStaticMethodRuntimeConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kPlatformConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kNewStaticMethodRuntimeConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "platform",
+        debugName: "new__static_method__Runtime",
         argNames: [],
       );
 
-  Future<bool> rustReleaseMode({dynamic hint}) {
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_rust_release_mode(port_),
-      parseSuccessData: _wire2api_bool,
-      constMeta: kRustReleaseModeConstMeta,
-      argValues: [],
+  Stream<UpdateMsgWrap> startMethodRuntime(
+      {required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeStream(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_start__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_update_msg_wrap,
+      constMeta: kStartMethodRuntimeConstMeta,
+      argValues: [that],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kRustReleaseModeConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kStartMethodRuntimeConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "rust_release_mode",
-        argNames: [],
+        debugName: "start__method__Runtime",
+        argNames: ["that"],
       );
+
+  DropFnType get dropOpaqueMutexModel => _platform.inner.drop_opaque_MutexModel;
+  ShareFnType get shareOpaqueMutexModel =>
+      _platform.inner.share_opaque_MutexModel;
+  OpaqueTypeFinalizer get MutexModelFinalizer => _platform.MutexModelFinalizer;
+
+  DropFnType get dropOpaqueMutexOptionMpscReceiverAction =>
+      _platform.inner.drop_opaque_MutexOptionMpscReceiverAction;
+  ShareFnType get shareOpaqueMutexOptionMpscReceiverAction =>
+      _platform.inner.share_opaque_MutexOptionMpscReceiverAction;
+  OpaqueTypeFinalizer get MutexOptionMpscReceiverActionFinalizer =>
+      _platform.MutexOptionMpscReceiverActionFinalizer;
 
   void dispose() {
     _platform.dispose();
   }
 // Section: wire2api
 
-  bool _wire2api_bool(dynamic raw) {
-    return raw as bool;
+  MutexModel _wire2api_MutexModel(dynamic raw) {
+    return MutexModel.fromRaw(raw[0], raw[1], this);
+  }
+
+  MutexOptionMpscReceiverAction _wire2api_MutexOptionMpscReceiverAction(
+      dynamic raw) {
+    return MutexOptionMpscReceiverAction.fromRaw(raw[0], raw[1], this);
   }
 
   int _wire2api_i32(dynamic raw) {
     return raw as int;
   }
 
-  Platform _wire2api_platform(dynamic raw) {
-    return Platform.values[raw as int];
+  Runtime _wire2api_runtime(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return Runtime(
+      bridge: this,
+      rx: _wire2api_MutexOptionMpscReceiverAction(arr[0]),
+      model: _wire2api_MutexModel(arr[1]),
+    );
+  }
+
+  UpdateMsg _wire2api_update_msg(dynamic raw) {
+    return UpdateMsg.values[raw as int];
+  }
+
+  UpdateMsgWrap _wire2api_update_msg_wrap(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return UpdateMsgWrap(
+      field0: _wire2api_update_msg(arr[0]),
+    );
   }
 }
 
@@ -85,9 +126,59 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 
 // Section: api2wire
 
+  @protected
+  wire_MutexModel api2wire_MutexModel(MutexModel raw) {
+    final ptr = inner.new_MutexModel();
+    _api_fill_to_wire_MutexModel(raw, ptr);
+    return ptr;
+  }
+
+  @protected
+  wire_MutexOptionMpscReceiverAction api2wire_MutexOptionMpscReceiverAction(
+      MutexOptionMpscReceiverAction raw) {
+    final ptr = inner.new_MutexOptionMpscReceiverAction();
+    _api_fill_to_wire_MutexOptionMpscReceiverAction(raw, ptr);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_Runtime> api2wire_box_autoadd_runtime(Runtime raw) {
+    final ptr = inner.new_box_autoadd_runtime_0();
+    _api_fill_to_wire_runtime(raw, ptr.ref);
+    return ptr;
+  }
+
 // Section: finalizer
 
+  late final OpaqueTypeFinalizer _MutexModelFinalizer =
+      OpaqueTypeFinalizer(inner._drop_opaque_MutexModelPtr);
+  OpaqueTypeFinalizer get MutexModelFinalizer => _MutexModelFinalizer;
+  late final OpaqueTypeFinalizer _MutexOptionMpscReceiverActionFinalizer =
+      OpaqueTypeFinalizer(inner._drop_opaque_MutexOptionMpscReceiverActionPtr);
+  OpaqueTypeFinalizer get MutexOptionMpscReceiverActionFinalizer =>
+      _MutexOptionMpscReceiverActionFinalizer;
 // Section: api_fill_to_wire
+
+  void _api_fill_to_wire_MutexModel(
+      MutexModel apiObj, wire_MutexModel wireObj) {
+    wireObj.ptr = apiObj.shareOrMove();
+  }
+
+  void _api_fill_to_wire_MutexOptionMpscReceiverAction(
+      MutexOptionMpscReceiverAction apiObj,
+      wire_MutexOptionMpscReceiverAction wireObj) {
+    wireObj.ptr = apiObj.shareOrMove();
+  }
+
+  void _api_fill_to_wire_box_autoadd_runtime(
+      Runtime apiObj, ffi.Pointer<wire_Runtime> wireObj) {
+    _api_fill_to_wire_runtime(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_runtime(Runtime apiObj, wire_Runtime wireObj) {
+    wireObj.rx = api2wire_MutexOptionMpscReceiverAction(apiObj.rx);
+    wireObj.model = api2wire_MutexModel(apiObj.model);
+  }
 }
 
 // ignore_for_file: camel_case_types, non_constant_identifier_names, avoid_positional_boolean_parameters, annotate_overrides, constant_identifier_names
@@ -186,33 +277,126 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
-  void wire_platform(
+  void wire_new__static_method__Runtime(
     int port_,
   ) {
-    return _wire_platform(
+    return _wire_new__static_method__Runtime(
       port_,
     );
   }
 
-  late final _wire_platformPtr =
+  late final _wire_new__static_method__RuntimePtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_platform');
-  late final _wire_platform =
-      _wire_platformPtr.asFunction<void Function(int)>();
+          'wire_new__static_method__Runtime');
+  late final _wire_new__static_method__Runtime =
+      _wire_new__static_method__RuntimePtr.asFunction<void Function(int)>();
 
-  void wire_rust_release_mode(
+  void wire_start__method__Runtime(
     int port_,
+    ffi.Pointer<wire_Runtime> that,
   ) {
-    return _wire_rust_release_mode(
+    return _wire_start__method__Runtime(
       port_,
+      that,
     );
   }
 
-  late final _wire_rust_release_modePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_rust_release_mode');
-  late final _wire_rust_release_mode =
-      _wire_rust_release_modePtr.asFunction<void Function(int)>();
+  late final _wire_start__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_start__method__Runtime');
+  late final _wire_start__method__Runtime = _wire_start__method__RuntimePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  wire_MutexModel new_MutexModel() {
+    return _new_MutexModel();
+  }
+
+  late final _new_MutexModelPtr =
+      _lookup<ffi.NativeFunction<wire_MutexModel Function()>>('new_MutexModel');
+  late final _new_MutexModel =
+      _new_MutexModelPtr.asFunction<wire_MutexModel Function()>();
+
+  wire_MutexOptionMpscReceiverAction new_MutexOptionMpscReceiverAction() {
+    return _new_MutexOptionMpscReceiverAction();
+  }
+
+  late final _new_MutexOptionMpscReceiverActionPtr = _lookup<
+          ffi.NativeFunction<wire_MutexOptionMpscReceiverAction Function()>>(
+      'new_MutexOptionMpscReceiverAction');
+  late final _new_MutexOptionMpscReceiverAction =
+      _new_MutexOptionMpscReceiverActionPtr
+          .asFunction<wire_MutexOptionMpscReceiverAction Function()>();
+
+  ffi.Pointer<wire_Runtime> new_box_autoadd_runtime_0() {
+    return _new_box_autoadd_runtime_0();
+  }
+
+  late final _new_box_autoadd_runtime_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Runtime> Function()>>(
+          'new_box_autoadd_runtime_0');
+  late final _new_box_autoadd_runtime_0 = _new_box_autoadd_runtime_0Ptr
+      .asFunction<ffi.Pointer<wire_Runtime> Function()>();
+
+  void drop_opaque_MutexModel(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _drop_opaque_MutexModel(
+      ptr,
+    );
+  }
+
+  late final _drop_opaque_MutexModelPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'drop_opaque_MutexModel');
+  late final _drop_opaque_MutexModel = _drop_opaque_MutexModelPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Void> share_opaque_MutexModel(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _share_opaque_MutexModel(
+      ptr,
+    );
+  }
+
+  late final _share_opaque_MutexModelPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(
+              ffi.Pointer<ffi.Void>)>>('share_opaque_MutexModel');
+  late final _share_opaque_MutexModel = _share_opaque_MutexModelPtr
+      .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
+
+  void drop_opaque_MutexOptionMpscReceiverAction(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _drop_opaque_MutexOptionMpscReceiverAction(
+      ptr,
+    );
+  }
+
+  late final _drop_opaque_MutexOptionMpscReceiverActionPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'drop_opaque_MutexOptionMpscReceiverAction');
+  late final _drop_opaque_MutexOptionMpscReceiverAction =
+      _drop_opaque_MutexOptionMpscReceiverActionPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Void> share_opaque_MutexOptionMpscReceiverAction(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _share_opaque_MutexOptionMpscReceiverAction(
+      ptr,
+    );
+  }
+
+  late final _share_opaque_MutexOptionMpscReceiverActionPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>>(
+      'share_opaque_MutexOptionMpscReceiverAction');
+  late final _share_opaque_MutexOptionMpscReceiverAction =
+      _share_opaque_MutexOptionMpscReceiverActionPtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
 
   void free_WireSyncReturn(
     WireSyncReturn ptr,
@@ -230,6 +414,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
 }
 
 final class _Dart_Handle extends ffi.Opaque {}
+
+final class wire_MutexOptionMpscReceiverAction extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ptr;
+}
+
+final class wire_MutexModel extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ptr;
+}
+
+final class wire_Runtime extends ffi.Struct {
+  external wire_MutexOptionMpscReceiverAction rx;
+
+  external wire_MutexModel model;
+}
 
 typedef DartPostCObjectFnType = ffi.Pointer<
     ffi.NativeFunction<
