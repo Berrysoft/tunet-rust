@@ -1,0 +1,15 @@
+[package]
+name = "native"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+tunet-model = { workspace = true }
+anyhow = { workspace = true }
+flutter_rust_bridge = "1"
