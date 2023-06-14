@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.flutter_rust_bridge_template">
+    package="com.berrysoft.tunet_flutter">
    <application
-        android:label="flutter_rust_bridge_template"
+        android:label="清华校园网"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
