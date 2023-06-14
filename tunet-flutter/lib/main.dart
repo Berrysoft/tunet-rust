@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'ffi.dart';
+import 'runtime.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: '清华校园网',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: '主页'),
     );
   }
 }
@@ -51,12 +51,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   // These futures belong to the state and are only initialized once,
   // in the initState method.
-  late Future<Runtime> runtime;
+  late Future<ManagedRuntime> runtime;
 
   @override
   void initState() {
     super.initState();
-    runtime = Runtime.newRuntime(bridge: api);
+    runtime = ManagedRuntime.newRuntime();
   }
 
   @override
@@ -100,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // Here, the generic type that the FutureBuilder manages is
             // explicitly named, because if omitted the snapshot will have the
             // type of AsyncSnapshot<Object?>.
-            FutureBuilder<Runtime>(
+            FutureBuilder<ManagedRuntime>(
               // We await two unrelated futures here, so the type has to be
               // List<dynamic>.
               future: runtime,
@@ -122,35 +122,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
                 // Finally, retrieve the data expected in the same order provided
                 // to the FutureBuilder.future.
-                final Runtime runtime = data;
-                return StreamBuilder<UpdateMsgWrap>(
-                  stream: runtime.start(),
-                  builder: (context, snap) {
-                    final UpdateMsg? data = snap.data?.field0;
-                    if (data != null) {
-                      switch (data) {
-                        case UpdateMsg.State:
-                          runtime.queueFlux();
-                          break;
-                        case UpdateMsg.Flux:
-                          return FutureBuilder<NetFlux>(
-                              future: runtime.flux(),
-                              builder: (context, snap) {
-                                final NetFlux? data = snap.data;
-                                if (data != null) {
-                                  final String username = data.username;
-                                  return Text(username, style: style);
-                                }
-                                return Text("No flux.", style: style);
-                              });
-                        default:
-                          break;
-                      }
-                      return Text('$data', style: style);
-                    }
-                    return Text("No message.", style: style);
-                  },
-                );
+                final ManagedRuntime runtime = data;
+                return FutureBuilder<void>(
+                    future: runtime.start(),
+                    builder: (context, snap) {
+                      return StreamBuilder<NetFlux>(
+                          stream: runtime.netFluxSink.stream,
+                          builder: (context, snap) {
+                            final NetFlux? data = snap.data;
+                            if (data != null) {
+                              final String username = data.username;
+                              return Text(username, style: style);
+                            }
+                            return Text("No flux.", style: style);
+                          });
+                    });
               },
             )
           ],

@@ -98,6 +98,25 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<NetStateWrap> stateMethodRuntime(
+      {required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_state__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_net_state_wrap,
+      constMeta: kStateMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kStateMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "state__method__Runtime",
+        argNames: ["that"],
+      );
+
   DropFnType get dropOpaqueMutexModel => _platform.inner.drop_opaque_MutexModel;
   ShareFnType get shareOpaqueMutexModel =>
       _platform.inner.share_opaque_MutexModel;
@@ -182,6 +201,19 @@ class NativeImpl implements Native {
       flux: _wire2api_flux(arr[1]),
       onlineTime: _wire2api_new_duration(arr[2]),
       balance: _wire2api_balance(arr[3]),
+    );
+  }
+
+  NetState _wire2api_net_state(dynamic raw) {
+    return NetState.values[raw as int];
+  }
+
+  NetStateWrap _wire2api_net_state_wrap(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return NetStateWrap(
+      field0: _wire2api_net_state(arr[0]),
     );
   }
 
@@ -477,6 +509,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
           ffi.Void Function(ffi.Int64,
               ffi.Pointer<wire_Runtime>)>>('wire_flux__method__Runtime');
   late final _wire_flux__method__Runtime = _wire_flux__method__RuntimePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_state__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_state__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_state__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_state__method__Runtime');
+  late final _wire_state__method__Runtime = _wire_state__method__RuntimePtr
       .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
   wire_MutexModel new_MutexModel() {

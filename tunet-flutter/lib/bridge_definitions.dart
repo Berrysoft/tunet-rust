@@ -26,6 +26,11 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kFluxMethodRuntimeConstMeta;
 
+  Future<NetStateWrap> stateMethodRuntime(
+      {required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kStateMethodRuntimeConstMeta;
+
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
   OpaqueTypeFinalizer get MutexModelFinalizer;
@@ -114,6 +119,21 @@ class NetFlux {
   });
 }
 
+enum NetState {
+  Unknown,
+  Net,
+  Auth4,
+  Auth6,
+}
+
+class NetStateWrap {
+  final NetState field0;
+
+  const NetStateWrap({
+    required this.field0,
+  });
+}
+
 class NewDuration {
   final Duration field0;
 
@@ -147,6 +167,10 @@ class Runtime {
       );
 
   Future<NetFlux> flux({dynamic hint}) => bridge.fluxMethodRuntime(
+        that: this,
+      );
+
+  Future<NetStateWrap> state({dynamic hint}) => bridge.stateMethodRuntime(
         that: this,
       );
 }

@@ -24,6 +24,16 @@ pub enum _UpdateMsg {
 
 pub struct UpdateMsgWrap(pub UpdateMsg);
 
+#[frb(mirror(NetState))]
+pub enum _NetState {
+    Unknown,
+    Net,
+    Auth4,
+    Auth6,
+}
+
+pub struct NetStateWrap(pub NetState);
+
 #[frb(mirror(NetFlux))]
 pub struct _NetFlux {
     pub username: String,
@@ -98,5 +108,9 @@ impl Runtime {
 
     pub fn flux(&self) -> NetFlux {
         self.model.lock().unwrap().flux.clone()
+    }
+
+    pub fn state(&self) -> NetStateWrap {
+        NetStateWrap(self.model.lock().unwrap().state)
     }
 }

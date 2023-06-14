@@ -73,6 +73,19 @@ fn wire_flux__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runti
         },
     )
 }
+fn wire_state__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "state__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::state(&api_that))
+        },
+    )
+}
 // Section: wrapper structs
 
 #[derive(Clone)]
@@ -83,6 +96,9 @@ struct mirror_Flux(Flux);
 
 #[derive(Clone)]
 struct mirror_NetFlux(NetFlux);
+
+#[derive(Clone)]
+struct mirror_NetState(NetState);
 
 #[derive(Clone)]
 struct mirror_NewDuration(NewDuration);
@@ -107,6 +123,12 @@ const _: fn() = || {
         let _: Flux = NetFlux.flux;
         let _: NewDuration = NetFlux.online_time;
         let _: Balance = NetFlux.balance;
+    }
+    match None::<NetState>.unwrap() {
+        NetState::Unknown => {}
+        NetState::Net => {}
+        NetState::Auth4 => {}
+        NetState::Auth6 => {}
     }
     {
         let NewDuration_ = None::<NewDuration>.unwrap();
@@ -172,6 +194,25 @@ impl support::IntoDart for mirror_NetFlux {
     }
 }
 impl support::IntoDartExceptPrimitive for mirror_NetFlux {}
+
+impl support::IntoDart for mirror_NetState {
+    fn into_dart(self) -> support::DartAbi {
+        match self.0 {
+            NetState::Unknown => 0,
+            NetState::Net => 1,
+            NetState::Auth4 => 2,
+            NetState::Auth6 => 3,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_NetState {}
+impl support::IntoDart for NetStateWrap {
+    fn into_dart(self) -> support::DartAbi {
+        vec![mirror_NetState(self.0).into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for NetStateWrap {}
 
 impl support::IntoDart for mirror_NewDuration {
     fn into_dart(self) -> support::DartAbi {
