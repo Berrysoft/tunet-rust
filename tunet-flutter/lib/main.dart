@@ -129,10 +129,21 @@ class _MyHomePageState extends State<MyHomePage> {
                       return StreamBuilder<NetFlux>(
                           stream: runtime.netFluxSink.stream,
                           builder: (context, snap) {
-                            final NetFlux? data = snap.data;
+                            final data = snap.data;
                             if (data != null) {
-                              final String username = data.username;
-                              return Text(username, style: style);
+                              final username = data.username;
+                              final flux = data.flux.field0;
+                              final onlineTime = data.onlineTime.field0;
+                              final balance = data.balance.field0;
+                              return Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  Text('用户：$username', style: style),
+                                  Text('流量：$flux', style: style),
+                                  Text('时长：$onlineTime', style: style),
+                                  Text('余额：$balance', style: style),
+                                ],
+                              );
                             }
                             return Text("No flux.", style: style);
                           });
