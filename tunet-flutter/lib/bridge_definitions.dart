@@ -22,6 +22,14 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kStartMethodRuntimeConstMeta;
 
+  Future<void> queueLoginMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueLoginMethodRuntimeConstMeta;
+
+  Future<void> queueLogoutMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueLogoutMethodRuntimeConstMeta;
+
   Future<void> queueFluxMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kQueueFluxMethodRuntimeConstMeta;
@@ -163,6 +171,14 @@ class Runtime {
       bridge.newStaticMethodRuntime(hint: hint);
 
   Stream<UpdateMsgWrap> start({dynamic hint}) => bridge.startMethodRuntime(
+        that: this,
+      );
+
+  Future<void> queueLogin({dynamic hint}) => bridge.queueLoginMethodRuntime(
+        that: this,
+      );
+
+  Future<void> queueLogout({dynamic hint}) => bridge.queueLogoutMethodRuntime(
         that: this,
       );
 

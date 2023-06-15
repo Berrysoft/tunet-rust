@@ -38,5 +38,7 @@ class ManagedRuntime {
     }
   }
 
+  Future<void> queueLogin() => runtime.queueLogin();
+  Future<void> queueLogout() => runtime.queueLogout();
   Future<void> queueFlux() => runtime.queueFlux();
 }

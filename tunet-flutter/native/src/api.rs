@@ -109,9 +109,21 @@ impl Runtime {
         });
     }
 
-    pub fn queue_flux(&self) {
+    fn queue(&self, a: Action) {
         let _guard = self.handle.lock().unwrap().as_ref().unwrap().enter();
-        self.model.lock().unwrap().queue(Action::Flux);
+        self.model.lock().unwrap().queue(a);
+    }
+
+    pub fn queue_login(&self) {
+        self.queue(Action::Login);
+    }
+
+    pub fn queue_logout(&self) {
+        self.queue(Action::Logout);
+    }
+
+    pub fn queue_flux(&self) {
+        self.queue(Action::Flux);
     }
 
     pub fn flux(&self) -> NetFlux {

@@ -31,71 +31,132 @@ class MyApp extends StatelessWidget {
         primarySwatch:
             generateMaterialColor(color: SystemTheme.accentColor.accent),
       ),
-      home: MyHomePage(runtime: runtime),
+      home: DefaultTabController(
+        length: 1,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.home), text: '主页'),
+              ],
+            ),
+          ),
+          body: TabBarView(
+            children: [
+              HomePage(runtime: runtime),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   final ManagedRuntime runtime;
 
-  const MyHomePage({Key? key, required this.runtime}) : super(key: key);
+  const HomePage({Key? key, required this.runtime}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final runtime = widget.runtime;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('清华校园网'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            StreamBuilder<NetFlux>(
-              stream: runtime.netFluxSink.stream,
-              builder: (context, snap) {
-                final style = Theme.of(context).textTheme.bodyLarge;
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              StreamBuilder<NetState>(
+                stream: runtime.stateSink.stream,
+                builder: (context, snap) {
+                  final data = snap.data;
+                  if (data == null) {
+                    return const CircularProgressIndicator();
+                  }
 
-                final data = snap.data;
-                if (data == null) {
-                  return const CircularProgressIndicator();
-                }
-                final username = data.username;
-                final flux = data.flux.field0;
-                final onlineTime = data.onlineTime.field0;
-                final balance = data.balance.field0;
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Text('用户：$username', style: style),
-                    FutureBuilder<String>(
-                      future: api.fluxToString(f: flux),
-                      builder: (context, snap) {
-                        final s = snap.data;
-                        if (s == null) {
-                          return Text('流量：', style: style);
-                        } else {
-                          return Text('流量：{}'.format(s), style: style);
-                        }
-                      },
-                    ),
-                    Text(
-                        '时长：{}'.format(prettyDuration(onlineTime,
-                            locale: const ChineseSimplifiedDurationLocale())),
-                        style: style),
-                    Text('余额：¥{:.2f}'.format(balance), style: style),
-                  ],
-                );
-              },
-            )
-          ],
-        ),
+                  return DropdownButton<NetState>(
+                    items: [NetState.Net, NetState.Auth4, NetState.Auth6]
+                        .map((NetState s) {
+                      return DropdownMenuItem(value: s, child: Text(s.name));
+                    }).toList(),
+                    value: data,
+                    onChanged: (v) {},
+                  );
+                },
+              ),
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    runtime.queueLogin();
+                  },
+                  child: const Text('登录'),
+                ),
+              ),
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    runtime.queueLogout();
+                  },
+                  child: const Text('注销'),
+                ),
+              ),
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    runtime.queueFlux();
+                  },
+                  child: const Text('刷新'),
+                ),
+              ),
+            ],
+          ),
+          StreamBuilder<NetFlux>(
+            stream: runtime.netFluxSink.stream,
+            builder: (context, snap) {
+              final style = Theme.of(context).textTheme.bodyLarge;
+
+              final data = snap.data;
+              if (data == null) {
+                return const CircularProgressIndicator();
+              }
+              final username = data.username;
+              final flux = data.flux.field0;
+              final onlineTime = data.onlineTime.field0;
+              final balance = data.balance.field0;
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('用户：$username', style: style),
+                  FutureBuilder<String>(
+                    future: api.fluxToString(f: flux),
+                    builder: (context, snap) {
+                      final s = snap.data;
+                      if (s == null) {
+                        return Text('流量：', style: style);
+                      } else {
+                        return Text('流量：{}'.format(s), style: style);
+                      }
+                    },
+                  ),
+                  Text(
+                      '时长：{}'.format(prettyDuration(onlineTime,
+                          locale: const ChineseSimplifiedDurationLocale())),
+                      style: style),
+                  Text('余额：¥{:.2f}'.format(balance), style: style),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }

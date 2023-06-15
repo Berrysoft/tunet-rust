@@ -79,6 +79,42 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<void> queueLoginMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_queue_login__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueLoginMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueLoginMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_login__method__Runtime",
+        argNames: ["that"],
+      );
+
+  Future<void> queueLogoutMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_queue_logout__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueLogoutMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueLogoutMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_logout__method__Runtime",
+        argNames: ["that"],
+      );
+
   Future<void> queueFluxMethodRuntime({required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -512,6 +548,42 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_Runtime>)>>('wire_start__method__Runtime');
   late final _wire_start__method__Runtime = _wire_start__method__RuntimePtr
       .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_queue_login__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_queue_login__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_queue_login__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_queue_login__method__Runtime');
+  late final _wire_queue_login__method__Runtime =
+      _wire_queue_login__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_queue_logout__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_queue_logout__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_queue_logout__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>)>>(
+      'wire_queue_logout__method__Runtime');
+  late final _wire_queue_logout__method__Runtime =
+      _wire_queue_logout__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
   void wire_queue_flux__method__Runtime(
     int port_,

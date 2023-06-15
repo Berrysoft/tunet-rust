@@ -45,6 +45,10 @@ void wire_new__static_method__Runtime(int64_t port_);
 
 void wire_start__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
+void wire_queue_login__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
+void wire_queue_logout__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
 void wire_queue_flux__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 void wire_flux__method__Runtime(int64_t port_, struct wire_Runtime *that);
@@ -78,6 +82,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_flux_to_string);
     dummy_var ^= ((int64_t) (void*) wire_new__static_method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_start__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_queue_login__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_queue_logout__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_flux__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_flux__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_state__method__Runtime);
