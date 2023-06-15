@@ -9,6 +9,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
+  Future<String> fluxToString({required int f, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kFluxToStringConstMeta;
+
   Future<Runtime> newStaticMethodRuntime({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kNewStaticMethodRuntimeConstMeta;

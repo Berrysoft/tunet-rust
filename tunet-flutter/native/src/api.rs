@@ -45,6 +45,10 @@ pub struct _NetFlux {
 #[frb(mirror(Flux))]
 pub struct _Flux(pub u64);
 
+pub fn flux_to_string(f: u64) -> String {
+    Flux(f).to_string()
+}
+
 #[frb(mirror(NewDuration))]
 pub struct _NewDuration(pub Duration);
 
@@ -63,6 +67,10 @@ impl Runtime {
         android_logger::init_once(
             android_logger::Config::default().with_max_level(log::LevelFilter::Trace),
         );
+        #[cfg(target_os = "ios")]
+        oslog::OsLogger::new("com.berrysoft.tunet.flutter")
+            .level_filter(log::LevelFilter::Trace)
+            .init()?;
 
         let (tx, rx) = mpsc::channel(32);
         let model = Model::new(tx)?;

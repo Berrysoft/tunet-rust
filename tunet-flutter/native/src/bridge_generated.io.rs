@@ -2,6 +2,11 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
+pub extern "C" fn wire_flux_to_string(port_: i64, f: u64) {
+    wire_flux_to_string_impl(port_, f)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_new__static_method__Runtime(port_: i64) {
     wire_new__static_method__Runtime_impl(port_)
 }
@@ -129,6 +134,7 @@ impl Wire2Api<Runtime> for wire_Runtime {
         }
     }
 }
+
 // Section: wire structs
 
 #[repr(C)]
