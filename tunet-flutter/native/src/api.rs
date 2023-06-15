@@ -1,6 +1,7 @@
 use anyhow::Result;
 use flutter_rust_bridge::{frb, RustOpaque, StreamSink};
 
+pub use netstatus::NetStatus;
 pub use std::sync::{Arc, Mutex};
 pub use tokio::{runtime::Handle, sync::mpsc};
 pub use tunet_helper::{
@@ -34,6 +35,13 @@ pub enum _NetState {
 
 pub struct NetStateWrap(pub NetState);
 
+pub enum NetStatusSimp {
+    Unknown,
+    Wwan,
+    Wlan,
+    Lan,
+}
+
 #[frb(mirror(NetFlux))]
 pub struct _NetFlux {
     pub username: String,
@@ -59,6 +67,7 @@ pub struct Runtime {
     pub rx: RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>,
     pub model: RustOpaque<Mutex<Model>>,
     pub handle: RustOpaque<Mutex<Option<Handle>>>,
+    pub init_status: RustOpaque<Mutex<NetStatus>>,
 }
 
 impl Runtime {
@@ -78,6 +87,7 @@ impl Runtime {
             rx: RustOpaque::new(Mutex::new(Some(rx))),
             model: RustOpaque::new(Mutex::new(model)),
             handle: RustOpaque::new(Mutex::new(None)),
+            init_status: RustOpaque::new(Mutex::new(NetStatus::Unknown)),
         })
     }
 
@@ -91,6 +101,7 @@ impl Runtime {
             .unwrap();
         let handle = runtime.handle().clone();
         *self.handle.lock().unwrap() = Some(handle);
+        let status = self.init_status.lock().unwrap().clone();
         std::thread::spawn(move || {
             runtime.block_on(async {
                 {
@@ -98,8 +109,8 @@ impl Runtime {
                     model.update = Some(Box::new(move |msg| {
                         sink.add(UpdateMsgWrap(msg));
                     }));
-                    model.queue(Action::Status);
                     model.queue(Action::Timer);
+                    model.queue(Action::Status(Some(status)));
                 }
                 while let Some(action) = rx.recv().await {
                     log::info!("[tunet-flutter/native] received action: {:?}", action);
@@ -127,7 +138,20 @@ impl Runtime {
     }
 
     pub fn queue_state(&self, s: Option<NetStateWrap>) {
-        self.queue(Action::State(s.map(|s| s.0)))
+        self.queue(Action::State(s.map(|s| s.0)));
+    }
+
+    pub fn queue_status(&self, t: NetStatusSimp, ssid: Option<String>) {
+        let status = match t {
+            NetStatusSimp::Unknown => NetStatus::Unknown,
+            NetStatusSimp::Wwan => NetStatus::Wwan,
+            NetStatusSimp::Wlan => NetStatus::Wlan(
+                ssid.map(|s| s.trim_matches('\"').to_string())
+                    .unwrap_or_default(),
+            ),
+            NetStatusSimp::Lan => NetStatus::Lan,
+        };
+        *self.init_status.lock().unwrap() = status;
     }
 
     pub fn log_busy(&self) -> bool {

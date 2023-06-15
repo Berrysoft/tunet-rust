@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
+
 import 'ffi.dart';
 export 'ffi.dart';
 
 class ManagedRuntime {
   final Runtime runtime;
+
+  static const statusApi = MethodChannel('com.berrysoft.tunet_flutter/status');
 
   late StreamController<bool> logBusySink;
   late StreamController<NetFlux> netFluxSink;
@@ -23,6 +27,22 @@ class ManagedRuntime {
   }
 
   Future<void> start() async {
+    NetStatusSimp sendStatus = NetStatusSimp.Unknown;
+    String? ssid;
+    final String? status = await statusApi.invokeMethod("getStatus");
+    switch (status) {
+      case "wwan":
+        sendStatus = NetStatusSimp.Wwan;
+        break;
+      case "wlan":
+        sendStatus = NetStatusSimp.Wlan;
+        ssid = await statusApi.invokeMethod("getSsid");
+        break;
+      case "lan":
+        sendStatus = NetStatusSimp.Lan;
+        break;
+    }
+    await runtime.queueStatus(t: sendStatus, ssid: ssid);
     await for (final msgw in runtime.start()) {
       final msg = msgw.field0;
       switch (msg) {
@@ -31,8 +51,7 @@ class ManagedRuntime {
           stateSink.add((await runtime.state()).field0);
           break;
         case UpdateMsg.Status:
-          await runtime.queueState(
-              s: const NetStateWrap(field0: NetState.Auth4));
+          await runtime.queueState();
           statusSink.add((await runtime.status()));
           break;
         case UpdateMsg.Flux:

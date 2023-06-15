@@ -128,8 +128,8 @@ impl Model {
             Action::WatchStatus => {
                 self.spawn_watch_status();
             }
-            Action::Status => {
-                let status = NetStatus::current();
+            Action::Status(status) => {
+                let status = status.unwrap_or_else(NetStatus::current);
                 if status != self.status {
                     self.status = status;
                     self.update(UpdateMsg::Status);
@@ -228,7 +228,7 @@ impl Model {
         tokio::spawn(async move {
             let mut events = NetStatus::watch();
             while let Some(()) = events.next().await {
-                tx.send(Action::Status).await?;
+                tx.send(Action::Status(None)).await?;
             }
             Ok::<_, anyhow::Error>(())
         });
@@ -378,7 +378,7 @@ pub enum Action {
     Credential(String, String),
     State(Option<NetState>),
     WatchStatus,
-    Status,
+    Status(Option<NetStatus>),
     Timer,
     Tick,
     Login,

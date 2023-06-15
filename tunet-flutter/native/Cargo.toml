@@ -10,6 +10,7 @@ repository.workspace = true
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
+netstatus = { workspace = true }
 tunet-helper = { workspace = true }
 tunet-model = { workspace = true }
 anyhow = { workspace = true }

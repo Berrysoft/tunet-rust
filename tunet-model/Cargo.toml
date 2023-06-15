@@ -14,4 +14,5 @@ tokio = { workspace = true }
 mac_address = { workspace = true }
 anyhow = { workspace = true }
 itertools = { workspace = true }
+log = { workspace = true }
 drop_guard = "0.3"

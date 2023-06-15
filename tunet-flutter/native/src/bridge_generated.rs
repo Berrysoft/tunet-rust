@@ -123,6 +123,26 @@ fn wire_queue_state__method__Runtime_impl(
         },
     )
 }
+fn wire_queue_status__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    t: impl Wire2Api<NetStatusSimp> + UnwindSafe,
+    ssid: impl Wire2Api<Option<String>> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_status__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_t = t.wire2api();
+            let api_ssid = ssid.wire2api();
+            move |task_callback| Ok(Runtime::queue_status(&api_that, api_t, api_ssid))
+        },
+    )
+}
 fn wire_log_busy__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
@@ -278,11 +298,29 @@ impl Wire2Api<NetState> for i32 {
     }
 }
 
+impl Wire2Api<NetStatusSimp> for i32 {
+    fn wire2api(self) -> NetStatusSimp {
+        match self {
+            0 => NetStatusSimp::Unknown,
+            1 => NetStatusSimp::Wwan,
+            2 => NetStatusSimp::Wlan,
+            3 => NetStatusSimp::Lan,
+            _ => unreachable!("Invalid variant for NetStatusSimp: {}", self),
+        }
+    }
+}
+
 impl Wire2Api<u64> for u64 {
     fn wire2api(self) -> u64 {
         self
     }
 }
+impl Wire2Api<u8> for u8 {
+    fn wire2api(self) -> u8 {
+        self
+    }
+}
+
 // Section: impl IntoDart
 
 impl support::IntoDart for mirror_Balance {
@@ -344,6 +382,7 @@ impl support::IntoDart for Runtime {
             self.rx.into_dart(),
             self.model.into_dart(),
             self.handle.into_dart(),
+            self.init_status.into_dart(),
         ]
         .into_dart()
     }

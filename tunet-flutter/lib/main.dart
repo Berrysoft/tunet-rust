@@ -152,6 +152,16 @@ class _HomePageState extends State<HomePage> {
                           locale: const ChineseSimplifiedDurationLocale())),
                       style: style),
                   Text('余额：¥{:.2f}'.format(balance), style: style),
+                  StreamBuilder<String>(
+                    stream: runtime.statusSink.stream,
+                    builder: (context, snap) {
+                      final String? data = snap.data;
+                      if (data == null) {
+                        return const CircularProgressIndicator();
+                      }
+                      return Text('网络：$data', style: style);
+                    },
+                  ),
                 ],
               );
             },

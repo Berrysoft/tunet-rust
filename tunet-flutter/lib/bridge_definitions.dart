@@ -39,6 +39,14 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kQueueStateMethodRuntimeConstMeta;
 
+  Future<void> queueStatusMethodRuntime(
+      {required Runtime that,
+      required NetStatusSimp t,
+      String? ssid,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueStatusMethodRuntimeConstMeta;
+
   Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta;
@@ -59,6 +67,10 @@ abstract class Native {
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
   OpaqueTypeFinalizer get MutexModelFinalizer;
+
+  DropFnType get dropOpaqueMutexNetStatus;
+  ShareFnType get shareOpaqueMutexNetStatus;
+  OpaqueTypeFinalizer get MutexNetStatusFinalizer;
 
   DropFnType get dropOpaqueMutexOptionHandle;
   ShareFnType get shareOpaqueMutexOptionHandle;
@@ -81,6 +93,21 @@ class MutexModel extends FrbOpaque {
 
   @override
   OpaqueTypeFinalizer get staticFinalizer => bridge.MutexModelFinalizer;
+}
+
+@sealed
+class MutexNetStatus extends FrbOpaque {
+  final Native bridge;
+  MutexNetStatus.fromRaw(int ptr, int size, this.bridge)
+      : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueMutexNetStatus;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueMutexNetStatus;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer => bridge.MutexNetStatusFinalizer;
 }
 
 @sealed
@@ -159,6 +186,13 @@ class NetStateWrap {
   });
 }
 
+enum NetStatusSimp {
+  Unknown,
+  Wwan,
+  Wlan,
+  Lan,
+}
+
 class NewDuration {
   final Duration field0;
 
@@ -172,12 +206,14 @@ class Runtime {
   final MutexOptionMpscReceiverAction rx;
   final MutexModel model;
   final MutexOptionHandle handle;
+  final MutexNetStatus initStatus;
 
   const Runtime({
     required this.bridge,
     required this.rx,
     required this.model,
     required this.handle,
+    required this.initStatus,
   });
 
   static Future<Runtime> newRuntime({required Native bridge, dynamic hint}) =>
@@ -203,6 +239,14 @@ class Runtime {
       bridge.queueStateMethodRuntime(
         that: this,
         s: s,
+      );
+
+  Future<void> queueStatus(
+          {required NetStatusSimp t, String? ssid, dynamic hint}) =>
+      bridge.queueStatusMethodRuntime(
+        that: this,
+        t: t,
+        ssid: ssid,
       );
 
   Future<bool> logBusy({dynamic hint}) => bridge.logBusyMethodRuntime(

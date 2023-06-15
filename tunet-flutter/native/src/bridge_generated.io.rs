@@ -41,6 +41,16 @@ pub extern "C" fn wire_queue_state__method__Runtime(
 }
 
 #[no_mangle]
+pub extern "C" fn wire_queue_status__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    t: i32,
+    ssid: *mut wire_uint_8_list,
+) {
+    wire_queue_status__method__Runtime_impl(port_, that, t, ssid)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_log_busy__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_log_busy__method__Runtime_impl(port_, that)
 }
@@ -68,6 +78,11 @@ pub extern "C" fn new_MutexModel() -> wire_MutexModel {
 }
 
 #[no_mangle]
+pub extern "C" fn new_MutexNetStatus() -> wire_MutexNetStatus {
+    wire_MutexNetStatus::new_with_null_ptr()
+}
+
+#[no_mangle]
 pub extern "C" fn new_MutexOptionHandle() -> wire_MutexOptionHandle {
     wire_MutexOptionHandle::new_with_null_ptr()
 }
@@ -87,6 +102,15 @@ pub extern "C" fn new_box_autoadd_runtime_0() -> *mut wire_Runtime {
     support::new_leak_box_ptr(wire_Runtime::new_with_null_ptr())
 }
 
+#[no_mangle]
+pub extern "C" fn new_uint_8_list_0(len: i32) -> *mut wire_uint_8_list {
+    let ans = wire_uint_8_list {
+        ptr: support::new_leak_vec_ptr(Default::default(), len),
+        len,
+    };
+    support::new_leak_box_ptr(ans)
+}
+
 // Section: related functions
 
 #[no_mangle]
@@ -100,6 +124,21 @@ pub extern "C" fn drop_opaque_MutexModel(ptr: *const c_void) {
 pub extern "C" fn share_opaque_MutexModel(ptr: *const c_void) -> *const c_void {
     unsafe {
         Arc::<Mutex<Model>>::increment_strong_count(ptr as _);
+        ptr
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn drop_opaque_MutexNetStatus(ptr: *const c_void) {
+    unsafe {
+        Arc::<Mutex<NetStatus>>::decrement_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn share_opaque_MutexNetStatus(ptr: *const c_void) -> *const c_void {
+    unsafe {
+        Arc::<Mutex<NetStatus>>::increment_strong_count(ptr as _);
         ptr
     }
 }
@@ -141,6 +180,11 @@ impl Wire2Api<RustOpaque<Mutex<Model>>> for wire_MutexModel {
         unsafe { support::opaque_from_dart(self.ptr as _) }
     }
 }
+impl Wire2Api<RustOpaque<Mutex<NetStatus>>> for wire_MutexNetStatus {
+    fn wire2api(self) -> RustOpaque<Mutex<NetStatus>> {
+        unsafe { support::opaque_from_dart(self.ptr as _) }
+    }
+}
 impl Wire2Api<RustOpaque<Mutex<Option<Handle>>>> for wire_MutexOptionHandle {
     fn wire2api(self) -> RustOpaque<Mutex<Option<Handle>>> {
         unsafe { support::opaque_from_dart(self.ptr as _) }
@@ -151,6 +195,12 @@ impl Wire2Api<RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>>
 {
     fn wire2api(self) -> RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>> {
         unsafe { support::opaque_from_dart(self.ptr as _) }
+    }
+}
+impl Wire2Api<String> for *mut wire_uint_8_list {
+    fn wire2api(self) -> String {
+        let vec: Vec<u8> = self.wire2api();
+        String::from_utf8_lossy(&vec).into_owned()
     }
 }
 impl Wire2Api<NetStateWrap> for *mut wire_NetStateWrap {
@@ -178,15 +228,30 @@ impl Wire2Api<Runtime> for wire_Runtime {
             rx: self.rx.wire2api(),
             model: self.model.wire2api(),
             handle: self.handle.wire2api(),
+            init_status: self.init_status.wire2api(),
         }
     }
 }
 
+impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
+    fn wire2api(self) -> Vec<u8> {
+        unsafe {
+            let wrap = support::box_from_leak_ptr(self);
+            support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        }
+    }
+}
 // Section: wire structs
 
 #[repr(C)]
 #[derive(Clone)]
 pub struct wire_MutexModel {
+    ptr: *const core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_MutexNetStatus {
     ptr: *const core::ffi::c_void,
 }
 
@@ -214,6 +279,14 @@ pub struct wire_Runtime {
     rx: wire_MutexOptionMpscReceiverAction,
     model: wire_MutexModel,
     handle: wire_MutexOptionHandle,
+    init_status: wire_MutexNetStatus,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_uint_8_list {
+    ptr: *mut u8,
+    len: i32,
 }
 
 // Section: impl NewWithNullPtr
@@ -229,6 +302,13 @@ impl<T> NewWithNullPtr for *mut T {
 }
 
 impl NewWithNullPtr for wire_MutexModel {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            ptr: core::ptr::null(),
+        }
+    }
+}
+impl NewWithNullPtr for wire_MutexNetStatus {
     fn new_with_null_ptr() -> Self {
         Self {
             ptr: core::ptr::null(),
@@ -270,6 +350,7 @@ impl NewWithNullPtr for wire_Runtime {
             rx: wire_MutexOptionMpscReceiverAction::new_with_null_ptr(),
             model: wire_MutexModel::new_with_null_ptr(),
             handle: wire_MutexOptionHandle::new_with_null_ptr(),
+            init_status: wire_MutexNetStatus::new_with_null_ptr(),
         }
     }
 }

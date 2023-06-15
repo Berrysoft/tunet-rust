@@ -57,7 +57,7 @@ async fn start_model(model: &Mutex<Model>) -> Result<()> {
     if let Ok((u, p)) = settings_reader.read_full() {
         model.queue(Action::Credential(u, p));
     }
-    model.queue(Action::Status);
+    model.queue(Action::Status(None));
     model.queue(Action::WatchStatus);
     model.queue(Action::Timer);
     Ok(())

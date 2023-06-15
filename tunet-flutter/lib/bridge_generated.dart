@@ -153,6 +153,30 @@ class NativeImpl implements Native {
         argNames: ["that", "s"],
       );
 
+  Future<void> queueStatusMethodRuntime(
+      {required Runtime that,
+      required NetStatusSimp t,
+      String? ssid,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    var arg1 = api2wire_net_status_simp(t);
+    var arg2 = _platform.api2wire_opt_String(ssid);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_queue_status__method__Runtime(port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueStatusMethodRuntimeConstMeta,
+      argValues: [that, t, ssid],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueStatusMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_status__method__Runtime",
+        argNames: ["that", "t", "ssid"],
+      );
+
   Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -231,6 +255,13 @@ class NativeImpl implements Native {
       _platform.inner.share_opaque_MutexModel;
   OpaqueTypeFinalizer get MutexModelFinalizer => _platform.MutexModelFinalizer;
 
+  DropFnType get dropOpaqueMutexNetStatus =>
+      _platform.inner.drop_opaque_MutexNetStatus;
+  ShareFnType get shareOpaqueMutexNetStatus =>
+      _platform.inner.share_opaque_MutexNetStatus;
+  OpaqueTypeFinalizer get MutexNetStatusFinalizer =>
+      _platform.MutexNetStatusFinalizer;
+
   DropFnType get dropOpaqueMutexOptionHandle =>
       _platform.inner.drop_opaque_MutexOptionHandle;
   ShareFnType get shareOpaqueMutexOptionHandle =>
@@ -256,6 +287,10 @@ class NativeImpl implements Native {
 
   MutexModel _wire2api_MutexModel(dynamic raw) {
     return MutexModel.fromRaw(raw[0], raw[1], this);
+  }
+
+  MutexNetStatus _wire2api_MutexNetStatus(dynamic raw) {
+    return MutexNetStatus.fromRaw(raw[0], raw[1], this);
   }
 
   MutexOptionHandle _wire2api_MutexOptionHandle(dynamic raw) {
@@ -341,13 +376,14 @@ class NativeImpl implements Native {
 
   Runtime _wire2api_runtime(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return Runtime(
       bridge: this,
       rx: _wire2api_MutexOptionMpscReceiverAction(arr[0]),
       model: _wire2api_MutexModel(arr[1]),
       handle: _wire2api_MutexOptionHandle(arr[2]),
+      initStatus: _wire2api_MutexNetStatus(arr[3]),
     );
   }
 
@@ -393,6 +429,16 @@ int api2wire_net_state(NetState raw) {
   return api2wire_i32(raw.index);
 }
 
+@protected
+int api2wire_net_status_simp(NetStatusSimp raw) {
+  return api2wire_i32(raw.index);
+}
+
+@protected
+int api2wire_u8(int raw) {
+  return raw;
+}
+
 // Section: finalizer
 
 class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
@@ -404,6 +450,13 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   wire_MutexModel api2wire_MutexModel(MutexModel raw) {
     final ptr = inner.new_MutexModel();
     _api_fill_to_wire_MutexModel(raw, ptr);
+    return ptr;
+  }
+
+  @protected
+  wire_MutexNetStatus api2wire_MutexNetStatus(MutexNetStatus raw) {
+    final ptr = inner.new_MutexNetStatus();
+    _api_fill_to_wire_MutexNetStatus(raw, ptr);
     return ptr;
   }
 
@@ -423,6 +476,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_String(String raw) {
+    return api2wire_uint_8_list(utf8.encoder.convert(raw));
+  }
+
+  @protected
   ffi.Pointer<wire_NetStateWrap> api2wire_box_autoadd_net_state_wrap(
       NetStateWrap raw) {
     final ptr = inner.new_box_autoadd_net_state_wrap_0();
@@ -438,6 +496,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_opt_String(String? raw) {
+    return raw == null ? ffi.nullptr : api2wire_String(raw);
+  }
+
+  @protected
   ffi.Pointer<wire_NetStateWrap> api2wire_opt_box_autoadd_net_state_wrap(
       NetStateWrap? raw) {
     return raw == null ? ffi.nullptr : api2wire_box_autoadd_net_state_wrap(raw);
@@ -447,11 +510,21 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   int api2wire_u64(int raw) {
     return raw;
   }
+
+  @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
+    final ans = inner.new_uint_8_list_0(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
 // Section: finalizer
 
   late final OpaqueTypeFinalizer _MutexModelFinalizer =
       OpaqueTypeFinalizer(inner._drop_opaque_MutexModelPtr);
   OpaqueTypeFinalizer get MutexModelFinalizer => _MutexModelFinalizer;
+  late final OpaqueTypeFinalizer _MutexNetStatusFinalizer =
+      OpaqueTypeFinalizer(inner._drop_opaque_MutexNetStatusPtr);
+  OpaqueTypeFinalizer get MutexNetStatusFinalizer => _MutexNetStatusFinalizer;
   late final OpaqueTypeFinalizer _MutexOptionHandleFinalizer =
       OpaqueTypeFinalizer(inner._drop_opaque_MutexOptionHandlePtr);
   OpaqueTypeFinalizer get MutexOptionHandleFinalizer =>
@@ -464,6 +537,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 
   void _api_fill_to_wire_MutexModel(
       MutexModel apiObj, wire_MutexModel wireObj) {
+    wireObj.ptr = apiObj.shareOrMove();
+  }
+
+  void _api_fill_to_wire_MutexNetStatus(
+      MutexNetStatus apiObj, wire_MutexNetStatus wireObj) {
     wireObj.ptr = apiObj.shareOrMove();
   }
 
@@ -503,6 +581,7 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     wireObj.rx = api2wire_MutexOptionMpscReceiverAction(apiObj.rx);
     wireObj.model = api2wire_MutexModel(apiObj.model);
     wireObj.handle = api2wire_MutexOptionHandle(apiObj.handle);
+    wireObj.init_status = api2wire_MutexNetStatus(apiObj.initStatus);
   }
 }
 
@@ -725,6 +804,30 @@ class NativeWire implements FlutterRustBridgeWireBase {
           void Function(int, ffi.Pointer<wire_Runtime>,
               ffi.Pointer<wire_NetStateWrap>)>();
 
+  void wire_queue_status__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+    int t,
+    ffi.Pointer<wire_uint_8_list> ssid,
+  ) {
+    return _wire_queue_status__method__Runtime(
+      port_,
+      that,
+      t,
+      ssid,
+    );
+  }
+
+  late final _wire_queue_status__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>, ffi.Int32,
+                  ffi.Pointer<wire_uint_8_list>)>>(
+      'wire_queue_status__method__Runtime');
+  late final _wire_queue_status__method__Runtime =
+      _wire_queue_status__method__RuntimePtr.asFunction<
+          void Function(int, ffi.Pointer<wire_Runtime>, int,
+              ffi.Pointer<wire_uint_8_list>)>();
+
   void wire_log_busy__method__Runtime(
     int port_,
     ffi.Pointer<wire_Runtime> that,
@@ -803,6 +906,16 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_MutexModel =
       _new_MutexModelPtr.asFunction<wire_MutexModel Function()>();
 
+  wire_MutexNetStatus new_MutexNetStatus() {
+    return _new_MutexNetStatus();
+  }
+
+  late final _new_MutexNetStatusPtr =
+      _lookup<ffi.NativeFunction<wire_MutexNetStatus Function()>>(
+          'new_MutexNetStatus');
+  late final _new_MutexNetStatus =
+      _new_MutexNetStatusPtr.asFunction<wire_MutexNetStatus Function()>();
+
   wire_MutexOptionHandle new_MutexOptionHandle() {
     return _new_MutexOptionHandle();
   }
@@ -845,6 +958,21 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_runtime_0 = _new_box_autoadd_runtime_0Ptr
       .asFunction<ffi.Pointer<wire_Runtime> Function()>();
 
+  ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
+    int len,
+  ) {
+    return _new_uint_8_list_0(
+      len,
+    );
+  }
+
+  late final _new_uint_8_list_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_uint_8_list> Function(
+              ffi.Int32)>>('new_uint_8_list_0');
+  late final _new_uint_8_list_0 = _new_uint_8_list_0Ptr
+      .asFunction<ffi.Pointer<wire_uint_8_list> Function(int)>();
+
   void drop_opaque_MutexModel(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -872,6 +1000,35 @@ class NativeWire implements FlutterRustBridgeWireBase {
           ffi.Pointer<ffi.Void> Function(
               ffi.Pointer<ffi.Void>)>>('share_opaque_MutexModel');
   late final _share_opaque_MutexModel = _share_opaque_MutexModelPtr
+      .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
+
+  void drop_opaque_MutexNetStatus(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _drop_opaque_MutexNetStatus(
+      ptr,
+    );
+  }
+
+  late final _drop_opaque_MutexNetStatusPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'drop_opaque_MutexNetStatus');
+  late final _drop_opaque_MutexNetStatus = _drop_opaque_MutexNetStatusPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Void> share_opaque_MutexNetStatus(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _share_opaque_MutexNetStatus(
+      ptr,
+    );
+  }
+
+  late final _share_opaque_MutexNetStatusPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(
+              ffi.Pointer<ffi.Void>)>>('share_opaque_MutexNetStatus');
+  late final _share_opaque_MutexNetStatus = _share_opaque_MutexNetStatusPtr
       .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
 
   void drop_opaque_MutexOptionHandle(
@@ -964,17 +1121,30 @@ final class wire_MutexOptionHandle extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ptr;
 }
 
+final class wire_MutexNetStatus extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ptr;
+}
+
 final class wire_Runtime extends ffi.Struct {
   external wire_MutexOptionMpscReceiverAction rx;
 
   external wire_MutexModel model;
 
   external wire_MutexOptionHandle handle;
+
+  external wire_MutexNetStatus init_status;
 }
 
 final class wire_NetStateWrap extends ffi.Struct {
   @ffi.Int32()
   external int field0;
+}
+
+final class wire_uint_8_list extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint8> ptr;
+
+  @ffi.Int32()
+  external int len;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<
