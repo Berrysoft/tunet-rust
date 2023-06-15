@@ -98,8 +98,8 @@ impl Runtime {
                     model.update = Some(Box::new(move |msg| {
                         sink.add(UpdateMsgWrap(msg));
                     }));
+                    model.queue(Action::Status);
                     model.queue(Action::Timer);
-                    model.queue(Action::State(Some(NetState::Auth4)));
                 }
                 while let Some(action) = rx.recv().await {
                     log::info!("[tunet-flutter/native] received action: {:?}", action);
@@ -126,11 +126,23 @@ impl Runtime {
         self.queue(Action::Flux);
     }
 
+    pub fn queue_state(&self, s: Option<NetStateWrap>) {
+        self.queue(Action::State(s.map(|s| s.0)))
+    }
+
+    pub fn log_busy(&self) -> bool {
+        self.model.lock().unwrap().log_busy()
+    }
+
     pub fn flux(&self) -> NetFlux {
         self.model.lock().unwrap().flux.clone()
     }
 
     pub fn state(&self) -> NetStateWrap {
         NetStateWrap(self.model.lock().unwrap().state)
+    }
+
+    pub fn status(&self) -> String {
+        self.model.lock().unwrap().status.to_string()
     }
 }

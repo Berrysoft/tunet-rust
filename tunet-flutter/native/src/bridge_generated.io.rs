@@ -32,6 +32,20 @@ pub extern "C" fn wire_queue_flux__method__Runtime(port_: i64, that: *mut wire_R
 }
 
 #[no_mangle]
+pub extern "C" fn wire_queue_state__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    s: *mut wire_NetStateWrap,
+) {
+    wire_queue_state__method__Runtime_impl(port_, that, s)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_log_busy__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_log_busy__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_flux__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_flux__method__Runtime_impl(port_, that)
 }
@@ -39,6 +53,11 @@ pub extern "C" fn wire_flux__method__Runtime(port_: i64, that: *mut wire_Runtime
 #[no_mangle]
 pub extern "C" fn wire_state__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_state__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_status__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_status__method__Runtime_impl(port_, that)
 }
 
 // Section: allocate functions
@@ -56,6 +75,11 @@ pub extern "C" fn new_MutexOptionHandle() -> wire_MutexOptionHandle {
 #[no_mangle]
 pub extern "C" fn new_MutexOptionMpscReceiverAction() -> wire_MutexOptionMpscReceiverAction {
     wire_MutexOptionMpscReceiverAction::new_with_null_ptr()
+}
+
+#[no_mangle]
+pub extern "C" fn new_box_autoadd_net_state_wrap_0() -> *mut wire_NetStateWrap {
+    support::new_leak_box_ptr(wire_NetStateWrap::new_with_null_ptr())
 }
 
 #[no_mangle]
@@ -129,12 +153,25 @@ impl Wire2Api<RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>>
         unsafe { support::opaque_from_dart(self.ptr as _) }
     }
 }
+impl Wire2Api<NetStateWrap> for *mut wire_NetStateWrap {
+    fn wire2api(self) -> NetStateWrap {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<NetStateWrap>::wire2api(*wrap).into()
+    }
+}
 impl Wire2Api<Runtime> for *mut wire_Runtime {
     fn wire2api(self) -> Runtime {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
         Wire2Api::<Runtime>::wire2api(*wrap).into()
     }
 }
+
+impl Wire2Api<NetStateWrap> for wire_NetStateWrap {
+    fn wire2api(self) -> NetStateWrap {
+        NetStateWrap(self.field0.wire2api())
+    }
+}
+
 impl Wire2Api<Runtime> for wire_Runtime {
     fn wire2api(self) -> Runtime {
         Runtime {
@@ -163,6 +200,12 @@ pub struct wire_MutexOptionHandle {
 #[derive(Clone)]
 pub struct wire_MutexOptionMpscReceiverAction {
     ptr: *const core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_NetStateWrap {
+    field0: i32,
 }
 
 #[repr(C)]
@@ -204,6 +247,20 @@ impl NewWithNullPtr for wire_MutexOptionMpscReceiverAction {
         Self {
             ptr: core::ptr::null(),
         }
+    }
+}
+
+impl NewWithNullPtr for wire_NetStateWrap {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            field0: Default::default(),
+        }
+    }
+}
+
+impl Default for wire_NetStateWrap {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
     }
 }
 

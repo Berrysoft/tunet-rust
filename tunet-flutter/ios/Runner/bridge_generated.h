@@ -27,6 +27,10 @@ typedef struct wire_Runtime {
   struct wire_MutexOptionHandle handle;
 } wire_Runtime;
 
+typedef struct wire_NetStateWrap {
+  int32_t field0;
+} wire_NetStateWrap;
+
 typedef struct DartCObject *WireSyncReturn;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
@@ -51,15 +55,25 @@ void wire_queue_logout__method__Runtime(int64_t port_, struct wire_Runtime *that
 
 void wire_queue_flux__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
+void wire_queue_state__method__Runtime(int64_t port_,
+                                       struct wire_Runtime *that,
+                                       struct wire_NetStateWrap *s);
+
+void wire_log_busy__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
 void wire_flux__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 void wire_state__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
+void wire_status__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 struct wire_MutexModel new_MutexModel(void);
 
 struct wire_MutexOptionHandle new_MutexOptionHandle(void);
 
 struct wire_MutexOptionMpscReceiverAction new_MutexOptionMpscReceiverAction(void);
+
+struct wire_NetStateWrap *new_box_autoadd_net_state_wrap_0(void);
 
 struct wire_Runtime *new_box_autoadd_runtime_0(void);
 
@@ -85,11 +99,15 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_queue_login__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_logout__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_flux__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_queue_state__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_log_busy__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_flux__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_state__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_status__method__Runtime);
     dummy_var ^= ((int64_t) (void*) new_MutexModel);
     dummy_var ^= ((int64_t) (void*) new_MutexOptionHandle);
     dummy_var ^= ((int64_t) (void*) new_MutexOptionMpscReceiverAction);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_net_state_wrap_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_0);
     dummy_var ^= ((int64_t) (void*) drop_opaque_MutexModel);
     dummy_var ^= ((int64_t) (void*) share_opaque_MutexModel);

@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               Expanded(
-                child: TextButton(
+                child: ElevatedButton(
                   onPressed: () {
                     runtime.queueLogin();
                   },
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Expanded(
-                child: TextButton(
+                child: ElevatedButton(
                   onPressed: () {
                     runtime.queueLogout();
                   },
@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Expanded(
-                child: TextButton(
+                child: ElevatedButton(
                   onPressed: () {
                     runtime.queueFlux();
                   },
@@ -140,11 +140,11 @@ class _HomePageState extends State<HomePage> {
                     future: api.fluxToString(f: flux),
                     builder: (context, snap) {
                       final s = snap.data;
-                      if (s == null) {
-                        return Text('流量：', style: style);
-                      } else {
-                        return Text('流量：{}'.format(s), style: style);
+                      String text = '流量：';
+                      if (s != null) {
+                        text += s;
                       }
+                      return Text(text, style: style);
                     },
                   ),
                   Text(

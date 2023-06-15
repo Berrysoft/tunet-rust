@@ -5,20 +5,21 @@ export 'ffi.dart';
 class ManagedRuntime {
   final Runtime runtime;
 
-  final StreamController<NetState> stateSink;
-  final StreamController<NetFlux> netFluxSink;
+  late StreamController<bool> logBusySink;
+  late StreamController<NetFlux> netFluxSink;
+  late StreamController<NetState> stateSink;
+  late StreamController<String> statusSink;
 
-  const ManagedRuntime(
-      {required this.runtime,
-      required this.stateSink,
-      required this.netFluxSink});
+  ManagedRuntime({required this.runtime}) {
+    logBusySink = StreamController();
+    netFluxSink = StreamController();
+    stateSink = StreamController();
+    statusSink = StreamController();
+  }
 
   static Future<ManagedRuntime> newRuntime() async {
     final runtime = await Runtime.newRuntime(bridge: api);
-    return ManagedRuntime(
-        runtime: runtime,
-        stateSink: StreamController(),
-        netFluxSink: StreamController());
+    return ManagedRuntime(runtime: runtime);
   }
 
   Future<void> start() async {
@@ -26,11 +27,19 @@ class ManagedRuntime {
       final msg = msgw.field0;
       switch (msg) {
         case UpdateMsg.State:
-          stateSink.add((await runtime.state()).field0);
           await runtime.queueFlux();
+          stateSink.add((await runtime.state()).field0);
+          break;
+        case UpdateMsg.Status:
+          await runtime.queueState(
+              s: const NetStateWrap(field0: NetState.Auth4));
+          statusSink.add((await runtime.status()));
           break;
         case UpdateMsg.Flux:
           netFluxSink.add(await runtime.flux());
+          break;
+        case UpdateMsg.LogBusy:
+          logBusySink.add(await runtime.logBusy());
           break;
         default:
           break;

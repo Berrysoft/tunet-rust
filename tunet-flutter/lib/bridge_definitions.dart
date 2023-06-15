@@ -34,6 +34,15 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kQueueFluxMethodRuntimeConstMeta;
 
+  Future<void> queueStateMethodRuntime(
+      {required Runtime that, NetStateWrap? s, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueStateMethodRuntimeConstMeta;
+
+  Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta;
+
   Future<NetFlux> fluxMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kFluxMethodRuntimeConstMeta;
@@ -42,6 +51,10 @@ abstract class Native {
       {required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kStateMethodRuntimeConstMeta;
+
+  Future<String> statusMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta;
 
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
@@ -186,11 +199,25 @@ class Runtime {
         that: this,
       );
 
+  Future<void> queueState({NetStateWrap? s, dynamic hint}) =>
+      bridge.queueStateMethodRuntime(
+        that: this,
+        s: s,
+      );
+
+  Future<bool> logBusy({dynamic hint}) => bridge.logBusyMethodRuntime(
+        that: this,
+      );
+
   Future<NetFlux> flux({dynamic hint}) => bridge.fluxMethodRuntime(
         that: this,
       );
 
   Future<NetStateWrap> state({dynamic hint}) => bridge.stateMethodRuntime(
+        that: this,
+      );
+
+  Future<String> status({dynamic hint}) => bridge.statusMethodRuntime(
         that: this,
       );
 }

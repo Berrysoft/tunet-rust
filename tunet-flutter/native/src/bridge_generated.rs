@@ -105,6 +105,40 @@ fn wire_queue_flux__method__Runtime_impl(
         },
     )
 }
+fn wire_queue_state__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    s: impl Wire2Api<Option<NetStateWrap>> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_state__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_s = s.wire2api();
+            move |task_callback| Ok(Runtime::queue_state(&api_that, api_s))
+        },
+    )
+}
+fn wire_log_busy__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "log_busy__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::log_busy(&api_that))
+        },
+    )
+}
 fn wire_flux__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -128,6 +162,22 @@ fn wire_state__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runt
         move || {
             let api_that = that.wire2api();
             move |task_callback| Ok(Runtime::state(&api_that))
+        },
+    )
+}
+fn wire_status__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "status__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::status(&api_that))
         },
     )
 }
@@ -208,6 +258,23 @@ where
 {
     fn wire2api(self) -> Option<T> {
         (!self.is_null()).then(|| self.wire2api())
+    }
+}
+
+impl Wire2Api<i32> for i32 {
+    fn wire2api(self) -> i32 {
+        self
+    }
+}
+impl Wire2Api<NetState> for i32 {
+    fn wire2api(self) -> NetState {
+        match self {
+            0 => NetState::Unknown,
+            1 => NetState::Net,
+            2 => NetState::Auth4,
+            3 => NetState::Auth6,
+            _ => unreachable!("Invalid variant for NetState: {}", self),
+        }
     }
 }
 

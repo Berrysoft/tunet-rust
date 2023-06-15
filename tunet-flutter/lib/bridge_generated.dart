@@ -133,6 +133,44 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<void> queueStateMethodRuntime(
+      {required Runtime that, NetStateWrap? s, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    var arg1 = _platform.api2wire_opt_box_autoadd_net_state_wrap(s);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_queue_state__method__Runtime(port_, arg0, arg1),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueStateMethodRuntimeConstMeta,
+      argValues: [that, s],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueStateMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_state__method__Runtime",
+        argNames: ["that", "s"],
+      );
+
+  Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_log_busy__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_bool,
+      constMeta: kLogBusyMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "log_busy__method__Runtime",
+        argNames: ["that"],
+      );
+
   Future<NetFlux> fluxMethodRuntime({required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -167,6 +205,24 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kStateMethodRuntimeConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "state__method__Runtime",
+        argNames: ["that"],
+      );
+
+  Future<String> statusMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_status__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_String,
+      constMeta: kStatusMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "status__method__Runtime",
         argNames: ["that"],
       );
 
@@ -222,6 +278,10 @@ class NativeImpl implements Native {
     return Balance(
       field0: _wire2api_f64(arr[0]),
     );
+  }
+
+  bool _wire2api_bool(dynamic raw) {
+    return raw as bool;
   }
 
   double _wire2api_f64(dynamic raw) {
@@ -323,6 +383,16 @@ class NativeImpl implements Native {
 
 // Section: api2wire
 
+@protected
+int api2wire_i32(int raw) {
+  return raw;
+}
+
+@protected
+int api2wire_net_state(NetState raw) {
+  return api2wire_i32(raw.index);
+}
+
 // Section: finalizer
 
 class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
@@ -353,10 +423,24 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_NetStateWrap> api2wire_box_autoadd_net_state_wrap(
+      NetStateWrap raw) {
+    final ptr = inner.new_box_autoadd_net_state_wrap_0();
+    _api_fill_to_wire_net_state_wrap(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_Runtime> api2wire_box_autoadd_runtime(Runtime raw) {
     final ptr = inner.new_box_autoadd_runtime_0();
     _api_fill_to_wire_runtime(raw, ptr.ref);
     return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_NetStateWrap> api2wire_opt_box_autoadd_net_state_wrap(
+      NetStateWrap? raw) {
+    return raw == null ? ffi.nullptr : api2wire_box_autoadd_net_state_wrap(raw);
   }
 
   @protected
@@ -394,9 +478,25 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     wireObj.ptr = apiObj.shareOrMove();
   }
 
+  void _api_fill_to_wire_box_autoadd_net_state_wrap(
+      NetStateWrap apiObj, ffi.Pointer<wire_NetStateWrap> wireObj) {
+    _api_fill_to_wire_net_state_wrap(apiObj, wireObj.ref);
+  }
+
   void _api_fill_to_wire_box_autoadd_runtime(
       Runtime apiObj, ffi.Pointer<wire_Runtime> wireObj) {
     _api_fill_to_wire_runtime(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_net_state_wrap(
+      NetStateWrap apiObj, wire_NetStateWrap wireObj) {
+    wireObj.field0 = api2wire_net_state(apiObj.field0);
+  }
+
+  void _api_fill_to_wire_opt_box_autoadd_net_state_wrap(
+      NetStateWrap? apiObj, ffi.Pointer<wire_NetStateWrap> wireObj) {
+    if (apiObj != null)
+      _api_fill_to_wire_box_autoadd_net_state_wrap(apiObj, wireObj);
   }
 
   void _api_fill_to_wire_runtime(Runtime apiObj, wire_Runtime wireObj) {
@@ -603,6 +703,46 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_queue_flux__method__RuntimePtr
           .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
+  void wire_queue_state__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+    ffi.Pointer<wire_NetStateWrap> s,
+  ) {
+    return _wire_queue_state__method__Runtime(
+      port_,
+      that,
+      s,
+    );
+  }
+
+  late final _wire_queue_state__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>,
+                  ffi.Pointer<wire_NetStateWrap>)>>(
+      'wire_queue_state__method__Runtime');
+  late final _wire_queue_state__method__Runtime =
+      _wire_queue_state__method__RuntimePtr.asFunction<
+          void Function(int, ffi.Pointer<wire_Runtime>,
+              ffi.Pointer<wire_NetStateWrap>)>();
+
+  void wire_log_busy__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_log_busy__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_log_busy__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_log_busy__method__Runtime');
+  late final _wire_log_busy__method__Runtime =
+      _wire_log_busy__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
   void wire_flux__method__Runtime(
     int port_,
     ffi.Pointer<wire_Runtime> that,
@@ -637,6 +777,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_state__method__Runtime = _wire_state__method__RuntimePtr
       .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
+  void wire_status__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_status__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_status__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_status__method__Runtime');
+  late final _wire_status__method__Runtime = _wire_status__method__RuntimePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
   wire_MutexModel new_MutexModel() {
     return _new_MutexModel();
   }
@@ -666,6 +823,17 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_MutexOptionMpscReceiverAction =
       _new_MutexOptionMpscReceiverActionPtr
           .asFunction<wire_MutexOptionMpscReceiverAction Function()>();
+
+  ffi.Pointer<wire_NetStateWrap> new_box_autoadd_net_state_wrap_0() {
+    return _new_box_autoadd_net_state_wrap_0();
+  }
+
+  late final _new_box_autoadd_net_state_wrap_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_NetStateWrap> Function()>>(
+          'new_box_autoadd_net_state_wrap_0');
+  late final _new_box_autoadd_net_state_wrap_0 =
+      _new_box_autoadd_net_state_wrap_0Ptr
+          .asFunction<ffi.Pointer<wire_NetStateWrap> Function()>();
 
   ffi.Pointer<wire_Runtime> new_box_autoadd_runtime_0() {
     return _new_box_autoadd_runtime_0();
@@ -802,6 +970,11 @@ final class wire_Runtime extends ffi.Struct {
   external wire_MutexModel model;
 
   external wire_MutexOptionHandle handle;
+}
+
+final class wire_NetStateWrap extends ffi.Struct {
+  @ffi.Int32()
+  external int field0;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<
