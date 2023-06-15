@@ -8,6 +8,8 @@ import 'package:duration/duration.dart';
 import 'runtime.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   if (defaultTargetPlatform == TargetPlatform.android) {
     await SystemTheme.accentColor.load();
   }

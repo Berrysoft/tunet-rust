@@ -130,10 +130,8 @@ impl Model {
             }
             Action::Status(status) => {
                 let status = status.unwrap_or_else(NetStatus::current);
-                if status != self.status {
-                    self.status = status;
-                    self.update(UpdateMsg::Status);
-                }
+                self.status = status;
+                self.update(UpdateMsg::Status);
             }
             Action::Timer => {
                 self.spawn_timer();

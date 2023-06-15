@@ -145,12 +145,13 @@ impl Runtime {
         let status = match t {
             NetStatusSimp::Unknown => NetStatus::Unknown,
             NetStatusSimp::Wwan => NetStatus::Wwan,
-            NetStatusSimp::Wlan => NetStatus::Wlan(
-                ssid.map(|s| s.trim_matches('\"').to_string())
-                    .unwrap_or_default(),
-            ),
+            NetStatusSimp::Wlan => match ssid {
+                Some(s) => NetStatus::Wlan(s.trim_matches('\"').to_string()),
+                None => NetStatus::Unknown,
+            },
             NetStatusSimp::Lan => NetStatus::Lan,
         };
+        log::info!("Queue status: {:?}", status);
         *self.init_status.lock().unwrap() = status;
     }
 
