@@ -1,10 +1,17 @@
 import 'package:duration/locale.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:system_theme/system_theme.dart';
+import 'package:material_color_generator/material_color_generator.dart';
 import 'package:format/format.dart';
 import 'package:duration/duration.dart';
 import 'runtime.dart';
 
 void main() async {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await SystemTheme.accentColor.load();
+  }
+
   final runtime = await ManagedRuntime.newRuntime();
   runtime.start();
   runApp(MyApp(runtime: runtime));
@@ -20,7 +27,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '清华校园网',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        brightness: PlatformDispatcher.instance.platformBrightness,
+        primarySwatch:
+            generateMaterialColor(color: SystemTheme.accentColor.accent),
       ),
       home: MyHomePage(runtime: runtime),
     );
