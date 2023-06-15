@@ -68,7 +68,7 @@ impl Runtime {
             android_logger::Config::default().with_max_level(log::LevelFilter::Trace),
         );
         #[cfg(target_os = "ios")]
-        oslog::OsLogger::new("com.berrysoft.tunet.flutter")
+        oslog::OsLogger::new("com.berrysoft.tunet_flutter")
             .level_filter(log::LevelFilter::Trace)
             .init()?;
 
