@@ -13,11 +13,13 @@ class ManagedRuntime {
   late StreamController<NetFlux> netFluxSink;
   late StreamController<NetState> stateSink;
   late StreamController<String> statusSink;
+  late StreamController<DetailDailyWrap> dailySink;
 
   late Stream<bool> logBusyStream;
   late Stream<NetFlux> netFluxStream;
   late Stream<NetState> stateStream;
   late Stream<String> statusStream;
+  late Stream<DetailDailyWrap> dailyStream;
 
   ManagedRuntime({required this.runtime}) {
     logBusySink = StreamController();
@@ -32,6 +34,9 @@ class ManagedRuntime {
 
     statusSink = StreamController();
     statusStream = statusSink.stream.asBroadcastStream();
+
+    dailySink = StreamController();
+    dailyStream = dailySink.stream.asBroadcastStream();
   }
 
   static Future<ManagedRuntime> newRuntime() async {
@@ -55,10 +60,14 @@ class ManagedRuntime {
         sendStatus = NetStatusSimp.Lan;
         break;
     }
-    await runtime.queueStatus(t: sendStatus, ssid: ssid);
+    await runtime.initializeStatus(t: sendStatus, ssid: ssid);
 
     await for (final msg in runtime.start()) {
       switch (msg.field0) {
+        case UpdateMsg.Credential:
+          await runtime.queueState();
+          await runtime.queueDetails();
+          break;
         case UpdateMsg.State:
           await runtime.queueFlux();
           stateSink.add(await state());
@@ -69,6 +78,9 @@ class ManagedRuntime {
           break;
         case UpdateMsg.Flux:
           netFluxSink.add(await flux());
+          break;
+        case UpdateMsg.Details:
+          dailySink.add(await detailDaily());
           break;
         case UpdateMsg.LogBusy:
           logBusySink.add(await logBusy());
@@ -81,6 +93,8 @@ class ManagedRuntime {
 
   Future<void> queueState({NetState? s}) =>
       runtime.queueState(s: s != null ? NetStateWrap(field0: s) : null);
+  Future<void> queueCredential({required String u, required String p}) =>
+      runtime.queueCredential(u: u, p: p);
 
   Future<void> queueLogin() => runtime.queueLogin();
   Future<void> queueLogout() => runtime.queueLogout();
@@ -90,4 +104,5 @@ class ManagedRuntime {
   Future<String> status() => runtime.status();
   Future<NetFlux> flux() => runtime.flux();
   Future<bool> logBusy() => runtime.logBusy();
+  Future<DetailDailyWrap> detailDaily() => runtime.detailDaily();
 }

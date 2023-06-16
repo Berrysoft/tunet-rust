@@ -1,12 +1,14 @@
 use anyhow::Result;
+use chrono::Datelike;
 use flutter_rust_bridge::{frb, RustOpaque, StreamSink};
 
 pub use netstatus::NetStatus;
 pub use std::sync::{Arc, Mutex};
 pub use tokio::{runtime::Handle, sync::mpsc};
 pub use tunet_helper::{
-    Balance, Duration as NewDuration, Flux, NaiveDuration as Duration, NetFlux, NetState,
+    Balance, Duration as NewDuration, Flux, NaiveDate, NaiveDuration as Duration, NetFlux, NetState,
 };
+use tunet_model::DetailDaily;
 pub use tunet_model::{Action, Model, UpdateMsg};
 
 #[frb(mirror(UpdateMsg))]
@@ -63,6 +65,18 @@ pub struct _NewDuration(pub Duration);
 #[frb(mirror(Balance))]
 pub struct _Balance(pub f64);
 
+pub struct DetailDailyPoint {
+    pub day: u32,
+    pub flux: Flux,
+}
+
+pub struct DetailDailyWrap {
+    pub details: Vec<DetailDailyPoint>,
+    pub now_month: u32,
+    pub now_day: u32,
+    pub max_flux: Flux,
+}
+
 pub struct Runtime {
     pub rx: RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>,
     pub model: RustOpaque<Mutex<Model>>,
@@ -97,6 +111,19 @@ impl Runtime {
         })
     }
 
+    pub fn initialize_status(&self, t: NetStatusSimp, ssid: Option<String>) {
+        let status = match t {
+            NetStatusSimp::Unknown => NetStatus::Unknown,
+            NetStatusSimp::Wwan => NetStatus::Wwan,
+            NetStatusSimp::Wlan => match ssid {
+                Some(s) => NetStatus::Wlan(s),
+                None => NetStatus::Unknown,
+            },
+            NetStatusSimp::Lan => NetStatus::Lan,
+        };
+        *self.init_status.lock().unwrap() = status;
+    }
+
     pub fn start(&self, sink: StreamSink<UpdateMsgWrap>) {
         let model = self.model.clone();
         let mut rx = self.rx.lock().unwrap().take().unwrap();
@@ -115,8 +142,9 @@ impl Runtime {
                     model.update = Some(Box::new(move |msg| {
                         sink.add(UpdateMsgWrap(msg));
                     }));
-                    model.queue(Action::Timer);
+
                     model.queue(Action::Status(Some(status)));
+                    model.queue(Action::Timer);
                 }
                 while let Some(action) = rx.recv().await {
                     log::info!("received action: {:?}", action);
@@ -129,6 +157,10 @@ impl Runtime {
     fn queue(&self, a: Action) {
         let _guard = self.handle.lock().unwrap().as_ref().unwrap().enter();
         self.model.lock().unwrap().queue(a);
+    }
+
+    pub fn queue_credential(&self, u: String, p: String) {
+        self.queue(Action::Credential(u, p));
     }
 
     pub fn queue_login(&self) {
@@ -147,17 +179,8 @@ impl Runtime {
         self.queue(Action::State(s.map(|s| s.0)));
     }
 
-    pub fn queue_status(&self, t: NetStatusSimp, ssid: Option<String>) {
-        let status = match t {
-            NetStatusSimp::Unknown => NetStatus::Unknown,
-            NetStatusSimp::Wwan => NetStatus::Wwan,
-            NetStatusSimp::Wlan => match ssid {
-                Some(s) => NetStatus::Wlan(s),
-                None => NetStatus::Unknown,
-            },
-            NetStatusSimp::Lan => NetStatus::Lan,
-        };
-        *self.init_status.lock().unwrap() = status;
+    pub fn queue_details(&self) {
+        self.queue(Action::Details);
     }
 
     pub fn log_busy(&self) -> bool {
@@ -174,5 +197,25 @@ impl Runtime {
 
     pub fn status(&self) -> String {
         self.model.lock().unwrap().status.to_string()
+    }
+
+    pub fn detail_daily(&self) -> DetailDailyWrap {
+        let data = {
+            let model = self.model.lock().unwrap();
+            DetailDaily::new(&model.details)
+        };
+        DetailDailyWrap {
+            details: data
+                .details
+                .into_iter()
+                .map(|(date, flux)| DetailDailyPoint {
+                    day: date.day(),
+                    flux,
+                })
+                .collect(),
+            now_month: data.now.month(),
+            now_day: data.now.day(),
+            max_flux: data.max_flux,
+        }
     }
 }

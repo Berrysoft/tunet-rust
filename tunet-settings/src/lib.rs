@@ -38,19 +38,20 @@ pub struct SettingsReader {
 
 impl SettingsReader {
     pub fn new() -> SettingsResult<Self> {
-        Ok(Self::with_path(Self::file_path()?))
+        Ok(Self::with_dir(Self::file_dir()?))
     }
 
-    fn file_path() -> SettingsResult<PathBuf> {
+    fn file_dir() -> SettingsResult<PathBuf> {
         let mut p = config_dir().ok_or(SettingsError::ConfigDirNotFound)?;
         p.push(TUNET_NAME);
-        p.push("settings");
-        p.set_extension("json");
         Ok(p)
     }
 
-    pub fn with_path(path: impl Into<PathBuf>) -> Self {
-        Self { path: path.into() }
+    pub fn with_dir(path: impl Into<PathBuf>) -> Self {
+        let mut path = path.into();
+        path.push("settings");
+        path.set_extension("json");
+        Self { path }
     }
 
     pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {

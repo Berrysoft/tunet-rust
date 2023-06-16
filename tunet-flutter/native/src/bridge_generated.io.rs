@@ -12,8 +12,28 @@ pub extern "C" fn wire_new__static_method__Runtime(port_: i64) {
 }
 
 #[no_mangle]
+pub extern "C" fn wire_initialize_status__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    t: i32,
+    ssid: *mut wire_uint_8_list,
+) {
+    wire_initialize_status__method__Runtime_impl(port_, that, t, ssid)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_start__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_start__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_queue_credential__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    u: *mut wire_uint_8_list,
+    p: *mut wire_uint_8_list,
+) {
+    wire_queue_credential__method__Runtime_impl(port_, that, u, p)
 }
 
 #[no_mangle]
@@ -41,13 +61,8 @@ pub extern "C" fn wire_queue_state__method__Runtime(
 }
 
 #[no_mangle]
-pub extern "C" fn wire_queue_status__method__Runtime(
-    port_: i64,
-    that: *mut wire_Runtime,
-    t: i32,
-    ssid: *mut wire_uint_8_list,
-) {
-    wire_queue_status__method__Runtime_impl(port_, that, t, ssid)
+pub extern "C" fn wire_queue_details__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_queue_details__method__Runtime_impl(port_, that)
 }
 
 #[no_mangle]
@@ -68,6 +83,11 @@ pub extern "C" fn wire_state__method__Runtime(port_: i64, that: *mut wire_Runtim
 #[no_mangle]
 pub extern "C" fn wire_status__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_status__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_detail_daily__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_detail_daily__method__Runtime_impl(port_, that)
 }
 
 // Section: allocate functions

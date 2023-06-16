@@ -44,6 +44,26 @@ fn wire_new__static_method__Runtime_impl(port_: MessagePort) {
         move || move |task_callback| Runtime::new(),
     )
 }
+fn wire_initialize_status__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    t: impl Wire2Api<NetStatusSimp> + UnwindSafe,
+    ssid: impl Wire2Api<Option<String>> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "initialize_status__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_t = t.wire2api();
+            let api_ssid = ssid.wire2api();
+            move |task_callback| Ok(Runtime::initialize_status(&api_that, api_t, api_ssid))
+        },
+    )
+}
 fn wire_start__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -54,6 +74,26 @@ fn wire_start__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runt
         move || {
             let api_that = that.wire2api();
             move |task_callback| Ok(Runtime::start(&api_that, task_callback.stream_sink()))
+        },
+    )
+}
+fn wire_queue_credential__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    u: impl Wire2Api<String> + UnwindSafe,
+    p: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_credential__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_u = u.wire2api();
+            let api_p = p.wire2api();
+            move |task_callback| Ok(Runtime::queue_credential(&api_that, api_u, api_p))
         },
     )
 }
@@ -123,23 +163,19 @@ fn wire_queue_state__method__Runtime_impl(
         },
     )
 }
-fn wire_queue_status__method__Runtime_impl(
+fn wire_queue_details__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
-    t: impl Wire2Api<NetStatusSimp> + UnwindSafe,
-    ssid: impl Wire2Api<Option<String>> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "queue_status__method__Runtime",
+            debug_name: "queue_details__method__Runtime",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
             let api_that = that.wire2api();
-            let api_t = t.wire2api();
-            let api_ssid = ssid.wire2api();
-            move |task_callback| Ok(Runtime::queue_status(&api_that, api_t, api_ssid))
+            move |task_callback| Ok(Runtime::queue_details(&api_that))
         },
     )
 }
@@ -198,6 +234,22 @@ fn wire_status__method__Runtime_impl(
         move || {
             let api_that = that.wire2api();
             move |task_callback| Ok(Runtime::status(&api_that))
+        },
+    )
+}
+fn wire_detail_daily__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "detail_daily__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::detail_daily(&api_that))
         },
     )
 }
@@ -329,6 +381,26 @@ impl support::IntoDart for mirror_Balance {
     }
 }
 impl support::IntoDartExceptPrimitive for mirror_Balance {}
+
+impl support::IntoDart for DetailDailyPoint {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.day.into_dart(), mirror_Flux(self.flux).into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for DetailDailyPoint {}
+
+impl support::IntoDart for DetailDailyWrap {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.details.into_dart(),
+            self.now_month.into_dart(),
+            self.now_day.into_dart(),
+            mirror_Flux(self.max_flux).into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for DetailDailyWrap {}
 
 impl support::IntoDart for mirror_Flux {
     fn into_dart(self) -> support::DartAbi {

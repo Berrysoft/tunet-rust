@@ -17,10 +17,26 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kNewStaticMethodRuntimeConstMeta;
 
+  Future<void> initializeStatusMethodRuntime(
+      {required Runtime that,
+      required NetStatusSimp t,
+      String? ssid,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kInitializeStatusMethodRuntimeConstMeta;
+
   Stream<UpdateMsgWrap> startMethodRuntime(
       {required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kStartMethodRuntimeConstMeta;
+
+  Future<void> queueCredentialMethodRuntime(
+      {required Runtime that,
+      required String u,
+      required String p,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueCredentialMethodRuntimeConstMeta;
 
   Future<void> queueLoginMethodRuntime({required Runtime that, dynamic hint});
 
@@ -39,13 +55,9 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kQueueStateMethodRuntimeConstMeta;
 
-  Future<void> queueStatusMethodRuntime(
-      {required Runtime that,
-      required NetStatusSimp t,
-      String? ssid,
-      dynamic hint});
+  Future<void> queueDetailsMethodRuntime({required Runtime that, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kQueueStatusMethodRuntimeConstMeta;
+  FlutterRustBridgeTaskConstMeta get kQueueDetailsMethodRuntimeConstMeta;
 
   Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint});
 
@@ -63,6 +75,11 @@ abstract class Native {
   Future<String> statusMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta;
+
+  Future<DetailDailyWrap> detailDailyMethodRuntime(
+      {required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kDetailDailyMethodRuntimeConstMeta;
 
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
@@ -149,6 +166,30 @@ class Balance {
   });
 }
 
+class DetailDailyPoint {
+  final int day;
+  final Flux flux;
+
+  const DetailDailyPoint({
+    required this.day,
+    required this.flux,
+  });
+}
+
+class DetailDailyWrap {
+  final List<DetailDailyPoint> details;
+  final int nowMonth;
+  final int nowDay;
+  final Flux maxFlux;
+
+  const DetailDailyWrap({
+    required this.details,
+    required this.nowMonth,
+    required this.nowDay,
+    required this.maxFlux,
+  });
+}
+
 class Flux {
   final int field0;
 
@@ -219,8 +260,24 @@ class Runtime {
   static Future<Runtime> newRuntime({required Native bridge, dynamic hint}) =>
       bridge.newStaticMethodRuntime(hint: hint);
 
+  Future<void> initializeStatus(
+          {required NetStatusSimp t, String? ssid, dynamic hint}) =>
+      bridge.initializeStatusMethodRuntime(
+        that: this,
+        t: t,
+        ssid: ssid,
+      );
+
   Stream<UpdateMsgWrap> start({dynamic hint}) => bridge.startMethodRuntime(
         that: this,
+      );
+
+  Future<void> queueCredential(
+          {required String u, required String p, dynamic hint}) =>
+      bridge.queueCredentialMethodRuntime(
+        that: this,
+        u: u,
+        p: p,
       );
 
   Future<void> queueLogin({dynamic hint}) => bridge.queueLoginMethodRuntime(
@@ -241,12 +298,8 @@ class Runtime {
         s: s,
       );
 
-  Future<void> queueStatus(
-          {required NetStatusSimp t, String? ssid, dynamic hint}) =>
-      bridge.queueStatusMethodRuntime(
+  Future<void> queueDetails({dynamic hint}) => bridge.queueDetailsMethodRuntime(
         that: this,
-        t: t,
-        ssid: ssid,
       );
 
   Future<bool> logBusy({dynamic hint}) => bridge.logBusyMethodRuntime(
@@ -262,6 +315,11 @@ class Runtime {
       );
 
   Future<String> status({dynamic hint}) => bridge.statusMethodRuntime(
+        that: this,
+      );
+
+  Future<DetailDailyWrap> detailDaily({dynamic hint}) =>
+      bridge.detailDailyMethodRuntime(
         that: this,
       );
 }

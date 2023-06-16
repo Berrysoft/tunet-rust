@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:system_theme/system_theme.dart';
 import 'runtime.dart';
 import 'views/home_page.dart';
+import 'views/detail_page.dart';
+import 'views/settings_page.dart';
 import 'views/about_page.dart';
 
 void main() async {
@@ -32,12 +34,14 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: DefaultTabController(
-        length: 2,
+        length: 4,
         child: Scaffold(
           appBar: AppBar(
             title: const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.home_rounded), text: '主页'),
+                Tab(icon: Icon(Icons.auto_graph_rounded), text: '明细'),
+                Tab(icon: Icon(Icons.settings_rounded), text: '设置'),
                 Tab(icon: Icon(Icons.help_outline_rounded), text: '关于'),
               ],
             ),
@@ -45,6 +49,8 @@ class MyApp extends StatelessWidget {
           body: TabBarView(
             children: [
               HomePage(runtime: runtime),
+              DetailPage(runtime: runtime),
+              SettingsPage(runtime: runtime),
               const AboutPage(),
             ],
           ),
