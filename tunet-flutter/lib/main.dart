@@ -2,7 +2,6 @@ import 'package:duration/locale.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:system_theme/system_theme.dart';
-import 'package:material_color_generator/material_color_generator.dart';
 import 'package:format/format.dart';
 import 'package:duration/duration.dart';
 import 'runtime.dart';
@@ -30,8 +29,8 @@ class MyApp extends StatelessWidget {
       title: '清华校园网',
       theme: ThemeData(
         brightness: PlatformDispatcher.instance.platformBrightness,
-        primarySwatch:
-            generateMaterialColor(color: SystemTheme.accentColor.accent),
+        colorSchemeSeed: SystemTheme.accentColor.accent,
+        useMaterial3: true,
       ),
       home: DefaultTabController(
         length: 1,
@@ -73,100 +72,130 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              StreamBuilder<NetState>(
-                stream: runtime.stateSink.stream,
-                builder: (context, snap) {
-                  final data = snap.data;
-                  if (data == null) {
-                    return const CircularProgressIndicator();
-                  }
-
-                  return DropdownButton<NetState>(
-                    items: [NetState.Net, NetState.Auth4, NetState.Auth6]
-                        .map((NetState s) {
-                      return DropdownMenuItem(value: s, child: Text(s.name));
-                    }).toList(),
-                    value: data,
-                    onChanged: (v) {},
-                  );
-                },
-              ),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    runtime.queueLogin();
-                  },
-                  child: const Text('登录'),
-                ),
-              ),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    runtime.queueLogout();
-                  },
-                  child: const Text('注销'),
-                ),
-              ),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    runtime.queueFlux();
-                  },
-                  child: const Text('刷新'),
-                ),
-              ),
-            ],
-          ),
-          StreamBuilder<NetFlux>(
-            stream: runtime.netFluxSink.stream,
+          StreamBuilder<bool>(
+            stream: runtime.logBusySink.stream,
             builder: (context, snap) {
-              final style = Theme.of(context).textTheme.bodyLarge;
-
-              final data = snap.data;
-              if (data == null) {
-                return const CircularProgressIndicator();
-              }
-              final username = data.username;
-              final flux = data.flux.field0;
-              final onlineTime = data.onlineTime.field0;
-              final balance = data.balance.field0;
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              final busy = snap.data ?? false;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Text('用户：$username', style: style),
-                  FutureBuilder<String>(
-                    future: api.fluxToString(f: flux),
-                    builder: (context, snap) {
-                      final s = snap.data;
-                      String text = '流量：';
-                      if (s != null) {
-                        text += s;
-                      }
-                      return Text(text, style: style);
-                    },
+                  IconButton.filled(
+                    onPressed: busy
+                        ? null
+                        : () {
+                            runtime.queueLogin();
+                          },
+                    icon: const Icon(Icons.login_rounded),
                   ),
-                  Text(
-                      '时长：{}'.format(prettyDuration(onlineTime,
-                          locale: const ChineseSimplifiedDurationLocale())),
-                      style: style),
-                  Text('余额：¥{:.2f}'.format(balance), style: style),
-                  StreamBuilder<String>(
-                    stream: runtime.statusSink.stream,
-                    builder: (context, snap) {
-                      final String? data = snap.data;
-                      if (data == null) {
-                        return const CircularProgressIndicator();
-                      }
-                      return Text('网络：$data', style: style);
-                    },
+                  IconButton.filled(
+                    onPressed: busy
+                        ? null
+                        : () {
+                            runtime.queueLogout();
+                          },
+                    icon: const Icon(Icons.logout_rounded),
+                  ),
+                  IconButton.filled(
+                    onPressed: busy
+                        ? null
+                        : () {
+                            runtime.queueFlux();
+                          },
+                    icon: const Icon(Icons.refresh_rounded),
                   ),
                 ],
               );
             },
+          ),
+          Card(
+            child: StreamBuilder<NetFlux>(
+              stream: runtime.netFluxSink.stream,
+              builder: (context, snap) {
+                final data = snap.data;
+                if (data == null) {
+                  return const CircularProgressIndicator();
+                }
+                final username = data.username;
+                final flux = data.flux.field0;
+                final onlineTime = data.onlineTime.field0;
+                final balance = data.balance.field0;
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.person_2_rounded),
+                      title: Text(username),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.sync_alt_rounded),
+                      title: FutureBuilder<String>(
+                        future: api.fluxToString(f: flux),
+                        builder: (context, snap) {
+                          final s = snap.data;
+                          if (s == null) {
+                            return const CircularProgressIndicator();
+                          }
+                          return Text(s);
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.timelapse_rounded),
+                      title: Text(
+                        prettyDuration(
+                          onlineTime,
+                          locale: const ChineseSimplifiedDurationLocale(),
+                        ),
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.account_balance_rounded),
+                      title: Text('¥{:.2f}'.format(balance)),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.signal_cellular_alt_rounded),
+                      title: StreamBuilder<String>(
+                        stream: runtime.statusSink.stream,
+                        builder: (context, snap) {
+                          final String? data = snap.data;
+                          if (data == null) {
+                            return const CircularProgressIndicator();
+                          }
+                          return Text(data);
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.pattern_rounded),
+                      title: StreamBuilder<NetState>(
+                        stream: runtime.stateSink.stream,
+                        builder: (context, snap) {
+                          final data = snap.data;
+                          if (data == null) {
+                            return const CircularProgressIndicator();
+                          }
+                          return Text(data.name);
+                        },
+                      ),
+                      trailing: PopupMenuButton<NetState>(
+                        onSelected: (value) {
+                          runtime.queueState(s: value);
+                        },
+                        itemBuilder: (context) => [
+                          NetState.Net,
+                          NetState.Auth4,
+                          NetState.Auth6
+                        ]
+                            .map((NetState s) =>
+                                PopupMenuItem(value: s, child: Text(s.name)))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),

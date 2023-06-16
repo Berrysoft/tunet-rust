@@ -16,6 +16,8 @@ class ManagedRuntime {
 
   ManagedRuntime({required this.runtime}) {
     logBusySink = StreamController();
+    logBusySink.add(false);
+
     netFluxSink = StreamController();
     stateSink = StreamController();
     statusSink = StreamController();
@@ -65,6 +67,9 @@ class ManagedRuntime {
       }
     }
   }
+
+  Future<void> queueState({NetState? s}) =>
+      runtime.queueState(s: s != null ? NetStateWrap(field0: s) : null);
 
   Future<void> queueLogin() => runtime.queueLogin();
   Future<void> queueLogout() => runtime.queueLogout();
