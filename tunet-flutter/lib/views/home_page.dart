@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:format/format.dart';
 import 'package:duration/duration.dart';
@@ -76,6 +77,7 @@ class _HomePageState extends State<HomePage> {
     final runtime = widget.runtime;
 
     Widget cardBody = const CircularProgressIndicator();
+    Widget fluxBody = const LinearProgressIndicator();
     final netFlux = this.netFlux;
     if (netFlux != null) {
       final username = netFlux.username;
@@ -84,6 +86,17 @@ class _HomePageState extends State<HomePage> {
       final balance = netFlux.balance.field0;
       final status = this.status;
       final state = this.state;
+
+      final theme = Theme.of(context);
+      fluxBody = CustomPaint(
+        size: Size(MediaQuery.of(context).size.width, 30.0),
+        painter: FluxPainter(
+          flux: flux.toDouble() / 1000000000.0,
+          balance: balance,
+          accent: theme.colorScheme.primary,
+        ),
+      );
+
       cardBody = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,8 +160,13 @@ class _HomePageState extends State<HomePage> {
       margin: const EdgeInsets.all(8.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: fluxBody,
+          ),
+          Card(child: cardBody),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -178,9 +196,50 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          Card(child: cardBody),
         ],
       ),
     );
   }
+}
+
+class FluxPainter extends CustomPainter {
+  final double flux;
+  final double balance;
+  final Color accent;
+
+  const FluxPainter({
+    required this.flux,
+    required this.balance,
+    required this.accent,
+  }) : super();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final f1 = Paint()
+      ..color = accent
+      ..style = PaintingStyle.fill;
+    final f2 = Paint()
+      ..color = accent.withOpacity(0.66)
+      ..style = PaintingStyle.fill;
+    final f3 = Paint()
+      ..color = accent.withOpacity(0.33)
+      ..style = PaintingStyle.fill;
+
+    final totalFlux = balance + max(50.0, flux);
+    final freeRatio = 50.0 / totalFlux;
+    final fluxRatio = flux / totalFlux;
+
+    final fullWidth = size.width;
+    final freeWidth = freeRatio * fullWidth;
+    final fluxWidth = fluxRatio * fullWidth;
+
+    const radius = Radius.circular(8.0);
+
+    canvas.drawRRect(RRect.fromLTRBR(0, 0, fullWidth, size.height, radius), f3);
+    canvas.drawRRect(RRect.fromLTRBR(0, 0, freeWidth, size.height, radius), f2);
+    canvas.drawRRect(RRect.fromLTRBR(0, 0, fluxWidth, size.height, radius), f1);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
