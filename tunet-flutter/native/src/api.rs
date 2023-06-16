@@ -74,7 +74,13 @@ impl Runtime {
     pub fn new() -> Result<Runtime> {
         #[cfg(target_os = "android")]
         android_logger::init_once(
-            android_logger::Config::default().with_max_level(log::LevelFilter::Trace),
+            android_logger::Config::default()
+                .with_max_level(log::LevelFilter::Trace)
+                .with_filter(
+                    android_logger::FilterBuilder::new()
+                        .parse("warn,tunet=trace,native=trace")
+                        .build(),
+                ),
         );
         #[cfg(target_os = "ios")]
         oslog::OsLogger::new("com.berrysoft.tunet_flutter")
@@ -113,7 +119,7 @@ impl Runtime {
                     model.queue(Action::Status(Some(status)));
                 }
                 while let Some(action) = rx.recv().await {
-                    log::info!("[tunet-flutter/native] received action: {:?}", action);
+                    log::info!("received action: {:?}", action);
                     model.lock().unwrap().handle(action);
                 }
             });
@@ -146,12 +152,11 @@ impl Runtime {
             NetStatusSimp::Unknown => NetStatus::Unknown,
             NetStatusSimp::Wwan => NetStatus::Wwan,
             NetStatusSimp::Wlan => match ssid {
-                Some(s) => NetStatus::Wlan(s.trim_matches('\"').to_string()),
+                Some(s) => NetStatus::Wlan(s),
                 None => NetStatus::Unknown,
             },
             NetStatusSimp::Lan => NetStatus::Lan,
         };
-        log::info!("Queue status: {:?}", status);
         *self.init_status.lock().unwrap() = status;
     }
 
