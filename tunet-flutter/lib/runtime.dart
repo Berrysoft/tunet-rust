@@ -42,8 +42,8 @@ class ManagedRuntime {
   Future<void> start() async {
     NetStatusSimp sendStatus = NetStatusSimp.Unknown;
     String? ssid;
-    final String? status = await statusApi.invokeMethod("getStatus");
-    switch (status) {
+    final String? gstatus = await statusApi.invokeMethod("getStatus");
+    switch (gstatus) {
       case "wwan":
         sendStatus = NetStatusSimp.Wwan;
         break;
@@ -56,22 +56,22 @@ class ManagedRuntime {
         break;
     }
     await runtime.queueStatus(t: sendStatus, ssid: ssid);
-    await for (final msgw in runtime.start()) {
-      final msg = msgw.field0;
-      switch (msg) {
+
+    await for (final msg in runtime.start()) {
+      switch (msg.field0) {
         case UpdateMsg.State:
           await runtime.queueFlux();
-          stateSink.add((await runtime.state()).field0);
+          stateSink.add(await state());
           break;
         case UpdateMsg.Status:
           await runtime.queueState();
-          statusSink.add((await runtime.status()));
+          statusSink.add(await status());
           break;
         case UpdateMsg.Flux:
-          netFluxSink.add(await runtime.flux());
+          netFluxSink.add(await flux());
           break;
         case UpdateMsg.LogBusy:
-          logBusySink.add(await runtime.logBusy());
+          logBusySink.add(await logBusy());
           break;
         default:
           break;
@@ -85,4 +85,9 @@ class ManagedRuntime {
   Future<void> queueLogin() => runtime.queueLogin();
   Future<void> queueLogout() => runtime.queueLogout();
   Future<void> queueFlux() => runtime.queueFlux();
+
+  Future<NetState> state() async => (await runtime.state()).field0;
+  Future<String> status() => runtime.status();
+  Future<NetFlux> flux() => runtime.flux();
+  Future<bool> logBusy() => runtime.logBusy();
 }
