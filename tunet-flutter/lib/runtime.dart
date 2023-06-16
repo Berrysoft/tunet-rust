@@ -80,7 +80,10 @@ class ManagedRuntime {
           netFluxSink.add(await flux());
           break;
         case UpdateMsg.Details:
-          dailySink.add(await detailDaily());
+          final daily = await detailDaily();
+          if (daily != null) {
+            dailySink.add(daily);
+          }
           break;
         case UpdateMsg.LogBusy:
           logBusySink.add(await logBusy());
@@ -104,5 +107,5 @@ class ManagedRuntime {
   Future<String> status() => runtime.status();
   Future<NetFlux> flux() => runtime.flux();
   Future<bool> logBusy() => runtime.logBusy();
-  Future<DetailDailyWrap> detailDaily() => runtime.detailDaily();
+  Future<DetailDailyWrap?> detailDaily() => runtime.detailDaily();
 }

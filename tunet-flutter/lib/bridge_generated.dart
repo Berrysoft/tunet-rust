@@ -293,13 +293,13 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
-  Future<DetailDailyWrap> detailDailyMethodRuntime(
+  Future<DetailDailyWrap?> detailDailyMethodRuntime(
       {required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
           _platform.inner.wire_detail_daily__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_detail_daily_wrap,
+      parseSuccessData: _wire2api_opt_box_autoadd_detail_daily_wrap,
       constMeta: kDetailDailyMethodRuntimeConstMeta,
       argValues: [that],
       hint: hint,
@@ -381,6 +381,10 @@ class NativeImpl implements Native {
     return raw as bool;
   }
 
+  DetailDailyWrap _wire2api_box_autoadd_detail_daily_wrap(dynamic raw) {
+    return _wire2api_detail_daily_wrap(raw);
+  }
+
   DetailDailyPoint _wire2api_detail_daily_point(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
@@ -460,6 +464,10 @@ class NativeImpl implements Native {
     return NewDuration(
       field0: _wire2api_Chrono_Duration(arr[0]),
     );
+  }
+
+  DetailDailyWrap? _wire2api_opt_box_autoadd_detail_daily_wrap(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_detail_daily_wrap(raw);
   }
 
   Runtime _wire2api_runtime(dynamic raw) {

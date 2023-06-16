@@ -61,6 +61,7 @@ Future<void> credDialogBuilder(BuildContext context, ManagedRuntime runtime) {
                   keyboardType: TextInputType.visiblePassword,
                   autofillHints: const [AutofillHints.password],
                   onEditingComplete: () => TextInput.finishAutofillContext(),
+                  obscureText: true,
                 ),
               ],
             ),

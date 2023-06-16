@@ -36,7 +36,7 @@ class AboutPage extends StatelessWidget {
                     builder: (context, snap) {
                       final info = snap.data;
                       if (info == null) {
-                        return const CircularProgressIndicator();
+                        return const LinearProgressIndicator();
                       }
                       return Text('${info.version}:${info.buildNumber}');
                     },

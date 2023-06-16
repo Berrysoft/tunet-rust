@@ -76,7 +76,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta;
 
-  Future<DetailDailyWrap> detailDailyMethodRuntime(
+  Future<DetailDailyWrap?> detailDailyMethodRuntime(
       {required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kDetailDailyMethodRuntimeConstMeta;
@@ -318,7 +318,7 @@ class Runtime {
         that: this,
       );
 
-  Future<DetailDailyWrap> detailDaily({dynamic hint}) =>
+  Future<DetailDailyWrap?> detailDaily({dynamic hint}) =>
       bridge.detailDailyMethodRuntime(
         that: this,
       );

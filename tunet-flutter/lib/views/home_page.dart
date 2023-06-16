@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final runtime = widget.runtime;
 
-    Widget cardBody = const CircularProgressIndicator();
+    Widget cardBody = const LinearProgressIndicator();
     Widget fluxBody = const LinearProgressIndicator();
     final netFlux = this.netFlux;
     if (netFlux != null) {
@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
           ),
           ListTile(
             leading: const Icon(Icons.sync_alt_rounded),
-            title: FutureBuilder<String>(
+            title: FutureBuilder(
               future: api.fluxToString(f: flux),
               builder: (context, snap) {
                 final s = snap.data;

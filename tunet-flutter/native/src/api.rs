@@ -199,12 +199,16 @@ impl Runtime {
         self.model.lock().unwrap().status.to_string()
     }
 
-    pub fn detail_daily(&self) -> DetailDailyWrap {
+    pub fn detail_daily(&self) -> Option<DetailDailyWrap> {
         let data = {
             let model = self.model.lock().unwrap();
-            DetailDaily::new(&model.details)
+            if model.details.is_empty() {
+                None
+            } else {
+                Some(DetailDaily::new(&model.details))
+            }
         };
-        DetailDailyWrap {
+        data.map(|data| DetailDailyWrap {
             details: data
                 .details
                 .into_iter()
@@ -216,6 +220,6 @@ impl Runtime {
             now_month: data.now.month(),
             now_day: data.now.day(),
             max_flux: data.max_flux,
-        }
+        })
     }
 }
