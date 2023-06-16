@@ -12,10 +12,13 @@ class AboutPage extends StatelessWidget {
       margin: const EdgeInsets.all(8.0),
       child: Column(
         children: [
-          Text('清华大学校园网客户端', style: Theme.of(context).textTheme.titleLarge),
           Card(
             child: Column(
               children: [
+                const ListTile(
+                  leading: Icon(Icons.info_outline_rounded),
+                  title: Text('清华大学校园网客户端'),
+                ),
                 const ListTile(
                   leading: Icon(Icons.copyright_rounded),
                   title: Text('2023 Berrysoft'),
