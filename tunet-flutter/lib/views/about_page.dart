@@ -8,10 +8,12 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     return Container(
       margin: const EdgeInsets.all(8.0),
       child: Column(
         children: [
+          Image.asset("assets/logo.png", width: width / 3, height: width / 3),
           Card(
             child: Column(
               children: [
