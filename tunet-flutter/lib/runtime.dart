@@ -14,13 +14,24 @@ class ManagedRuntime {
   late StreamController<NetState> stateSink;
   late StreamController<String> statusSink;
 
+  late Stream<bool> logBusyStream;
+  late Stream<NetFlux> netFluxStream;
+  late Stream<NetState> stateStream;
+  late Stream<String> statusStream;
+
   ManagedRuntime({required this.runtime}) {
     logBusySink = StreamController();
     logBusySink.add(false);
+    logBusyStream = logBusySink.stream.asBroadcastStream();
 
     netFluxSink = StreamController();
+    netFluxStream = netFluxSink.stream.asBroadcastStream();
+
     stateSink = StreamController();
+    stateStream = stateSink.stream.asBroadcastStream();
+
     statusSink = StreamController();
+    statusStream = statusSink.stream.asBroadcastStream();
   }
 
   static Future<ManagedRuntime> newRuntime() async {
