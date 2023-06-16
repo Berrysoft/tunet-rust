@@ -29,6 +29,9 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
+    netFlux = null;
+    status = null;
+
     final runtime = widget.runtime;
     initStateAsync(runtime);
   }
