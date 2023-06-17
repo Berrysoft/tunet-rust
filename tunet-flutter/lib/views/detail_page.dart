@@ -43,16 +43,18 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final runtime = widget.runtime;
     final daily = this.daily;
     Widget dailyChart = const Flexible(child: LinearProgressIndicator());
     if (daily != null) {
-      var titles = FlTitlesData(
+      const double gbRatio = 1000000000;
+      final titles = FlTitlesData(
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             getTitlesWidget: (value, meta) => SideTitleWidget(
               axisSide: meta.axisSide,
               child: FutureBuilder(
-                future: api.fluxToString(f: value.toInt()),
+                future: api.fluxToString(f: (value * gbRatio).toInt()),
                 builder: (context, snap) {
                   final s = snap.data;
                   if (s == null) {
@@ -87,7 +89,7 @@ class _DetailPageState extends State<DetailPage> {
             spots: daily.details
                 .map((p) => FlSpot(
                       p.day.toDouble(),
-                      p.flux.field0.toDouble(),
+                      p.flux.field0.toDouble() / gbRatio,
                     ))
                 .toList(),
           )
@@ -99,21 +101,29 @@ class _DetailPageState extends State<DetailPage> {
       );
       dailyChart = LineChart(data);
     }
-    final height = MediaQuery.of(context).size.height;
     return Container(
       margin: const EdgeInsets.all(8.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Card(
-            child: SizedBox(
-              height: height / 3.0,
+          Expanded(
+            child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: dailyChart,
               ),
             ),
+          ),
+          PaginatedDataTable(
+            columns: const [
+              DataColumn(label: Text('登录时间')),
+              DataColumn(label: Text('注销时间')),
+              DataColumn(label: Text('流量')),
+            ],
+            source: runtime.detailsData,
+            showCheckboxColumn: false,
+            rowsPerPage: 6,
           ),
         ],
       ),

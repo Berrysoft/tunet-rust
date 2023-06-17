@@ -6,7 +6,9 @@ pub use netstatus::NetStatus;
 pub use std::sync::{Arc, Mutex};
 pub use tokio::{runtime::Handle, sync::mpsc};
 pub use tunet_helper::{
-    Balance, Duration as NewDuration, Flux, NaiveDate, NaiveDuration as Duration, NetFlux, NetState,
+    usereg::{NetDateTime, NetDetail},
+    Balance, Duration as NewDuration, Flux, NaiveDate, NaiveDateTime, NaiveDuration as Duration,
+    NetFlux, NetState,
 };
 use tunet_model::DetailDaily;
 pub use tunet_model::{Action, Model, UpdateMsg};
@@ -64,6 +66,16 @@ pub struct _NewDuration(pub Duration);
 
 #[frb(mirror(Balance))]
 pub struct _Balance(pub f64);
+
+#[frb(mirror(NetDateTime))]
+pub struct _NetDateTime(pub NaiveDateTime);
+
+#[frb(mirror(NetDetail))]
+pub struct _NetDetail {
+    pub login_time: NetDateTime,
+    pub logout_time: NetDateTime,
+    pub flux: Flux,
+}
 
 pub struct DetailDailyPoint {
     pub day: u32,
@@ -197,6 +209,10 @@ impl Runtime {
 
     pub fn status(&self) -> String {
         self.model.lock().unwrap().status.to_string()
+    }
+
+    pub fn details(&self) -> Vec<NetDetail> {
+        self.model.lock().unwrap().details.clone()
     }
 
     pub fn detail_daily(&self) -> Option<DetailDailyWrap> {

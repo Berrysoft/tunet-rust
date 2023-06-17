@@ -293,6 +293,25 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<List<NetDetail>> detailsMethodRuntime(
+      {required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_details__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_list_net_detail,
+      constMeta: kDetailsMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kDetailsMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "details__method__Runtime",
+        argNames: ["that"],
+      );
+
   Future<DetailDailyWrap?> detailDailyMethodRuntime(
       {required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
@@ -345,6 +364,10 @@ class NativeImpl implements Native {
 
   Duration _wire2api_Chrono_Duration(dynamic raw) {
     return wire2apiDuration(_wire2api_i64(raw));
+  }
+
+  DateTime _wire2api_Chrono_Naive(dynamic raw) {
+    return wire2apiTimestamp(ts: _wire2api_i64(raw), isUtc: true);
   }
 
   MutexModel _wire2api_MutexModel(dynamic raw) {
@@ -430,6 +453,30 @@ class NativeImpl implements Native {
 
   List<DetailDailyPoint> _wire2api_list_detail_daily_point(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_detail_daily_point).toList();
+  }
+
+  List<NetDetail> _wire2api_list_net_detail(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_net_detail).toList();
+  }
+
+  NetDateTime _wire2api_net_date_time(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return NetDateTime(
+      field0: _wire2api_Chrono_Naive(arr[0]),
+    );
+  }
+
+  NetDetail _wire2api_net_detail(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return NetDetail(
+      loginTime: _wire2api_net_date_time(arr[0]),
+      logoutTime: _wire2api_net_date_time(arr[1]),
+      flux: _wire2api_flux(arr[2]),
+    );
   }
 
   NetFlux _wire2api_net_flux(dynamic raw) {
@@ -1040,6 +1087,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
           ffi.Void Function(ffi.Int64,
               ffi.Pointer<wire_Runtime>)>>('wire_status__method__Runtime');
   late final _wire_status__method__Runtime = _wire_status__method__RuntimePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_details__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_details__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_details__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_details__method__Runtime');
+  late final _wire_details__method__Runtime = _wire_details__method__RuntimePtr
       .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
   void wire_detail_daily__method__Runtime(

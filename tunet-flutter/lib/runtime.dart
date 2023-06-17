@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 import 'ffi.dart';
 export 'ffi.dart';
@@ -9,35 +11,22 @@ class ManagedRuntime {
 
   static const statusApi = MethodChannel('com.berrysoft.tunet_flutter/status');
 
-  late StreamController<bool> logBusySink;
-  late StreamController<NetFlux> netFluxSink;
-  late StreamController<NetState> stateSink;
-  late StreamController<String> statusSink;
-  late StreamController<DetailDailyWrap> dailySink;
+  late StreamController<bool> logBusySink = StreamController();
+  late StreamController<NetFlux> netFluxSink = StreamController();
+  late StreamController<NetState> stateSink = StreamController();
+  late StreamController<String> statusSink = StreamController();
+  late StreamController<DetailDailyWrap> dailySink = StreamController();
 
-  late Stream<bool> logBusyStream;
-  late Stream<NetFlux> netFluxStream;
-  late Stream<NetState> stateStream;
-  late Stream<String> statusStream;
-  late Stream<DetailDailyWrap> dailyStream;
+  late Stream<bool> logBusyStream = logBusySink.stream.asBroadcastStream();
+  late Stream<NetFlux> netFluxStream = netFluxSink.stream.asBroadcastStream();
+  late Stream<NetState> stateStream = stateSink.stream.asBroadcastStream();
+  late Stream<String> statusStream = statusSink.stream.asBroadcastStream();
+  late Stream<DetailDailyWrap> dailyStream =
+      dailySink.stream.asBroadcastStream();
 
-  ManagedRuntime({required this.runtime}) {
-    logBusySink = StreamController();
-    logBusySink.add(false);
-    logBusyStream = logBusySink.stream.asBroadcastStream();
+  late DetailsData detailsData = DetailsData();
 
-    netFluxSink = StreamController();
-    netFluxStream = netFluxSink.stream.asBroadcastStream();
-
-    stateSink = StreamController();
-    stateStream = stateSink.stream.asBroadcastStream();
-
-    statusSink = StreamController();
-    statusStream = statusSink.stream.asBroadcastStream();
-
-    dailySink = StreamController();
-    dailyStream = dailySink.stream.asBroadcastStream();
-  }
+  ManagedRuntime({required this.runtime});
 
   static Future<ManagedRuntime> newRuntime() async {
     final runtime = await Runtime.newRuntime(bridge: api);
@@ -80,6 +69,7 @@ class ManagedRuntime {
           netFluxSink.add(await flux());
           break;
         case UpdateMsg.Details:
+          detailsData.data = await details();
           final daily = await detailDaily();
           if (daily != null) {
             dailySink.add(daily);
@@ -107,5 +97,41 @@ class ManagedRuntime {
   Future<String> status() => runtime.status();
   Future<NetFlux> flux() => runtime.flux();
   Future<bool> logBusy() => runtime.logBusy();
+  Future<List<NetDetail>> details() => runtime.details();
   Future<DetailDailyWrap?> detailDaily() => runtime.detailDaily();
+}
+
+class DetailsData extends DataTableSource {
+  late List<NetDetail> data = List.empty();
+
+  @override
+  DataRow? getRow(int index) {
+    if (index >= 0 && index < data.length) {
+      final d = data[index];
+      return DataRow(cells: [
+        DataCell(Text(DateFormat('MM-dd HH:mm').format(d.loginTime.field0))),
+        DataCell(Text(DateFormat('MM-dd HH:mm').format(d.logoutTime.field0))),
+        DataCell(FutureBuilder(
+          future: api.fluxToString(f: d.flux.field0),
+          builder: (context, snap) {
+            final data = snap.data;
+            if (data == null) {
+              return const CircularProgressIndicator();
+            }
+            return Text(data);
+          },
+        ))
+      ]);
+    }
+    return null;
+  }
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get rowCount => data.length;
+
+  @override
+  int get selectedRowCount => 0;
 }

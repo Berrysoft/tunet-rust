@@ -76,6 +76,11 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta;
 
+  Future<List<NetDetail>> detailsMethodRuntime(
+      {required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kDetailsMethodRuntimeConstMeta;
+
   Future<DetailDailyWrap?> detailDailyMethodRuntime(
       {required Runtime that, dynamic hint});
 
@@ -198,6 +203,26 @@ class Flux {
   });
 }
 
+class NetDateTime {
+  final DateTime field0;
+
+  const NetDateTime({
+    required this.field0,
+  });
+}
+
+class NetDetail {
+  final NetDateTime loginTime;
+  final NetDateTime logoutTime;
+  final Flux flux;
+
+  const NetDetail({
+    required this.loginTime,
+    required this.logoutTime,
+    required this.flux,
+  });
+}
+
 class NetFlux {
   final String username;
   final Flux flux;
@@ -315,6 +340,11 @@ class Runtime {
       );
 
   Future<String> status({dynamic hint}) => bridge.statusMethodRuntime(
+        that: this,
+      );
+
+  Future<List<NetDetail>> details({dynamic hint}) =>
+      bridge.detailsMethodRuntime(
         that: this,
       );
 

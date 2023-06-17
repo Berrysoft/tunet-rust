@@ -237,6 +237,27 @@ fn wire_status__method__Runtime_impl(
         },
     )
 }
+fn wire_details__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "details__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| {
+                Ok(Runtime::details(&api_that)
+                    .into_iter()
+                    .map(|v| mirror_NetDetail(v))
+                    .collect::<Vec<_>>())
+            }
+        },
+    )
+}
 fn wire_detail_daily__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
@@ -262,6 +283,12 @@ struct mirror_Balance(Balance);
 struct mirror_Flux(Flux);
 
 #[derive(Clone)]
+struct mirror_NetDateTime(NetDateTime);
+
+#[derive(Clone)]
+struct mirror_NetDetail(NetDetail);
+
+#[derive(Clone)]
 struct mirror_NetFlux(NetFlux);
 
 #[derive(Clone)]
@@ -283,6 +310,16 @@ const _: fn() = || {
     {
         let Flux_ = None::<Flux>.unwrap();
         let _: u64 = Flux_.0;
+    }
+    {
+        let NetDateTime_ = None::<NetDateTime>.unwrap();
+        let _: chrono::NaiveDateTime = NetDateTime_.0;
+    }
+    {
+        let NetDetail = None::<NetDetail>.unwrap();
+        let _: NetDateTime = NetDetail.login_time;
+        let _: NetDateTime = NetDetail.logout_time;
+        let _: Flux = NetDetail.flux;
     }
     {
         let NetFlux = None::<NetFlux>.unwrap();
@@ -408,6 +445,25 @@ impl support::IntoDart for mirror_Flux {
     }
 }
 impl support::IntoDartExceptPrimitive for mirror_Flux {}
+
+impl support::IntoDart for mirror_NetDateTime {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0 .0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_NetDateTime {}
+
+impl support::IntoDart for mirror_NetDetail {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            mirror_NetDateTime(self.0.login_time).into_dart(),
+            mirror_NetDateTime(self.0.logout_time).into_dart(),
+            mirror_Flux(self.0.flux).into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_NetDetail {}
 
 impl support::IntoDart for mirror_NetFlux {
     fn into_dart(self) -> support::DartAbi {
