@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:format/format.dart';
 import 'package:duration/duration.dart';
 import 'package:duration/locale.dart';
@@ -16,12 +17,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  FToast fToast = FToast();
+
   late bool logBusy = false;
   late NetFlux? netFlux;
   late String? status;
   late NetState state = NetState.Unknown;
 
   late StreamSubscription<bool> logBusySub;
+  late StreamSubscription<String> logTextSub;
   late StreamSubscription<NetFlux> netFluxSub;
   late StreamSubscription<String> statusSub;
   late StreamSubscription<NetState> stateSub;
@@ -29,6 +33,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
+    fToast.init(context);
 
     netFlux = null;
     status = null;
@@ -60,6 +66,9 @@ class _HomePageState extends State<HomePage> {
         runtime.statusStream.listen((event) => setState(() => status = event));
     stateSub =
         runtime.stateStream.listen((event) => setState(() => state = event));
+
+    logTextSub =
+        runtime.logTextStream.listen((event) => logTextBuilder(fToast, event));
   }
 
   @override
@@ -68,6 +77,7 @@ class _HomePageState extends State<HomePage> {
     netFluxSub.cancel();
     statusSub.cancel();
     stateSub.cancel();
+    logTextSub.cancel();
 
     super.dispose();
   }
@@ -242,4 +252,16 @@ class FluxPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
+}
+
+void logTextBuilder(FToast fToast, String text) {
+  Widget toast = Container(
+    padding: const EdgeInsets.all(8.0),
+    child: Text(text),
+  );
+  fToast.showToast(
+    child: toast,
+    gravity: ToastGravity.BOTTOM,
+    toastDuration: const Duration(seconds: 2),
+  );
 }
