@@ -3,15 +3,17 @@ use chrono::Datelike;
 use flutter_rust_bridge::{frb, RustOpaque, StreamSink};
 
 pub use netstatus::NetStatus;
-pub use std::sync::{Arc, Mutex};
+pub use std::{
+    net::Ipv4Addr,
+    sync::{Arc, Mutex},
+};
 pub use tokio::{runtime::Handle, sync::mpsc};
 pub use tunet_helper::{
-    usereg::{NetDateTime, NetDetail},
+    usereg::{NetDateTime, NetDetail, NetUser},
     Balance, Duration as NewDuration, Flux, NaiveDate, NaiveDateTime, NaiveDuration as Duration,
     NetFlux, NetState,
 };
-use tunet_model::DetailDaily;
-pub use tunet_model::{Action, Model, UpdateMsg};
+pub use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 
 #[frb(mirror(UpdateMsg))]
 pub enum _UpdateMsg {
@@ -87,6 +89,26 @@ pub struct DetailDailyWrap {
     pub now_month: u32,
     pub now_day: u32,
     pub max_flux: Flux,
+}
+
+pub struct NetUserWrap {
+    pub address: Ipv4AddrWrap,
+    pub login_time: NetDateTime,
+    pub mac_address: String,
+    pub flux: Flux,
+    pub is_local: bool,
+}
+
+pub struct Ipv4AddrWrap {
+    pub octets: [u8; 4],
+}
+
+impl From<Ipv4Addr> for Ipv4AddrWrap {
+    fn from(value: Ipv4Addr) -> Self {
+        Self {
+            octets: value.octets(),
+        }
+    }
 }
 
 pub struct RuntimeStartConfig {
@@ -212,6 +234,10 @@ impl Runtime {
         self.queue(Action::Details);
     }
 
+    pub fn queue_onlines(&self) {
+        self.queue(Action::Online);
+    }
+
     pub fn log_busy(&self) -> bool {
         self.model.lock().unwrap().log_busy()
     }
@@ -266,5 +292,30 @@ impl Runtime {
 
     pub fn username(&self) -> String {
         self.model.lock().unwrap().username.clone()
+    }
+
+    pub fn online_busy(&self) -> bool {
+        self.model.lock().unwrap().online_busy()
+    }
+
+    pub fn onlines(&self) -> Vec<NetUserWrap> {
+        let model = self.model.lock().unwrap();
+        model
+            .users
+            .iter()
+            .map(|u| NetUserWrap {
+                address: u.address.into(),
+                login_time: u.login_time,
+                mac_address: u
+                    .mac_address
+                    .map(|addr| addr.to_string())
+                    .unwrap_or_default(),
+                flux: u.flux,
+                is_local: model
+                    .mac_addrs
+                    .iter()
+                    .any(|it| Some(it) == u.mac_address.as_ref()),
+            })
+            .collect()
     }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,6 +22,7 @@ class ManagedRuntime {
   late StreamController<bool> detailBusySink = StreamController();
   late StreamController<DetailDailyWrap> dailySink = StreamController();
   late StreamController<String> usernameSink = StreamController();
+  late StreamController<bool> onlineBusySink = StreamController();
 
   late Stream<bool> logBusyStream = logBusySink.stream.asBroadcastStream();
   late Stream<String> logTextStream = logTextSink.stream.asBroadcastStream();
@@ -32,8 +34,11 @@ class ManagedRuntime {
   late Stream<DetailDailyWrap> dailyStream =
       dailySink.stream.asBroadcastStream();
   late Stream<String> usernameStream = usernameSink.stream.asBroadcastStream();
+  late Stream<bool> onlineBusyStream =
+      onlineBusySink.stream.asBroadcastStream();
 
-  late DetailsData detailsData = DetailsData();
+  DetailsData detailsData = DetailsData();
+  List<DataRow> onlinesData = List.empty();
 
   ManagedRuntime({required this.runtime});
 
@@ -74,6 +79,7 @@ class ManagedRuntime {
         case UpdateMsg.Credential:
           await runtime.queueState();
           await runtime.queueDetails();
+          await runtime.queueOnlines();
           usernameSink.add(await username());
           break;
         case UpdateMsg.State:
@@ -90,6 +96,9 @@ class ManagedRuntime {
         case UpdateMsg.Flux:
           netFluxSink.add(await flux());
           break;
+        case UpdateMsg.Online:
+          onlinesData = (await onlines()).map(netUserToRow).toList();
+          break;
         case UpdateMsg.Details:
           detailsData.data = await details();
           final daily = await detailDaily();
@@ -100,10 +109,11 @@ class ManagedRuntime {
         case UpdateMsg.LogBusy:
           logBusySink.add(await logBusy());
           break;
+        case UpdateMsg.OnlineBusy:
+          onlineBusySink.add(await onlineBusy());
+          break;
         case UpdateMsg.DetailBusy:
           detailBusySink.add(await detailBusy());
-          break;
-        default:
           break;
       }
     }
@@ -137,6 +147,7 @@ class ManagedRuntime {
   Future<void> queueLogout() => runtime.queueLogout();
   Future<void> queueFlux() => runtime.queueFlux();
   Future<void> queueDetails() => runtime.queueDetails();
+  Future<void> queueOnlines() => runtime.queueOnlines();
 
   Future<bool> logBusy() => runtime.logBusy();
   Future<String> logText() => runtime.logText();
@@ -147,10 +158,12 @@ class ManagedRuntime {
   Future<List<NetDetail>> details() => runtime.details();
   Future<DetailDailyWrap?> detailDaily() => runtime.detailDaily();
   Future<String> username() => runtime.username();
+  Future<bool> onlineBusy() => runtime.onlineBusy();
+  Future<List<NetUserWrap>> onlines() => runtime.onlines();
 }
 
 class DetailsData extends DataTableSource {
-  late List<NetDetail> data = List.empty();
+  List<NetDetail> data = List.empty();
 
   @override
   DataRow? getRow(int index) {
@@ -182,4 +195,26 @@ class DetailsData extends DataTableSource {
 
   @override
   int get selectedRowCount => 0;
+}
+
+DataRow netUserToRow(NetUserWrap u) {
+  return DataRow(cells: [
+    DataCell(Text(InternetAddress.fromRawAddress(
+      Uint8List.fromList(u.address.octets),
+      type: InternetAddressType.IPv4,
+    ).address)),
+    DataCell(Text(DateFormat('MM-dd HH:mm').format(u.loginTime.field0))),
+    DataCell(FutureBuilder(
+      future: api.fluxToString(f: u.flux.field0),
+      builder: (context, snap) {
+        final data = snap.data;
+        if (data == null) {
+          return const CircularProgressIndicator();
+        }
+        return Text(data);
+      },
+    )),
+    DataCell(Text(u.macAddress)),
+    DataCell(Text(u.isLocal ? '本机' : '未知')),
+  ]);
 }

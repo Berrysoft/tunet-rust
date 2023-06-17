@@ -15,8 +15,10 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String username = "";
+  bool onlineBusy = false;
 
   late StreamSubscription<String> usernameSub;
+  late StreamSubscription<bool> onlineBusySub;
 
   @override
   void initState() {
@@ -28,16 +30,21 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> initStateAsync(ManagedRuntime runtime) async {
     final username = await runtime.username();
+    final onlineBusy = await runtime.onlineBusy();
     setState(() {
       this.username = username;
+      this.onlineBusy = onlineBusy;
     });
     usernameSub = runtime.usernameStream
         .listen((event) => setState(() => this.username = event));
+    onlineBusySub = runtime.onlineBusyStream
+        .listen((event) => setState(() => this.onlineBusy = event));
   }
 
   @override
   void dispose() {
     usernameSub.cancel();
+    onlineBusySub.cancel();
 
     super.dispose();
   }
@@ -61,10 +68,78 @@ class _SettingsPageState extends State<SettingsPage> {
               onTap: () => credDialogBuilder(context, runtime),
             ),
           ),
+          Card(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.people_alt_rounded),
+                  title: const Text('管理连接'),
+                  trailing: PopupMenuButton<OnlineAction>(
+                    onSelected: (value) {
+                      switch (value) {
+                        case OnlineAction.connect:
+                          break;
+                        case OnlineAction.drop:
+                          break;
+                        case OnlineAction.refresh:
+                          runtime.queueOnlines();
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: OnlineAction.connect,
+                        child: ListTile(
+                          leading: Icon(Icons.add_rounded),
+                          title: Text('认证IP'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: OnlineAction.drop,
+                        child: ListTile(
+                          leading: Icon(Icons.remove_rounded),
+                          title: Text('下线IP'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: OnlineAction.refresh,
+                        child: ListTile(
+                          leading: Icon(Icons.refresh_rounded),
+                          title: Text('刷新'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: const [
+                      DataColumn(label: Text('IP地址')),
+                      DataColumn(label: Text('登录时间')),
+                      DataColumn(label: Text('流量')),
+                      DataColumn(label: Text('MAC地址')),
+                      DataColumn(label: Text('设备')),
+                    ],
+                    rows: runtime.onlinesData,
+                    showCheckboxColumn: false,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+}
+
+enum OnlineAction {
+  connect,
+  drop,
+  refresh,
 }
 
 Future<void> credDialogBuilder(BuildContext context, ManagedRuntime runtime) {

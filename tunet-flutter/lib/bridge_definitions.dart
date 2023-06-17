@@ -8,6 +8,8 @@ import 'package:meta/meta.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:collection/collection.dart';
+
 abstract class Native {
   Future<String> fluxToString({required int f, dynamic hint});
 
@@ -63,6 +65,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kQueueDetailsMethodRuntimeConstMeta;
 
+  Future<void> queueOnlinesMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueOnlinesMethodRuntimeConstMeta;
+
   Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta;
@@ -101,6 +107,15 @@ abstract class Native {
   Future<String> usernameMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kUsernameMethodRuntimeConstMeta;
+
+  Future<bool> onlineBusyMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kOnlineBusyMethodRuntimeConstMeta;
+
+  Future<List<NetUserWrap>> onlinesMethodRuntime(
+      {required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kOnlinesMethodRuntimeConstMeta;
 
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
@@ -218,6 +233,14 @@ class Flux {
   });
 }
 
+class Ipv4AddrWrap {
+  final U8Array4 octets;
+
+  const Ipv4AddrWrap({
+    required this.octets,
+  });
+}
+
 class NetDateTime {
   final DateTime field0;
 
@@ -272,6 +295,22 @@ enum NetStatusSimp {
   Wwan,
   Wlan,
   Lan,
+}
+
+class NetUserWrap {
+  final Ipv4AddrWrap address;
+  final NetDateTime loginTime;
+  final String macAddress;
+  final Flux flux;
+  final bool isLocal;
+
+  const NetUserWrap({
+    required this.address,
+    required this.loginTime,
+    required this.macAddress,
+    required this.flux,
+    required this.isLocal,
+  });
 }
 
 class NewDuration {
@@ -335,6 +374,10 @@ class Runtime {
         that: this,
       );
 
+  Future<void> queueOnlines({dynamic hint}) => bridge.queueOnlinesMethodRuntime(
+        that: this,
+      );
+
   Future<bool> logBusy({dynamic hint}) => bridge.logBusyMethodRuntime(
         that: this,
       );
@@ -372,6 +415,15 @@ class Runtime {
   Future<String> username({dynamic hint}) => bridge.usernameMethodRuntime(
         that: this,
       );
+
+  Future<bool> onlineBusy({dynamic hint}) => bridge.onlineBusyMethodRuntime(
+        that: this,
+      );
+
+  Future<List<NetUserWrap>> onlines({dynamic hint}) =>
+      bridge.onlinesMethodRuntime(
+        that: this,
+      );
 }
 
 class RuntimeStartConfig {
@@ -400,6 +452,15 @@ class RuntimeStartConfig {
           username: username,
           password: password,
           hint: hint);
+}
+
+class U8Array4 extends NonGrowableListView<int> {
+  static const arraySize = 4;
+  U8Array4(Uint8List inner)
+      : assert(inner.length == arraySize),
+        super(inner);
+  U8Array4.unchecked(Uint8List inner) : super(inner);
+  U8Array4.init() : super(Uint8List(arraySize));
 }
 
 enum UpdateMsg {

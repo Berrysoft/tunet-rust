@@ -199,6 +199,22 @@ fn wire_queue_details__method__Runtime_impl(
         },
     )
 }
+fn wire_queue_onlines__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_onlines__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::queue_onlines(&api_that))
+        },
+    )
+}
 fn wire_log_busy__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
@@ -339,6 +355,38 @@ fn wire_username__method__Runtime_impl(
         move || {
             let api_that = that.wire2api();
             move |task_callback| Ok(Runtime::username(&api_that))
+        },
+    )
+}
+fn wire_online_busy__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "online_busy__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::online_busy(&api_that))
+        },
+    )
+}
+fn wire_onlines__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "onlines__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::onlines(&api_that))
         },
     )
 }
@@ -514,6 +562,13 @@ impl support::IntoDart for mirror_Flux {
 }
 impl support::IntoDartExceptPrimitive for mirror_Flux {}
 
+impl support::IntoDart for Ipv4AddrWrap {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.octets.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for Ipv4AddrWrap {}
+
 impl support::IntoDart for mirror_NetDateTime {
     fn into_dart(self) -> support::DartAbi {
         vec![self.0 .0.into_dart()].into_dart()
@@ -564,6 +619,20 @@ impl support::IntoDart for NetStateWrap {
     }
 }
 impl support::IntoDartExceptPrimitive for NetStateWrap {}
+
+impl support::IntoDart for NetUserWrap {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.address.into_dart(),
+            mirror_NetDateTime(self.login_time).into_dart(),
+            self.mac_address.into_dart(),
+            mirror_Flux(self.flux).into_dart(),
+            self.is_local.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for NetUserWrap {}
 
 impl support::IntoDart for mirror_NewDuration {
     fn into_dart(self) -> support::DartAbi {
