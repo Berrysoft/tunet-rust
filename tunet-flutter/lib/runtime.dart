@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'ffi.dart';
 export 'ffi.dart';
@@ -49,9 +51,18 @@ class ManagedRuntime {
         sendStatus = NetStatusSimp.Lan;
         break;
     }
-    await runtime.initializeStatus(t: sendStatus, ssid: ssid);
 
-    await for (final msg in runtime.start()) {
+    final (u, p) = await loadCredential();
+
+    final config = await RuntimeStartConfig.newRuntimeStartConfig(
+      bridge: api,
+      status: sendStatus,
+      ssid: ssid,
+      username: u,
+      password: p,
+    );
+
+    await for (final msg in runtime.start(config: config)) {
       switch (msg.field0) {
         case UpdateMsg.Credential:
           await runtime.queueState();
@@ -84,10 +95,29 @@ class ManagedRuntime {
     }
   }
 
+  Future<(String, String)> loadCredential() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username') ?? "";
+
+    const storage = FlutterSecureStorage();
+    final password = await storage.read(key: '$username@tunet') ?? "";
+    return (username, password);
+  }
+
+  Future<void> saveCredential(String u, String p) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', u);
+
+    const storage = FlutterSecureStorage();
+    await storage.write(key: '$u@tunet', value: p);
+  }
+
   Future<void> queueState({NetState? s}) =>
       runtime.queueState(s: s != null ? NetStateWrap(field0: s) : null);
-  Future<void> queueCredential({required String u, required String p}) =>
-      runtime.queueCredential(u: u, p: p);
+  Future<void> queueCredential({required String u, required String p}) async {
+    await saveCredential(u, p);
+    await runtime.queueCredential(u: u, p: p);
+  }
 
   Future<void> queueLogin() => runtime.queueLogin();
   Future<void> queueLogout() => runtime.queueLogout();

@@ -37,6 +37,10 @@ dependencies:
   ffi: ^2.0.2
   flutter_rust_bridge: ^1.77.1
   meta: ^1.9.1
+  intl: ^0.18.1
+
+  shared_preferences: ^2.1.2
+  flutter_secure_storage: ^8.0.0
 
   system_theme: ^2.2.0
 

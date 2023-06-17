@@ -89,11 +89,40 @@ pub struct DetailDailyWrap {
     pub max_flux: Flux,
 }
 
+pub struct RuntimeStartConfig {
+    pub status: RustOpaque<NetStatus>,
+    pub username: String,
+    pub password: String,
+}
+
+impl RuntimeStartConfig {
+    pub fn new(
+        status: NetStatusSimp,
+        ssid: Option<String>,
+        username: String,
+        password: String,
+    ) -> RuntimeStartConfig {
+        let status = match status {
+            NetStatusSimp::Unknown => NetStatus::Unknown,
+            NetStatusSimp::Wwan => NetStatus::Wwan,
+            NetStatusSimp::Wlan => match ssid {
+                Some(s) => NetStatus::Wlan(s),
+                None => NetStatus::Unknown,
+            },
+            NetStatusSimp::Lan => NetStatus::Lan,
+        };
+        Self {
+            status: RustOpaque::new(status),
+            username,
+            password,
+        }
+    }
+}
+
 pub struct Runtime {
     pub rx: RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>,
     pub model: RustOpaque<Mutex<Model>>,
     pub handle: RustOpaque<Mutex<Option<Handle>>>,
-    pub init_status: RustOpaque<Mutex<NetStatus>>,
 }
 
 impl Runtime {
@@ -119,24 +148,10 @@ impl Runtime {
             rx: RustOpaque::new(Mutex::new(Some(rx))),
             model: RustOpaque::new(Mutex::new(model)),
             handle: RustOpaque::new(Mutex::new(None)),
-            init_status: RustOpaque::new(Mutex::new(NetStatus::Unknown)),
         })
     }
 
-    pub fn initialize_status(&self, t: NetStatusSimp, ssid: Option<String>) {
-        let status = match t {
-            NetStatusSimp::Unknown => NetStatus::Unknown,
-            NetStatusSimp::Wwan => NetStatus::Wwan,
-            NetStatusSimp::Wlan => match ssid {
-                Some(s) => NetStatus::Wlan(s),
-                None => NetStatus::Unknown,
-            },
-            NetStatusSimp::Lan => NetStatus::Lan,
-        };
-        *self.init_status.lock().unwrap() = status;
-    }
-
-    pub fn start(&self, sink: StreamSink<UpdateMsgWrap>) {
+    pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
         let model = self.model.clone();
         let mut rx = self.rx.lock().unwrap().take().unwrap();
         let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -146,7 +161,6 @@ impl Runtime {
             .unwrap();
         let handle = runtime.handle().clone();
         *self.handle.lock().unwrap() = Some(handle);
-        let status = self.init_status.lock().unwrap().clone();
         std::thread::spawn(move || {
             runtime.block_on(async {
                 {
@@ -155,7 +169,10 @@ impl Runtime {
                         sink.add(UpdateMsgWrap(msg));
                     }));
 
-                    model.queue(Action::Status(Some(status)));
+                    if (!config.username.is_empty()) && (!config.password.is_empty()) {
+                        model.queue(Action::Credential(config.username, config.password));
+                    }
+                    model.queue(Action::Status(Some((*config.status).clone())));
                     model.queue(Action::Timer);
                 }
                 while let Some(action) = rx.recv().await {

@@ -13,20 +13,24 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kFluxToStringConstMeta;
 
+  Future<RuntimeStartConfig> newStaticMethodRuntimeStartConfig(
+      {required NetStatusSimp status,
+      String? ssid,
+      required String username,
+      required String password,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kNewStaticMethodRuntimeStartConfigConstMeta;
+
   Future<Runtime> newStaticMethodRuntime({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kNewStaticMethodRuntimeConstMeta;
 
-  Future<void> initializeStatusMethodRuntime(
-      {required Runtime that,
-      required NetStatusSimp t,
-      String? ssid,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kInitializeStatusMethodRuntimeConstMeta;
-
   Stream<UpdateMsgWrap> startMethodRuntime(
-      {required Runtime that, dynamic hint});
+      {required Runtime that,
+      required RuntimeStartConfig config,
+      dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kStartMethodRuntimeConstMeta;
 
@@ -90,10 +94,6 @@ abstract class Native {
   ShareFnType get shareOpaqueMutexModel;
   OpaqueTypeFinalizer get MutexModelFinalizer;
 
-  DropFnType get dropOpaqueMutexNetStatus;
-  ShareFnType get shareOpaqueMutexNetStatus;
-  OpaqueTypeFinalizer get MutexNetStatusFinalizer;
-
   DropFnType get dropOpaqueMutexOptionHandle;
   ShareFnType get shareOpaqueMutexOptionHandle;
   OpaqueTypeFinalizer get MutexOptionHandleFinalizer;
@@ -101,6 +101,10 @@ abstract class Native {
   DropFnType get dropOpaqueMutexOptionMpscReceiverAction;
   ShareFnType get shareOpaqueMutexOptionMpscReceiverAction;
   OpaqueTypeFinalizer get MutexOptionMpscReceiverActionFinalizer;
+
+  DropFnType get dropOpaqueNetStatus;
+  ShareFnType get shareOpaqueNetStatus;
+  OpaqueTypeFinalizer get NetStatusFinalizer;
 }
 
 @sealed
@@ -115,21 +119,6 @@ class MutexModel extends FrbOpaque {
 
   @override
   OpaqueTypeFinalizer get staticFinalizer => bridge.MutexModelFinalizer;
-}
-
-@sealed
-class MutexNetStatus extends FrbOpaque {
-  final Native bridge;
-  MutexNetStatus.fromRaw(int ptr, int size, this.bridge)
-      : super.unsafe(ptr, size);
-  @override
-  DropFnType get dropFn => bridge.dropOpaqueMutexNetStatus;
-
-  @override
-  ShareFnType get shareFn => bridge.shareOpaqueMutexNetStatus;
-
-  @override
-  OpaqueTypeFinalizer get staticFinalizer => bridge.MutexNetStatusFinalizer;
 }
 
 @sealed
@@ -161,6 +150,20 @@ class MutexOptionMpscReceiverAction extends FrbOpaque {
   @override
   OpaqueTypeFinalizer get staticFinalizer =>
       bridge.MutexOptionMpscReceiverActionFinalizer;
+}
+
+@sealed
+class NetStatus extends FrbOpaque {
+  final Native bridge;
+  NetStatus.fromRaw(int ptr, int size, this.bridge) : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueNetStatus;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueNetStatus;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer => bridge.NetStatusFinalizer;
 }
 
 class Balance {
@@ -272,29 +275,22 @@ class Runtime {
   final MutexOptionMpscReceiverAction rx;
   final MutexModel model;
   final MutexOptionHandle handle;
-  final MutexNetStatus initStatus;
 
   const Runtime({
     required this.bridge,
     required this.rx,
     required this.model,
     required this.handle,
-    required this.initStatus,
   });
 
   static Future<Runtime> newRuntime({required Native bridge, dynamic hint}) =>
       bridge.newStaticMethodRuntime(hint: hint);
 
-  Future<void> initializeStatus(
-          {required NetStatusSimp t, String? ssid, dynamic hint}) =>
-      bridge.initializeStatusMethodRuntime(
+  Stream<UpdateMsgWrap> start(
+          {required RuntimeStartConfig config, dynamic hint}) =>
+      bridge.startMethodRuntime(
         that: this,
-        t: t,
-        ssid: ssid,
-      );
-
-  Stream<UpdateMsgWrap> start({dynamic hint}) => bridge.startMethodRuntime(
-        that: this,
+        config: config,
       );
 
   Future<void> queueCredential(
@@ -352,6 +348,34 @@ class Runtime {
       bridge.detailDailyMethodRuntime(
         that: this,
       );
+}
+
+class RuntimeStartConfig {
+  final Native bridge;
+  final NetStatus status;
+  final String username;
+  final String password;
+
+  const RuntimeStartConfig({
+    required this.bridge,
+    required this.status,
+    required this.username,
+    required this.password,
+  });
+
+  static Future<RuntimeStartConfig> newRuntimeStartConfig(
+          {required Native bridge,
+          required NetStatusSimp status,
+          String? ssid,
+          required String username,
+          required String password,
+          dynamic hint}) =>
+      bridge.newStaticMethodRuntimeStartConfig(
+          status: status,
+          ssid: ssid,
+          username: username,
+          password: password,
+          hint: hint);
 }
 
 enum UpdateMsg {

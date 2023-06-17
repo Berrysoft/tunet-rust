@@ -34,6 +34,35 @@ fn wire_flux_to_string_impl(port_: MessagePort, f: impl Wire2Api<u64> + UnwindSa
         },
     )
 }
+fn wire_new__static_method__RuntimeStartConfig_impl(
+    port_: MessagePort,
+    status: impl Wire2Api<NetStatusSimp> + UnwindSafe,
+    ssid: impl Wire2Api<Option<String>> + UnwindSafe,
+    username: impl Wire2Api<String> + UnwindSafe,
+    password: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "new__static_method__RuntimeStartConfig",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_status = status.wire2api();
+            let api_ssid = ssid.wire2api();
+            let api_username = username.wire2api();
+            let api_password = password.wire2api();
+            move |task_callback| {
+                Ok(RuntimeStartConfig::new(
+                    api_status,
+                    api_ssid,
+                    api_username,
+                    api_password,
+                ))
+            }
+        },
+    )
+}
 fn wire_new__static_method__Runtime_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -44,27 +73,11 @@ fn wire_new__static_method__Runtime_impl(port_: MessagePort) {
         move || move |task_callback| Runtime::new(),
     )
 }
-fn wire_initialize_status__method__Runtime_impl(
+fn wire_start__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
-    t: impl Wire2Api<NetStatusSimp> + UnwindSafe,
-    ssid: impl Wire2Api<Option<String>> + UnwindSafe,
+    config: impl Wire2Api<RuntimeStartConfig> + UnwindSafe,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "initialize_status__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            let api_t = t.wire2api();
-            let api_ssid = ssid.wire2api();
-            move |task_callback| Ok(Runtime::initialize_status(&api_that, api_t, api_ssid))
-        },
-    )
-}
-fn wire_start__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
             debug_name: "start__method__Runtime",
@@ -73,7 +86,14 @@ fn wire_start__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runt
         },
         move || {
             let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::start(&api_that, task_callback.stream_sink()))
+            let api_config = config.wire2api();
+            move |task_callback| {
+                Ok(Runtime::start(
+                    &api_that,
+                    task_callback.stream_sink(),
+                    api_config,
+                ))
+            }
         },
     )
 }
@@ -510,12 +530,23 @@ impl support::IntoDart for Runtime {
             self.rx.into_dart(),
             self.model.into_dart(),
             self.handle.into_dart(),
-            self.init_status.into_dart(),
         ]
         .into_dart()
     }
 }
 impl support::IntoDartExceptPrimitive for Runtime {}
+
+impl support::IntoDart for RuntimeStartConfig {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.status.into_dart(),
+            self.username.into_dart(),
+            self.password.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for RuntimeStartConfig {}
 
 impl support::IntoDart for mirror_UpdateMsg {
     fn into_dart(self) -> support::DartAbi {
