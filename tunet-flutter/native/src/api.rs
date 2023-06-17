@@ -216,6 +216,10 @@ impl Runtime {
         self.model.lock().unwrap().log_busy()
     }
 
+    pub fn log_text(&self) -> String {
+        self.model.lock().unwrap().log.clone().into_owned()
+    }
+
     pub fn flux(&self) -> NetFlux {
         self.model.lock().unwrap().flux.clone()
     }
@@ -254,5 +258,9 @@ impl Runtime {
             now_day: data.now.day(),
             max_flux: data.max_flux,
         })
+    }
+
+    pub fn username(&self) -> String {
+        self.model.lock().unwrap().username.clone()
     }
 }

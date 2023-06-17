@@ -67,6 +67,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta;
 
+  Future<String> logTextMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLogTextMethodRuntimeConstMeta;
+
   Future<NetFlux> fluxMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kFluxMethodRuntimeConstMeta;
@@ -89,6 +93,10 @@ abstract class Native {
       {required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kDetailDailyMethodRuntimeConstMeta;
+
+  Future<String> usernameMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kUsernameMethodRuntimeConstMeta;
 
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
@@ -327,6 +335,10 @@ class Runtime {
         that: this,
       );
 
+  Future<String> logText({dynamic hint}) => bridge.logTextMethodRuntime(
+        that: this,
+      );
+
   Future<NetFlux> flux({dynamic hint}) => bridge.fluxMethodRuntime(
         that: this,
       );
@@ -346,6 +358,10 @@ class Runtime {
 
   Future<DetailDailyWrap?> detailDaily({dynamic hint}) =>
       bridge.detailDailyMethodRuntime(
+        that: this,
+      );
+
+  Future<String> username({dynamic hint}) => bridge.usernameMethodRuntime(
         that: this,
       );
 }

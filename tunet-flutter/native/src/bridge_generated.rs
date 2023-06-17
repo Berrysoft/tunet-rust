@@ -215,6 +215,22 @@ fn wire_log_busy__method__Runtime_impl(
         },
     )
 }
+fn wire_log_text__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "log_text__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::log_text(&api_that))
+        },
+    )
+}
 fn wire_flux__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -291,6 +307,22 @@ fn wire_detail_daily__method__Runtime_impl(
         move || {
             let api_that = that.wire2api();
             move |task_callback| Ok(Runtime::detail_daily(&api_that))
+        },
+    )
+}
+fn wire_username__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "username__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(Runtime::username(&api_that))
         },
     )
 }

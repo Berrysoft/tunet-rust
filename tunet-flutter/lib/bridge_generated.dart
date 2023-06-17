@@ -245,6 +245,24 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<String> logTextMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_log_text__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_String,
+      constMeta: kLogTextMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kLogTextMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "log_text__method__Runtime",
+        argNames: ["that"],
+      );
+
   Future<NetFlux> fluxMethodRuntime({required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -335,6 +353,24 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kDetailDailyMethodRuntimeConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "detail_daily__method__Runtime",
+        argNames: ["that"],
+      );
+
+  Future<String> usernameMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_username__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_String,
+      constMeta: kUsernameMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kUsernameMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "username__method__Runtime",
         argNames: ["that"],
       );
 
@@ -1083,6 +1119,24 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_log_busy__method__RuntimePtr
           .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
+  void wire_log_text__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_log_text__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_log_text__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_log_text__method__Runtime');
+  late final _wire_log_text__method__Runtime =
+      _wire_log_text__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
   void wire_flux__method__Runtime(
     int port_,
     ffi.Pointer<wire_Runtime> that,
@@ -1167,6 +1221,24 @@ class NativeWire implements FlutterRustBridgeWireBase {
       'wire_detail_daily__method__Runtime');
   late final _wire_detail_daily__method__Runtime =
       _wire_detail_daily__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_username__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_username__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_username__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_username__method__Runtime');
+  late final _wire_username__method__Runtime =
+      _wire_username__method__RuntimePtr
           .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
   wire_MutexModel new_MutexModel() {

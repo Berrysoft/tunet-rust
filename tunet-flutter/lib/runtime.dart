@@ -14,17 +14,21 @@ class ManagedRuntime {
   static const statusApi = MethodChannel('com.berrysoft.tunet_flutter/status');
 
   late StreamController<bool> logBusySink = StreamController();
+  late StreamController<String> logTextSink = StreamController();
   late StreamController<NetFlux> netFluxSink = StreamController();
   late StreamController<NetState> stateSink = StreamController();
   late StreamController<String> statusSink = StreamController();
   late StreamController<DetailDailyWrap> dailySink = StreamController();
+  late StreamController<String> usernameSink = StreamController();
 
   late Stream<bool> logBusyStream = logBusySink.stream.asBroadcastStream();
+  late Stream<String> logTextStream = logTextSink.stream.asBroadcastStream();
   late Stream<NetFlux> netFluxStream = netFluxSink.stream.asBroadcastStream();
   late Stream<NetState> stateStream = stateSink.stream.asBroadcastStream();
   late Stream<String> statusStream = statusSink.stream.asBroadcastStream();
   late Stream<DetailDailyWrap> dailyStream =
       dailySink.stream.asBroadcastStream();
+  late Stream<String> usernameStream = usernameSink.stream.asBroadcastStream();
 
   late DetailsData detailsData = DetailsData();
 
@@ -67,6 +71,7 @@ class ManagedRuntime {
         case UpdateMsg.Credential:
           await runtime.queueState();
           await runtime.queueDetails();
+          usernameSink.add(await username());
           break;
         case UpdateMsg.State:
           await runtime.queueFlux();
@@ -75,6 +80,9 @@ class ManagedRuntime {
         case UpdateMsg.Status:
           await runtime.queueState();
           statusSink.add(await status());
+          break;
+        case UpdateMsg.Log:
+          logTextSink.add(await logText());
           break;
         case UpdateMsg.Flux:
           netFluxSink.add(await flux());
@@ -123,12 +131,14 @@ class ManagedRuntime {
   Future<void> queueLogout() => runtime.queueLogout();
   Future<void> queueFlux() => runtime.queueFlux();
 
+  Future<bool> logBusy() => runtime.logBusy();
+  Future<String> logText() => runtime.logText();
   Future<NetState> state() async => (await runtime.state()).field0;
   Future<String> status() => runtime.status();
   Future<NetFlux> flux() => runtime.flux();
-  Future<bool> logBusy() => runtime.logBusy();
   Future<List<NetDetail>> details() => runtime.details();
   Future<DetailDailyWrap?> detailDaily() => runtime.detailDaily();
+  Future<String> username() => runtime.username();
 }
 
 class DetailsData extends DataTableSource {

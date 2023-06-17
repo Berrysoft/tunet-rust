@@ -76,6 +76,11 @@ pub extern "C" fn wire_log_busy__method__Runtime(port_: i64, that: *mut wire_Run
 }
 
 #[no_mangle]
+pub extern "C" fn wire_log_text__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_log_text__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_flux__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_flux__method__Runtime_impl(port_, that)
 }
@@ -98,6 +103,11 @@ pub extern "C" fn wire_details__method__Runtime(port_: i64, that: *mut wire_Runt
 #[no_mangle]
 pub extern "C" fn wire_detail_daily__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_detail_daily__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_username__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_username__method__Runtime_impl(port_, that)
 }
 
 // Section: allocate functions
