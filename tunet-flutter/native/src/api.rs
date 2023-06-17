@@ -232,6 +232,10 @@ impl Runtime {
         self.model.lock().unwrap().status.to_string()
     }
 
+    pub fn detail_busy(&self) -> bool {
+        self.model.lock().unwrap().detail_busy()
+    }
+
     pub fn details(&self) -> Vec<NetDetail> {
         self.model.lock().unwrap().details.clone()
     }

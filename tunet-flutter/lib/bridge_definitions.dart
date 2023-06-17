@@ -84,6 +84,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta;
 
+  Future<bool> detailBusyMethodRuntime({required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kDetailBusyMethodRuntimeConstMeta;
+
   Future<List<NetDetail>> detailsMethodRuntime(
       {required Runtime that, dynamic hint});
 
@@ -348,6 +352,10 @@ class Runtime {
       );
 
   Future<String> status({dynamic hint}) => bridge.statusMethodRuntime(
+        that: this,
+      );
+
+  Future<bool> detailBusy({dynamic hint}) => bridge.detailBusyMethodRuntime(
         that: this,
       );
 

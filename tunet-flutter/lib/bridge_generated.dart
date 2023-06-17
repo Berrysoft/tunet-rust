@@ -318,6 +318,24 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<bool> detailBusyMethodRuntime({required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_detail_busy__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_bool,
+      constMeta: kDetailBusyMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kDetailBusyMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "detail_busy__method__Runtime",
+        argNames: ["that"],
+      );
+
   Future<List<NetDetail>> detailsMethodRuntime(
       {required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
@@ -1187,6 +1205,24 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_Runtime>)>>('wire_status__method__Runtime');
   late final _wire_status__method__Runtime = _wire_status__method__RuntimePtr
       .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_detail_busy__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_detail_busy__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_detail_busy__method__RuntimePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_Runtime>)>>('wire_detail_busy__method__Runtime');
+  late final _wire_detail_busy__method__Runtime =
+      _wire_detail_busy__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
   void wire_details__method__Runtime(
     int port_,

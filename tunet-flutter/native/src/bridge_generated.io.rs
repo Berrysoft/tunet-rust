@@ -96,6 +96,11 @@ pub extern "C" fn wire_status__method__Runtime(port_: i64, that: *mut wire_Runti
 }
 
 #[no_mangle]
+pub extern "C" fn wire_detail_busy__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_detail_busy__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_details__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_details__method__Runtime_impl(port_, that)
 }

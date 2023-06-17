@@ -14,7 +14,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  late String username = "";
+  String username = "";
 
   late StreamSubscription<String> usernameSub;
 

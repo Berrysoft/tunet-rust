@@ -99,6 +99,8 @@ void wire_state__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 void wire_status__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
+void wire_detail_busy__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
 void wire_details__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 void wire_detail_daily__method__Runtime(int64_t port_, struct wire_Runtime *that);
@@ -156,6 +158,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_flux__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_state__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_status__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_detail_busy__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_details__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_detail_daily__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_username__method__Runtime);

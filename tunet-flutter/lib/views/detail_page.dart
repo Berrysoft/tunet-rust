@@ -13,8 +13,10 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
+  bool detailBusy = false;
   DetailDailyWrap? daily;
 
+  late StreamSubscription<bool> detailBusySub;
   late StreamSubscription<DetailDailyWrap?> dailySub;
 
   @override
@@ -26,16 +28,21 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   Future<void> initStateAsync(ManagedRuntime runtime) async {
+    final detailBusy = await runtime.detailBusy();
     final daily = await runtime.detailDaily();
     setState(() {
+      this.detailBusy = detailBusy;
       this.daily = daily;
     });
+    detailBusySub = runtime.detailBusyStream
+        .listen((event) => setState(() => this.detailBusy = event));
     dailySub = runtime.dailyStream
         .listen((event) => setState(() => this.daily = event));
   }
 
   @override
   void dispose() {
+    detailBusySub.cancel();
     dailySub.cancel();
 
     super.dispose();
@@ -44,6 +51,7 @@ class _DetailPageState extends State<DetailPage> {
   @override
   Widget build(BuildContext context) {
     final runtime = widget.runtime;
+    final detailBusy = this.detailBusy;
     final daily = this.daily;
     Widget dailyChart = const Flexible(child: LinearProgressIndicator());
     if (daily != null) {
@@ -78,7 +86,12 @@ class _DetailPageState extends State<DetailPage> {
             reservedSize: 30,
           ),
         ),
-        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: AxisTitles(
+          axisNameWidget:
+              Text("按日统计", style: Theme.of(context).textTheme.titleLarge),
+          axisNameSize: 40,
+          sideTitles: const SideTitles(showTitles: false),
+        ),
         rightTitles:
             const AxisTitles(sideTitles: SideTitles(showTitles: false)),
       );
@@ -99,22 +112,19 @@ class _DetailPageState extends State<DetailPage> {
         maxX: daily.nowDay.toDouble(),
         minY: 0,
       );
-      dailyChart = LineChart(data);
+      dailyChart = Expanded(
+          child: Card(
+              child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: LineChart(data),
+      )));
     }
-    return Container(
-      margin: const EdgeInsets.all(8.0),
-      child: Column(
+    return Scaffold(
+      body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: dailyChart,
-              ),
-            ),
-          ),
+          dailyChart,
           PaginatedDataTable(
             columns: const [
               DataColumn(label: Text('登录时间')),
@@ -127,6 +137,15 @@ class _DetailPageState extends State<DetailPage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: detailBusy
+            ? null
+            : () {
+                runtime.queueDetails();
+              },
+        child: const Icon(Icons.refresh_rounded),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
     );
   }
 }

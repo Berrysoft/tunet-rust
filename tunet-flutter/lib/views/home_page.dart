@@ -19,10 +19,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   FToast fToast = FToast();
 
-  late bool logBusy = false;
-  late NetFlux? netFlux;
-  late String? status;
-  late NetState state = NetState.Unknown;
+  bool logBusy = false;
+  NetFlux? netFlux;
+  String? status;
+  NetState state = NetState.Unknown;
 
   late StreamSubscription<bool> logBusySub;
   late StreamSubscription<String> logTextSub;
@@ -35,9 +35,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     fToast.init(context);
-
-    netFlux = null;
-    status = null;
 
     final runtime = widget.runtime;
     initStateAsync(runtime);

@@ -18,6 +18,7 @@ class ManagedRuntime {
   late StreamController<NetFlux> netFluxSink = StreamController();
   late StreamController<NetState> stateSink = StreamController();
   late StreamController<String> statusSink = StreamController();
+  late StreamController<bool> detailBusySink = StreamController();
   late StreamController<DetailDailyWrap> dailySink = StreamController();
   late StreamController<String> usernameSink = StreamController();
 
@@ -26,6 +27,8 @@ class ManagedRuntime {
   late Stream<NetFlux> netFluxStream = netFluxSink.stream.asBroadcastStream();
   late Stream<NetState> stateStream = stateSink.stream.asBroadcastStream();
   late Stream<String> statusStream = statusSink.stream.asBroadcastStream();
+  late Stream<bool> detailBusyStream =
+      detailBusySink.stream.asBroadcastStream();
   late Stream<DetailDailyWrap> dailyStream =
       dailySink.stream.asBroadcastStream();
   late Stream<String> usernameStream = usernameSink.stream.asBroadcastStream();
@@ -97,6 +100,9 @@ class ManagedRuntime {
         case UpdateMsg.LogBusy:
           logBusySink.add(await logBusy());
           break;
+        case UpdateMsg.DetailBusy:
+          detailBusySink.add(await detailBusy());
+          break;
         default:
           break;
       }
@@ -130,12 +136,14 @@ class ManagedRuntime {
   Future<void> queueLogin() => runtime.queueLogin();
   Future<void> queueLogout() => runtime.queueLogout();
   Future<void> queueFlux() => runtime.queueFlux();
+  Future<void> queueDetails() => runtime.queueDetails();
 
   Future<bool> logBusy() => runtime.logBusy();
   Future<String> logText() => runtime.logText();
   Future<NetState> state() async => (await runtime.state()).field0;
   Future<String> status() => runtime.status();
   Future<NetFlux> flux() => runtime.flux();
+  Future<bool> detailBusy() => runtime.detailBusy();
   Future<List<NetDetail>> details() => runtime.details();
   Future<DetailDailyWrap?> detailDaily() => runtime.detailDaily();
   Future<String> username() => runtime.username();
