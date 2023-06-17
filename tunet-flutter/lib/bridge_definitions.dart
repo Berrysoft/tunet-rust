@@ -69,6 +69,16 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kQueueOnlinesMethodRuntimeConstMeta;
 
+  Future<void> queueConnectMethodRuntime(
+      {required Runtime that, required Ipv4AddrWrap ip, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueConnectMethodRuntimeConstMeta;
+
+  Future<void> queueDropMethodRuntime(
+      {required Runtime that, required List<Ipv4AddrWrap> ips, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueDropMethodRuntimeConstMeta;
+
   Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta;
@@ -376,6 +386,18 @@ class Runtime {
 
   Future<void> queueOnlines({dynamic hint}) => bridge.queueOnlinesMethodRuntime(
         that: this,
+      );
+
+  Future<void> queueConnect({required Ipv4AddrWrap ip, dynamic hint}) =>
+      bridge.queueConnectMethodRuntime(
+        that: this,
+        ip: ip,
+      );
+
+  Future<void> queueDrop({required List<Ipv4AddrWrap> ips, dynamic hint}) =>
+      bridge.queueDropMethodRuntime(
+        that: this,
+        ips: ips,
       );
 
   Future<bool> logBusy({dynamic hint}) => bridge.logBusyMethodRuntime(

@@ -46,6 +46,15 @@ typedef struct wire_NetStateWrap {
   int32_t field0;
 } wire_NetStateWrap;
 
+typedef struct wire_Ipv4AddrWrap {
+  struct wire_uint_8_list *octets;
+} wire_Ipv4AddrWrap;
+
+typedef struct wire_list_ipv_4_addr_wrap {
+  struct wire_Ipv4AddrWrap *ptr;
+  int32_t len;
+} wire_list_ipv_4_addr_wrap;
+
 typedef struct DartCObject *WireSyncReturn;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
@@ -91,6 +100,14 @@ void wire_queue_details__method__Runtime(int64_t port_, struct wire_Runtime *tha
 
 void wire_queue_onlines__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
+void wire_queue_connect__method__Runtime(int64_t port_,
+                                         struct wire_Runtime *that,
+                                         struct wire_Ipv4AddrWrap *ip);
+
+void wire_queue_drop__method__Runtime(int64_t port_,
+                                      struct wire_Runtime *that,
+                                      struct wire_list_ipv_4_addr_wrap *ips);
+
 void wire_log_busy__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 void wire_log_text__method__Runtime(int64_t port_, struct wire_Runtime *that);
@@ -121,11 +138,15 @@ struct wire_MutexOptionMpscReceiverAction new_MutexOptionMpscReceiverAction(void
 
 struct wire_NetStatus new_NetStatus(void);
 
+struct wire_Ipv4AddrWrap *new_box_autoadd_ipv_4_addr_wrap_0(void);
+
 struct wire_NetStateWrap *new_box_autoadd_net_state_wrap_0(void);
 
 struct wire_Runtime *new_box_autoadd_runtime_0(void);
 
 struct wire_RuntimeStartConfig *new_box_autoadd_runtime_start_config_0(void);
+
+struct wire_list_ipv_4_addr_wrap *new_list_ipv_4_addr_wrap_0(int32_t len);
 
 struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 
@@ -160,6 +181,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_queue_state__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_details__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_onlines__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_queue_connect__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_queue_drop__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_log_busy__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_log_text__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_flux__method__Runtime);
@@ -175,9 +198,11 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_MutexOptionHandle);
     dummy_var ^= ((int64_t) (void*) new_MutexOptionMpscReceiverAction);
     dummy_var ^= ((int64_t) (void*) new_NetStatus);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_ipv_4_addr_wrap_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_net_state_wrap_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_start_config_0);
+    dummy_var ^= ((int64_t) (void*) new_list_ipv_4_addr_wrap_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) drop_opaque_MutexModel);
     dummy_var ^= ((int64_t) (void*) share_opaque_MutexModel);

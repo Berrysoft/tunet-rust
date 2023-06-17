@@ -238,6 +238,16 @@ impl Runtime {
         self.queue(Action::Online);
     }
 
+    pub fn queue_connect(&self, ip: Ipv4AddrWrap) {
+        self.queue(Action::Connect(Ipv4Addr::from(ip.octets)));
+    }
+
+    pub fn queue_drop(&self, ips: Vec<Ipv4AddrWrap>) {
+        for ip in ips {
+            self.queue(Action::Drop(Ipv4Addr::from(ip.octets)));
+        }
+    }
+
     pub fn log_busy(&self) -> bool {
         self.model.lock().unwrap().log_busy()
     }

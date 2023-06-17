@@ -76,6 +76,24 @@ pub extern "C" fn wire_queue_onlines__method__Runtime(port_: i64, that: *mut wir
 }
 
 #[no_mangle]
+pub extern "C" fn wire_queue_connect__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    ip: *mut wire_Ipv4AddrWrap,
+) {
+    wire_queue_connect__method__Runtime_impl(port_, that, ip)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_queue_drop__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    ips: *mut wire_list_ipv_4_addr_wrap,
+) {
+    wire_queue_drop__method__Runtime_impl(port_, that, ips)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_log_busy__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_log_busy__method__Runtime_impl(port_, that)
 }
@@ -153,6 +171,11 @@ pub extern "C" fn new_NetStatus() -> wire_NetStatus {
 }
 
 #[no_mangle]
+pub extern "C" fn new_box_autoadd_ipv_4_addr_wrap_0() -> *mut wire_Ipv4AddrWrap {
+    support::new_leak_box_ptr(wire_Ipv4AddrWrap::new_with_null_ptr())
+}
+
+#[no_mangle]
 pub extern "C" fn new_box_autoadd_net_state_wrap_0() -> *mut wire_NetStateWrap {
     support::new_leak_box_ptr(wire_NetStateWrap::new_with_null_ptr())
 }
@@ -165,6 +188,15 @@ pub extern "C" fn new_box_autoadd_runtime_0() -> *mut wire_Runtime {
 #[no_mangle]
 pub extern "C" fn new_box_autoadd_runtime_start_config_0() -> *mut wire_RuntimeStartConfig {
     support::new_leak_box_ptr(wire_RuntimeStartConfig::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn new_list_ipv_4_addr_wrap_0(len: i32) -> *mut wire_list_ipv_4_addr_wrap {
+    let wrap = wire_list_ipv_4_addr_wrap {
+        ptr: support::new_leak_vec_ptr(<wire_Ipv4AddrWrap>::new_with_null_ptr(), len),
+        len,
+    };
+    support::new_leak_box_ptr(wrap)
 }
 
 #[no_mangle]
@@ -268,6 +300,12 @@ impl Wire2Api<String> for *mut wire_uint_8_list {
         String::from_utf8_lossy(&vec).into_owned()
     }
 }
+impl Wire2Api<Ipv4AddrWrap> for *mut wire_Ipv4AddrWrap {
+    fn wire2api(self) -> Ipv4AddrWrap {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<Ipv4AddrWrap>::wire2api(*wrap).into()
+    }
+}
 impl Wire2Api<NetStateWrap> for *mut wire_NetStateWrap {
     fn wire2api(self) -> NetStateWrap {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
@@ -284,6 +322,23 @@ impl Wire2Api<RuntimeStartConfig> for *mut wire_RuntimeStartConfig {
     fn wire2api(self) -> RuntimeStartConfig {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
         Wire2Api::<RuntimeStartConfig>::wire2api(*wrap).into()
+    }
+}
+
+impl Wire2Api<Ipv4AddrWrap> for wire_Ipv4AddrWrap {
+    fn wire2api(self) -> Ipv4AddrWrap {
+        Ipv4AddrWrap {
+            octets: self.octets.wire2api(),
+        }
+    }
+}
+impl Wire2Api<Vec<Ipv4AddrWrap>> for *mut wire_list_ipv_4_addr_wrap {
+    fn wire2api(self) -> Vec<Ipv4AddrWrap> {
+        let vec = unsafe {
+            let wrap = support::box_from_leak_ptr(self);
+            support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(Wire2Api::wire2api).collect()
     }
 }
 
@@ -312,6 +367,12 @@ impl Wire2Api<RuntimeStartConfig> for wire_RuntimeStartConfig {
     }
 }
 
+impl Wire2Api<[u8; 4]> for *mut wire_uint_8_list {
+    fn wire2api(self) -> [u8; 4] {
+        let vec: Vec<u8> = self.wire2api();
+        support::from_vec_to_array(vec)
+    }
+}
 impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
     fn wire2api(self) -> Vec<u8> {
         unsafe {
@@ -344,6 +405,19 @@ pub struct wire_MutexOptionMpscReceiverAction {
 #[derive(Clone)]
 pub struct wire_NetStatus {
     ptr: *const core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_Ipv4AddrWrap {
+    octets: *mut wire_uint_8_list,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_list_ipv_4_addr_wrap {
+    ptr: *mut wire_Ipv4AddrWrap,
+    len: i32,
 }
 
 #[repr(C)]
@@ -413,6 +487,20 @@ impl NewWithNullPtr for wire_NetStatus {
         Self {
             ptr: core::ptr::null(),
         }
+    }
+}
+
+impl NewWithNullPtr for wire_Ipv4AddrWrap {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            octets: core::ptr::null_mut(),
+        }
+    }
+}
+
+impl Default for wire_Ipv4AddrWrap {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
     }
 }
 

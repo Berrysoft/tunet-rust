@@ -246,6 +246,46 @@ class NativeImpl implements Native {
         argNames: ["that"],
       );
 
+  Future<void> queueConnectMethodRuntime(
+      {required Runtime that, required Ipv4AddrWrap ip, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    var arg1 = _platform.api2wire_box_autoadd_ipv_4_addr_wrap(ip);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_queue_connect__method__Runtime(port_, arg0, arg1),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueConnectMethodRuntimeConstMeta,
+      argValues: [that, ip],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueConnectMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_connect__method__Runtime",
+        argNames: ["that", "ip"],
+      );
+
+  Future<void> queueDropMethodRuntime(
+      {required Runtime that, required List<Ipv4AddrWrap> ips, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    var arg1 = _platform.api2wire_list_ipv_4_addr_wrap(ips);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_queue_drop__method__Runtime(port_, arg0, arg1),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueDropMethodRuntimeConstMeta,
+      argValues: [that, ips],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueDropMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_drop__method__Runtime",
+        argNames: ["that", "ips"],
+      );
+
   Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -784,6 +824,14 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_Ipv4AddrWrap> api2wire_box_autoadd_ipv_4_addr_wrap(
+      Ipv4AddrWrap raw) {
+    final ptr = inner.new_box_autoadd_ipv_4_addr_wrap_0();
+    _api_fill_to_wire_ipv_4_addr_wrap(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_NetStateWrap> api2wire_box_autoadd_net_state_wrap(
       NetStateWrap raw) {
     final ptr = inner.new_box_autoadd_net_state_wrap_0();
@@ -807,6 +855,16 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_list_ipv_4_addr_wrap> api2wire_list_ipv_4_addr_wrap(
+      List<Ipv4AddrWrap> raw) {
+    final ans = inner.new_list_ipv_4_addr_wrap_0(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      _api_fill_to_wire_ipv_4_addr_wrap(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_opt_String(String? raw) {
     return raw == null ? ffi.nullptr : api2wire_String(raw);
   }
@@ -820,6 +878,13 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   @protected
   int api2wire_u64(int raw) {
     return raw;
+  }
+
+  @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_u8_array_4(U8Array4 raw) {
+    final ans = inner.new_uint_8_list_0(4);
+    ans.ref.ptr.asTypedList(4).setAll(0, raw);
+    return ans;
   }
 
   @protected
@@ -866,6 +931,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     wireObj.ptr = apiObj.shareOrMove();
   }
 
+  void _api_fill_to_wire_box_autoadd_ipv_4_addr_wrap(
+      Ipv4AddrWrap apiObj, ffi.Pointer<wire_Ipv4AddrWrap> wireObj) {
+    _api_fill_to_wire_ipv_4_addr_wrap(apiObj, wireObj.ref);
+  }
+
   void _api_fill_to_wire_box_autoadd_net_state_wrap(
       NetStateWrap apiObj, ffi.Pointer<wire_NetStateWrap> wireObj) {
     _api_fill_to_wire_net_state_wrap(apiObj, wireObj.ref);
@@ -879,6 +949,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   void _api_fill_to_wire_box_autoadd_runtime_start_config(
       RuntimeStartConfig apiObj, ffi.Pointer<wire_RuntimeStartConfig> wireObj) {
     _api_fill_to_wire_runtime_start_config(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_ipv_4_addr_wrap(
+      Ipv4AddrWrap apiObj, wire_Ipv4AddrWrap wireObj) {
+    wireObj.octets = api2wire_u8_array_4(apiObj.octets);
   }
 
   void _api_fill_to_wire_net_state_wrap(
@@ -1223,6 +1298,50 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_queue_onlines__method__RuntimePtr
           .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
 
+  void wire_queue_connect__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+    ffi.Pointer<wire_Ipv4AddrWrap> ip,
+  ) {
+    return _wire_queue_connect__method__Runtime(
+      port_,
+      that,
+      ip,
+    );
+  }
+
+  late final _wire_queue_connect__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>,
+                  ffi.Pointer<wire_Ipv4AddrWrap>)>>(
+      'wire_queue_connect__method__Runtime');
+  late final _wire_queue_connect__method__Runtime =
+      _wire_queue_connect__method__RuntimePtr.asFunction<
+          void Function(int, ffi.Pointer<wire_Runtime>,
+              ffi.Pointer<wire_Ipv4AddrWrap>)>();
+
+  void wire_queue_drop__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+    ffi.Pointer<wire_list_ipv_4_addr_wrap> ips,
+  ) {
+    return _wire_queue_drop__method__Runtime(
+      port_,
+      that,
+      ips,
+    );
+  }
+
+  late final _wire_queue_drop__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>,
+                  ffi.Pointer<wire_list_ipv_4_addr_wrap>)>>(
+      'wire_queue_drop__method__Runtime');
+  late final _wire_queue_drop__method__Runtime =
+      _wire_queue_drop__method__RuntimePtr.asFunction<
+          void Function(int, ffi.Pointer<wire_Runtime>,
+              ffi.Pointer<wire_list_ipv_4_addr_wrap>)>();
+
   void wire_log_busy__method__Runtime(
     int port_,
     ffi.Pointer<wire_Runtime> that,
@@ -1455,6 +1574,17 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_NetStatus =
       _new_NetStatusPtr.asFunction<wire_NetStatus Function()>();
 
+  ffi.Pointer<wire_Ipv4AddrWrap> new_box_autoadd_ipv_4_addr_wrap_0() {
+    return _new_box_autoadd_ipv_4_addr_wrap_0();
+  }
+
+  late final _new_box_autoadd_ipv_4_addr_wrap_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Ipv4AddrWrap> Function()>>(
+          'new_box_autoadd_ipv_4_addr_wrap_0');
+  late final _new_box_autoadd_ipv_4_addr_wrap_0 =
+      _new_box_autoadd_ipv_4_addr_wrap_0Ptr
+          .asFunction<ffi.Pointer<wire_Ipv4AddrWrap> Function()>();
+
   ffi.Pointer<wire_NetStateWrap> new_box_autoadd_net_state_wrap_0() {
     return _new_box_autoadd_net_state_wrap_0();
   }
@@ -1487,6 +1617,21 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_runtime_start_config_0 =
       _new_box_autoadd_runtime_start_config_0Ptr
           .asFunction<ffi.Pointer<wire_RuntimeStartConfig> Function()>();
+
+  ffi.Pointer<wire_list_ipv_4_addr_wrap> new_list_ipv_4_addr_wrap_0(
+    int len,
+  ) {
+    return _new_list_ipv_4_addr_wrap_0(
+      len,
+    );
+  }
+
+  late final _new_list_ipv_4_addr_wrap_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_list_ipv_4_addr_wrap> Function(
+              ffi.Int32)>>('new_list_ipv_4_addr_wrap_0');
+  late final _new_list_ipv_4_addr_wrap_0 = _new_list_ipv_4_addr_wrap_0Ptr
+      .asFunction<ffi.Pointer<wire_list_ipv_4_addr_wrap> Function(int)>();
 
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
@@ -1681,6 +1826,17 @@ final class wire_RuntimeStartConfig extends ffi.Struct {
 final class wire_NetStateWrap extends ffi.Struct {
   @ffi.Int32()
   external int field0;
+}
+
+final class wire_Ipv4AddrWrap extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> octets;
+}
+
+final class wire_list_ipv_4_addr_wrap extends ffi.Struct {
+  external ffi.Pointer<wire_Ipv4AddrWrap> ptr;
+
+  @ffi.Int32()
+  external int len;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

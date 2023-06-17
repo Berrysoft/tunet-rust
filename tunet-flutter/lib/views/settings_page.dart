@@ -1,7 +1,9 @@
 import 'dart:async';
-
+import 'dart:io';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import '../runtime.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -16,6 +18,8 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String username = "";
   bool onlineBusy = false;
+
+  List<bool> onlinesSelected = List.empty();
 
   late StreamSubscription<String> usernameSub;
   late StreamSubscription<bool> onlineBusySub;
@@ -52,6 +56,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final runtime = widget.runtime;
+    final onlines = runtime.onlinesData;
+    if (onlinesSelected.length != onlines.length) {
+      onlinesSelected = List.filled(onlines.length, false);
+    }
     final username = this.username;
     return Container(
       margin: const EdgeInsets.all(8.0),
@@ -80,8 +88,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     onSelected: (value) {
                       switch (value) {
                         case OnlineAction.connect:
+                          ipDialogBuilder(context, runtime);
                           break;
                         case OnlineAction.drop:
+                          final ips = onlines
+                              .whereIndexed(
+                                  (index, _) => onlinesSelected[index])
+                              .map((u) => u.address)
+                              .toList();
+                          runtime.queueDrop(ips: ips);
                           break;
                         case OnlineAction.refresh:
                           runtime.queueOnlines();
@@ -123,8 +138,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       DataColumn(label: Text('MAC地址')),
                       DataColumn(label: Text('设备')),
                     ],
-                    rows: runtime.onlinesData,
-                    showCheckboxColumn: false,
+                    rows: onlines
+                        .mapIndexed(
+                          (index, element) => netUserToRow(
+                            element,
+                            onlinesSelected[index],
+                            (selected) => setState(
+                                () => onlinesSelected[index] = selected!),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
               ],
@@ -134,6 +157,36 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+}
+
+DataRow netUserToRow(
+  NetUserWrap u,
+  bool selected,
+  void Function(bool?) onSelectedChanged,
+) {
+  return DataRow(
+    cells: [
+      DataCell(Text(InternetAddress.fromRawAddress(
+        Uint8List.fromList(u.address.octets),
+        type: InternetAddressType.IPv4,
+      ).address)),
+      DataCell(Text(DateFormat('MM-dd HH:mm').format(u.loginTime.field0))),
+      DataCell(FutureBuilder(
+        future: api.fluxToString(f: u.flux.field0),
+        builder: (context, snap) {
+          final data = snap.data;
+          if (data == null) {
+            return const CircularProgressIndicator();
+          }
+          return Text(data);
+        },
+      )),
+      DataCell(Text(u.macAddress)),
+      DataCell(Text(u.isLocal ? '本机' : '未知')),
+    ],
+    selected: selected,
+    onSelectChanged: onSelectedChanged,
+  );
 }
 
 enum OnlineAction {
@@ -147,58 +200,85 @@ Future<void> credDialogBuilder(BuildContext context, ManagedRuntime runtime) {
   final passwordController = TextEditingController();
   return showDialog(
     context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('设置凭据'),
-        content: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          child: AutofillGroup(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: usernameController,
-                  decoration: const InputDecoration(labelText: '用户名'),
-                  keyboardType: TextInputType.name,
-                  textInputAction: TextInputAction.next,
-                  autofillHints: const [AutofillHints.username],
-                ),
-                TextField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(labelText: '密码'),
-                  keyboardType: TextInputType.visiblePassword,
-                  autofillHints: const [AutofillHints.password],
-                  onEditingComplete: () => TextInput.finishAutofillContext(),
-                  obscureText: true,
-                ),
-              ],
-            ),
+    builder: (context) => AlertDialog(
+      title: const Text('设置凭据'),
+      content: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        child: AutofillGroup(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(labelText: '用户名'),
+                keyboardType: TextInputType.name,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.username],
+              ),
+              TextField(
+                controller: passwordController,
+                decoration: const InputDecoration(labelText: '密码'),
+                keyboardType: TextInputType.visiblePassword,
+                autofillHints: const [AutofillHints.password],
+                onEditingComplete: () => TextInput.finishAutofillContext(),
+                obscureText: true,
+              ),
+            ],
           ),
-          onTap: () {
-            String password = passwordController.text;
-            String username = usernameController.text;
-            if (username.isEmpty || password.isEmpty) {
-              TextInput.finishAutofillContext(shouldSave: false);
-            }
+        ),
+        onTap: () {
+          String password = passwordController.text;
+          String username = usernameController.text;
+          if (username.isEmpty || password.isEmpty) {
+            TextInput.finishAutofillContext(shouldSave: false);
+          }
+        },
+      ),
+      actions: [
+        TextButton(
+          child: const Text('确定'),
+          onPressed: () {
+            runtime.queueCredential(
+              u: usernameController.text,
+              p: passwordController.text,
+            );
+            Navigator.of(context).pop();
           },
         ),
-        actions: [
-          TextButton(
-            child: const Text('取消'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          TextButton(
-            child: const Text('确定'),
-            onPressed: () {
-              runtime.queueCredential(
-                u: usernameController.text,
-                p: passwordController.text,
-              );
-              Navigator.of(context).pop();
-            },
+      ],
+    ),
+  );
+}
+
+Future<void> ipDialogBuilder(BuildContext context, ManagedRuntime runtime) {
+  final ipController = TextEditingController();
+  return showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('认证IP'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: ipController,
+            decoration: const InputDecoration(labelText: 'IP地址'),
+            keyboardType: TextInputType.number,
           ),
         ],
-      );
-    },
+      ),
+      actions: [
+        TextButton(
+          child: const Text('确定'),
+          onPressed: () {
+            runtime.queueConnect(
+              ip: Ipv4AddrWrap(
+                octets: U8Array4(InternetAddress(ipController.text).rawAddress),
+              ),
+            );
+            Navigator.of(context).pop();
+          },
+        )
+      ],
+    ),
   );
 }

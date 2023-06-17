@@ -215,6 +215,42 @@ fn wire_queue_onlines__method__Runtime_impl(
         },
     )
 }
+fn wire_queue_connect__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    ip: impl Wire2Api<Ipv4AddrWrap> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_connect__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_ip = ip.wire2api();
+            move |task_callback| Ok(Runtime::queue_connect(&api_that, api_ip))
+        },
+    )
+}
+fn wire_queue_drop__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    ips: impl Wire2Api<Vec<Ipv4AddrWrap>> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_drop__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_ips = ips.wire2api();
+            move |task_callback| Ok(Runtime::queue_drop(&api_that, api_ips))
+        },
+    )
+}
 fn wire_log_busy__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
@@ -491,6 +527,7 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
+
 impl Wire2Api<NetState> for i32 {
     fn wire2api(self) -> NetState {
         match self {

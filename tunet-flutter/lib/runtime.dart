@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -38,7 +37,7 @@ class ManagedRuntime {
       onlineBusySink.stream.asBroadcastStream();
 
   DetailsData detailsData = DetailsData();
-  List<DataRow> onlinesData = List.empty();
+  List<NetUserWrap> onlinesData = List.empty();
 
   ManagedRuntime({required this.runtime});
 
@@ -97,7 +96,7 @@ class ManagedRuntime {
           netFluxSink.add(await flux());
           break;
         case UpdateMsg.Online:
-          onlinesData = (await onlines()).map(netUserToRow).toList();
+          onlinesData = await onlines();
           break;
         case UpdateMsg.Details:
           detailsData.data = await details();
@@ -148,6 +147,10 @@ class ManagedRuntime {
   Future<void> queueFlux() => runtime.queueFlux();
   Future<void> queueDetails() => runtime.queueDetails();
   Future<void> queueOnlines() => runtime.queueOnlines();
+  Future<void> queueConnect({required Ipv4AddrWrap ip}) =>
+      runtime.queueConnect(ip: ip);
+  Future<void> queueDrop({required List<Ipv4AddrWrap> ips}) =>
+      runtime.queueDrop(ips: ips);
 
   Future<bool> logBusy() => runtime.logBusy();
   Future<String> logText() => runtime.logText();
@@ -195,26 +198,4 @@ class DetailsData extends DataTableSource {
 
   @override
   int get selectedRowCount => 0;
-}
-
-DataRow netUserToRow(NetUserWrap u) {
-  return DataRow(cells: [
-    DataCell(Text(InternetAddress.fromRawAddress(
-      Uint8List.fromList(u.address.octets),
-      type: InternetAddressType.IPv4,
-    ).address)),
-    DataCell(Text(DateFormat('MM-dd HH:mm').format(u.loginTime.field0))),
-    DataCell(FutureBuilder(
-      future: api.fluxToString(f: u.flux.field0),
-      builder: (context, snap) {
-        final data = snap.data;
-        if (data == null) {
-          return const CircularProgressIndicator();
-        }
-        return Text(data);
-      },
-    )),
-    DataCell(Text(u.macAddress)),
-    DataCell(Text(u.isLocal ? '本机' : '未知')),
-  ]);
 }
