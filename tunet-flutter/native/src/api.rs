@@ -198,7 +198,7 @@ impl Runtime {
                     model.queue(Action::Timer);
                 }
                 while let Some(action) = rx.recv().await {
-                    log::info!("received action: {:?}", action);
+                    log::debug!("received action: {:?}", action);
                     model.lock().unwrap().handle(action);
                 }
             });
