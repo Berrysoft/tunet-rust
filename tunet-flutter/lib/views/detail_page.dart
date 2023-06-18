@@ -19,6 +19,8 @@ class _DetailPageState extends State<DetailPage> {
   late StreamSubscription<bool> detailBusySub;
   late StreamSubscription<DetailDailyWrap?> dailySub;
 
+  final GlobalKey<RefreshIndicatorState> refreshIndicatorKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -113,35 +115,49 @@ class _DetailPageState extends State<DetailPage> {
         minY: 0,
       );
       dailyChart = Expanded(
-          child: Card(
-              child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: LineChart(data),
-      )));
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: LineChart(data),
+          ),
+        ),
+      );
     }
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          dailyChart,
-          PaginatedDataTable(
-            columns: const [
-              DataColumn(label: Text('登录时间')),
-              DataColumn(label: Text('注销时间')),
-              DataColumn(label: Text('流量')),
-            ],
-            source: runtime.detailsData,
-            showCheckboxColumn: false,
-            rowsPerPage: 6,
-          ),
-        ],
+      body: RefreshIndicator(
+        key: refreshIndicatorKey,
+        onRefresh: () async {
+          runtime.queueDetails();
+          final iter = StreamIterator(runtime.detailBusyStream);
+          while (await iter.moveNext()) {
+            if (!iter.current) {
+              return;
+            }
+          }
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            dailyChart,
+            PaginatedDataTable(
+              columns: const [
+                DataColumn(label: Text('登录时间')),
+                DataColumn(label: Text('注销时间')),
+                DataColumn(label: Text('流量')),
+              ],
+              source: runtime.detailsData,
+              showCheckboxColumn: false,
+              rowsPerPage: 6,
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.small(
         onPressed: detailBusy
             ? null
             : () {
-                runtime.queueDetails();
+                refreshIndicatorKey.currentState?.show();
               },
         child: const Icon(Icons.refresh_rounded),
       ),
