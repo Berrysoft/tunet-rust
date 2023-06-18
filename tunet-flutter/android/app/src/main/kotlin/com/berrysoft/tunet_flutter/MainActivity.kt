@@ -41,7 +41,11 @@ class MainActivity : FlutterActivity() {
             } else if (call.method == "getSsid") {
                 val manager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
                 val ssid = manager.connectionInfo.ssid
-                result.success(ssid.trim('\"'))
+                if (ssid == "<unknown ssid>") {
+                    result.success(null)
+                } else {
+                    result.success(ssid.trim('\"'))
+                }
             } else {
                 result.notImplemented()
             }
