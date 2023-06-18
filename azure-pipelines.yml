@@ -166,3 +166,24 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       ArtifactName: 'publish'
+
+- job: Build_Android
+  pool:
+    vmImage: 'ubuntu-latest'
+  
+  steps:
+  - script: |
+      rustup target add x86_64-linux-android
+      rustup target add armv7-linux-androideabi
+      rustup target add aarch64-linux-android
+    displayName: 'Add targets'
+  
+  - script: |
+      cd tunet-flutter
+      make apk
+      cp build/app/outputs/flutter-apk/app-release.apk $(Build.ArtifactStagingDirectory)/tunet.apk
+    displayName: 'Build APK'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
