@@ -41,6 +41,7 @@ dependencies:
 
   shared_preferences: ^2.1.2
   flutter_secure_storage: ^8.0.0
+  permission_handler: ^10.3.0
 
   system_theme: ^2.2.0
   fluttertoast: ^8.2.2

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:system_theme/system_theme.dart';
 import 'runtime.dart';
 import 'views/home_page.dart';
@@ -13,6 +14,8 @@ void main() async {
   if (defaultTargetPlatform == TargetPlatform.android) {
     await SystemTheme.accentColor.load();
   }
+
+  await Permission.location.request();
 
   final runtime = await ManagedRuntime.newRuntime();
   runtime.start();
