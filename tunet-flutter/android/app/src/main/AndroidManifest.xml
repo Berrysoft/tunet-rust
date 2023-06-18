@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.berrysoft.tunet_flutter">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
    <application
         android:label="清华校园网"
         android:name="${applicationName}"
