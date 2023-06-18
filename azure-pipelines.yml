@@ -75,13 +75,6 @@ jobs:
         arch: 'aarch64'
         cross: 'arm64'
         sslver: '1.1'
-      focal-riscv64:
-        image: 'ubuntu-20.04'
-        ubuntuDist: 'focal'
-        target: 'riscv64gc-unknown-linux-gnu'
-        arch: 'riscv64gc'
-        cross: 'riscv64'
-        sslver: '1.1'
       jammy-x64:
         image: 'ubuntu-22.04'
         ubuntuDist: 'jammy'
@@ -94,13 +87,6 @@ jobs:
         target: 'aarch64-unknown-linux-gnu'
         arch: 'aarch64'
         cross: 'arm64'
-        sslver: '3'
-      jammy-riscv64:
-        image: 'ubuntu-22.04'
-        ubuntuDist: 'jammy'
-        target: 'riscv64gc-unknown-linux-gnu'
-        arch: 'riscv64gc'
-        cross: 'riscv64'
         sslver: '3'
   pool:
     vmImage: $(image)
