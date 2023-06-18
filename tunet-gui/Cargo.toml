@@ -24,7 +24,7 @@ slint = { version = "1", default-features = false, features = [
 i-slint-backend-winit = "1"
 image = { version = "0.24", default-features = false, features = ["ico"] }
 paste = "1"
-plotters = { git = "https://github.com/plotters-rs/plotters.git", default-features = false, features = [
+plotters = { version = "0.3", default-features = false, features = [
     "svg_backend",
     "chrono",
     "line_series",

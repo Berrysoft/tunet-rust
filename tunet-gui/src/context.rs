@@ -305,7 +305,7 @@ fn draw_daily(
 
         let mut chart = ChartBuilder::on(&root)
             .x_label_area_size(35.0 * scale)
-            .y_label_area_size(70.0 * scale)
+            .y_label_area_size(75.0 * scale)
             .margin_top(10.0 * scale)
             .margin_right(20.0 * scale)
             .build_cartesian_2d(
