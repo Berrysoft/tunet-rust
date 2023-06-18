@@ -9,7 +9,7 @@ repository.workspace = true
 [dependencies]
 keyring = { workspace = true }
 thiserror = { workspace = true }
-serde = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 dirs = { workspace = true }
 rpassword = "7"
