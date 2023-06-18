@@ -424,6 +424,7 @@ enum OnlineAction {
 }
 
 Future<void> credDialogBuilder(BuildContext context, ManagedRuntime runtime) {
+  final formKey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   return showDialog(
@@ -433,31 +434,45 @@ Future<void> credDialogBuilder(BuildContext context, ManagedRuntime runtime) {
       content: GestureDetector(
         behavior: HitTestBehavior.translucent,
         child: AutofillGroup(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: usernameController,
-                decoration: const InputDecoration(labelText: '用户名'),
-                keyboardType: TextInputType.name,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.username],
-              ),
-              TextField(
-                controller: passwordController,
-                decoration: const InputDecoration(labelText: '密码'),
-                keyboardType: TextInputType.visiblePassword,
-                autofillHints: const [AutofillHints.password],
-                onEditingComplete: () => TextInput.finishAutofillContext(),
-                obscureText: true,
-              ),
-            ],
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: usernameController,
+                  decoration: const InputDecoration(labelText: '用户名'),
+                  keyboardType: TextInputType.name,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.username],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '用户名不能为空';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(labelText: '密码'),
+                  keyboardType: TextInputType.visiblePassword,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.password],
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '密码不能为空';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+            onChanged: () => formKey.currentState!.validate(),
           ),
         ),
         onTap: () {
-          String password = passwordController.text;
-          String username = usernameController.text;
-          if (username.isEmpty || password.isEmpty) {
+          if (!formKey.currentState!.validate()) {
             TextInput.finishAutofillContext(shouldSave: false);
           }
         },
@@ -466,11 +481,13 @@ Future<void> credDialogBuilder(BuildContext context, ManagedRuntime runtime) {
         TextButton(
           child: const Text('确定'),
           onPressed: () {
-            runtime.queueCredential(
-              u: usernameController.text,
-              p: passwordController.text,
-            );
-            Navigator.of(context).pop();
+            final username = usernameController.text;
+            final password = passwordController.text;
+            if (formKey.currentState!.validate()) {
+              TextInput.finishAutofillContext();
+              runtime.queueCredential(u: username, p: password);
+              Navigator.of(context).pop();
+            }
           },
         ),
       ],
@@ -479,31 +496,52 @@ Future<void> credDialogBuilder(BuildContext context, ManagedRuntime runtime) {
 }
 
 Future<void> ipDialogBuilder(BuildContext context, ManagedRuntime runtime) {
+  final formKey = GlobalKey<FormState>();
   final ipController = TextEditingController();
   return showDialog(
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('认证IP'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: ipController,
-            decoration: const InputDecoration(labelText: 'IP地址'),
-            keyboardType: TextInputType.number,
-          ),
-        ],
+      content: Form(
+        key: formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: ipController,
+              decoration: const InputDecoration(labelText: 'IP地址'),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value != null) {
+                  final ip = InternetAddress.tryParse(value);
+                  if (ip != null) {
+                    if (ip.type == InternetAddressType.IPv4) {
+                      return null;
+                    } else {
+                      return '不支持的地址类型';
+                    }
+                  }
+                }
+                return '文本无效';
+              },
+            ),
+          ],
+        ),
+        onChanged: () => formKey.currentState!.validate(),
       ),
       actions: [
         TextButton(
           child: const Text('确定'),
           onPressed: () {
-            runtime.queueConnect(
-              ip: Ipv4AddrWrap(
-                octets: U8Array4(InternetAddress(ipController.text).rawAddress),
-              ),
-            );
-            Navigator.of(context).pop();
+            if (formKey.currentState!.validate()) {
+              runtime.queueConnect(
+                ip: Ipv4AddrWrap(
+                  octets:
+                      U8Array4(InternetAddress(ipController.text).rawAddress),
+                ),
+              );
+              Navigator.of(context).pop();
+            }
           },
         )
       ],
