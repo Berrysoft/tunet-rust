@@ -3,7 +3,7 @@
 
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
-## GUI
+## GUI（桌面端）
 基于 [Slint](https://slint-ui.com/) 开发。使用如下命令启动：
 
 ``` bash
@@ -15,6 +15,13 @@ $ tunet-gui
 | Windows | ![Windows](assets/windows.light.png) | ![Windows](assets/windows.dark.png) |
 | Linux   | ![Linux](assets/linux.light.png)     | （暂无图片）                        |
 | macOS   | ![macOS](assets/mac.light.png)       | ![macOS](assets/mac.dark.png)       |
+
+## GUI（移动端）
+基于 [Flutter](https://flutter.dev/) 开发。会尽量保证 iOS 版本能用，但是没钱发布。
+
+| 平台    | 亮                                   | 暗                                  |
+| ------- | ------------------------------------ | ----------------------------------- |
+| Android | ![Android](assets/android.light.png) | ![Android](assets/android.dark.png) |
 
 ## CUI（命令行图形界面）
 使用如下命令启动：
@@ -102,33 +109,53 @@ $ sudo systemctl start tunet@foo
 ```
 可以通过编辑该文件来调整重复登录的间隔。
 
-## keyring
-用户名和密码在第一次登录时根据提示输入，不同平台管理密码方法如下：
-
-| 平台    | 方法                                                                                      |
-| ------- | ----------------------------------------------------------------------------------------- |
-| Windows | [Windows Credential Manager](https://docs.microsoft.com/en-us/windows/win32/api/wincred/) |
-| Linux   | [Keyrings](https://man7.org/linux/man-pages/man7/keyrings.7.html)                         |
-| macOS   | [Keychain](https://developer.apple.com/documentation/security/keychain_services)          |
-
-对于不支持密码管理的 Linux 发行版，会回退到**明文**密码。
-
-在 WSL 上保存的密码会在 WSL 重启后消失。
-
-请不要在不信任的电脑上保存密码。可以在图形界面点击“删除并退出”，或在命令行使用如下命令删除：
+## 密码
+用户名和密码在第一次登录时根据提示输入。请不要在不信任的电脑上保存密码。可以在桌面端图形界面点击“删除并退出”，或在命令行使用如下命令删除：
 ``` bash
 $ tunet deletecred
 ```
 
-## netstatus
-针对 Windows, Linux, macOS 使用了平台特定的方式尝试获得当前的网络连接方式，如果是无线网连接还会获取 SSID。
+## 网络状态
+针对不同平台使用平台特定的方式尝试获得当前的网络连接方式，如果是无线网连接还会获取 SSID。
 如果无法获取，则尝试连接特定的网址来判断。
 
-| 平台    | 方法                                                                         |
-| ------- | ---------------------------------------------------------------------------- |
-| Windows | `Windows::Networking::Connectivity`                                          |
-| Linux   | [Netlink](https://wiki.linuxfoundation.org/networking/generic_netlink_howto) |
-| macOS   | System Configuration 与 Core WLAN                                            |
+<table>
+  <thead>
+    <tr>
+      <th>平台</th>
+      <th>网络状态</th>
+      <th>WIFI SSID</th>
+      <th>MAC 地址</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Windows</td>
+      <td colspan="2">Windows::Networking::Connectivity</td>
+      <td>GetAdaptersAddresses</td>
+    </tr>
+    <tr>
+      <td>Linux</td>
+      <td>（无）</td>
+      <td>Netlink</td>
+      <td rowspan="4">getifaddrs</td>
+    </tr>
+    <tr>
+      <td>Android</td>
+      <td>ConnectivityManager</td>
+      <td>WifiManager</td>
+    </tr>
+    <tr>
+      <td>macOS X</td>
+      <td rowspan="2">System Configuration</td>
+      <td>Core WLAN</td>
+    </tr>
+    <tr>
+      <td>iOS</td>
+      <td>NEHotspotNetwork</td>
+    </tr>
+  </tbody>
+</table>
 
 ## 编译说明
 使用 `cargo` 直接编译：
@@ -136,3 +163,10 @@ $ tunet deletecred
 $ cargo build --release
 ```
 即可在 `target/release` 下找到编译好的程序。
+
+若要为 Android 编译 APK：
+``` bash
+$ cd tunet-flutter
+$ make apk
+```
+即可在 `tunet-flutter/build/app/outputs/flutter-apk/app-release.apk` 找到打包。
