@@ -112,8 +112,6 @@ class _HomePageState extends State<HomePage> {
       final flux = netFlux.flux.field0;
       final onlineTime = netFlux.onlineTime.field0;
       final balance = netFlux.balance.field0;
-      final status = this.status;
-      final state = this.state;
 
       final theme = Theme.of(context);
       fluxBody = CustomPaint(
@@ -159,28 +157,6 @@ class _HomePageState extends State<HomePage> {
             leading: const Icon(Icons.account_balance_rounded),
             title: Text('¥{:.2f}'.format(balance)),
           ),
-          ListTile(
-              leading: const Icon(Icons.signal_cellular_alt_rounded),
-              title: status == null
-                  ? const LinearProgressIndicator()
-                  : Text(status)),
-          ListTile(
-            leading: const Icon(Icons.pattern_rounded),
-            title: Text(state.name),
-            trailing: PopupMenuButton<NetState>(
-              onSelected: (value) {
-                runtime.queueState(s: value);
-              },
-              itemBuilder: (context) => [
-                NetState.Net,
-                NetState.Auth4,
-                NetState.Auth6
-              ]
-                  .map((NetState s) =>
-                      PopupMenuItem(value: s, child: Text(s.name)))
-                  .toList(),
-            ),
-          ),
         ],
       );
     }
@@ -190,6 +166,8 @@ class _HomePageState extends State<HomePage> {
       onlinesSelected = List.filled(onlines.length, false);
     }
     final username = this.username;
+    final status = this.status;
+    final state = this.state;
 
     return Container(
       margin: const EdgeInsets.all(8.0),
@@ -233,12 +211,42 @@ class _HomePageState extends State<HomePage> {
             ),
             Card(child: cardBody),
             Card(
-              child: InkWell(
-                child: ListTile(
-                  leading: const Icon(Icons.person_2_rounded),
-                  title: username.isEmpty ? const Text('设置凭据') : Text(username),
-                ),
-                onTap: () => credDialogBuilder(context, runtime),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  InkWell(
+                    child: ListTile(
+                      leading: const Icon(Icons.person_2_rounded),
+                      title: username.isEmpty
+                          ? const Text('设置凭据')
+                          : Text(username),
+                    ),
+                    onTap: () => credDialogBuilder(context, runtime),
+                  ),
+                  ListTile(
+                      leading: const Icon(Icons.signal_cellular_alt_rounded),
+                      title: status == null
+                          ? const LinearProgressIndicator()
+                          : Text(status)),
+                  ListTile(
+                    leading: const Icon(Icons.pattern_rounded),
+                    title: Text(state.name),
+                    trailing: PopupMenuButton<NetState>(
+                      onSelected: (value) {
+                        runtime.queueState(s: value);
+                      },
+                      itemBuilder: (context) => [
+                        NetState.Net,
+                        NetState.Auth4,
+                        NetState.Auth6,
+                      ]
+                          .map((s) => PopupMenuItem(
+                              value: s, child: ListTile(title: Text(s.name))))
+                          .toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
             Card(

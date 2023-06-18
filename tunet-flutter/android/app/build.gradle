@@ -89,7 +89,7 @@ dependencies {
                 '-t', 'arm64-v8a',
                 // the below 2 ABIs are usually used for Android simulators,
                 // add or remove these ABIs as needed.
-                '-t', 'x86',
+                // '-t', 'x86',
                 '-t', 'x86_64',
                 '-o', '../android/app/src/main/jniLibs', 'build'
         if (profileMode != null) {
