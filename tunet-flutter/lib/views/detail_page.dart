@@ -141,10 +141,24 @@ class _DetailPageState extends State<DetailPage> {
           children: [
             dailyChart,
             PaginatedDataTable(
-              columns: const [
-                DataColumn(label: Text('登录时间')),
-                DataColumn(label: Text('注销时间')),
-                DataColumn(label: Text('流量')),
+              sortColumnIndex: runtime.detailsData.sortColumnIndex,
+              sortAscending: runtime.detailsData.sortAscending,
+              columns: [
+                DataColumn(
+                  label: const Text('登录时间'),
+                  onSort: (columnIndex, ascending) => setState(
+                      () => runtime.detailsData.sort(columnIndex, ascending)),
+                ),
+                DataColumn(
+                  label: const Text('注销时间'),
+                  onSort: (columnIndex, ascending) => setState(
+                      () => runtime.detailsData.sort(columnIndex, ascending)),
+                ),
+                DataColumn(
+                  label: const Text('流量'),
+                  onSort: (columnIndex, ascending) => setState(
+                      () => runtime.detailsData.sort(columnIndex, ascending)),
+                ),
               ],
               source: runtime.detailsData,
               showCheckboxColumn: false,

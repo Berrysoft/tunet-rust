@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -99,7 +100,7 @@ class ManagedRuntime {
           onlinesData = await onlines();
           break;
         case UpdateMsg.Details:
-          detailsData.data = await details();
+          detailsData.setData(await details());
           final daily = await detailDaily();
           if (daily != null) {
             dailySink.add(daily);
@@ -168,6 +169,13 @@ class ManagedRuntime {
 class DetailsData extends DataTableSource {
   List<NetDetail> data = List.empty();
 
+  void setData(List<NetDetail> data) {
+    this.data = data;
+    sortColumnIndex = null;
+    sortAscending = true;
+    notifyListeners();
+  }
+
   @override
   DataRow? getRow(int index) {
     if (index >= 0 && index < data.length) {
@@ -198,4 +206,27 @@ class DetailsData extends DataTableSource {
 
   @override
   int get selectedRowCount => 0;
+
+  int? sortColumnIndex;
+  bool sortAscending = true;
+
+  void sort(int columnIndex, bool ascending) {
+    sortColumnIndex = columnIndex;
+    sortAscending = ascending;
+    switch (columnIndex) {
+      case 0:
+        data.sortBy((d) => d.loginTime.field0);
+        break;
+      case 1:
+        data.sortBy((d) => d.logoutTime.field0);
+        break;
+      case 2:
+        data.sortBy<num>((d) => d.flux.field0);
+        break;
+    }
+    if (!ascending) {
+      reverse(data);
+    }
+    notifyListeners();
+  }
 }
