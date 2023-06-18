@@ -1,6 +1,6 @@
 [package]
 name = "tunet-cui"
-version = "0.7.6"
+version = "0.8.0"
 description = "A console UI for Tsinghua University campus network."
 edition.workspace = true
 authors.workspace = true
