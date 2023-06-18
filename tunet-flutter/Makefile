@@ -18,6 +18,6 @@ lib/bridge_generated.dart lib/bridge_definitions.dart ios/Runner/bridge_generate
 	flutter_rust_bridge_codegen --rust-input $^ --dart-output lib/bridge_generated.dart --c-output ios/Runner/bridge_generated.h --dart-decl-output lib/bridge_definitions.dart
 
 apk: get
-	flutter build apk
+	flutter build apk --split-per-abi
 
 .SECONDARY:
