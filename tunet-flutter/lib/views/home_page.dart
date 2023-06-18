@@ -82,9 +82,9 @@ class _HomePageState extends State<HomePage> {
         runtime.logTextStream.listen((event) => logTextBuilder(fToast, event));
 
     usernameSub = runtime.usernameStream
-        .listen((event) => setState(() => this.username = event));
+        .listen((event) => setState(() => username = event));
     onlineBusySub = runtime.onlineBusyStream
-        .listen((event) => setState(() => this.onlineBusy = event));
+        .listen((event) => setState(() => onlineBusy = event));
   }
 
   @override
