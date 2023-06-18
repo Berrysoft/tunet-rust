@@ -1,4 +1,4 @@
-.PHONY: get fmt clean run
+.PHONY: get fmt clean run apk
 
 get:
 	flutter pub get
@@ -16,5 +16,8 @@ run: native/src/bridge_generated.rs
 
 lib/bridge_generated.dart lib/bridge_definitions.dart ios/Runner/bridge_generated.h native/src/bridge_generated.rs &: native/src/api.rs
 	flutter_rust_bridge_codegen --rust-input $^ --dart-output lib/bridge_generated.dart --c-output ios/Runner/bridge_generated.h --dart-decl-output lib/bridge_definitions.dart
+
+apk: get
+	flutter build apk
 
 .SECONDARY:
