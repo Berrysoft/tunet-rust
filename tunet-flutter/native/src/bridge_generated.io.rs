@@ -326,11 +326,6 @@ impl Wire2Api<NetStatus> for wire_NetStatus {
         }
     }
 }
-impl Wire2Api<NetStatusWrap> for wire_NetStatusWrap {
-    fn wire2api(self) -> NetStatusWrap {
-        NetStatusWrap(self.field0.wire2api())
-    }
-}
 
 impl Wire2Api<Runtime> for wire_Runtime {
     fn wire2api(self) -> Runtime {
@@ -406,12 +401,6 @@ pub struct wire_NetStateWrap {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_NetStatusWrap {
-    field0: wire_NetStatus,
-}
-
-#[repr(C)]
-#[derive(Clone)]
 pub struct wire_Runtime {
     rx: wire_MutexOptionMpscReceiverAction,
     model: wire_MutexModel,
@@ -421,7 +410,7 @@ pub struct wire_Runtime {
 #[repr(C)]
 #[derive(Clone)]
 pub struct wire_RuntimeStartConfig {
-    status: wire_NetStatusWrap,
+    status: wire_NetStatus,
     username: *mut wire_uint_8_list,
     password: *mut wire_uint_8_list,
 }
@@ -550,20 +539,6 @@ pub extern "C" fn inflate_NetStatus_Wlan() -> *mut NetStatusKind {
             field0: core::ptr::null_mut(),
         }),
     })
-}
-
-impl NewWithNullPtr for wire_NetStatusWrap {
-    fn new_with_null_ptr() -> Self {
-        Self {
-            field0: Default::default(),
-        }
-    }
-}
-
-impl Default for wire_NetStatusWrap {
-    fn default() -> Self {
-        Self::new_with_null_ptr()
-    }
 }
 
 impl NewWithNullPtr for wire_Runtime {

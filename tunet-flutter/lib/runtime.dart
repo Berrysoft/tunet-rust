@@ -65,7 +65,7 @@ class ManagedRuntime {
     final (u, p) = await loadCredential();
 
     final config = RuntimeStartConfig(
-      status: NetStatusWrap(field0: sendStatus),
+      status: sendStatus,
       username: u,
       password: p,
     );

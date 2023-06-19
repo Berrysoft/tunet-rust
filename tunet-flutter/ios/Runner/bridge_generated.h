@@ -60,12 +60,8 @@ typedef struct wire_NetStatus {
   union NetStatusKind *kind;
 } wire_NetStatus;
 
-typedef struct wire_NetStatusWrap {
-  struct wire_NetStatus field0;
-} wire_NetStatusWrap;
-
 typedef struct wire_RuntimeStartConfig {
-  struct wire_NetStatusWrap status;
+  struct wire_NetStatus status;
   struct wire_uint_8_list *username;
   struct wire_uint_8_list *password;
 } wire_RuntimeStartConfig;

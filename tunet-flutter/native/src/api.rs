@@ -49,8 +49,6 @@ pub enum _NetStatus {
     Lan,
 }
 
-pub struct NetStatusWrap(pub NetStatus);
-
 #[frb(mirror(NetFlux))]
 pub struct _NetFlux {
     pub username: String,
@@ -115,7 +113,7 @@ impl From<Ipv4Addr> for Ipv4AddrWrap {
 }
 
 pub struct RuntimeStartConfig {
-    pub status: NetStatusWrap,
+    pub status: NetStatus,
     pub username: String,
     pub password: String,
 }
@@ -173,7 +171,7 @@ impl Runtime {
                     if (!config.username.is_empty()) && (!config.password.is_empty()) {
                         model.queue(Action::Credential(config.username, config.password));
                     }
-                    model.queue(Action::Status(Some(config.status.0)));
+                    model.queue(Action::Status(Some(config.status)));
                     model.queue(Action::Timer);
                 }
                 while let Some(action) = rx.recv().await {

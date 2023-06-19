@@ -225,10 +225,11 @@ class _HomePageState extends State<HomePage> {
                     onTap: () => credDialogBuilder(context, runtime),
                   ),
                   ListTile(
-                      leading: const Icon(Icons.signal_cellular_alt_rounded),
-                      title: status == null
-                          ? const LinearProgressIndicator()
-                          : Text(status)),
+                    leading: const Icon(Icons.signal_cellular_alt_rounded),
+                    title: status == null
+                        ? const LinearProgressIndicator()
+                        : Text(status),
+                  ),
                   ListTile(
                     leading: const Icon(Icons.pattern_rounded),
                     title: Text(state.name),

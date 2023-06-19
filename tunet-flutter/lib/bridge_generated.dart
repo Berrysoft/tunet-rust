@@ -910,11 +910,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     }
   }
 
-  void _api_fill_to_wire_net_status_wrap(
-      NetStatusWrap apiObj, wire_NetStatusWrap wireObj) {
-    _api_fill_to_wire_net_status(apiObj.field0, wireObj.field0);
-  }
-
   void _api_fill_to_wire_opt_box_autoadd_net_state_wrap(
       NetStateWrap? apiObj, ffi.Pointer<wire_NetStateWrap> wireObj) {
     if (apiObj != null)
@@ -929,7 +924,7 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 
   void _api_fill_to_wire_runtime_start_config(
       RuntimeStartConfig apiObj, wire_RuntimeStartConfig wireObj) {
-    _api_fill_to_wire_net_status_wrap(apiObj.status, wireObj.status);
+    _api_fill_to_wire_net_status(apiObj.status, wireObj.status);
     wireObj.username = api2wire_String(apiObj.username);
     wireObj.password = api2wire_String(apiObj.password);
   }
@@ -1734,12 +1729,8 @@ final class wire_NetStatus extends ffi.Struct {
   external ffi.Pointer<NetStatusKind> kind;
 }
 
-final class wire_NetStatusWrap extends ffi.Struct {
-  external wire_NetStatus field0;
-}
-
 final class wire_RuntimeStartConfig extends ffi.Struct {
-  external wire_NetStatusWrap status;
+  external wire_NetStatus status;
 
   external ffi.Pointer<wire_uint_8_list> username;
 

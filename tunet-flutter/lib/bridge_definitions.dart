@@ -284,14 +284,6 @@ sealed class NetStatus with _$NetStatus {
   const factory NetStatus.lan() = NetStatus_Lan;
 }
 
-class NetStatusWrap {
-  final NetStatus field0;
-
-  const NetStatusWrap({
-    required this.field0,
-  });
-}
-
 class NetUserWrap {
   final Ipv4AddrWrap address;
   final NetDateTime loginTime;
@@ -434,7 +426,7 @@ class Runtime {
 }
 
 class RuntimeStartConfig {
-  final NetStatusWrap status;
+  final NetStatus status;
   final String username;
   final String password;
 
