@@ -7,17 +7,6 @@ pub extern "C" fn wire_flux_to_string(port_: i64, f: u64) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_new__static_method__RuntimeStartConfig(
-    port_: i64,
-    status: i32,
-    ssid: *mut wire_uint_8_list,
-    username: *mut wire_uint_8_list,
-    password: *mut wire_uint_8_list,
-) {
-    wire_new__static_method__RuntimeStartConfig_impl(port_, status, ssid, username, password)
-}
-
-#[no_mangle]
 pub extern "C" fn wire_new__static_method__Runtime(port_: i64) {
     wire_new__static_method__Runtime_impl(port_)
 }
@@ -166,11 +155,6 @@ pub extern "C" fn new_MutexOptionMpscReceiverAction() -> wire_MutexOptionMpscRec
 }
 
 #[no_mangle]
-pub extern "C" fn new_NetStatus() -> wire_NetStatus {
-    wire_NetStatus::new_with_null_ptr()
-}
-
-#[no_mangle]
 pub extern "C" fn new_box_autoadd_ipv_4_addr_wrap_0() -> *mut wire_Ipv4AddrWrap {
     support::new_leak_box_ptr(wire_Ipv4AddrWrap::new_with_null_ptr())
 }
@@ -255,21 +239,6 @@ pub extern "C" fn share_opaque_MutexOptionMpscReceiverAction(ptr: *const c_void)
     }
 }
 
-#[no_mangle]
-pub extern "C" fn drop_opaque_NetStatus(ptr: *const c_void) {
-    unsafe {
-        Arc::<NetStatus>::decrement_strong_count(ptr as _);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn share_opaque_NetStatus(ptr: *const c_void) -> *const c_void {
-    unsafe {
-        Arc::<NetStatus>::increment_strong_count(ptr as _);
-        ptr
-    }
-}
-
 // Section: impl Wire2Api
 
 impl Wire2Api<RustOpaque<Mutex<Model>>> for wire_MutexModel {
@@ -286,11 +255,6 @@ impl Wire2Api<RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>>
     for wire_MutexOptionMpscReceiverAction
 {
     fn wire2api(self) -> RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>> {
-        unsafe { support::opaque_from_dart(self.ptr as _) }
-    }
-}
-impl Wire2Api<RustOpaque<NetStatus>> for wire_NetStatus {
-    fn wire2api(self) -> RustOpaque<NetStatus> {
         unsafe { support::opaque_from_dart(self.ptr as _) }
     }
 }
@@ -345,6 +309,26 @@ impl Wire2Api<Vec<Ipv4AddrWrap>> for *mut wire_list_ipv_4_addr_wrap {
 impl Wire2Api<NetStateWrap> for wire_NetStateWrap {
     fn wire2api(self) -> NetStateWrap {
         NetStateWrap(self.field0.wire2api())
+    }
+}
+impl Wire2Api<NetStatus> for wire_NetStatus {
+    fn wire2api(self) -> NetStatus {
+        match self.tag {
+            0 => NetStatus::Unknown,
+            1 => NetStatus::Wwan,
+            2 => unsafe {
+                let ans = support::box_from_leak_ptr(self.kind);
+                let ans = support::box_from_leak_ptr(ans.Wlan);
+                NetStatus::Wlan(ans.field0.wire2api())
+            },
+            3 => NetStatus::Lan,
+            _ => unreachable!(),
+        }
+    }
+}
+impl Wire2Api<NetStatusWrap> for wire_NetStatusWrap {
+    fn wire2api(self) -> NetStatusWrap {
+        NetStatusWrap(self.field0.wire2api())
     }
 }
 
@@ -403,12 +387,6 @@ pub struct wire_MutexOptionMpscReceiverAction {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_NetStatus {
-    ptr: *const core::ffi::c_void,
-}
-
-#[repr(C)]
-#[derive(Clone)]
 pub struct wire_Ipv4AddrWrap {
     octets: *mut wire_uint_8_list,
 }
@@ -428,6 +406,12 @@ pub struct wire_NetStateWrap {
 
 #[repr(C)]
 #[derive(Clone)]
+pub struct wire_NetStatusWrap {
+    field0: wire_NetStatus,
+}
+
+#[repr(C)]
+#[derive(Clone)]
 pub struct wire_Runtime {
     rx: wire_MutexOptionMpscReceiverAction,
     model: wire_MutexModel,
@@ -437,7 +421,7 @@ pub struct wire_Runtime {
 #[repr(C)]
 #[derive(Clone)]
 pub struct wire_RuntimeStartConfig {
-    status: wire_NetStatus,
+    status: wire_NetStatusWrap,
     username: *mut wire_uint_8_list,
     password: *mut wire_uint_8_list,
 }
@@ -448,6 +432,39 @@ pub struct wire_uint_8_list {
     ptr: *mut u8,
     len: i32,
 }
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_NetStatus {
+    tag: i32,
+    kind: *mut NetStatusKind,
+}
+
+#[repr(C)]
+pub union NetStatusKind {
+    Unknown: *mut wire_NetStatus_Unknown,
+    Wwan: *mut wire_NetStatus_Wwan,
+    Wlan: *mut wire_NetStatus_Wlan,
+    Lan: *mut wire_NetStatus_Lan,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_NetStatus_Unknown {}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_NetStatus_Wwan {}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_NetStatus_Wlan {
+    field0: *mut wire_uint_8_list,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_NetStatus_Lan {}
 
 // Section: impl NewWithNullPtr
 
@@ -476,13 +493,6 @@ impl NewWithNullPtr for wire_MutexOptionHandle {
     }
 }
 impl NewWithNullPtr for wire_MutexOptionMpscReceiverAction {
-    fn new_with_null_ptr() -> Self {
-        Self {
-            ptr: core::ptr::null(),
-        }
-    }
-}
-impl NewWithNullPtr for wire_NetStatus {
     fn new_with_null_ptr() -> Self {
         Self {
             ptr: core::ptr::null(),
@@ -518,6 +528,44 @@ impl Default for wire_NetStateWrap {
     }
 }
 
+impl Default for wire_NetStatus {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
+impl NewWithNullPtr for wire_NetStatus {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            tag: -1,
+            kind: core::ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn inflate_NetStatus_Wlan() -> *mut NetStatusKind {
+    support::new_leak_box_ptr(NetStatusKind {
+        Wlan: support::new_leak_box_ptr(wire_NetStatus_Wlan {
+            field0: core::ptr::null_mut(),
+        }),
+    })
+}
+
+impl NewWithNullPtr for wire_NetStatusWrap {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            field0: Default::default(),
+        }
+    }
+}
+
+impl Default for wire_NetStatusWrap {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
 impl NewWithNullPtr for wire_Runtime {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -537,7 +585,7 @@ impl Default for wire_Runtime {
 impl NewWithNullPtr for wire_RuntimeStartConfig {
     fn new_with_null_ptr() -> Self {
         Self {
-            status: wire_NetStatus::new_with_null_ptr(),
+            status: Default::default(),
             username: core::ptr::null_mut(),
             password: core::ptr::null_mut(),
         }

@@ -48,28 +48,24 @@ class ManagedRuntime {
   }
 
   Future<void> start() async {
-    NetStatusSimp sendStatus = NetStatusSimp.Unknown;
-    String? ssid;
+    NetStatus sendStatus = const NetStatus.unknown();
     final String? gstatus = await statusApi.invokeMethod("getStatus");
     switch (gstatus) {
       case "wwan":
-        sendStatus = NetStatusSimp.Wwan;
+        sendStatus = const NetStatus.wwan();
         break;
       case "wlan":
-        sendStatus = NetStatusSimp.Wlan;
-        ssid = await statusApi.invokeMethod("getSsid");
+        sendStatus = NetStatus.wlan(await statusApi.invokeMethod("getSsid"));
         break;
       case "lan":
-        sendStatus = NetStatusSimp.Lan;
+        sendStatus = const NetStatus.lan();
         break;
     }
 
     final (u, p) = await loadCredential();
 
-    final config = await RuntimeStartConfig.newRuntimeStartConfig(
-      bridge: api,
-      status: sendStatus,
-      ssid: ssid,
+    final config = RuntimeStartConfig(
+      status: NetStatusWrap(field0: sendStatus),
       username: u,
       password: p,
     );

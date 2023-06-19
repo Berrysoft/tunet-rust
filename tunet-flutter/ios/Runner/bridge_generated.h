@@ -9,11 +9,6 @@ typedef int64_t DartPort;
 
 typedef bool (*DartPostCObjectFnType)(DartPort port_id, void *message);
 
-typedef struct wire_uint_8_list {
-  uint8_t *ptr;
-  int32_t len;
-} wire_uint_8_list;
-
 typedef struct wire_MutexOptionMpscReceiverAction {
   const void *ptr;
 } wire_MutexOptionMpscReceiverAction;
@@ -32,12 +27,45 @@ typedef struct wire_Runtime {
   struct wire_MutexOptionHandle handle;
 } wire_Runtime;
 
+typedef struct wire_NetStatus_Unknown {
+
+} wire_NetStatus_Unknown;
+
+typedef struct wire_NetStatus_Wwan {
+
+} wire_NetStatus_Wwan;
+
+typedef struct wire_uint_8_list {
+  uint8_t *ptr;
+  int32_t len;
+} wire_uint_8_list;
+
+typedef struct wire_NetStatus_Wlan {
+  struct wire_uint_8_list *field0;
+} wire_NetStatus_Wlan;
+
+typedef struct wire_NetStatus_Lan {
+
+} wire_NetStatus_Lan;
+
+typedef union NetStatusKind {
+  struct wire_NetStatus_Unknown *Unknown;
+  struct wire_NetStatus_Wwan *Wwan;
+  struct wire_NetStatus_Wlan *Wlan;
+  struct wire_NetStatus_Lan *Lan;
+} NetStatusKind;
+
 typedef struct wire_NetStatus {
-  const void *ptr;
+  int32_t tag;
+  union NetStatusKind *kind;
 } wire_NetStatus;
 
+typedef struct wire_NetStatusWrap {
+  struct wire_NetStatus field0;
+} wire_NetStatusWrap;
+
 typedef struct wire_RuntimeStartConfig {
-  struct wire_NetStatus status;
+  struct wire_NetStatusWrap status;
   struct wire_uint_8_list *username;
   struct wire_uint_8_list *password;
 } wire_RuntimeStartConfig;
@@ -68,12 +96,6 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 intptr_t init_frb_dart_api_dl(void *obj);
 
 void wire_flux_to_string(int64_t port_, uint64_t f);
-
-void wire_new__static_method__RuntimeStartConfig(int64_t port_,
-                                                 int32_t status,
-                                                 struct wire_uint_8_list *ssid,
-                                                 struct wire_uint_8_list *username,
-                                                 struct wire_uint_8_list *password);
 
 void wire_new__static_method__Runtime(int64_t port_);
 
@@ -136,8 +158,6 @@ struct wire_MutexOptionHandle new_MutexOptionHandle(void);
 
 struct wire_MutexOptionMpscReceiverAction new_MutexOptionMpscReceiverAction(void);
 
-struct wire_NetStatus new_NetStatus(void);
-
 struct wire_Ipv4AddrWrap *new_box_autoadd_ipv_4_addr_wrap_0(void);
 
 struct wire_NetStateWrap *new_box_autoadd_net_state_wrap_0(void);
@@ -162,16 +182,13 @@ void drop_opaque_MutexOptionMpscReceiverAction(const void *ptr);
 
 const void *share_opaque_MutexOptionMpscReceiverAction(const void *ptr);
 
-void drop_opaque_NetStatus(const void *ptr);
-
-const void *share_opaque_NetStatus(const void *ptr);
+union NetStatusKind *inflate_NetStatus_Wlan(void);
 
 void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) wire_flux_to_string);
-    dummy_var ^= ((int64_t) (void*) wire_new__static_method__RuntimeStartConfig);
     dummy_var ^= ((int64_t) (void*) wire_new__static_method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_start__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_credential__method__Runtime);
@@ -197,7 +214,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_MutexModel);
     dummy_var ^= ((int64_t) (void*) new_MutexOptionHandle);
     dummy_var ^= ((int64_t) (void*) new_MutexOptionMpscReceiverAction);
-    dummy_var ^= ((int64_t) (void*) new_NetStatus);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_ipv_4_addr_wrap_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_net_state_wrap_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_0);
@@ -210,8 +226,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) share_opaque_MutexOptionHandle);
     dummy_var ^= ((int64_t) (void*) drop_opaque_MutexOptionMpscReceiverAction);
     dummy_var ^= ((int64_t) (void*) share_opaque_MutexOptionMpscReceiverAction);
-    dummy_var ^= ((int64_t) (void*) drop_opaque_NetStatus);
-    dummy_var ^= ((int64_t) (void*) share_opaque_NetStatus);
+    dummy_var ^= ((int64_t) (void*) inflate_NetStatus_Wlan);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     dummy_var ^= ((int64_t) (void*) get_dart_object);

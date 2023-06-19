@@ -41,12 +41,15 @@ pub enum _NetState {
 
 pub struct NetStateWrap(pub NetState);
 
-pub enum NetStatusSimp {
+#[frb(mirror(NetStatus))]
+pub enum _NetStatus {
     Unknown,
     Wwan,
-    Wlan,
+    Wlan(String),
     Lan,
 }
+
+pub struct NetStatusWrap(pub NetStatus);
 
 #[frb(mirror(NetFlux))]
 pub struct _NetFlux {
@@ -112,33 +115,9 @@ impl From<Ipv4Addr> for Ipv4AddrWrap {
 }
 
 pub struct RuntimeStartConfig {
-    pub status: RustOpaque<NetStatus>,
+    pub status: NetStatusWrap,
     pub username: String,
     pub password: String,
-}
-
-impl RuntimeStartConfig {
-    pub fn new(
-        status: NetStatusSimp,
-        ssid: Option<String>,
-        username: String,
-        password: String,
-    ) -> RuntimeStartConfig {
-        let status = match status {
-            NetStatusSimp::Unknown => NetStatus::Unknown,
-            NetStatusSimp::Wwan => NetStatus::Wwan,
-            NetStatusSimp::Wlan => match ssid {
-                Some(s) => NetStatus::Wlan(s),
-                None => NetStatus::Unknown,
-            },
-            NetStatusSimp::Lan => NetStatus::Lan,
-        };
-        Self {
-            status: RustOpaque::new(status),
-            username,
-            password,
-        }
-    }
 }
 
 pub struct Runtime {
@@ -194,7 +173,7 @@ impl Runtime {
                     if (!config.username.is_empty()) && (!config.password.is_empty()) {
                         model.queue(Action::Credential(config.username, config.password));
                     }
-                    model.queue(Action::Status(Some((*config.status).clone())));
+                    model.queue(Action::Status(Some(config.status.0)));
                     model.queue(Action::Timer);
                 }
                 while let Some(action) = rx.recv().await {
