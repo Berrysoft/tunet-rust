@@ -45,13 +45,22 @@ class _HomePageState extends State<HomePage> {
         final flux = netFlux.flux.field0;
         final balance = netFlux.balance.field0;
 
-        return CustomPaint(
-          size: Size(MediaQuery.of(context).size.width, 30.0),
-          painter: FluxPainter(
-            flux: flux.toDouble() / 1000000000.0,
-            balance: balance,
-            accent: Theme.of(context).colorScheme.primary,
-          ),
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1.0),
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+          builder: (context, value, child) {
+            final cflux = flux.toDouble() / 1000000000.0 * value;
+            final cbalance = balance * value;
+            return CustomPaint(
+              size: Size(MediaQuery.of(context).size.width, 30.0),
+              painter: FluxPainter(
+                flux: cflux,
+                balance: cbalance,
+                accent: Theme.of(context).colorScheme.primary,
+              ),
+            );
+          },
         );
       },
     );
