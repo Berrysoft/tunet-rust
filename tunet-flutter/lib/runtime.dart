@@ -107,9 +107,9 @@ class ManagedRuntime extends NotifyPropertyChanged {
   }
 
   static const String onlinesProperty = "onlines";
-  List<NetUserWrap> _onlines = List.empty();
-  List<NetUserWrap> get onlines => _onlines;
-  set onlines(List<NetUserWrap> value) {
+  List<NetUserWrap>? _onlines = List.empty();
+  List<NetUserWrap>? get onlines => _onlines;
+  set onlines(List<NetUserWrap>? value) {
     if (_onlines != value) {
       _onlines = value;
       propertyChanged(propertyName: onlinesProperty);
@@ -227,7 +227,7 @@ class ManagedRuntime extends NotifyPropertyChanged {
   }
 
   Future<void> queueOnlines() async {
-    onlines = List.empty();
+    onlines = null;
     await runtime.queueOnlines();
   }
 

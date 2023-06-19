@@ -218,12 +218,15 @@ class _HomePageState extends State<HomePage> {
                             ipDialogBuilder(context, runtime);
                             break;
                           case OnlineAction.drop:
-                            final ips = runtime.onlines
-                                .whereIndexed(
-                                    (index, _) => onlinesSelected[index])
-                                .map((u) => u.address)
-                                .toList();
-                            runtime.queueDrop(ips: ips);
+                            final onlines = runtime.onlines;
+                            if (onlines != null) {
+                              final ips = onlines
+                                  .whereIndexed(
+                                      (index, _) => onlinesSelected[index])
+                                  .map((u) => u.address)
+                                  .toList();
+                              runtime.queueDrop(ips: ips);
+                            }
                             break;
                           case OnlineAction.refresh:
                             runtime.queueOnlines();
@@ -255,17 +258,23 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Binding<ManagedRuntime>(
-                      source: runtime,
-                      path: ManagedRuntime.onlinesProperty,
-                      builder: (context, runtime) {
-                        final onlines = runtime.onlines;
-                        if (onlinesSelected.length != onlines.length) {
-                          onlinesSelected = List.filled(onlines.length, false);
-                        }
-                        return DataTable(
+                  Binding<ManagedRuntime>(
+                    source: runtime,
+                    path: ManagedRuntime.onlinesProperty,
+                    builder: (context, runtime) {
+                      final onlines = runtime.onlines;
+                      if (onlines == null) {
+                        return const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [CircularProgressIndicator()],
+                        );
+                      }
+                      if (onlinesSelected.length != onlines.length) {
+                        onlinesSelected = List.filled(onlines.length, false);
+                      }
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
                           columns: const [
                             DataColumn(label: Text('IP地址')),
                             DataColumn(label: Text('登录时间')),
@@ -283,9 +292,9 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               )
                               .toList(),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
