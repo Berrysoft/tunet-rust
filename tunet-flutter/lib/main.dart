@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -11,7 +12,7 @@ import 'views/about_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (defaultTargetPlatform == TargetPlatform.android) {
+  if (Platform.isAndroid) {
     await SystemTheme.accentColor.load();
   }
 
