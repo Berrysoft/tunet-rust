@@ -13,10 +13,6 @@ import 'package:collection/collection.dart';
 part 'bridge_definitions.freezed.dart';
 
 abstract class Native {
-  Future<String> fluxToString({required int f, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kFluxToStringConstMeta;
-
   Future<Runtime> newStaticMethodRuntime({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kNewStaticMethodRuntimeConstMeta;

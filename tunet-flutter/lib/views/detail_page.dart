@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:collection/collection.dart';
+import 'package:data_size/data_size.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../runtime.dart';
@@ -57,32 +59,22 @@ class _DetailPageState extends State<DetailPage> {
     final daily = this.daily;
     Widget dailyChart = const Flexible(child: LinearProgressIndicator());
     if (daily != null) {
-      const double gbRatio = 1000000000;
       final titles = FlTitlesData(
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             getTitlesWidget: (value, meta) => SideTitleWidget(
               axisSide: meta.axisSide,
-              child: FutureBuilder(
-                future: api.fluxToString(f: (value * gbRatio).toInt()),
-                builder: (context, snap) {
-                  final s = snap.data;
-                  if (s == null) {
-                    return const LinearProgressIndicator();
-                  }
-                  return Text(s);
-                },
-              ),
+              child: Text(value.toInt().formatByteSize()),
             ),
             showTitles: true,
-            reservedSize: 70,
+            reservedSize: 80,
           ),
         ),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             getTitlesWidget: (value, meta) => SideTitleWidget(
               axisSide: meta.axisSide,
-              child: Text('${value.toInt()}日'),
+              child: Text(value.toInt().toString()),
             ),
             showTitles: true,
             reservedSize: 30,
@@ -98,18 +90,35 @@ class _DetailPageState extends State<DetailPage> {
             const AxisTitles(sideTitles: SideTitles(showTitles: false)),
       );
 
+      var touch = LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipItems: (touchedSpots) {
+            final items = defaultLineTooltipItem(touchedSpots);
+            return IterableZip<dynamic>([touchedSpots, items]).map((list) {
+              LineBarSpot spot = list[0];
+              LineTooltipItem item = list[1];
+              return LineTooltipItem(
+                spot.y.toInt().formatByteSize(),
+                item.textStyle,
+              );
+            }).toList();
+          },
+        ),
+      );
+
       var data = LineChartData(
         lineBarsData: [
           LineChartBarData(
             spots: daily.details
                 .map((p) => FlSpot(
                       p.day.toDouble(),
-                      p.flux.field0.toDouble() / gbRatio,
+                      p.flux.field0.toDouble(),
                     ))
                 .toList(),
           )
         ],
         titlesData: titles,
+        lineTouchData: touch,
         minX: 1,
         maxX: daily.nowDay.toDouble(),
         minY: 0,

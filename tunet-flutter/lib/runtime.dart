@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
+import 'package:data_size/data_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -179,16 +180,7 @@ class DetailsData extends DataTableSource {
       return DataRow(cells: [
         DataCell(Text(DateFormat('MM-dd HH:mm').format(d.loginTime.field0))),
         DataCell(Text(DateFormat('MM-dd HH:mm').format(d.logoutTime.field0))),
-        DataCell(FutureBuilder(
-          future: api.fluxToString(f: d.flux.field0),
-          builder: (context, snap) {
-            final data = snap.data;
-            if (data == null) {
-              return const CircularProgressIndicator();
-            }
-            return Text(data);
-          },
-        ))
+        DataCell(Text(d.flux.field0.formatByteSize())),
       ]);
     }
     return null;

@@ -26,23 +26,6 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Future<String> fluxToString({required int f, dynamic hint}) {
-    var arg0 = _platform.api2wire_u64(f);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_flux_to_string(port_, arg0),
-      parseSuccessData: _wire2api_String,
-      constMeta: kFluxToStringConstMeta,
-      argValues: [f],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kFluxToStringConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "flux_to_string",
-        argNames: ["f"],
-      );
-
   Future<Runtime> newStaticMethodRuntime({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
@@ -810,11 +793,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  int api2wire_u64(int raw) {
-    return raw;
-  }
-
-  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_u8_array_4(U8Array4 raw) {
     final ans = inner.new_uint_8_list_0(4);
     ans.ref.ptr.asTypedList(4).setAll(0, raw);
@@ -1025,22 +1003,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'init_frb_dart_api_dl');
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
-
-  void wire_flux_to_string(
-    int port_,
-    int f,
-  ) {
-    return _wire_flux_to_string(
-      port_,
-      f,
-    );
-  }
-
-  late final _wire_flux_to_stringPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint64)>>(
-          'wire_flux_to_string');
-  late final _wire_flux_to_string =
-      _wire_flux_to_stringPtr.asFunction<void Function(int, int)>();
 
   void wire_new__static_method__Runtime(
     int port_,

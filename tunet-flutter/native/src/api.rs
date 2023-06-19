@@ -60,10 +60,6 @@ pub struct _NetFlux {
 #[frb(mirror(Flux))]
 pub struct _Flux(pub u64);
 
-pub fn flux_to_string(f: u64) -> String {
-    Flux(f).to_string()
-}
-
 #[frb(mirror(NewDuration))]
 pub struct _NewDuration(pub Duration);
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:collection/collection.dart';
+import 'package:data_size/data_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -133,16 +134,7 @@ class _HomePageState extends State<HomePage> {
           ),
           ListTile(
             leading: const Icon(Icons.sync_alt_rounded),
-            title: FutureBuilder(
-              future: api.fluxToString(f: flux),
-              builder: (context, snap) {
-                final s = snap.data;
-                if (s == null) {
-                  return const LinearProgressIndicator();
-                }
-                return Text(s);
-              },
-            ),
+            title: Text(flux.formatByteSize()),
           ),
           ListTile(
             leading: const Icon(Icons.timelapse_rounded),
@@ -400,16 +392,7 @@ DataRow netUserToRow(
         type: InternetAddressType.IPv4,
       ).address)),
       DataCell(Text(DateFormat('MM-dd HH:mm').format(u.loginTime.field0))),
-      DataCell(FutureBuilder(
-        future: api.fluxToString(f: u.flux.field0),
-        builder: (context, snap) {
-          final data = snap.data;
-          if (data == null) {
-            return const CircularProgressIndicator();
-          }
-          return Text(data);
-        },
-      )),
+      DataCell(Text(u.flux.field0.formatByteSize())),
       DataCell(Text(u.macAddress)),
       DataCell(Text(u.isLocal ? '本机' : '未知')),
     ],

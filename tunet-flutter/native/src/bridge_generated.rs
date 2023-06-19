@@ -21,19 +21,6 @@ use std::sync::Arc;
 
 // Section: wire functions
 
-fn wire_flux_to_string_impl(port_: MessagePort, f: impl Wire2Api<u64> + UnwindSafe) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "flux_to_string",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_f = f.wire2api();
-            move |task_callback| Ok(flux_to_string(api_f))
-        },
-    )
-}
 fn wire_new__static_method__Runtime_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -511,11 +498,6 @@ impl Wire2Api<NetState> for i32 {
     }
 }
 
-impl Wire2Api<u64> for u64 {
-    fn wire2api(self) -> u64 {
-        self
-    }
-}
 impl Wire2Api<u8> for u8 {
     fn wire2api(self) -> u8 {
         self
