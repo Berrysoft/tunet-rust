@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:binding/binding.dart';
 import 'package:collection/collection.dart';
 import 'package:data_size/data_size.dart';
 import 'package:flutter/material.dart';
@@ -10,10 +11,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'ffi.dart';
 export 'ffi.dart';
 
-class ManagedRuntime {
+class ManagedRuntime extends NotifyPropertyChanged {
   final Runtime runtime;
 
   static const statusApi = MethodChannel('com.berrysoft.tunet_flutter/status');
+
+  bool _logBusy = false;
+  static const String logBusyProperty = "logBusy";
+  bool get logBusy => _logBusy;
+  set setLogBusy(bool v) {
+    if (v != _logBusy) {
+      _logBusy = v;
+      propertyChanged(propertyName: logBusyProperty);
+    }
+  }
 
   late StreamController<bool> logBusySink = StreamController();
   late StreamController<String> logTextSink = StreamController();
