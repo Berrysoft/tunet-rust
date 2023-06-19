@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:binding/binding.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -37,24 +38,29 @@ class MyApp extends StatelessWidget {
         colorSchemeSeed: SystemTheme.accentColor.accent,
         useMaterial3: true,
       ),
-      home: DefaultTabController(
-        length: 3,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.home_rounded), text: '主页'),
-                Tab(icon: Icon(Icons.auto_graph_rounded), text: '明细'),
-                Tab(icon: Icon(Icons.help_outline_rounded), text: '关于'),
-              ],
+      home: BindingProvider(
+        child: BindingSource<ManagedRuntime>(
+          instance: runtime,
+          child: DefaultTabController(
+            length: 3,
+            child: Scaffold(
+              appBar: AppBar(
+                title: const TabBar(
+                  tabs: [
+                    Tab(icon: Icon(Icons.home_rounded), text: '主页'),
+                    Tab(icon: Icon(Icons.auto_graph_rounded), text: '明细'),
+                    Tab(icon: Icon(Icons.help_outline_rounded), text: '关于'),
+                  ],
+                ),
+              ),
+              body: const TabBarView(
+                children: [
+                  HomePage(),
+                  DetailPage(),
+                  AboutPage(),
+                ],
+              ),
             ),
-          ),
-          body: TabBarView(
-            children: [
-              HomePage(runtime: runtime),
-              DetailPage(runtime: runtime),
-              const AboutPage(),
-            ],
           ),
         ),
       ),

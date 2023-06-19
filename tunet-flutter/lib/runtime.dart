@@ -16,41 +16,107 @@ class ManagedRuntime extends NotifyPropertyChanged {
 
   static const statusApi = MethodChannel('com.berrysoft.tunet_flutter/status');
 
-  bool _logBusy = false;
   static const String logBusyProperty = "logBusy";
+  bool _logBusy = false;
   bool get logBusy => _logBusy;
-  set setLogBusy(bool v) {
+  set logBusy(bool v) {
     if (v != _logBusy) {
       _logBusy = v;
       propertyChanged(propertyName: logBusyProperty);
     }
   }
 
-  late StreamController<bool> logBusySink = StreamController();
-  late StreamController<String> logTextSink = StreamController();
-  late StreamController<NetFlux> netFluxSink = StreamController();
-  late StreamController<NetState> stateSink = StreamController();
-  late StreamController<String> statusSink = StreamController();
-  late StreamController<bool> detailBusySink = StreamController();
-  late StreamController<DetailDailyWrap> dailySink = StreamController();
-  late StreamController<String> usernameSink = StreamController();
-  late StreamController<bool> onlineBusySink = StreamController();
+  static const String detailBusyProperty = "detailBusy";
+  bool _detailBusy = false;
+  bool get detailBusy => _detailBusy;
+  set detailBusy(bool value) {
+    if (_detailBusy != value) {
+      _detailBusy = value;
+      propertyChanged(propertyName: detailBusyProperty);
+    }
+  }
 
-  late Stream<bool> logBusyStream = logBusySink.stream.asBroadcastStream();
-  late Stream<String> logTextStream = logTextSink.stream.asBroadcastStream();
-  late Stream<NetFlux> netFluxStream = netFluxSink.stream.asBroadcastStream();
-  late Stream<NetState> stateStream = stateSink.stream.asBroadcastStream();
-  late Stream<String> statusStream = statusSink.stream.asBroadcastStream();
-  late Stream<bool> detailBusyStream =
-      detailBusySink.stream.asBroadcastStream();
-  late Stream<DetailDailyWrap> dailyStream =
-      dailySink.stream.asBroadcastStream();
-  late Stream<String> usernameStream = usernameSink.stream.asBroadcastStream();
-  late Stream<bool> onlineBusyStream =
-      onlineBusySink.stream.asBroadcastStream();
+  static const String onlineBusyProperty = "onlineBusy";
+  bool _onlineBusy = false;
+  bool get onlineBusy => _onlineBusy;
+  set onlineBusy(bool value) {
+    if (_onlineBusy != value) {
+      _onlineBusy = value;
+      propertyChanged(propertyName: onlineBusyProperty);
+    }
+  }
+
+  static const String logTextProperty = "logText";
+  String _logText = "";
+  String get logText => _logText;
+  set logText(String value) {
+    if (_logText != value) {
+      _logText = value;
+      propertyChanged(propertyName: logTextProperty);
+    }
+  }
+
+  static const String netFluxProperty = "netFlux";
+  NetFlux? _netFlux;
+  NetFlux? get netFlux => _netFlux;
+  set netFlux(NetFlux? value) {
+    if (_netFlux != value) {
+      _netFlux = value;
+      propertyChanged(propertyName: netFluxProperty);
+    }
+  }
+
+  static const String stateProperty = "state";
+  NetState _state = NetState.Unknown;
+  NetState get state => _state;
+  set state(NetState value) {
+    if (_state != value) {
+      _state = value;
+      propertyChanged(propertyName: stateProperty);
+    }
+  }
+
+  static const String statusProperty = "status";
+  String _status = "";
+  String get status => _status;
+  set status(String value) {
+    if (_status != value) {
+      _status = value;
+      propertyChanged(propertyName: statusProperty);
+    }
+  }
+
+  static const String dailyProperty = "daily";
+  DetailDailyWrap? _daily;
+  DetailDailyWrap? get daily => _daily;
+  set daily(DetailDailyWrap? value) {
+    if (_daily != value) {
+      _daily = value;
+      propertyChanged(propertyName: dailyProperty);
+    }
+  }
+
+  static const String usernameProperty = "username";
+  String _username = "";
+  String get username => _username;
+  set username(String value) {
+    if (_username != value) {
+      _username = value;
+      propertyChanged(propertyName: usernameProperty);
+    }
+  }
+
+  static const String onlinesProperty = "onlines";
+  List<NetUserWrap> _onlines = List.empty();
+  List<NetUserWrap> get onlines => _onlines;
+  set onlines(List<NetUserWrap> value) {
+    if (_onlines != value) {
+      _onlines = value;
+      propertyChanged(propertyName: onlinesProperty);
+    }
+  }
 
   DetailsData detailsData = DetailsData();
-  List<NetUserWrap> onlinesData = List.empty();
 
   ManagedRuntime({required this.runtime});
 
@@ -67,7 +133,10 @@ class ManagedRuntime extends NotifyPropertyChanged {
         sendStatus = const NetStatus.wwan();
         break;
       case "wlan":
-        sendStatus = NetStatus.wlan(await statusApi.invokeMethod("getSsid"));
+        String? ssid = await statusApi.invokeMethod("getSsid");
+        if (ssid != null) {
+          sendStatus = NetStatus.wlan(ssid);
+        }
         break;
       case "lan":
         sendStatus = const NetStatus.lan();
@@ -88,40 +157,37 @@ class ManagedRuntime extends NotifyPropertyChanged {
           await runtime.queueState();
           await runtime.queueDetails();
           await runtime.queueOnlines();
-          usernameSink.add(await username());
+          username = await runtime.username();
           break;
         case UpdateMsg.State:
           await runtime.queueFlux();
-          stateSink.add(await state());
+          state = (await runtime.state()).field0;
           break;
         case UpdateMsg.Status:
           await runtime.queueState();
-          statusSink.add(await status());
+          status = await runtime.status();
           break;
         case UpdateMsg.Log:
-          logTextSink.add(await logText());
+          logText = await runtime.logText();
           break;
         case UpdateMsg.Flux:
-          netFluxSink.add(await flux());
+          netFlux = await runtime.flux();
           break;
         case UpdateMsg.Online:
-          onlinesData = await onlines();
+          onlines = await runtime.onlines();
           break;
         case UpdateMsg.Details:
-          detailsData.setData(await details());
-          final daily = await detailDaily();
-          if (daily != null) {
-            dailySink.add(daily);
-          }
+          detailsData.setData(await runtime.details());
+          daily = await runtime.detailDaily();
           break;
         case UpdateMsg.LogBusy:
-          logBusySink.add(await logBusy());
+          logBusy = await runtime.logBusy();
           break;
         case UpdateMsg.OnlineBusy:
-          onlineBusySink.add(await onlineBusy());
+          onlineBusy = await runtime.onlineBusy();
           break;
         case UpdateMsg.DetailBusy:
-          detailBusySink.add(await detailBusy());
+          detailBusy = await runtime.detailBusy();
           break;
       }
     }
@@ -154,24 +220,21 @@ class ManagedRuntime extends NotifyPropertyChanged {
   Future<void> queueLogin() => runtime.queueLogin();
   Future<void> queueLogout() => runtime.queueLogout();
   Future<void> queueFlux() => runtime.queueFlux();
-  Future<void> queueDetails() => runtime.queueDetails();
-  Future<void> queueOnlines() => runtime.queueOnlines();
+  Future<void> queueDetails() async {
+    detailsData.setData(List.empty());
+    daily = null;
+    await runtime.queueDetails();
+  }
+
+  Future<void> queueOnlines() async {
+    onlines = List.empty();
+    await runtime.queueOnlines();
+  }
+
   Future<void> queueConnect({required Ipv4AddrWrap ip}) =>
       runtime.queueConnect(ip: ip);
   Future<void> queueDrop({required List<Ipv4AddrWrap> ips}) =>
       runtime.queueDrop(ips: ips);
-
-  Future<bool> logBusy() => runtime.logBusy();
-  Future<String> logText() => runtime.logText();
-  Future<NetState> state() async => (await runtime.state()).field0;
-  Future<String> status() => runtime.status();
-  Future<NetFlux> flux() => runtime.flux();
-  Future<bool> detailBusy() => runtime.detailBusy();
-  Future<List<NetDetail>> details() => runtime.details();
-  Future<DetailDailyWrap?> detailDaily() => runtime.detailDaily();
-  Future<String> username() => runtime.username();
-  Future<bool> onlineBusy() => runtime.onlineBusy();
-  Future<List<NetUserWrap>> onlines() => runtime.onlines();
 }
 
 class DetailsData extends DataTableSource {
