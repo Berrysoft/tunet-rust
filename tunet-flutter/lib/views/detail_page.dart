@@ -88,8 +88,9 @@ class _DetailPageState extends State<DetailPage> {
           maxX: daily.nowDay.toDouble(),
           minY: 0,
         );
-        return Expanded(
-          child: Card(
+        return Card(
+          child: SizedBox(
+            height: 300,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: LineChart(data),
@@ -131,22 +132,24 @@ class _DetailPageState extends State<DetailPage> {
             rowsPerPage: 6,
           );
         }
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: InkWell(
-                onTap: detailBusy ? null : () => runtime.queueDetails(),
-                child: const ListTile(
-                  leading: Icon(Icons.refresh_rounded),
-                  title: Text('刷新'),
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                child: InkWell(
+                  onTap: detailBusy ? null : () => runtime.queueDetails(),
+                  child: const ListTile(
+                    leading: Icon(Icons.refresh_rounded),
+                    title: Text('刷新'),
+                  ),
                 ),
               ),
-            ),
-            dailyChart,
-            tableWidget
-          ],
+              dailyChart,
+              tableWidget
+            ],
+          ),
         );
       },
     );
