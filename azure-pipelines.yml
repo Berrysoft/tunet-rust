@@ -156,6 +156,8 @@ jobs:
 - job: Build_Android
   pool:
     vmImage: 'ubuntu-20.04'
+  variables:
+  - group: 'Android sign'
   
   steps:
   - script: |
@@ -168,9 +170,21 @@ jobs:
   - script: |
       sudo snap install flutter --classic
     displayName: 'Install flutter'
+
+  - task: DownloadSecureFile@1
+    name: keystore
+    displayName: 'Download keystore'
+    inputs:
+      secureFile: 'keystore.jks'
   
   - script: |
       cd tunet-flutter
+      cat > android/key.properties << EOL
+      storePassword=$(store-password)
+      keyPassword=$(key-password)
+      keyAlias=$(key-alias)
+      storeFile=$(keystore.secureFilePath)
+      EOL
       make apk
       cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $(Build.ArtifactStagingDirectory)/tunet.armeabi-v7a.apk
       cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $(Build.ArtifactStagingDirectory)/tunet.arm64-v8a.apk
