@@ -169,4 +169,4 @@ $ cargo build --release
 $ cd tunet-flutter
 $ make apk
 ```
-即可在 `tunet-flutter/build/app/outputs/flutter-apk/app-release.apk` 找到打包。
+即可在 `tunet-flutter/build/app/outputs/flutter-apk/app-<架构>-release.apk` 找到打包。
