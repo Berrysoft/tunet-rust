@@ -17,7 +17,7 @@ class AboutCard extends StatelessWidget {
           ),
           const ListTile(
             leading: Icon(Icons.copyright_rounded),
-            title: Text('2023 Berrysoft'),
+            title: Text('2021-2023 Berrysoft'),
           ),
           const ListTile(
             leading: FlutterLogo(),
