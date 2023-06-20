@@ -194,3 +194,27 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       ArtifactName: 'publish'
+
+- job: Build_iOS
+  pool:
+    vmImage: 'macOS-latest'
+
+  steps:
+  - script: |
+      brew install flutter cocoapods
+    displayName: 'Install tools'
+
+  - script: |
+      rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+      cd tunet-flutter
+      flutter build ios --release --no-codesign
+      mkdir -p ipa/Payload
+      cp -r build/ios/iphoneos/Runner.app ./ipa/Payload
+      cd ipa
+      zip -r tunet.ios.ipa *
+      cp tunet.ios.ipa $(Build.ArtifactStagingDirectory)/
+    displayName: 'Build IPA'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
