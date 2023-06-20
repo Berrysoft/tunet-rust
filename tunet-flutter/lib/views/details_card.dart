@@ -41,7 +41,6 @@ class _DetailsCardState extends State<DetailsCard> {
           ],
           source: detailsData,
           showCheckboxColumn: false,
-          rowsPerPage: 6,
         );
       },
     );

@@ -71,34 +71,36 @@ class _OnlinesCardState extends State<OnlinesCard> {
             builder: (context, runtime) {
               final onlines = runtime.onlines;
               if (onlines == null) {
-                return const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [CircularProgressIndicator()],
-                );
+                return const LinearProgressIndicator();
               }
               if (onlinesSelected.length != onlines.length) {
                 onlinesSelected = List.filled(onlines.length, false);
               }
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('IP地址')),
-                    DataColumn(label: Text('登录时间')),
-                    DataColumn(label: Text('流量')),
-                    DataColumn(label: Text('MAC地址')),
-                    DataColumn(label: Text('设备')),
-                  ],
-                  rows: onlines
-                      .mapIndexed(
-                        (index, element) => _netUserToRow(
-                          element,
-                          onlinesSelected[index],
-                          (selected) => setState(
-                              () => onlinesSelected[index] = selected!),
-                        ),
-                      )
-                      .toList(),
+              return LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.minWidth),
+                    child: DataTable(
+                      columns: const [
+                        DataColumn(label: Text('IP地址')),
+                        DataColumn(label: Text('登录时间')),
+                        DataColumn(label: Text('流量')),
+                        DataColumn(label: Text('MAC地址')),
+                        DataColumn(label: Text('设备')),
+                      ],
+                      rows: onlines
+                          .mapIndexed(
+                            (index, element) => _netUserToRow(
+                              element,
+                              onlinesSelected[index],
+                              (selected) => setState(
+                                  () => onlinesSelected[index] = selected!),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
                 ),
               );
             },
