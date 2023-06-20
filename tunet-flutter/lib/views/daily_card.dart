@@ -1,32 +1,23 @@
 import 'package:binding/binding.dart';
 import 'package:collection/collection.dart';
 import 'package:data_size/data_size.dart';
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import '../runtime.dart';
 
-class DetailPage extends StatefulWidget {
-  const DetailPage({Key? key}) : super(key: key);
+class DailyCard extends StatelessWidget {
+  const DailyCard({super.key});
 
-  @override
-  State<StatefulWidget> createState() => _DetailPageState();
-}
-
-class _DetailPageState extends State<DetailPage> {
   @override
   Widget build(BuildContext context) {
-    const Widget loadingWidget = Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [CircularProgressIndicator()],
-    );
     final runtime = BindingSource.of<ManagedRuntime>(context);
-    Widget dailyChart = Binding<ManagedRuntime>(
+    return Binding<ManagedRuntime>(
       source: runtime,
       path: ManagedRuntime.dailyProperty,
       builder: (context, runtime) {
         final daily = runtime.daily;
         if (daily == null) {
-          return loadingWidget;
+          return const LinearProgressIndicator();
         }
         final titles = FlTitlesData(
           leftTitles: AxisTitles(
@@ -95,60 +86,6 @@ class _DetailPageState extends State<DetailPage> {
               padding: const EdgeInsets.all(8.0),
               child: LineChart(data),
             ),
-          ),
-        );
-      },
-    );
-    return Binding<ManagedRuntime>(
-      source: runtime,
-      path: ManagedRuntime.detailBusyProperty,
-      builder: (context, runtime) {
-        final detailBusy = runtime.detailBusy;
-        final detailsData = runtime.detailsData;
-        Widget tableWidget = loadingWidget;
-        if (runtime.daily != null) {
-          tableWidget = PaginatedDataTable(
-            sortColumnIndex: detailsData.sortColumnIndex,
-            sortAscending: detailsData.sortAscending,
-            columns: [
-              DataColumn(
-                label: const Text('登录时间'),
-                onSort: (columnIndex, ascending) =>
-                    setState(() => detailsData.sort(columnIndex, ascending)),
-              ),
-              DataColumn(
-                label: const Text('注销时间'),
-                onSort: (columnIndex, ascending) =>
-                    setState(() => detailsData.sort(columnIndex, ascending)),
-              ),
-              DataColumn(
-                label: const Text('流量'),
-                onSort: (columnIndex, ascending) =>
-                    setState(() => detailsData.sort(columnIndex, ascending)),
-              ),
-            ],
-            source: detailsData,
-            showCheckboxColumn: false,
-            rowsPerPage: 6,
-          );
-        }
-        return SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                child: InkWell(
-                  onTap: detailBusy ? null : () => runtime.queueDetails(),
-                  child: const ListTile(
-                    leading: Icon(Icons.refresh_rounded),
-                    title: Text('刷新'),
-                  ),
-                ),
-              ),
-              dailyChart,
-              tableWidget
-            ],
           ),
         );
       },

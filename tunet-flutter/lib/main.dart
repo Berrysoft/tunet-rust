@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:system_theme/system_theme.dart';
+import 'package:tunet/views/about_card.dart';
+import 'views/daily_card.dart';
+import 'views/details_card.dart';
+import 'views/flux_paint.dart';
+import 'views/info_card.dart';
+import 'views/onlines_card.dart';
+import 'views/settings_card.dart';
 import 'runtime.dart';
-import 'views/home_page.dart';
-import 'views/detail_page.dart';
-import 'views/about_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,30 +45,121 @@ class MyApp extends StatelessWidget {
       home: BindingProvider(
         child: BindingSource<ManagedRuntime>(
           instance: runtime,
-          child: DefaultTabController(
-            length: 3,
-            child: Scaffold(
-              appBar: AppBar(
-                title: const TabBar(
-                  tabs: [
-                    Tab(icon: Icon(Icons.home_rounded), text: '主页'),
-                    Tab(icon: Icon(Icons.auto_graph_rounded), text: '明细'),
-                    Tab(icon: Icon(Icons.help_outline_rounded), text: '关于'),
-                  ],
-                ),
-              ),
-              body: const TabBarView(
-                children: [
-                  HomePage(),
-                  DetailPage(),
-                  AboutPage(),
-                ],
-              ),
-            ),
-          ),
+          child: const MainPage(),
         ),
       ),
       builder: FToastBuilder(),
     );
   }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  FToast fToast = FToast();
+  late PropertyChangedCallbackWrap<ManagedRuntime> logTextCallback;
+
+  @override
+  void initState() {
+    super.initState();
+
+    fToast.init(context);
+
+    final runtime = BindingSource.of<ManagedRuntime>(context);
+    logTextCallback = PropertyChangedCallbackWrap<ManagedRuntime>(
+      source: runtime,
+      callback: (runtime) {
+        final logText = runtime.logText;
+        _logTextBuilder(fToast, logText);
+      },
+    );
+
+    final provider = BindingProvider.of(context);
+    provider.add(ManagedRuntime.logTextProperty, logTextCallback);
+  }
+
+  @override
+  void dispose() {
+    final provider = BindingProvider.of(context);
+    provider.remove(ManagedRuntime.logTextProperty, logTextCallback);
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final runtime = BindingSource.of<ManagedRuntime>(context);
+    final logBusy = runtime.logBusy;
+    final onlineBusy = runtime.onlineBusy;
+    final detailBusy = runtime.detailBusy;
+    return Scaffold(
+      appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset("assets/logo.png"),
+        ),
+        title: const Text('清华校园网'),
+        actions: [
+          IconButton(
+            onPressed: logBusy
+                ? null
+                : () {
+                    runtime.queueLogin();
+                  },
+            icon: const Icon(Icons.login_rounded),
+          ),
+          IconButton(
+            onPressed: logBusy
+                ? null
+                : () {
+                    runtime.queueLogout();
+                  },
+            icon: const Icon(Icons.logout_rounded),
+          ),
+          IconButton(
+            onPressed: (logBusy || onlineBusy || detailBusy)
+                ? null
+                : () {
+                    runtime.queueFlux();
+                    runtime.queueOnlines();
+                    runtime.queueDetails();
+                  },
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: const SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FluxPaint(),
+            InfoCard(),
+            SettingsCard(),
+            OnlinesCard(),
+            DailyCard(),
+            DetailsCard(),
+            AboutCard(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _logTextBuilder(FToast fToast, String text) {
+  Widget toast = Container(
+    padding: const EdgeInsets.all(8.0),
+    child: Text(text),
+  );
+  fToast.showToast(
+    child: toast,
+    gravity: ToastGravity.BOTTOM,
+    toastDuration: const Duration(seconds: 1),
+  );
 }
