@@ -23,6 +23,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   FToast fToast = FToast();
 
+  late PropertyChangedCallbackWrap<ManagedRuntime> logTextCallback;
+
   List<bool> onlinesSelected = List.empty();
 
   @override
@@ -30,6 +32,26 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     fToast.init(context);
+
+    final runtime = BindingSource.of<ManagedRuntime>(context);
+    logTextCallback = PropertyChangedCallbackWrap<ManagedRuntime>(
+      source: runtime,
+      callback: (runtime) {
+        final logText = runtime.logText;
+        logTextBuilder(fToast, logText);
+      },
+    );
+
+    final provider = BindingProvider.of(context);
+    provider.add(ManagedRuntime.logTextProperty, logTextCallback);
+  }
+
+  @override
+  void dispose() {
+    final provider = BindingProvider.of(context);
+    provider.remove(ManagedRuntime.logTextProperty, logTextCallback);
+
+    super.dispose();
   }
 
   @override
@@ -365,7 +387,7 @@ void logTextBuilder(FToast fToast, String text) {
   fToast.showToast(
     child: toast,
     gravity: ToastGravity.BOTTOM,
-    toastDuration: const Duration(seconds: 2),
+    toastDuration: const Duration(seconds: 1),
   );
 }
 

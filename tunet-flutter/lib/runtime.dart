@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:binding/binding.dart';
+import 'package:binding/src/binding_base.dart';
 import 'package:collection/collection.dart';
 import 'package:data_size/data_size.dart';
 import 'package:flutter/material.dart';
@@ -294,5 +295,20 @@ class DetailsData extends DataTableSource {
       reverse(data);
     }
     notifyListeners();
+  }
+}
+
+class PropertyChangedCallbackWrap<T extends NotifyPropertyChanged>
+    extends BindingBase<T> {
+  final void Function(T) callback;
+
+  @override
+  T source;
+
+  PropertyChangedCallbackWrap({required this.source, required this.callback});
+
+  @override
+  void rebuild() {
+    callback(source);
   }
 }
