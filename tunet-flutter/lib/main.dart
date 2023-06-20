@@ -6,6 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:system_theme/system_theme.dart';
 import 'package:tunet/views/about_card.dart';
+import 'package:tunet/views/main_app_bar.dart';
 import 'views/daily_card.dart';
 import 'views/details_card.dart';
 import 'views/flux_paint.dart';
@@ -93,47 +94,9 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final runtime = BindingSource.of<ManagedRuntime>(context);
-    final logBusy = runtime.logBusy;
-    final onlineBusy = runtime.onlineBusy;
-    final detailBusy = runtime.detailBusy;
-    return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset("assets/logo.png"),
-        ),
-        title: const Text('清华校园网'),
-        actions: [
-          IconButton(
-            onPressed: logBusy
-                ? null
-                : () {
-                    runtime.queueLogin();
-                  },
-            icon: const Icon(Icons.login_rounded),
-          ),
-          IconButton(
-            onPressed: logBusy
-                ? null
-                : () {
-                    runtime.queueLogout();
-                  },
-            icon: const Icon(Icons.logout_rounded),
-          ),
-          IconButton(
-            onPressed: (logBusy || onlineBusy || detailBusy)
-                ? null
-                : () {
-                    runtime.queueFlux();
-                    runtime.queueOnlines();
-                    runtime.queueDetails();
-                  },
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
-      ),
-      body: const SingleChildScrollView(
+    return const Scaffold(
+      appBar: MainAppBar(),
+      body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
