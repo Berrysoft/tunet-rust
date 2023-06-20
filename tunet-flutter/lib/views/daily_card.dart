@@ -80,12 +80,22 @@ class DailyCard extends StatelessWidget {
           minY: 0,
         );
         return Card(
-          child: SizedBox(
-            height: 300,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: LineChart(data),
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const ListTile(
+                leading: Icon(Icons.auto_graph_rounded),
+                title: Text('明细统计'),
+              ),
+              SizedBox(
+                height: 300,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: LineChart(data),
+                ),
+              ),
+            ],
           ),
         );
       },
