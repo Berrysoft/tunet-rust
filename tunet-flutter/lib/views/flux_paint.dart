@@ -20,13 +20,17 @@ class FluxPaint extends StatelessWidget {
           final flux = netFlux.flux.field0;
           final balance = netFlux.balance.field0;
 
+          final fluxGB = flux.toDouble() / 1000000000.0;
+
+          final costBalance = max(0.0, fluxGB - 50.0);
+
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1.0),
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeOut,
             builder: (context, value, child) {
-              final cflux = flux.toDouble() / 1000000000.0 * value;
-              final cbalance = balance * value;
+              final cflux = fluxGB * value;
+              final cbalance = balance + costBalance * (1.0 - value);
               return CustomPaint(
                 size: Size(MediaQuery.of(context).size.width, 30.0),
                 painter: _FluxPainter(
@@ -56,6 +60,7 @@ class _FluxPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    print("flux: ${this.flux}; balance: ${this.balance}");
     final f1 = Paint()
       ..color = accent
       ..style = PaintingStyle.fill;
