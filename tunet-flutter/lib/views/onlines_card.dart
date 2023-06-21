@@ -79,6 +79,7 @@ class _OnlinesCardState extends State<OnlinesCard> {
                       5,
                       DataCell(Shimmer(child: const Text('               '))),
                     ),
+                    onSelectChanged: (_) {},
                   ),
                 ];
               } else {
