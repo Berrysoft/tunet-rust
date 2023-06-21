@@ -60,7 +60,6 @@ class _FluxPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print("flux: ${this.flux}; balance: ${this.balance}");
     final f1 = Paint()
       ..color = accent
       ..style = PaintingStyle.fill;
