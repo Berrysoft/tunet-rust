@@ -49,7 +49,7 @@ impl DetailDaily {
     }
 }
 
-pub type UpdateCallback = Box<dyn Fn(UpdateMsg) + Send + 'static>;
+pub type UpdateCallback = Box<dyn Fn(&Model, UpdateMsg) + Send + 'static>;
 
 pub struct Model {
     tx: Sender<Action>,
@@ -217,7 +217,7 @@ impl Model {
 
     pub fn update(&self, msg: UpdateMsg) {
         if let Some(f) = &self.update {
-            f(msg);
+            f(self, msg);
         }
     }
 

@@ -259,3 +259,30 @@ impl UseregHelper {
         }
     }
 }
+
+#[cfg(feature = "dart")]
+mod impl_dart {
+    use super::*;
+    use allo_isolate::{ffi::DartCObject, IntoDart, IntoDartExceptPrimitive};
+
+    impl IntoDart for NetDateTime {
+        fn into_dart(self) -> DartCObject {
+            vec![self.0.into_dart()].into_dart()
+        }
+    }
+
+    impl IntoDartExceptPrimitive for NetDateTime {}
+
+    impl IntoDart for NetDetail {
+        fn into_dart(self) -> DartCObject {
+            vec![
+                self.login_time.into_dart(),
+                self.logout_time.into_dart(),
+                self.flux.into_dart(),
+            ]
+            .into_dart()
+        }
+    }
+
+    impl IntoDartExceptPrimitive for NetDetail {}
+}

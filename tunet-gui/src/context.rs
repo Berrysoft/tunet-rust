@@ -36,12 +36,9 @@ impl UpdateContext {
     pub async fn create_model(&self, tx: mpsc::Sender<Action>) -> Result<Arc<Mutex<Model>>> {
         let model = Arc::new(Mutex::new(Model::new(tx)?));
         let context = self.clone();
-        let update = upgrade_spawn!(model, |msg| {
+        let update = upgrade_spawn!(model, |model, msg| {
             let context = context.clone();
-            async move {
-                let model = model.lock().await;
-                context.update(&model, msg);
-            }
+            context.update(&model, msg);
         });
         {
             let mut model = model.lock().await;

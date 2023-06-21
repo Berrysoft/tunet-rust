@@ -126,7 +126,7 @@ fn wire_queue_flux__method__Runtime_impl(
 fn wire_queue_state__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
-    s: impl Wire2Api<Option<NetStateWrap>> + UnwindSafe,
+    s: impl Wire2Api<Option<NetState>> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -209,181 +209,6 @@ fn wire_queue_drop__method__Runtime_impl(
         },
     )
 }
-fn wire_log_busy__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "log_busy__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::log_busy(&api_that))
-        },
-    )
-}
-fn wire_log_text__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "log_text__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::log_text(&api_that))
-        },
-    )
-}
-fn wire_flux__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "flux__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(mirror_NetFlux(Runtime::flux(&api_that)))
-        },
-    )
-}
-fn wire_state__method__Runtime_impl(port_: MessagePort, that: impl Wire2Api<Runtime> + UnwindSafe) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "state__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::state(&api_that))
-        },
-    )
-}
-fn wire_status__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "status__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::status(&api_that))
-        },
-    )
-}
-fn wire_detail_busy__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "detail_busy__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::detail_busy(&api_that))
-        },
-    )
-}
-fn wire_details__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "details__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| {
-                Ok(Runtime::details(&api_that)
-                    .into_iter()
-                    .map(|v| mirror_NetDetail(v))
-                    .collect::<Vec<_>>())
-            }
-        },
-    )
-}
-fn wire_detail_daily__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "detail_daily__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::detail_daily(&api_that))
-        },
-    )
-}
-fn wire_username__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "username__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::username(&api_that))
-        },
-    )
-}
-fn wire_online_busy__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "online_busy__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::online_busy(&api_that))
-        },
-    )
-}
-fn wire_onlines__method__Runtime_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<Runtime> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "onlines__method__Runtime",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| Ok(Runtime::onlines(&api_that))
-        },
-    )
-}
 // Section: wrapper structs
 
 #[derive(Clone)]
@@ -406,9 +231,6 @@ struct mirror_NetState(NetState);
 
 #[derive(Clone)]
 struct mirror_NewDuration(NewDuration);
-
-#[derive(Clone)]
-struct mirror_UpdateMsg(UpdateMsg);
 
 // Section: static checks
 
@@ -447,18 +269,6 @@ const _: fn() = || {
     {
         let NewDuration_ = None::<NewDuration>.unwrap();
         let _: chrono::Duration = NewDuration_.0;
-    }
-    match None::<UpdateMsg>.unwrap() {
-        UpdateMsg::Credential => {}
-        UpdateMsg::State => {}
-        UpdateMsg::Status => {}
-        UpdateMsg::Log => {}
-        UpdateMsg::Flux => {}
-        UpdateMsg::Online => {}
-        UpdateMsg::Details => {}
-        UpdateMsg::LogBusy => {}
-        UpdateMsg::OnlineBusy => {}
-        UpdateMsg::DetailBusy => {}
     }
 };
 // Section: allocate functions
@@ -591,13 +401,6 @@ impl support::IntoDart for mirror_NetState {
     }
 }
 impl support::IntoDartExceptPrimitive for mirror_NetState {}
-impl support::IntoDart for NetStateWrap {
-    fn into_dart(self) -> support::DartAbi {
-        vec![mirror_NetState(self.0).into_dart()].into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for NetStateWrap {}
-
 impl support::IntoDart for NetUserWrap {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -631,31 +434,26 @@ impl support::IntoDart for Runtime {
 }
 impl support::IntoDartExceptPrimitive for Runtime {}
 
-impl support::IntoDart for mirror_UpdateMsg {
+impl support::IntoDart for UpdateMsgWrap {
     fn into_dart(self) -> support::DartAbi {
-        match self.0 {
-            UpdateMsg::Credential => 0,
-            UpdateMsg::State => 1,
-            UpdateMsg::Status => 2,
-            UpdateMsg::Log => 3,
-            UpdateMsg::Flux => 4,
-            UpdateMsg::Online => 5,
-            UpdateMsg::Details => 6,
-            UpdateMsg::LogBusy => 7,
-            UpdateMsg::OnlineBusy => 8,
-            UpdateMsg::DetailBusy => 9,
+        match self {
+            Self::Credential(field0) => vec![0.into_dart(), field0.into_dart()],
+            Self::State(field0) => vec![1.into_dart(), field0.into_dart()],
+            Self::Status(field0) => vec![2.into_dart(), field0.into_dart()],
+            Self::Log(field0) => vec![3.into_dart(), field0.into_dart()],
+            Self::Flux(field0) => vec![4.into_dart(), field0.into_dart()],
+            Self::Online(field0) => vec![5.into_dart(), field0.into_dart()],
+            Self::Details(field0, field1) => {
+                vec![6.into_dart(), field0.into_dart(), field1.into_dart()]
+            }
+            Self::LogBusy(field0) => vec![7.into_dart(), field0.into_dart()],
+            Self::OnlineBusy(field0) => vec![8.into_dart(), field0.into_dart()],
+            Self::DetailBusy(field0) => vec![9.into_dart(), field0.into_dart()],
         }
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for mirror_UpdateMsg {}
-impl support::IntoDart for UpdateMsgWrap {
-    fn into_dart(self) -> support::DartAbi {
-        vec![mirror_UpdateMsg(self.0).into_dart()].into_dart()
-    }
-}
 impl support::IntoDartExceptPrimitive for UpdateMsgWrap {}
-
 // Section: executor
 
 support::lazy_static! {

@@ -9,6 +9,8 @@ class FluxPaint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final runtime = BindingSource.of<ManagedRuntime>(context);
+    final size = Size(MediaQuery.of(context).size.width, 30.0);
+    final accent = Theme.of(context).colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Binding<ManagedRuntime>(
@@ -16,7 +18,16 @@ class FluxPaint extends StatelessWidget {
         path: ManagedRuntime.netFluxProperty,
         builder: (context, runtime) {
           final netFlux = runtime.netFlux;
-          if (netFlux == null) return const LinearProgressIndicator();
+          if (netFlux == null) {
+            return CustomPaint(
+              size: size,
+              painter: _FluxPainter(
+                flux: 0,
+                balance: 0,
+                accent: accent,
+              ),
+            );
+          }
           final flux = netFlux.flux.field0;
           final balance = netFlux.balance.field0;
 
@@ -32,11 +43,11 @@ class FluxPaint extends StatelessWidget {
               final cflux = fluxGB * value;
               final cbalance = balance + costBalance * (1.0 - value);
               return CustomPaint(
-                size: Size(MediaQuery.of(context).size.width, 30.0),
+                size: size,
                 painter: _FluxPainter(
                   flux: cflux,
                   balance: cbalance,
-                  accent: Theme.of(context).colorScheme.primary,
+                  accent: accent,
                 ),
               );
             },

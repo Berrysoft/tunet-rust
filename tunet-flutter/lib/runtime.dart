@@ -153,44 +153,44 @@ class ManagedRuntime extends NotifyPropertyChanged {
     );
 
     await for (final msg in runtime.start(config: config)) {
-      switch (msg.field0) {
-        case UpdateMsg.Credential:
+      await msg.when<Future<void>>(
+        credential: (username) async {
           await runtime.queueState();
           await runtime.queueDetails();
           await runtime.queueOnlines();
-          username = await runtime.username();
-          break;
-        case UpdateMsg.State:
+          this.username = username;
+        },
+        state: (state) async {
           await runtime.queueFlux();
-          state = (await runtime.state()).field0;
-          break;
-        case UpdateMsg.Status:
+          this.state = state;
+        },
+        status: (status) async {
           await runtime.queueState();
-          status = await runtime.status();
-          break;
-        case UpdateMsg.Log:
-          logText = await runtime.logText();
-          break;
-        case UpdateMsg.Flux:
-          netFlux = await runtime.flux();
-          break;
-        case UpdateMsg.Online:
-          onlines = await runtime.onlines();
-          break;
-        case UpdateMsg.Details:
-          detailsData.setData(await runtime.details());
-          daily = await runtime.detailDaily();
-          break;
-        case UpdateMsg.LogBusy:
-          logBusy = await runtime.logBusy();
-          break;
-        case UpdateMsg.OnlineBusy:
-          onlineBusy = await runtime.onlineBusy();
-          break;
-        case UpdateMsg.DetailBusy:
-          detailBusy = await runtime.detailBusy();
-          break;
-      }
+          this.status = status;
+        },
+        log: (logText) async {
+          this.logText = logText;
+        },
+        flux: (netFlux) async {
+          this.netFlux = netFlux;
+        },
+        online: (onlines) async {
+          this.onlines = onlines;
+        },
+        details: (details, daily) async {
+          detailsData.setData(details);
+          this.daily = daily;
+        },
+        logBusy: (logBusy) async {
+          this.logBusy = logBusy;
+        },
+        onlineBusy: (onlineBusy) async {
+          this.onlineBusy = onlineBusy;
+        },
+        detailBusy: (detailBusy) async {
+          this.detailBusy = detailBusy;
+        },
+      );
     }
   }
 
@@ -211,8 +211,7 @@ class ManagedRuntime extends NotifyPropertyChanged {
     await storage.write(key: '$u@tunet', value: p);
   }
 
-  Future<void> queueState({NetState? s}) =>
-      runtime.queueState(s: s != null ? NetStateWrap(field0: s) : null);
+  Future<void> queueState({NetState? s}) => runtime.queueState(s: s);
   Future<void> queueCredential({required String u, required String p}) async {
     await saveCredential(u, p);
     await runtime.queueCredential(u: u, p: p);

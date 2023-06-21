@@ -45,7 +45,7 @@ abstract class Native {
   FlutterRustBridgeTaskConstMeta get kQueueFluxMethodRuntimeConstMeta;
 
   Future<void> queueStateMethodRuntime(
-      {required Runtime that, NetStateWrap? s, dynamic hint});
+      {required Runtime that, NetState? s, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kQueueStateMethodRuntimeConstMeta;
 
@@ -66,54 +66,6 @@ abstract class Native {
       {required Runtime that, required List<Ipv4AddrWrap> ips, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kQueueDropMethodRuntimeConstMeta;
-
-  Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta;
-
-  Future<String> logTextMethodRuntime({required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kLogTextMethodRuntimeConstMeta;
-
-  Future<NetFlux> fluxMethodRuntime({required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kFluxMethodRuntimeConstMeta;
-
-  Future<NetStateWrap> stateMethodRuntime(
-      {required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kStateMethodRuntimeConstMeta;
-
-  Future<String> statusMethodRuntime({required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta;
-
-  Future<bool> detailBusyMethodRuntime({required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kDetailBusyMethodRuntimeConstMeta;
-
-  Future<List<NetDetail>> detailsMethodRuntime(
-      {required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kDetailsMethodRuntimeConstMeta;
-
-  Future<DetailDailyWrap?> detailDailyMethodRuntime(
-      {required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kDetailDailyMethodRuntimeConstMeta;
-
-  Future<String> usernameMethodRuntime({required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kUsernameMethodRuntimeConstMeta;
-
-  Future<bool> onlineBusyMethodRuntime({required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kOnlineBusyMethodRuntimeConstMeta;
-
-  Future<List<NetUserWrap>> onlinesMethodRuntime(
-      {required Runtime that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kOnlinesMethodRuntimeConstMeta;
 
   DropFnType get dropOpaqueMutexModel;
   ShareFnType get shareOpaqueMutexModel;
@@ -262,14 +214,6 @@ enum NetState {
   Auth6,
 }
 
-class NetStateWrap {
-  final NetState field0;
-
-  const NetStateWrap({
-    required this.field0,
-  });
-}
-
 @freezed
 sealed class NetStatus with _$NetStatus {
   const factory NetStatus.unknown() = NetStatus_Unknown;
@@ -347,7 +291,7 @@ class Runtime {
         that: this,
       );
 
-  Future<void> queueState({NetStateWrap? s, dynamic hint}) =>
+  Future<void> queueState({NetState? s, dynamic hint}) =>
       bridge.queueStateMethodRuntime(
         that: this,
         s: s,
@@ -372,53 +316,6 @@ class Runtime {
         that: this,
         ips: ips,
       );
-
-  Future<bool> logBusy({dynamic hint}) => bridge.logBusyMethodRuntime(
-        that: this,
-      );
-
-  Future<String> logText({dynamic hint}) => bridge.logTextMethodRuntime(
-        that: this,
-      );
-
-  Future<NetFlux> flux({dynamic hint}) => bridge.fluxMethodRuntime(
-        that: this,
-      );
-
-  Future<NetStateWrap> state({dynamic hint}) => bridge.stateMethodRuntime(
-        that: this,
-      );
-
-  Future<String> status({dynamic hint}) => bridge.statusMethodRuntime(
-        that: this,
-      );
-
-  Future<bool> detailBusy({dynamic hint}) => bridge.detailBusyMethodRuntime(
-        that: this,
-      );
-
-  Future<List<NetDetail>> details({dynamic hint}) =>
-      bridge.detailsMethodRuntime(
-        that: this,
-      );
-
-  Future<DetailDailyWrap?> detailDaily({dynamic hint}) =>
-      bridge.detailDailyMethodRuntime(
-        that: this,
-      );
-
-  Future<String> username({dynamic hint}) => bridge.usernameMethodRuntime(
-        that: this,
-      );
-
-  Future<bool> onlineBusy({dynamic hint}) => bridge.onlineBusyMethodRuntime(
-        that: this,
-      );
-
-  Future<List<NetUserWrap>> onlines({dynamic hint}) =>
-      bridge.onlinesMethodRuntime(
-        that: this,
-      );
 }
 
 class RuntimeStartConfig {
@@ -442,23 +339,37 @@ class U8Array4 extends NonGrowableListView<int> {
   U8Array4.init() : super(Uint8List(arraySize));
 }
 
-enum UpdateMsg {
-  Credential,
-  State,
-  Status,
-  Log,
-  Flux,
-  Online,
-  Details,
-  LogBusy,
-  OnlineBusy,
-  DetailBusy,
-}
-
-class UpdateMsgWrap {
-  final UpdateMsg field0;
-
-  const UpdateMsgWrap({
-    required this.field0,
-  });
+@freezed
+sealed class UpdateMsgWrap with _$UpdateMsgWrap {
+  const factory UpdateMsgWrap.credential(
+    String field0,
+  ) = UpdateMsgWrap_Credential;
+  const factory UpdateMsgWrap.state(
+    NetState field0,
+  ) = UpdateMsgWrap_State;
+  const factory UpdateMsgWrap.status(
+    String field0,
+  ) = UpdateMsgWrap_Status;
+  const factory UpdateMsgWrap.log(
+    String field0,
+  ) = UpdateMsgWrap_Log;
+  const factory UpdateMsgWrap.flux(
+    NetFlux field0,
+  ) = UpdateMsgWrap_Flux;
+  const factory UpdateMsgWrap.online(
+    List<NetUserWrap> field0,
+  ) = UpdateMsgWrap_Online;
+  const factory UpdateMsgWrap.details(
+    List<NetDetail> field0,
+    DetailDailyWrap field1,
+  ) = UpdateMsgWrap_Details;
+  const factory UpdateMsgWrap.logBusy(
+    bool field0,
+  ) = UpdateMsgWrap_LogBusy;
+  const factory UpdateMsgWrap.onlineBusy(
+    bool field0,
+  ) = UpdateMsgWrap_OnlineBusy;
+  const factory UpdateMsgWrap.detailBusy(
+    bool field0,
+  ) = UpdateMsgWrap_DetailBusy;
 }
