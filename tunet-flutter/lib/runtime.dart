@@ -172,6 +172,7 @@ class ManagedRuntime extends NotifyPropertyChanged {
           this.logText = logText;
         },
         flux: (netFlux) async {
+          this.netFlux = null;
           this.netFlux = netFlux;
         },
         online: (onlines) async {

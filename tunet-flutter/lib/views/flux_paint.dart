@@ -22,8 +22,8 @@ class FluxPaint extends StatelessWidget {
             return CustomPaint(
               size: size,
               painter: _FluxPainter(
-                flux: 0,
-                balance: 0,
+                freeRatio: 0,
+                fluxRatio: 0,
                 accent: accent,
               ),
             );
@@ -33,20 +33,22 @@ class FluxPaint extends StatelessWidget {
 
           final fluxGB = flux.toDouble() / 1000000000.0;
 
-          final costBalance = max(0.0, fluxGB - 50.0);
+          final totalFlux = balance + max(50.0, fluxGB);
+          final freeRatio = 50.0 / totalFlux;
+          final fluxRatio = fluxGB / totalFlux;
 
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1.0),
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeOut,
             builder: (context, value, child) {
-              final cflux = fluxGB * value;
-              final cbalance = balance + costBalance * (1.0 - value);
+              final cfree = freeRatio + (1 - freeRatio) * (1 - value);
+              final cflux = fluxRatio * value;
               return CustomPaint(
                 size: size,
                 painter: _FluxPainter(
-                  flux: cflux,
-                  balance: cbalance,
+                  freeRatio: cfree,
+                  fluxRatio: cflux,
                   accent: accent,
                 ),
               );
@@ -59,13 +61,13 @@ class FluxPaint extends StatelessWidget {
 }
 
 class _FluxPainter extends CustomPainter {
-  final double flux;
-  final double balance;
+  final double freeRatio;
+  final double fluxRatio;
   final Color accent;
 
   const _FluxPainter({
-    required this.flux,
-    required this.balance,
+    required this.freeRatio,
+    required this.fluxRatio,
     required this.accent,
   }) : super();
 
@@ -80,10 +82,6 @@ class _FluxPainter extends CustomPainter {
     final f3 = Paint()
       ..color = accent.withOpacity(0.33)
       ..style = PaintingStyle.fill;
-
-    final totalFlux = balance + max(50.0, flux);
-    final freeRatio = 50.0 / totalFlux;
-    final fluxRatio = flux / totalFlux;
 
     final fullWidth = size.width;
     final freeWidth = freeRatio * fullWidth;
