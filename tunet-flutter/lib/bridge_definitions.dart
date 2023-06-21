@@ -24,6 +24,24 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kStartMethodRuntimeConstMeta;
 
+  Future<NetStatus> currentStatusMethodRuntime(
+      {required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kCurrentStatusMethodRuntimeConstMeta;
+
+  Future<(String, String)> loadCredentialMethodRuntime(
+      {required Runtime that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLoadCredentialMethodRuntimeConstMeta;
+
+  Future<void> saveCredentialMethodRuntime(
+      {required Runtime that,
+      required String u,
+      required String p,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSaveCredentialMethodRuntimeConstMeta;
+
   Future<void> queueCredentialMethodRuntime(
       {required Runtime that,
       required String u,
@@ -325,6 +343,24 @@ class Runtime {
       bridge.startMethodRuntime(
         that: this,
         config: config,
+      );
+
+  Future<NetStatus> currentStatus({dynamic hint}) =>
+      bridge.currentStatusMethodRuntime(
+        that: this,
+      );
+
+  Future<(String, String)> loadCredential({dynamic hint}) =>
+      bridge.loadCredentialMethodRuntime(
+        that: this,
+      );
+
+  Future<void> saveCredential(
+          {required String u, required String p, dynamic hint}) =>
+      bridge.saveCredentialMethodRuntime(
+        that: this,
+        u: u,
+        p: p,
       );
 
   Future<void> queueCredential(

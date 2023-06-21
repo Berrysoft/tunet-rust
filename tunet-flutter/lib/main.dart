@@ -18,11 +18,13 @@ import 'runtime.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isAndroid) {
+  if (Platform.isAndroid || Platform.isWindows) {
     await SystemTheme.accentColor.load();
   }
 
-  await Permission.location.request();
+  if (Platform.isAndroid || Platform.isIOS) {
+    await Permission.location.request();
+  }
 
   final runtime = await ManagedRuntime.newRuntime();
   runtime.start();

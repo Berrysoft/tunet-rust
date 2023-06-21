@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:binding/binding.dart';
 import 'package:binding/src/binding_base.dart';
 import 'package:collection/collection.dart';
@@ -127,22 +128,7 @@ class ManagedRuntime extends NotifyPropertyChanged {
   }
 
   Future<void> start() async {
-    NetStatus sendStatus = const NetStatus.unknown();
-    final String? gstatus = await statusApi.invokeMethod("getStatus");
-    switch (gstatus) {
-      case "wwan":
-        sendStatus = const NetStatus.wwan();
-        break;
-      case "wlan":
-        String? ssid = await statusApi.invokeMethod("getSsid");
-        if (ssid != null) {
-          sendStatus = NetStatus.wlan(ssid);
-        }
-        break;
-      case "lan":
-        sendStatus = const NetStatus.lan();
-        break;
-    }
+    NetStatus sendStatus = await currentStatus();
 
     final (u, p) = await loadCredential();
 
@@ -194,21 +180,53 @@ class ManagedRuntime extends NotifyPropertyChanged {
     }
   }
 
-  Future<(String, String)> loadCredential() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username') ?? "";
+  Future<NetStatus> currentStatus() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      NetStatus sendStatus = const NetStatus.unknown();
+      final String? gstatus = await statusApi.invokeMethod("getStatus");
+      switch (gstatus) {
+        case "wwan":
+          sendStatus = const NetStatus.wwan();
+          break;
+        case "wlan":
+          String? ssid = await statusApi.invokeMethod("getSsid");
+          if (ssid != null) {
+            sendStatus = NetStatus.wlan(ssid);
+          }
+          break;
+        case "lan":
+          sendStatus = const NetStatus.lan();
+          break;
+      }
+      return sendStatus;
+    } else {
+      return await runtime.currentStatus();
+    }
+  }
 
-    const storage = FlutterSecureStorage();
-    final password = await storage.read(key: '$username@tunet') ?? "";
-    return (username, password);
+  Future<(String, String)> loadCredential() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final username = prefs.getString('username') ?? "";
+
+      const storage = FlutterSecureStorage();
+      final password = await storage.read(key: '$username@tunet') ?? "";
+      return (username, password);
+    } else {
+      return await runtime.loadCredential();
+    }
   }
 
   Future<void> saveCredential(String u, String p) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', u);
+    if (Platform.isAndroid || Platform.isIOS) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('username', u);
 
-    const storage = FlutterSecureStorage();
-    await storage.write(key: '$u@tunet', value: p);
+      const storage = FlutterSecureStorage();
+      await storage.write(key: '$u@tunet', value: p);
+    } else {
+      await runtime.saveCredential(u: u, p: p);
+    }
   }
 
   Future<void> queueState({NetState? s}) =>

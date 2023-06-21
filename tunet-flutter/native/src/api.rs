@@ -14,6 +14,7 @@ pub use tunet_helper::{
     NetFlux, NetState,
 };
 pub use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
+use tunet_settings::SettingsReader;
 
 #[frb(mirror(UpdateMsg))]
 pub enum _UpdateMsg {
@@ -136,6 +137,8 @@ impl Runtime {
         oslog::OsLogger::new("com.berrysoft.tunet_flutter")
             .level_filter(log::LevelFilter::Trace)
             .init()?;
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        env_logger::try_init()?;
 
         let (tx, rx) = mpsc::channel(32);
         let model = Model::new(tx)?;
@@ -168,6 +171,7 @@ impl Runtime {
                         model.queue(Action::Credential(config.username, config.password));
                     }
                     model.queue(Action::Status(Some(config.status)));
+                    model.queue(Action::WatchStatus);
                     model.queue(Action::Timer);
                 }
                 while let Some(action) = rx.recv().await {
@@ -176,6 +180,19 @@ impl Runtime {
                 }
             });
         });
+    }
+
+    pub fn current_status(&self) -> NetStatus {
+        NetStatus::current()
+    }
+
+    pub fn load_credential(&self) -> Result<(String, String)> {
+        Ok(SettingsReader::new()?.read_full()?)
+    }
+
+    pub fn save_credential(&self, u: String, p: String) -> Result<()> {
+        SettingsReader::new()?.save(&u, &p)?;
+        Ok(())
     }
 
     fn queue(&self, a: Action) {

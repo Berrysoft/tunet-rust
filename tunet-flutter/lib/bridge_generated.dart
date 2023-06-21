@@ -65,6 +65,68 @@ class NativeImpl implements Native {
         argNames: ["that", "config"],
       );
 
+  Future<NetStatus> currentStatusMethodRuntime(
+      {required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_current_status__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api_net_status,
+      constMeta: kCurrentStatusMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kCurrentStatusMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "current_status__method__Runtime",
+        argNames: ["that"],
+      );
+
+  Future<(String, String)> loadCredentialMethodRuntime(
+      {required Runtime that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_load_credential__method__Runtime(port_, arg0),
+      parseSuccessData: _wire2api___record__String_String,
+      constMeta: kLoadCredentialMethodRuntimeConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kLoadCredentialMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "load_credential__method__Runtime",
+        argNames: ["that"],
+      );
+
+  Future<void> saveCredentialMethodRuntime(
+      {required Runtime that,
+      required String u,
+      required String p,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    var arg1 = _platform.api2wire_String(u);
+    var arg2 = _platform.api2wire_String(p);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_save_credential__method__Runtime(port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kSaveCredentialMethodRuntimeConstMeta,
+      argValues: [that, u, p],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSaveCredentialMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "save_credential__method__Runtime",
+        argNames: ["that", "u", "p"],
+      );
+
   Future<void> queueCredentialMethodRuntime(
       {required Runtime that,
       required String u,
@@ -492,6 +554,17 @@ class NativeImpl implements Native {
     return raw as String;
   }
 
+  (String, String) _wire2api___record__String_String(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      _wire2api_String(arr[0]),
+      _wire2api_String(arr[1]),
+    );
+  }
+
   Balance _wire2api_balance(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
@@ -616,6 +689,23 @@ class NativeImpl implements Native {
     return NetStateWrap(
       field0: _wire2api_net_state(arr[0]),
     );
+  }
+
+  NetStatus _wire2api_net_status(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return NetStatus_Unknown();
+      case 1:
+        return NetStatus_Wwan();
+      case 2:
+        return NetStatus_Wlan(
+          _wire2api_String(raw[1]),
+        );
+      case 3:
+        return NetStatus_Lan();
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   NetUserWrap _wire2api_net_user_wrap(dynamic raw) {
@@ -1039,6 +1129,69 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_start__method__RuntimePtr.asFunction<
           void Function(int, ffi.Pointer<wire_Runtime>,
               ffi.Pointer<wire_RuntimeStartConfig>)>();
+
+  void wire_current_status__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_current_status__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_current_status__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>)>>(
+      'wire_current_status__method__Runtime');
+  late final _wire_current_status__method__Runtime =
+      _wire_current_status__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_load_credential__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+  ) {
+    return _wire_load_credential__method__Runtime(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire_load_credential__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>)>>(
+      'wire_load_credential__method__Runtime');
+  late final _wire_load_credential__method__Runtime =
+      _wire_load_credential__method__RuntimePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
+
+  void wire_save_credential__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+    ffi.Pointer<wire_uint_8_list> u,
+    ffi.Pointer<wire_uint_8_list> p,
+  ) {
+    return _wire_save_credential__method__Runtime(
+      port_,
+      that,
+      u,
+      p,
+    );
+  }
+
+  late final _wire_save_credential__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64,
+                  ffi.Pointer<wire_Runtime>,
+                  ffi.Pointer<wire_uint_8_list>,
+                  ffi.Pointer<wire_uint_8_list>)>>(
+      'wire_save_credential__method__Runtime');
+  late final _wire_save_credential__method__Runtime =
+      _wire_save_credential__method__RuntimePtr.asFunction<
+          void Function(int, ffi.Pointer<wire_Runtime>,
+              ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_queue_credential__method__Runtime(
     int port_,

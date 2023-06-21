@@ -97,6 +97,15 @@ void wire_start__method__Runtime(int64_t port_,
                                  struct wire_Runtime *that,
                                  struct wire_RuntimeStartConfig *config);
 
+void wire_current_status__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
+void wire_load_credential__method__Runtime(int64_t port_, struct wire_Runtime *that);
+
+void wire_save_credential__method__Runtime(int64_t port_,
+                                           struct wire_Runtime *that,
+                                           struct wire_uint_8_list *u,
+                                           struct wire_uint_8_list *p);
+
 void wire_queue_credential__method__Runtime(int64_t port_,
                                             struct wire_Runtime *that,
                                             struct wire_uint_8_list *u,
@@ -184,6 +193,9 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) wire_new__static_method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_start__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_current_status__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_load_credential__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_save_credential__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_credential__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_login__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_logout__method__Runtime);

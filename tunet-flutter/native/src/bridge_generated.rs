@@ -55,6 +55,58 @@ fn wire_start__method__Runtime_impl(
         },
     )
 }
+fn wire_current_status__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "current_status__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(mirror_NetStatus(Runtime::current_status(&api_that)))
+        },
+    )
+}
+fn wire_load_credential__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "load_credential__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Runtime::load_credential(&api_that)
+        },
+    )
+}
+fn wire_save_credential__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    u: impl Wire2Api<String> + UnwindSafe,
+    p: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "save_credential__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_u = u.wire2api();
+            let api_p = p.wire2api();
+            move |task_callback| Runtime::save_credential(&api_that, api_u, api_p)
+        },
+    )
+}
 fn wire_queue_credential__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
@@ -405,6 +457,9 @@ struct mirror_NetFlux(NetFlux);
 struct mirror_NetState(NetState);
 
 #[derive(Clone)]
+struct mirror_NetStatus(NetStatus);
+
+#[derive(Clone)]
 struct mirror_NewDuration(NewDuration);
 
 #[derive(Clone)]
@@ -443,6 +498,14 @@ const _: fn() = || {
         NetState::Net => {}
         NetState::Auth4 => {}
         NetState::Auth6 => {}
+    }
+    match None::<NetStatus>.unwrap() {
+        NetStatus::Unknown => {}
+        NetStatus::Wwan => {}
+        NetStatus::Wlan(field0) => {
+            let _: String = field0;
+        }
+        NetStatus::Lan => {}
     }
     {
         let NewDuration_ = None::<NewDuration>.unwrap();
@@ -598,6 +661,18 @@ impl support::IntoDart for NetStateWrap {
 }
 impl support::IntoDartExceptPrimitive for NetStateWrap {}
 
+impl support::IntoDart for mirror_NetStatus {
+    fn into_dart(self) -> support::DartAbi {
+        match self.0 {
+            NetStatus::Unknown => vec![0.into_dart()],
+            NetStatus::Wwan => vec![1.into_dart()],
+            NetStatus::Wlan(field0) => vec![2.into_dart(), field0.into_dart()],
+            NetStatus::Lan => vec![3.into_dart()],
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for mirror_NetStatus {}
 impl support::IntoDart for NetUserWrap {
     fn into_dart(self) -> support::DartAbi {
         vec![

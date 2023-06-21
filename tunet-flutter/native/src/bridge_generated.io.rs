@@ -16,6 +16,26 @@ pub extern "C" fn wire_start__method__Runtime(
 }
 
 #[no_mangle]
+pub extern "C" fn wire_current_status__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_current_status__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_load_credential__method__Runtime(port_: i64, that: *mut wire_Runtime) {
+    wire_load_credential__method__Runtime_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_save_credential__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    u: *mut wire_uint_8_list,
+    p: *mut wire_uint_8_list,
+) {
+    wire_save_credential__method__Runtime_impl(port_, that, u, p)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_queue_credential__method__Runtime(
     port_: i64,
     that: *mut wire_Runtime,
