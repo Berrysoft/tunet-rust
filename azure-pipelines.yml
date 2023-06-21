@@ -30,7 +30,7 @@ jobs:
   steps:
   - script: |
       rustup target add $(target)
-      cargo build --release --target $(target)
+      cargo build --release --workspace --exclude native --target $(target)
     displayName: "Build"
 
   - pwsh: |
@@ -116,7 +116,7 @@ jobs:
 
   - script: |
       rustup target add $(target)
-      cargo build --release --target $(target)
+      cargo build --release --workspace --exclude native --target $(target)
     displayName: "Build"
     env:
       PKG_CONFIG_ALLOW_CROSS: 1
@@ -136,12 +136,12 @@ jobs:
   steps:
   - script: |
       rustup target add x86_64-apple-darwin
-      cargo build --release --target x86_64-apple-darwin
+      cargo build --release --workspace --exclude native --target x86_64-apple-darwin
     displayName: "Build x64"
 
   - script: |
       rustup target add aarch64-apple-darwin
-      cargo build --release --target aarch64-apple-darwin
+      cargo build --release --workspace --exclude native --target aarch64-apple-darwin
     displayName: "Build arm64"
 
   - script: |

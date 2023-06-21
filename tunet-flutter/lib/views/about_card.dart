@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class AboutCard extends StatelessWidget {
@@ -29,10 +30,12 @@ class AboutCard extends StatelessWidget {
               future: PackageInfo.fromPlatform(),
               builder: (context, snap) {
                 final info = snap.data;
-                if (info == null) {
-                  return const LinearProgressIndicator();
-                }
-                return Text('${info.version}:${info.buildNumber}');
+                return Shimmer(
+                  enabled: info == null,
+                  child: Text(info == null
+                      ? ""
+                      : '${info.version}:${info.buildNumber}'),
+                );
               },
             ),
           ),

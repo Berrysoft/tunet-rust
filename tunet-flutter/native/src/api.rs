@@ -16,21 +16,18 @@ pub use tunet_helper::{
 pub use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 
-#[frb(mirror(UpdateMsg))]
-pub enum _UpdateMsg {
-    Credential,
-    State,
-    Status,
-    Log,
-    Flux,
-    Online,
-    Details,
-    LogBusy,
-    OnlineBusy,
-    DetailBusy,
+pub enum UpdateMsgWrap {
+    Credential(String),
+    State(NetState),
+    Status(String),
+    Log(String),
+    Flux(NetFlux),
+    Online(Vec<NetUserWrap>),
+    Details(Vec<NetDetail>, DetailDailyWrap),
+    LogBusy(bool),
+    OnlineBusy(bool),
+    DetailBusy(bool),
 }
-
-pub struct UpdateMsgWrap(pub UpdateMsg);
 
 #[frb(mirror(NetState))]
 pub enum _NetState {
@@ -39,8 +36,6 @@ pub enum _NetState {
     Auth4,
     Auth6,
 }
-
-pub struct NetStateWrap(pub NetState);
 
 #[frb(mirror(NetStatus))]
 pub enum _NetStatus {
@@ -163,8 +158,55 @@ impl Runtime {
             runtime.block_on(async {
                 {
                     let mut model = model.lock().unwrap();
-                    model.update = Some(Box::new(move |msg| {
-                        sink.add(UpdateMsgWrap(msg));
+                    model.update = Some(Box::new(move |model, msg| {
+                        let msg = match msg {
+                            UpdateMsg::Credential => {
+                                UpdateMsgWrap::Credential(model.username.clone())
+                            }
+                            UpdateMsg::State => UpdateMsgWrap::State(model.state),
+                            UpdateMsg::Status => UpdateMsgWrap::Status(model.status.to_string()),
+                            UpdateMsg::Log => UpdateMsgWrap::Log(model.log.to_string()),
+                            UpdateMsg::Flux => UpdateMsgWrap::Flux(model.flux.clone()),
+                            UpdateMsg::Online => UpdateMsgWrap::Online(
+                                model
+                                    .users
+                                    .iter()
+                                    .map(|u| NetUserWrap {
+                                        address: u.address.into(),
+                                        login_time: u.login_time,
+                                        mac_address: u
+                                            .mac_address
+                                            .map(|addr| addr.to_string())
+                                            .unwrap_or_default(),
+                                        flux: u.flux,
+                                        is_local: model
+                                            .mac_addrs
+                                            .iter()
+                                            .any(|it| Some(it) == u.mac_address.as_ref()),
+                                    })
+                                    .collect(),
+                            ),
+                            UpdateMsg::Details => UpdateMsgWrap::Details(model.details.clone(), {
+                                let data = DetailDaily::new(&model.details);
+                                DetailDailyWrap {
+                                    details: data
+                                        .details
+                                        .into_iter()
+                                        .map(|(date, flux)| DetailDailyPoint {
+                                            day: date.day(),
+                                            flux,
+                                        })
+                                        .collect(),
+                                    now_month: data.now.month(),
+                                    now_day: data.now.day(),
+                                    max_flux: data.max_flux,
+                                }
+                            }),
+                            UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(model.log_busy()),
+                            UpdateMsg::OnlineBusy => UpdateMsgWrap::OnlineBusy(model.online_busy()),
+                            UpdateMsg::DetailBusy => UpdateMsgWrap::DetailBusy(model.detail_busy()),
+                        };
+                        sink.add(msg);
                     }));
 
                     if (!config.username.is_empty()) && (!config.password.is_empty()) {
@@ -216,8 +258,8 @@ impl Runtime {
         self.queue(Action::Flux);
     }
 
-    pub fn queue_state(&self, s: Option<NetStateWrap>) {
-        self.queue(Action::State(s.map(|s| s.0)));
+    pub fn queue_state(&self, s: Option<NetState>) {
+        self.queue(Action::State(s));
     }
 
     pub fn queue_details(&self) {
@@ -236,86 +278,5 @@ impl Runtime {
         for ip in ips {
             self.queue(Action::Drop(Ipv4Addr::from(ip.octets)));
         }
-    }
-
-    pub fn log_busy(&self) -> bool {
-        self.model.lock().unwrap().log_busy()
-    }
-
-    pub fn log_text(&self) -> String {
-        self.model.lock().unwrap().log.clone().into_owned()
-    }
-
-    pub fn flux(&self) -> NetFlux {
-        self.model.lock().unwrap().flux.clone()
-    }
-
-    pub fn state(&self) -> NetStateWrap {
-        NetStateWrap(self.model.lock().unwrap().state)
-    }
-
-    pub fn status(&self) -> String {
-        self.model.lock().unwrap().status.to_string()
-    }
-
-    pub fn detail_busy(&self) -> bool {
-        self.model.lock().unwrap().detail_busy()
-    }
-
-    pub fn details(&self) -> Vec<NetDetail> {
-        self.model.lock().unwrap().details.clone()
-    }
-
-    pub fn detail_daily(&self) -> Option<DetailDailyWrap> {
-        let data = {
-            let model = self.model.lock().unwrap();
-            if model.details.is_empty() {
-                None
-            } else {
-                Some(DetailDaily::new(&model.details))
-            }
-        };
-        data.map(|data| DetailDailyWrap {
-            details: data
-                .details
-                .into_iter()
-                .map(|(date, flux)| DetailDailyPoint {
-                    day: date.day(),
-                    flux,
-                })
-                .collect(),
-            now_month: data.now.month(),
-            now_day: data.now.day(),
-            max_flux: data.max_flux,
-        })
-    }
-
-    pub fn username(&self) -> String {
-        self.model.lock().unwrap().username.clone()
-    }
-
-    pub fn online_busy(&self) -> bool {
-        self.model.lock().unwrap().online_busy()
-    }
-
-    pub fn onlines(&self) -> Vec<NetUserWrap> {
-        let model = self.model.lock().unwrap();
-        model
-            .users
-            .iter()
-            .map(|u| NetUserWrap {
-                address: u.address.into(),
-                login_time: u.login_time,
-                mac_address: u
-                    .mac_address
-                    .map(|addr| addr.to_string())
-                    .unwrap_or_default(),
-                flux: u.flux,
-                is_local: model
-                    .mac_addrs
-                    .iter()
-                    .any(|it| Some(it) == u.mac_address.as_ref()),
-            })
-            .collect()
     }
 }

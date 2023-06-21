@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:binding/binding.dart';
 import 'package:collection/collection.dart';
 import 'package:data_size/data_size.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 import '../runtime.dart';
 
 class OnlinesCard extends StatefulWidget {
@@ -70,11 +70,31 @@ class _OnlinesCardState extends State<OnlinesCard> {
             path: ManagedRuntime.onlinesProperty,
             builder: (context, runtime) {
               final onlines = runtime.onlines;
+              List<DataRow> rows;
               if (onlines == null) {
-                return const LinearProgressIndicator();
-              }
-              if (onlinesSelected.length != onlines.length) {
-                onlinesSelected = List.filled(onlines.length, false);
+                rows = [
+                  DataRow(
+                    cells: List.filled(
+                      5,
+                      DataCell(Shimmer(child: const Text('               '))),
+                    ),
+                    onSelectChanged: (_) {},
+                  ),
+                ];
+              } else {
+                if (onlinesSelected.length != onlines.length) {
+                  onlinesSelected = List.filled(onlines.length, false);
+                }
+                rows = onlines
+                    .mapIndexed(
+                      (index, element) => _netUserToRow(
+                        element,
+                        onlinesSelected[index],
+                        (selected) =>
+                            setState(() => onlinesSelected[index] = selected!),
+                      ),
+                    )
+                    .toList();
               }
               return LayoutBuilder(
                 builder: (context, constraints) => SingleChildScrollView(
@@ -89,16 +109,7 @@ class _OnlinesCardState extends State<OnlinesCard> {
                         DataColumn(label: Text('MAC地址')),
                         DataColumn(label: Text('设备')),
                       ],
-                      rows: onlines
-                          .mapIndexed(
-                            (index, element) => _netUserToRow(
-                              element,
-                              onlinesSelected[index],
-                              (selected) => setState(
-                                  () => onlinesSelected[index] = selected!),
-                            ),
-                          )
-                          .toList(),
+                      rows: rows,
                     ),
                   ),
                 ),

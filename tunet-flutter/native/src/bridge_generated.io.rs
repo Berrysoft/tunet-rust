@@ -64,7 +64,7 @@ pub extern "C" fn wire_queue_flux__method__Runtime(port_: i64, that: *mut wire_R
 pub extern "C" fn wire_queue_state__method__Runtime(
     port_: i64,
     that: *mut wire_Runtime,
-    s: *mut wire_NetStateWrap,
+    s: *mut i32,
 ) {
     wire_queue_state__method__Runtime_impl(port_, that, s)
 }
@@ -97,61 +97,6 @@ pub extern "C" fn wire_queue_drop__method__Runtime(
     wire_queue_drop__method__Runtime_impl(port_, that, ips)
 }
 
-#[no_mangle]
-pub extern "C" fn wire_log_busy__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_log_busy__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_log_text__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_log_text__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_flux__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_flux__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_state__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_state__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_status__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_status__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_detail_busy__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_detail_busy__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_details__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_details__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_detail_daily__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_detail_daily__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_username__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_username__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_online_busy__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_online_busy__method__Runtime_impl(port_, that)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_onlines__method__Runtime(port_: i64, that: *mut wire_Runtime) {
-    wire_onlines__method__Runtime_impl(port_, that)
-}
-
 // Section: allocate functions
 
 #[no_mangle]
@@ -175,8 +120,8 @@ pub extern "C" fn new_box_autoadd_ipv_4_addr_wrap_0() -> *mut wire_Ipv4AddrWrap 
 }
 
 #[no_mangle]
-pub extern "C" fn new_box_autoadd_net_state_wrap_0() -> *mut wire_NetStateWrap {
-    support::new_leak_box_ptr(wire_NetStateWrap::new_with_null_ptr())
+pub extern "C" fn new_box_autoadd_net_state_0(value: i32) -> *mut i32 {
+    support::new_leak_box_ptr(value)
 }
 
 #[no_mangle]
@@ -285,10 +230,10 @@ impl Wire2Api<Ipv4AddrWrap> for *mut wire_Ipv4AddrWrap {
         Wire2Api::<Ipv4AddrWrap>::wire2api(*wrap).into()
     }
 }
-impl Wire2Api<NetStateWrap> for *mut wire_NetStateWrap {
-    fn wire2api(self) -> NetStateWrap {
+impl Wire2Api<NetState> for *mut i32 {
+    fn wire2api(self) -> NetState {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
-        Wire2Api::<NetStateWrap>::wire2api(*wrap).into()
+        Wire2Api::<NetState>::wire2api(*wrap).into()
     }
 }
 impl Wire2Api<Runtime> for *mut wire_Runtime {
@@ -321,11 +266,6 @@ impl Wire2Api<Vec<Ipv4AddrWrap>> for *mut wire_list_ipv_4_addr_wrap {
     }
 }
 
-impl Wire2Api<NetStateWrap> for wire_NetStateWrap {
-    fn wire2api(self) -> NetStateWrap {
-        NetStateWrap(self.field0.wire2api())
-    }
-}
 impl Wire2Api<NetStatus> for wire_NetStatus {
     fn wire2api(self) -> NetStatus {
         match self.tag {
@@ -406,12 +346,6 @@ pub struct wire_Ipv4AddrWrap {
 pub struct wire_list_ipv_4_addr_wrap {
     ptr: *mut wire_Ipv4AddrWrap,
     len: i32,
-}
-
-#[repr(C)]
-#[derive(Clone)]
-pub struct wire_NetStateWrap {
-    field0: i32,
 }
 
 #[repr(C)]
@@ -513,20 +447,6 @@ impl NewWithNullPtr for wire_Ipv4AddrWrap {
 }
 
 impl Default for wire_Ipv4AddrWrap {
-    fn default() -> Self {
-        Self::new_with_null_ptr()
-    }
-}
-
-impl NewWithNullPtr for wire_NetStateWrap {
-    fn new_with_null_ptr() -> Self {
-        Self {
-            field0: Default::default(),
-        }
-    }
-}
-
-impl Default for wire_NetStateWrap {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }

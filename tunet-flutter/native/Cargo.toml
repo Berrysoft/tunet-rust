@@ -11,7 +11,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 netstatus = { workspace = true }
-tunet-helper = { workspace = true }
+tunet-helper = { workspace = true, features = ["dart"] }
 tunet-model = { workspace = true }
 tunet-settings = { workspace = true }
 anyhow = { workspace = true }

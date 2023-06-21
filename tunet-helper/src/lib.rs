@@ -227,3 +227,61 @@ pub fn create_http_client() -> NetHelperResult<HttpClient> {
         .no_proxy()
         .build()?)
 }
+
+#[cfg(feature = "dart")]
+mod impl_dart {
+    use super::*;
+    use allo_isolate::{ffi::DartCObject, IntoDart, IntoDartExceptPrimitive};
+
+    impl IntoDart for Flux {
+        fn into_dart(self) -> DartCObject {
+            vec![self.0.into_dart()].into_dart()
+        }
+    }
+
+    impl IntoDartExceptPrimitive for Flux {}
+
+    impl IntoDart for Duration {
+        fn into_dart(self) -> DartCObject {
+            vec![self.0.into_dart()].into_dart()
+        }
+    }
+
+    impl IntoDartExceptPrimitive for Duration {}
+
+    impl IntoDart for Balance {
+        fn into_dart(self) -> DartCObject {
+            vec![self.0.into_dart()].into_dart()
+        }
+    }
+
+    impl IntoDartExceptPrimitive for Balance {}
+
+    impl IntoDart for NetFlux {
+        fn into_dart(self) -> DartCObject {
+            vec![
+                self.username.into_dart(),
+                self.flux.into_dart(),
+                self.online_time.into_dart(),
+                self.balance.into_dart(),
+            ]
+            .into_dart()
+        }
+    }
+
+    impl IntoDartExceptPrimitive for NetFlux {}
+
+    impl IntoDart for NetState {
+        fn into_dart(self) -> DartCObject {
+            match self {
+                NetState::Unknown => 0,
+                NetState::Net => 1,
+                NetState::Auth4 => 2,
+                NetState::Auth6 => 3,
+            }
+            .into_dart()
+        }
+    }
+
+    impl IntoDartExceptPrimitive for NetState {}
+}

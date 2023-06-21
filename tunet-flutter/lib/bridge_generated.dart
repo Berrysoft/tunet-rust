@@ -206,9 +206,9 @@ class NativeImpl implements Native {
       );
 
   Future<void> queueStateMethodRuntime(
-      {required Runtime that, NetStateWrap? s, dynamic hint}) {
+      {required Runtime that, NetState? s, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    var arg1 = _platform.api2wire_opt_box_autoadd_net_state_wrap(s);
+    var arg1 = _platform.api2wire_opt_box_autoadd_net_state(s);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
           _platform.inner.wire_queue_state__method__Runtime(port_, arg0, arg1),
@@ -303,208 +303,6 @@ class NativeImpl implements Native {
         argNames: ["that", "ips"],
       );
 
-  Future<bool> logBusyMethodRuntime({required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_log_busy__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_bool,
-      constMeta: kLogBusyMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kLogBusyMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "log_busy__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<String> logTextMethodRuntime({required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_log_text__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_String,
-      constMeta: kLogTextMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kLogTextMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "log_text__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<NetFlux> fluxMethodRuntime({required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_flux__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_net_flux,
-      constMeta: kFluxMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kFluxMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "flux__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<NetStateWrap> stateMethodRuntime(
-      {required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_state__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_net_state_wrap,
-      constMeta: kStateMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kStateMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "state__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<String> statusMethodRuntime({required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_status__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_String,
-      constMeta: kStatusMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kStatusMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "status__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<bool> detailBusyMethodRuntime({required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_detail_busy__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_bool,
-      constMeta: kDetailBusyMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kDetailBusyMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "detail_busy__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<List<NetDetail>> detailsMethodRuntime(
-      {required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_details__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_list_net_detail,
-      constMeta: kDetailsMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kDetailsMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "details__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<DetailDailyWrap?> detailDailyMethodRuntime(
-      {required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_detail_daily__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_opt_box_autoadd_detail_daily_wrap,
-      constMeta: kDetailDailyMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kDetailDailyMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "detail_daily__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<String> usernameMethodRuntime({required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_username__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_String,
-      constMeta: kUsernameMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kUsernameMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "username__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<bool> onlineBusyMethodRuntime({required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_online_busy__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_bool,
-      constMeta: kOnlineBusyMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kOnlineBusyMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "online_busy__method__Runtime",
-        argNames: ["that"],
-      );
-
-  Future<List<NetUserWrap>> onlinesMethodRuntime(
-      {required Runtime that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_onlines__method__Runtime(port_, arg0),
-      parseSuccessData: _wire2api_list_net_user_wrap,
-      constMeta: kOnlinesMethodRuntimeConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kOnlinesMethodRuntimeConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "onlines__method__Runtime",
-        argNames: ["that"],
-      );
-
   DropFnType get dropOpaqueMutexModel => _platform.inner.drop_opaque_MutexModel;
   ShareFnType get shareOpaqueMutexModel =>
       _platform.inner.share_opaque_MutexModel;
@@ -580,6 +378,10 @@ class NativeImpl implements Native {
 
   DetailDailyWrap _wire2api_box_autoadd_detail_daily_wrap(dynamic raw) {
     return _wire2api_detail_daily_wrap(raw);
+  }
+
+  NetFlux _wire2api_box_autoadd_net_flux(dynamic raw) {
+    return _wire2api_net_flux(raw);
   }
 
   DetailDailyPoint _wire2api_detail_daily_point(dynamic raw) {
@@ -682,15 +484,6 @@ class NativeImpl implements Native {
     return NetState.values[raw as int];
   }
 
-  NetStateWrap _wire2api_net_state_wrap(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return NetStateWrap(
-      field0: _wire2api_net_state(arr[0]),
-    );
-  }
-
   NetStatus _wire2api_net_status(dynamic raw) {
     switch (raw[0]) {
       case 0:
@@ -730,10 +523,6 @@ class NativeImpl implements Native {
     );
   }
 
-  DetailDailyWrap? _wire2api_opt_box_autoadd_detail_daily_wrap(dynamic raw) {
-    return raw == null ? null : _wire2api_box_autoadd_detail_daily_wrap(raw);
-  }
-
   Runtime _wire2api_runtime(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
@@ -770,17 +559,52 @@ class NativeImpl implements Native {
     return;
   }
 
-  UpdateMsg _wire2api_update_msg(dynamic raw) {
-    return UpdateMsg.values[raw as int];
-  }
-
   UpdateMsgWrap _wire2api_update_msg_wrap(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return UpdateMsgWrap(
-      field0: _wire2api_update_msg(arr[0]),
-    );
+    switch (raw[0]) {
+      case 0:
+        return UpdateMsgWrap_Credential(
+          _wire2api_String(raw[1]),
+        );
+      case 1:
+        return UpdateMsgWrap_State(
+          _wire2api_net_state(raw[1]),
+        );
+      case 2:
+        return UpdateMsgWrap_Status(
+          _wire2api_String(raw[1]),
+        );
+      case 3:
+        return UpdateMsgWrap_Log(
+          _wire2api_String(raw[1]),
+        );
+      case 4:
+        return UpdateMsgWrap_Flux(
+          _wire2api_box_autoadd_net_flux(raw[1]),
+        );
+      case 5:
+        return UpdateMsgWrap_Online(
+          _wire2api_list_net_user_wrap(raw[1]),
+        );
+      case 6:
+        return UpdateMsgWrap_Details(
+          _wire2api_list_net_detail(raw[1]),
+          _wire2api_box_autoadd_detail_daily_wrap(raw[2]),
+        );
+      case 7:
+        return UpdateMsgWrap_LogBusy(
+          _wire2api_bool(raw[1]),
+        );
+      case 8:
+        return UpdateMsgWrap_OnlineBusy(
+          _wire2api_bool(raw[1]),
+        );
+      case 9:
+        return UpdateMsgWrap_DetailBusy(
+          _wire2api_bool(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 }
 
@@ -844,11 +668,8 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  ffi.Pointer<wire_NetStateWrap> api2wire_box_autoadd_net_state_wrap(
-      NetStateWrap raw) {
-    final ptr = inner.new_box_autoadd_net_state_wrap_0();
-    _api_fill_to_wire_net_state_wrap(raw, ptr.ref);
-    return ptr;
+  ffi.Pointer<ffi.Int32> api2wire_box_autoadd_net_state(NetState raw) {
+    return inner.new_box_autoadd_net_state_0(api2wire_net_state(raw));
   }
 
   @protected
@@ -877,9 +698,8 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  ffi.Pointer<wire_NetStateWrap> api2wire_opt_box_autoadd_net_state_wrap(
-      NetStateWrap? raw) {
-    return raw == null ? ffi.nullptr : api2wire_box_autoadd_net_state_wrap(raw);
+  ffi.Pointer<ffi.Int32> api2wire_opt_box_autoadd_net_state(NetState? raw) {
+    return raw == null ? ffi.nullptr : api2wire_box_autoadd_net_state(raw);
   }
 
   @protected
@@ -931,11 +751,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     _api_fill_to_wire_ipv_4_addr_wrap(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_box_autoadd_net_state_wrap(
-      NetStateWrap apiObj, ffi.Pointer<wire_NetStateWrap> wireObj) {
-    _api_fill_to_wire_net_state_wrap(apiObj, wireObj.ref);
-  }
-
   void _api_fill_to_wire_box_autoadd_runtime(
       Runtime apiObj, ffi.Pointer<wire_Runtime> wireObj) {
     _api_fill_to_wire_runtime(apiObj, wireObj.ref);
@@ -949,11 +764,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   void _api_fill_to_wire_ipv_4_addr_wrap(
       Ipv4AddrWrap apiObj, wire_Ipv4AddrWrap wireObj) {
     wireObj.octets = api2wire_u8_array_4(apiObj.octets);
-  }
-
-  void _api_fill_to_wire_net_state_wrap(
-      NetStateWrap apiObj, wire_NetStateWrap wireObj) {
-    wireObj.field0 = api2wire_net_state(apiObj.field0);
   }
 
   void _api_fill_to_wire_net_status(NetStatus apiObj, wire_NetStatus wireObj) {
@@ -976,12 +786,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
       wireObj.tag = 3;
       return;
     }
-  }
-
-  void _api_fill_to_wire_opt_box_autoadd_net_state_wrap(
-      NetStateWrap? apiObj, ffi.Pointer<wire_NetStateWrap> wireObj) {
-    if (apiObj != null)
-      _api_fill_to_wire_box_autoadd_net_state_wrap(apiObj, wireObj);
   }
 
   void _api_fill_to_wire_runtime(Runtime apiObj, wire_Runtime wireObj) {
@@ -1277,7 +1081,7 @@ class NativeWire implements FlutterRustBridgeWireBase {
   void wire_queue_state__method__Runtime(
     int port_,
     ffi.Pointer<wire_Runtime> that,
-    ffi.Pointer<wire_NetStateWrap> s,
+    ffi.Pointer<ffi.Int32> s,
   ) {
     return _wire_queue_state__method__Runtime(
       port_,
@@ -1287,14 +1091,13 @@ class NativeWire implements FlutterRustBridgeWireBase {
   }
 
   late final _wire_queue_state__method__RuntimePtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>,
-                  ffi.Pointer<wire_NetStateWrap>)>>(
-      'wire_queue_state__method__Runtime');
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>,
+              ffi.Pointer<ffi.Int32>)>>('wire_queue_state__method__Runtime');
   late final _wire_queue_state__method__Runtime =
       _wire_queue_state__method__RuntimePtr.asFunction<
-          void Function(int, ffi.Pointer<wire_Runtime>,
-              ffi.Pointer<wire_NetStateWrap>)>();
+          void Function(
+              int, ffi.Pointer<wire_Runtime>, ffi.Pointer<ffi.Int32>)>();
 
   void wire_queue_details__method__Runtime(
     int port_,
@@ -1376,199 +1179,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
           void Function(int, ffi.Pointer<wire_Runtime>,
               ffi.Pointer<wire_list_ipv_4_addr_wrap>)>();
 
-  void wire_log_busy__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_log_busy__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_log_busy__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_log_busy__method__Runtime');
-  late final _wire_log_busy__method__Runtime =
-      _wire_log_busy__method__RuntimePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_log_text__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_log_text__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_log_text__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_log_text__method__Runtime');
-  late final _wire_log_text__method__Runtime =
-      _wire_log_text__method__RuntimePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_flux__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_flux__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_flux__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_flux__method__Runtime');
-  late final _wire_flux__method__Runtime = _wire_flux__method__RuntimePtr
-      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_state__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_state__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_state__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_state__method__Runtime');
-  late final _wire_state__method__Runtime = _wire_state__method__RuntimePtr
-      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_status__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_status__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_status__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_status__method__Runtime');
-  late final _wire_status__method__Runtime = _wire_status__method__RuntimePtr
-      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_detail_busy__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_detail_busy__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_detail_busy__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_detail_busy__method__Runtime');
-  late final _wire_detail_busy__method__Runtime =
-      _wire_detail_busy__method__RuntimePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_details__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_details__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_details__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_details__method__Runtime');
-  late final _wire_details__method__Runtime = _wire_details__method__RuntimePtr
-      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_detail_daily__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_detail_daily__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_detail_daily__method__RuntimePtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>)>>(
-      'wire_detail_daily__method__Runtime');
-  late final _wire_detail_daily__method__Runtime =
-      _wire_detail_daily__method__RuntimePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_username__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_username__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_username__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_username__method__Runtime');
-  late final _wire_username__method__Runtime =
-      _wire_username__method__RuntimePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_online_busy__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_online_busy__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_online_busy__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_online_busy__method__Runtime');
-  late final _wire_online_busy__method__Runtime =
-      _wire_online_busy__method__RuntimePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
-  void wire_onlines__method__Runtime(
-    int port_,
-    ffi.Pointer<wire_Runtime> that,
-  ) {
-    return _wire_onlines__method__Runtime(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire_onlines__method__RuntimePtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_Runtime>)>>('wire_onlines__method__Runtime');
-  late final _wire_onlines__method__Runtime = _wire_onlines__method__RuntimePtr
-      .asFunction<void Function(int, ffi.Pointer<wire_Runtime>)>();
-
   wire_MutexModel new_MutexModel() {
     return _new_MutexModel();
   }
@@ -1610,16 +1220,19 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_ipv_4_addr_wrap_0Ptr
           .asFunction<ffi.Pointer<wire_Ipv4AddrWrap> Function()>();
 
-  ffi.Pointer<wire_NetStateWrap> new_box_autoadd_net_state_wrap_0() {
-    return _new_box_autoadd_net_state_wrap_0();
+  ffi.Pointer<ffi.Int32> new_box_autoadd_net_state_0(
+    int value,
+  ) {
+    return _new_box_autoadd_net_state_0(
+      value,
+    );
   }
 
-  late final _new_box_autoadd_net_state_wrap_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_NetStateWrap> Function()>>(
-          'new_box_autoadd_net_state_wrap_0');
-  late final _new_box_autoadd_net_state_wrap_0 =
-      _new_box_autoadd_net_state_wrap_0Ptr
-          .asFunction<ffi.Pointer<wire_NetStateWrap> Function()>();
+  late final _new_box_autoadd_net_state_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int32> Function(ffi.Int32)>>(
+          'new_box_autoadd_net_state_0');
+  late final _new_box_autoadd_net_state_0 = _new_box_autoadd_net_state_0Ptr
+      .asFunction<ffi.Pointer<ffi.Int32> Function(int)>();
 
   ffi.Pointer<wire_Runtime> new_box_autoadd_runtime_0() {
     return _new_box_autoadd_runtime_0();
@@ -1850,11 +1463,6 @@ final class wire_RuntimeStartConfig extends ffi.Struct {
   external ffi.Pointer<wire_uint_8_list> username;
 
   external ffi.Pointer<wire_uint_8_list> password;
-}
-
-final class wire_NetStateWrap extends ffi.Struct {
-  @ffi.Int32()
-  external int field0;
 }
 
 final class wire_Ipv4AddrWrap extends ffi.Struct {
