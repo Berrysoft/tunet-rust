@@ -1,6 +1,7 @@
 import 'package:binding/binding.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 import '../runtime.dart';
 
 class SettingsCard extends StatelessWidget {
@@ -35,9 +36,10 @@ class SettingsCard extends StatelessWidget {
               path: ManagedRuntime.statusProperty,
               builder: (context, runtime) {
                 final status = runtime.status;
-                return status.isEmpty
-                    ? const LinearProgressIndicator()
-                    : Text(status);
+                return Shimmer(
+                  enabled: status.isEmpty,
+                  child: Text(status),
+                );
               },
             ),
           ),
