@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:binding/binding.dart';
 import 'package:collection/collection.dart';
 import 'package:data_size/data_size.dart';
