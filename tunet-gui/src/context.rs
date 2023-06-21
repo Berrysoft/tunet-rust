@@ -1,4 +1,4 @@
-use crate::{accent_color, upgrade_spawn, App, DetailModel, HomeModel, NetInfo, SettingsModel};
+use crate::{accent_color, App, DetailModel, HomeModel, NetInfo, SettingsModel};
 use anyhow::Result;
 use mac_address::MacAddress;
 use plotters::{
@@ -36,10 +36,9 @@ impl UpdateContext {
     pub async fn create_model(&self, tx: mpsc::Sender<Action>) -> Result<Arc<Mutex<Model>>> {
         let model = Arc::new(Mutex::new(Model::new(tx)?));
         let context = self.clone();
-        let update = upgrade_spawn!(model, |model, msg| {
-            let context = context.clone();
-            context.update(&model, msg);
-        });
+        let update = move |model: &Model, msg| {
+            context.update(model, msg);
+        };
         {
             let mut model = model.lock().await;
             model.update = Some(Box::new(update));
