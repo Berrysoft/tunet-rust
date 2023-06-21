@@ -44,6 +44,7 @@ class MyApp extends StatelessWidget {
         brightness: PlatformDispatcher.instance.platformBrightness,
         colorSchemeSeed: SystemTheme.accentColor.accent,
         useMaterial3: true,
+        fontFamily: Platform.isWindows ? "Microsoft Yahei UI" : null,
       ),
       home: BindingProvider(
         child: BindingSource<ManagedRuntime>(
