@@ -49,6 +49,11 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kQueueStateMethodRuntimeConstMeta;
 
+  Future<void> queueStatusMethodRuntime(
+      {required Runtime that, required NetStatus s, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kQueueStatusMethodRuntimeConstMeta;
+
   Future<void> queueDetailsMethodRuntime({required Runtime that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kQueueDetailsMethodRuntimeConstMeta;
@@ -293,6 +298,12 @@ class Runtime {
 
   Future<void> queueState({NetState? s, dynamic hint}) =>
       bridge.queueStateMethodRuntime(
+        that: this,
+        s: s,
+      );
+
+  Future<void> queueStatus({required NetStatus s, dynamic hint}) =>
+      bridge.queueStatusMethodRuntime(
         that: this,
         s: s,
       );

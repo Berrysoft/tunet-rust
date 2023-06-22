@@ -127,25 +127,8 @@ class ManagedRuntime extends NotifyPropertyChanged {
   }
 
   Future<void> start() async {
-    NetStatus sendStatus = const NetStatus.unknown();
-    final String? gstatus = await statusApi.invokeMethod("getStatus");
-    switch (gstatus) {
-      case "wwan":
-        sendStatus = const NetStatus.wwan();
-        break;
-      case "wlan":
-        String? ssid = await statusApi.invokeMethod("getSsid");
-        if (ssid != null) {
-          sendStatus = NetStatus.wlan(ssid);
-        }
-        break;
-      case "lan":
-        sendStatus = const NetStatus.lan();
-        break;
-    }
-
+    final sendStatus = await loadStatus();
     final (u, p) = await loadCredential();
-
     final config = RuntimeStartConfig(
       status: sendStatus,
       username: u,
@@ -155,17 +138,17 @@ class ManagedRuntime extends NotifyPropertyChanged {
     await for (final msg in runtime.start(config: config)) {
       await msg.when<Future<void>>(
         credential: (username) async {
-          await runtime.queueState();
-          await runtime.queueDetails();
-          await runtime.queueOnlines();
+          await queueState();
+          await queueDetails();
+          await queueOnlines();
           this.username = username;
         },
         state: (state) async {
-          await runtime.queueFlux();
+          await queueFlux();
           this.state = state;
         },
         status: (status) async {
-          await runtime.queueState();
+          await queueState();
           this.status = status;
         },
         log: (logText) async {
@@ -195,6 +178,26 @@ class ManagedRuntime extends NotifyPropertyChanged {
     }
   }
 
+  Future<NetStatus> loadStatus() async {
+    NetStatus sendStatus = const NetStatus.unknown();
+    final String? gstatus = await statusApi.invokeMethod("getStatus");
+    switch (gstatus) {
+      case "wwan":
+        sendStatus = const NetStatus.wwan();
+        break;
+      case "wlan":
+        String? ssid = await statusApi.invokeMethod("getSsid");
+        if (ssid != null) {
+          sendStatus = NetStatus.wlan(ssid);
+        }
+        break;
+      case "lan":
+        sendStatus = const NetStatus.lan();
+        break;
+    }
+    return sendStatus;
+  }
+
   Future<(String, String)> loadCredential() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final username = prefs.getString('username') ?? "";
@@ -213,6 +216,10 @@ class ManagedRuntime extends NotifyPropertyChanged {
   }
 
   Future<void> queueState({NetState? s}) => runtime.queueState(s: s);
+  Future<void> queueStatus() async {
+    await runtime.queueStatus(s: await loadStatus());
+  }
+
   Future<void> queueCredential({required String u, required String p}) async {
     await saveCredential(u, p);
     await runtime.queueCredential(u: u, p: p);

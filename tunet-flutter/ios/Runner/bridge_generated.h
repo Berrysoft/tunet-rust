@@ -106,6 +106,10 @@ void wire_queue_flux__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 void wire_queue_state__method__Runtime(int64_t port_, struct wire_Runtime *that, int32_t *s);
 
+void wire_queue_status__method__Runtime(int64_t port_,
+                                        struct wire_Runtime *that,
+                                        struct wire_NetStatus *s);
+
 void wire_queue_details__method__Runtime(int64_t port_, struct wire_Runtime *that);
 
 void wire_queue_onlines__method__Runtime(int64_t port_, struct wire_Runtime *that);
@@ -127,6 +131,8 @@ struct wire_MutexOptionMpscReceiverAction new_MutexOptionMpscReceiverAction(void
 struct wire_Ipv4AddrWrap *new_box_autoadd_ipv_4_addr_wrap_0(void);
 
 int32_t *new_box_autoadd_net_state_0(int32_t value);
+
+struct wire_NetStatus *new_box_autoadd_net_status_0(void);
 
 struct wire_Runtime *new_box_autoadd_runtime_0(void);
 
@@ -161,6 +167,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_queue_logout__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_flux__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_state__method__Runtime);
+    dummy_var ^= ((int64_t) (void*) wire_queue_status__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_details__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_onlines__method__Runtime);
     dummy_var ^= ((int64_t) (void*) wire_queue_connect__method__Runtime);
@@ -170,6 +177,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_MutexOptionMpscReceiverAction);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_ipv_4_addr_wrap_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_net_state_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_net_status_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_runtime_start_config_0);
     dummy_var ^= ((int64_t) (void*) new_list_ipv_4_addr_wrap_0);

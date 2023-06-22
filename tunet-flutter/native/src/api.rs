@@ -245,6 +245,10 @@ impl Runtime {
         self.queue(Action::State(s));
     }
 
+    pub fn queue_status(&self, s: NetStatus) {
+        self.queue(Action::Status(Some(s)));
+    }
+
     pub fn queue_details(&self) {
         self.queue(Action::Details);
     }
