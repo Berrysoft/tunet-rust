@@ -1,3 +1,4 @@
 native/src/bridge_*.rs linguist-vendored
 ios/Runner/bridge_*.h linguist-vendored
+macos/Runner/bridge_*.h linguist-vendored
 lib/bridge_*.dart linguist-vendored
