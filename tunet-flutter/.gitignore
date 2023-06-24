@@ -46,3 +46,5 @@ app.*.map.json
 native/target
 xcuserdata
 jniLibs
+
+pubspec.lock
