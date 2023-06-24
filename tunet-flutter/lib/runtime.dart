@@ -128,10 +128,9 @@ class ManagedRuntime extends NotifyPropertyChanged {
   }
 
   Future<void> start() async {
-    NetStatus sendStatus = await currentStatus();
+    final sendStatus = await loadStatus();
 
     final (u, p) = await loadCredential();
-
     final config = RuntimeStartConfig(
       status: sendStatus,
       username: u,
@@ -141,17 +140,17 @@ class ManagedRuntime extends NotifyPropertyChanged {
     await for (final msg in runtime.start(config: config)) {
       await msg.when<Future<void>>(
         credential: (username) async {
-          await runtime.queueState();
-          await runtime.queueDetails();
-          await runtime.queueOnlines();
+          await queueState();
+          await queueDetails();
+          await queueOnlines();
           this.username = username;
         },
         state: (state) async {
-          await runtime.queueFlux();
+          await queueFlux();
           this.state = state;
         },
         status: (status) async {
-          await runtime.queueState();
+          await queueState();
           this.status = status;
         },
         log: (logText) async {
@@ -181,7 +180,7 @@ class ManagedRuntime extends NotifyPropertyChanged {
     }
   }
 
-  Future<NetStatus> currentStatus() async {
+  Future<NetStatus> loadStatus() async {
     if (Platform.isAndroid || Platform.isIOS) {
       NetStatus sendStatus = const NetStatus.unknown();
       final String? gstatus = await statusApi.invokeMethod("getStatus");
@@ -231,6 +230,10 @@ class ManagedRuntime extends NotifyPropertyChanged {
   }
 
   Future<void> queueState({NetState? s}) => runtime.queueState(s: s);
+  Future<void> queueStatus() async {
+    await runtime.queueStatus(s: await loadStatus());
+  }
+
   Future<void> queueCredential({required String u, required String p}) async {
     await saveCredential(u, p);
     await runtime.queueCredential(u: u, p: p);

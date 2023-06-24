@@ -1,0 +1,60 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_secure_storage (6.0.0):
+    - Flutter
+  - fluttertoast (0.0.2):
+    - Flutter
+    - Toast
+  - package_info_plus (0.4.5):
+    - Flutter
+  - permission_handler_apple (9.1.0):
+    - Flutter
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - Toast (4.0.0)
+  - url_launcher_ios (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Toast
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_secure_storage:
+    :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  fluttertoast:
+    :path: ".symlinks/plugins/fluttertoast/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+
+SPEC CHECKSUMS:
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_secure_storage: 23fc622d89d073675f2eaa109381aefbcf5a49be
+  fluttertoast: fafc4fa4d01a6a9e4f772ecd190ffa525e9e2d9c
+  package_info_plus: fd030dabf36271f146f1f3beacd48f564b0f17f7
+  permission_handler_apple: 8f116445eff3c0e7c65ad60f5fef5490aa94b4e4
+  shared_preferences_foundation: e2dae3258e06f44cc55f49d42024fd8dd03c590c
+  Toast: 91b396c56ee72a5790816f40d3a94dd357abc196
+  url_launcher_ios: 08a3dfac5fb39e8759aeb0abbd5d9480f30fc8b4
+
+PODFILE CHECKSUM: 775997f741c536251164e3eacf6e34abf2eb7a17
+
+COCOAPODS: 1.12.1

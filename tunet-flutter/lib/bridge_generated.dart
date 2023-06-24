@@ -225,6 +225,26 @@ class NativeImpl implements Native {
         argNames: ["that", "s"],
       );
 
+  Future<void> queueStatusMethodRuntime(
+      {required Runtime that, required NetStatus s, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_runtime(that);
+    var arg1 = _platform.api2wire_box_autoadd_net_status(s);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_queue_status__method__Runtime(port_, arg0, arg1),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kQueueStatusMethodRuntimeConstMeta,
+      argValues: [that, s],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kQueueStatusMethodRuntimeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "queue_status__method__Runtime",
+        argNames: ["that", "s"],
+      );
+
   Future<void> queueDetailsMethodRuntime(
       {required Runtime that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_runtime(that);
@@ -673,6 +693,13 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_NetStatus> api2wire_box_autoadd_net_status(NetStatus raw) {
+    final ptr = inner.new_box_autoadd_net_status_0();
+    _api_fill_to_wire_net_status(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_Runtime> api2wire_box_autoadd_runtime(Runtime raw) {
     final ptr = inner.new_box_autoadd_runtime_0();
     _api_fill_to_wire_runtime(raw, ptr.ref);
@@ -749,6 +776,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   void _api_fill_to_wire_box_autoadd_ipv_4_addr_wrap(
       Ipv4AddrWrap apiObj, ffi.Pointer<wire_Ipv4AddrWrap> wireObj) {
     _api_fill_to_wire_ipv_4_addr_wrap(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_box_autoadd_net_status(
+      NetStatus apiObj, ffi.Pointer<wire_NetStatus> wireObj) {
+    _api_fill_to_wire_net_status(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_box_autoadd_runtime(
@@ -1099,6 +1131,28 @@ class NativeWire implements FlutterRustBridgeWireBase {
           void Function(
               int, ffi.Pointer<wire_Runtime>, ffi.Pointer<ffi.Int32>)>();
 
+  void wire_queue_status__method__Runtime(
+    int port_,
+    ffi.Pointer<wire_Runtime> that,
+    ffi.Pointer<wire_NetStatus> s,
+  ) {
+    return _wire_queue_status__method__Runtime(
+      port_,
+      that,
+      s,
+    );
+  }
+
+  late final _wire_queue_status__method__RuntimePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Runtime>,
+                  ffi.Pointer<wire_NetStatus>)>>(
+      'wire_queue_status__method__Runtime');
+  late final _wire_queue_status__method__Runtime =
+      _wire_queue_status__method__RuntimePtr.asFunction<
+          void Function(
+              int, ffi.Pointer<wire_Runtime>, ffi.Pointer<wire_NetStatus>)>();
+
   void wire_queue_details__method__Runtime(
     int port_,
     ffi.Pointer<wire_Runtime> that,
@@ -1233,6 +1287,16 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'new_box_autoadd_net_state_0');
   late final _new_box_autoadd_net_state_0 = _new_box_autoadd_net_state_0Ptr
       .asFunction<ffi.Pointer<ffi.Int32> Function(int)>();
+
+  ffi.Pointer<wire_NetStatus> new_box_autoadd_net_status_0() {
+    return _new_box_autoadd_net_status_0();
+  }
+
+  late final _new_box_autoadd_net_status_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_NetStatus> Function()>>(
+          'new_box_autoadd_net_status_0');
+  late final _new_box_autoadd_net_status_0 = _new_box_autoadd_net_status_0Ptr
+      .asFunction<ffi.Pointer<wire_NetStatus> Function()>();
 
   ffi.Pointer<wire_Runtime> new_box_autoadd_runtime_0() {
     return _new_box_autoadd_runtime_0();

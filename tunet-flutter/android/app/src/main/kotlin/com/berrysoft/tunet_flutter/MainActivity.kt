@@ -17,23 +17,13 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler { call, result ->
             if (call.method == "getStatus") {
                 val manager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-                val networks = manager.allNetworks
-                val types: MutableList<String> = ArrayList()
-                for (network in networks) {
-                    val info = manager.getNetworkInfo(network);
-                    if (info != null) {
-                        when (info.type) {
-                            ConnectivityManager.TYPE_MOBILE -> types.add("wwan")
-                            ConnectivityManager.TYPE_WIFI -> types.add("wlan")
-                            ConnectivityManager.TYPE_ETHERNET -> types.add("lan")
-                        }
-                    }
-                }
-                if (types.contains("wlan")) {
+                val types =
+                    manager.allNetworks.mapNotNull { network -> manager.getNetworkInfo(network)?.type }
+                if (types.contains(ConnectivityManager.TYPE_WIFI)) {
                     result.success("wlan")
-                } else if (types.contains("wwan")) {
+                } else if (types.contains(ConnectivityManager.TYPE_MOBILE)) {
                     result.success("wwan")
-                } else if (types.contains("lan")) {
+                } else if (types.contains(ConnectivityManager.TYPE_ETHERNET)) {
                     result.success("lan")
                 } else {
                     result.success("unknown")

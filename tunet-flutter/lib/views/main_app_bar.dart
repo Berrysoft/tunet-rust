@@ -74,7 +74,7 @@ class _MainAppBarState extends State<MainAppBar> {
           onPressed: (logBusy || onlineBusy || detailBusy)
               ? null
               : () {
-                  runtime.queueFlux();
+                  runtime.queueStatus();
                   runtime.queueOnlines();
                   runtime.queueDetails();
                 },

@@ -70,6 +70,15 @@ pub extern "C" fn wire_queue_state__method__Runtime(
 }
 
 #[no_mangle]
+pub extern "C" fn wire_queue_status__method__Runtime(
+    port_: i64,
+    that: *mut wire_Runtime,
+    s: *mut wire_NetStatus,
+) {
+    wire_queue_status__method__Runtime_impl(port_, that, s)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_queue_details__method__Runtime(port_: i64, that: *mut wire_Runtime) {
     wire_queue_details__method__Runtime_impl(port_, that)
 }
@@ -122,6 +131,11 @@ pub extern "C" fn new_box_autoadd_ipv_4_addr_wrap_0() -> *mut wire_Ipv4AddrWrap 
 #[no_mangle]
 pub extern "C" fn new_box_autoadd_net_state_0(value: i32) -> *mut i32 {
     support::new_leak_box_ptr(value)
+}
+
+#[no_mangle]
+pub extern "C" fn new_box_autoadd_net_status_0() -> *mut wire_NetStatus {
+    support::new_leak_box_ptr(wire_NetStatus::new_with_null_ptr())
 }
 
 #[no_mangle]
@@ -234,6 +248,12 @@ impl Wire2Api<NetState> for *mut i32 {
     fn wire2api(self) -> NetState {
         let wrap = unsafe { support::box_from_leak_ptr(self) };
         Wire2Api::<NetState>::wire2api(*wrap).into()
+    }
+}
+impl Wire2Api<NetStatus> for *mut wire_NetStatus {
+    fn wire2api(self) -> NetStatus {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<NetStatus>::wire2api(*wrap).into()
     }
 }
 impl Wire2Api<Runtime> for *mut wire_Runtime {

@@ -193,6 +193,24 @@ fn wire_queue_state__method__Runtime_impl(
         },
     )
 }
+fn wire_queue_status__method__Runtime_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Runtime> + UnwindSafe,
+    s: impl Wire2Api<NetStatus> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "queue_status__method__Runtime",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_s = s.wire2api();
+            move |task_callback| Ok(Runtime::queue_status(&api_that, api_s))
+        },
+    )
+}
 fn wire_queue_details__method__Runtime_impl(
     port_: MessagePort,
     that: impl Wire2Api<Runtime> + UnwindSafe,
