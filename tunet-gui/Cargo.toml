@@ -34,4 +34,8 @@ plotters = { version = "0.3", default-features = false, features = [
 slint-build = "1"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
-winres = { workspace = true }
+winresource = { workspace = true }
+
+[package.metadata.winresource]
+OriginalFilename = "tunet-gui.exe"
+LegalCopyright = "Copyright © 2021-2023 Berrysoft"

@@ -70,7 +70,7 @@ core-foundation = "0.9"
 system-configuration = "0.5"
 
 windows = "0.48"
-winres = "0.1"
+winresource = "0.1"
 
 [patch.crates-io]
 slint = { git = "https://github.com/slint-ui/slint.git" }

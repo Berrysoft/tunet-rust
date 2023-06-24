@@ -4870,7 +4870,7 @@ dependencies = [
  "tokio",
  "tunet-helper",
  "tunet-settings",
- "winres",
+ "winresource",
 ]
 
 [[package]]
@@ -4886,7 +4886,7 @@ dependencies = [
  "tunet-helper",
  "tunet-model",
  "tunet-settings",
- "winres",
+ "winresource",
 ]
 
 [[package]]
@@ -4906,7 +4906,7 @@ dependencies = [
  "tunet-helper",
  "tunet-model",
  "tunet-settings",
- "winres",
+ "winresource",
 ]
 
 [[package]]
@@ -5797,6 +5797,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b68db261ef59e9e52806f688020631e987592bd83619edccda9c47d42cde4f6c"
 dependencies = [
  "toml 0.5.11",
+]
+
+[[package]]
+name = "winresource"
+version = "0.1.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cd38cf1ae6704c0bd03ee663068b8303b9c4bb069f83143c21ef25b19d1bc30"
+dependencies = [
+ "toml 0.7.5",
+ "version_check",
 ]
 
 [[package]]

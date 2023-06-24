@@ -60,4 +60,8 @@ console = "0.15"
 enum_dispatch = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
-winres = { workspace = true }
+winresource = { workspace = true }
+
+[package.metadata.winresource]
+OriginalFilename = "tunet.exe"
+LegalCopyright = "Copyright © 2021-2023 Berrysoft"
