@@ -4857,7 +4857,7 @@ checksum = "a464a4b34948a5f67fddd2b823c62d9d92e44be75058b99939eae6c5b6960b33"
 
 [[package]]
 name = "tunet"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4875,7 +4875,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-cui"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -4891,7 +4891,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-gui"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "color-theme",
@@ -4952,7 +4952,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-service"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "cfg-if",
