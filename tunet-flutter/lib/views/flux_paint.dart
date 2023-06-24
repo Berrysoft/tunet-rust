@@ -15,7 +15,7 @@ class FluxPaint extends StatelessWidget {
       padding: const EdgeInsets.all(4.0),
       child: Binding<ManagedRuntime>(
         source: runtime,
-        path: ManagedRuntime.netFluxProperty,
+        path: ManagedRuntime.logBusyProperty,
         builder: (context, runtime) {
           final netFlux = runtime.netFlux;
           if (netFlux == null) {
@@ -38,6 +38,7 @@ class FluxPaint extends StatelessWidget {
           final fluxRatio = fluxGB / totalFlux;
 
           return TweenAnimationBuilder<double>(
+            key: UniqueKey(),
             tween: Tween(begin: 0, end: 1.0),
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeOut,
