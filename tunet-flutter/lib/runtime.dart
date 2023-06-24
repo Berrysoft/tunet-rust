@@ -157,7 +157,6 @@ class ManagedRuntime extends NotifyPropertyChanged {
           this.logText = logText;
         },
         flux: (netFlux) async {
-          this.netFlux = null;
           this.netFlux = netFlux;
         },
         online: (onlines) async {
@@ -241,10 +240,7 @@ class ManagedRuntime extends NotifyPropertyChanged {
 
   Future<void> queueLogin() => runtime.queueLogin();
   Future<void> queueLogout() => runtime.queueLogout();
-  Future<void> queueFlux() async {
-    netFlux = null;
-    await runtime.queueFlux();
-  }
+  Future<void> queueFlux() => runtime.queueFlux();
 
   Future<void> queueDetails() async {
     detailsData.setData(List.empty());
