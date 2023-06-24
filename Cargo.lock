@@ -2054,7 +2054,7 @@ dependencies = [
  "fontdue",
  "i-slint-common",
  "image",
- "itertools 0.11.0",
+ "itertools",
  "linked_hash_set",
  "lyon_extra",
  "lyon_path",
@@ -2348,15 +2348,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5299060ff5db63e788015dcb9525ad9b84f4fd9717ed2cbdeba5018cbf42f9b5"
 dependencies = [
  "winapi",
-]
-
-[[package]]
-name = "itertools"
-version = "0.10.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
-dependencies = [
- "either",
 ]
 
 [[package]]
@@ -4874,7 +4865,7 @@ dependencies = [
  "console",
  "enum_dispatch",
  "futures-util",
- "itertools 0.10.5",
+ "itertools",
  "mac_address2",
  "tokio",
  "tunet-helper",
@@ -4952,7 +4943,7 @@ dependencies = [
  "anyhow",
  "drop_guard",
  "futures-util",
- "itertools 0.10.5",
+ "itertools",
  "mac_address2",
  "netstatus",
  "tokio",
