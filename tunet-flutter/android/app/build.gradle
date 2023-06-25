@@ -88,7 +88,7 @@ dependencies {
     def taskPostfix = it.key
     def profileMode = it.value
     tasks.whenTaskAdded { task ->
-        if (task.name == "javaPreCompile$taskPostfix") {
+        if (task.name == "assemble$taskPostfix") {
             task.dependsOn "cargoBuild$taskPostfix"
         }
     }

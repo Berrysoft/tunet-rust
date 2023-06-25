@@ -48,3 +48,6 @@ xcuserdata
 jniLibs
 
 pubspec.lock
+
+lib/bridge_*.dart
+native/src/bridge_*.rs
