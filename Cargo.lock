@@ -5978,16 +5978,16 @@ dependencies = [
 
 [[package]]
 name = "winlog2"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "388246c98d3511274f3b238621d0ecc29cf1f41bf9ed8965b0c238917931033c"
+checksum = "e87bf73199fb145132693277e4e6950bd86020a1fafba9eb2e415bc3e54bce17"
 dependencies = [
  "log",
  "thiserror",
  "widestring",
  "windows-sys 0.48.0",
  "winreg 0.50.0",
- "winres",
+ "winresource",
 ]
 
 [[package]]
@@ -6016,15 +6016,6 @@ checksum = "524e57b2c537c0f9b1e69f1965311ec12182b4122e45035b1508cd24d2adadb1"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "winres"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b68db261ef59e9e52806f688020631e987592bd83619edccda9c47d42cde4f6c"
-dependencies = [
- "toml 0.5.11",
 ]
 
 [[package]]
