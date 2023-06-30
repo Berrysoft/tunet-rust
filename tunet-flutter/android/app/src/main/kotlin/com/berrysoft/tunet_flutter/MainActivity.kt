@@ -1,4 +1,4 @@
-package com.berrysoft.tunet_flutter
+package io.github.berrysoft.tunet_flutter
 
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
@@ -7,7 +7,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val channelName = "com.berrysoft.tunet_flutter/status"
+    private val channelName = "io.github.berrysoft.tunet_flutter/status"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

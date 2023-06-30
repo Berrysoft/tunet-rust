@@ -128,7 +128,7 @@ impl Runtime {
                 ),
         );
         #[cfg(target_os = "ios")]
-        oslog::OsLogger::new("com.berrysoft.tunet_flutter")
+        oslog::OsLogger::new("io.github.berrysoft.tunet_flutter")
             .level_filter(log::LevelFilter::Trace)
             .init()?;
 

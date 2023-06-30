@@ -12,14 +12,14 @@
 	<key>CFBundleDisplayName</key>
 	<string>清华校园网</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.berrysoft.tunet</string>
+	<string>io.github.berrysoft.tunet</string>
 	<key>CFBundleExecutable</key>
 	<string>tunet-gui</string>
 
 	<key>CFBundleVersion</key>
-	<string>0.8.2</string>
+	<string>0.9.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.8.2</string>
+	<string>0.9.0</string>
 
 	<key>LSMinimumSystemVersion</key>
 	<string>11.7</string>

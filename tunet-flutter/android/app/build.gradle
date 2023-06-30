@@ -49,7 +49,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.berrysoft.tunet_flutter"
+        applicationId "io.github.berrysoft.tunet_flutter"
         minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
@@ -69,7 +69,7 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    namespace 'com.berrysoft.tunet_flutter'
+    namespace 'io.github.berrysoft.tunet_flutter'
 }
 
 flutter {

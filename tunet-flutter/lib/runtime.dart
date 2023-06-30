@@ -15,7 +15,8 @@ export 'ffi.dart';
 class ManagedRuntime extends NotifyPropertyChanged {
   final Runtime runtime;
 
-  static const statusApi = MethodChannel('com.berrysoft.tunet_flutter/status');
+  static const statusApi =
+      MethodChannel('io.github.berrysoft.tunet_flutter/status');
 
   static const String logBusyProperty = "logBusy";
   bool _logBusy = false;
