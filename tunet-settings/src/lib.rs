@@ -10,6 +10,8 @@ use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 use thiserror::Error;
 
+mod key_fallback;
+
 #[derive(Debug, Error)]
 pub enum SettingsError {
     #[error("找不到配置文件目录")]
@@ -53,13 +55,23 @@ impl SettingsReader {
         Self { path: path.into() }
     }
 
+    fn entry(u: &str) -> SettingsResult<Entry> {
+        if true {
+            Ok(Entry::new_with_credential(Box::new(
+                key_fallback::KeyFallback::new(TUNET_NAME, u)?,
+            )))
+        } else {
+            Ok(Entry::new(TUNET_NAME, u)?)
+        }
+    }
+
     pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {
         if let Some(p) = self.path.parent() {
             DirBuilder::new().recursive(true).create(p)?;
         }
         let f = File::create(self.path.as_path())?;
         let writer = BufWriter::new(f);
-        let entry = Entry::new(TUNET_NAME, u)?;
+        let entry = Self::entry(u)?;
         entry.set_password(p)?;
         let c = Settings {
             username: Cow::Borrowed(u),
@@ -69,7 +81,7 @@ impl SettingsReader {
     }
 
     pub fn delete(&mut self, u: &str) -> SettingsResult<()> {
-        let entry = Entry::new(TUNET_NAME, u)?;
+        let entry = Self::entry(u)?;
         entry.delete_password()?;
         if self.path.exists() {
             remove_file(self.path.as_path())?;
@@ -85,7 +97,7 @@ impl SettingsReader {
     }
 
     pub fn read_password(&self, u: &str) -> SettingsResult<String> {
-        let entry = Entry::new(TUNET_NAME, u)?;
+        let entry = Self::entry(u)?;
         let password = entry.get_password()?;
         Ok(password)
     }
