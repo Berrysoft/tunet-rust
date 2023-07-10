@@ -1,7 +1,11 @@
 use crate::*;
 use authtea::AuthTea;
-use data_encoding::{Encoding, HEXLOWER};
-use data_encoding_macro::new_encoding;
+use base64::{
+    alphabet::Alphabet,
+    engine::{general_purpose::PAD, GeneralPurpose},
+    Engine,
+};
+use data_encoding::HEXLOWER;
 use hmac::{Hmac, Mac};
 use md5::Md5;
 use once_cell::sync::Lazy;
@@ -17,10 +21,11 @@ pub struct AuthConnect<U: AuthConnectUri + Send + Sync> {
     _p: PhantomData<U>,
 }
 
-const AUTH_BASE64: Encoding = new_encoding! {
-    symbols: "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA",
-    padding: '=',
-};
+pub static AUTH_BASE64: Lazy<GeneralPurpose> = Lazy::new(|| {
+    let alphabet =
+        Alphabet::new("LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA").unwrap();
+    GeneralPurpose::new(&alphabet, PAD)
+});
 
 static REDIRECT_URI: &str = "http://www.tsinghua.edu.cn/";
 

@@ -21,7 +21,7 @@ md-5 = "0.10"
 sha-1 = "0.10"
 hmac = "0.12"
 data-encoding = "2"
-data-encoding-macro = "0.1"
+base64 = { workspace = true }
 serde_json = { workspace = true }
 select = "0.6"
 chrono = { workspace = true }

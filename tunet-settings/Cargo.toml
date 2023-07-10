@@ -13,3 +13,4 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 dirs = { workspace = true }
 rpassword = "7"
+serde_with = { workspace = true, features = ["base64"] }

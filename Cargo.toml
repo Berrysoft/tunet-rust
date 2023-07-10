@@ -50,6 +50,7 @@ chrono = { version = "0.4", default-features = false, features = [
 clap = { version = "4", features = ["derive"] }
 dirs = "5"
 log = "0.4"
+base64 = "0.21"
 
 futures-core = "0.3"
 futures-util = "0.3"
@@ -61,6 +62,7 @@ mac_address = { version = "2", package = "mac_address2" }
 
 serde = "1"
 serde_json = "1"
+serde_with = "3"
 
 tokio = "1"
 tokio-stream = "0.1"
