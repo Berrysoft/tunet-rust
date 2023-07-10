@@ -114,6 +114,7 @@ $ sudo systemctl start tunet@foo
 ``` bash
 $ tunet deletecred
 ```
+注意：由于 Linux 的限制，目前没有找到合适的持续化密码保存方法，因此会直接明文存储。
 
 ## 网络状态
 针对不同平台使用平台特定的方式尝试获得当前的网络连接方式，如果是无线网连接还会获取 SSID。
