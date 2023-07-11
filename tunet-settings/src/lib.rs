@@ -56,7 +56,7 @@ impl SettingsReader {
     }
 
     fn entry(u: &str) -> SettingsResult<Entry> {
-        if true {
+        if cfg!(target_os = "linux") {
             Ok(Entry::new_with_credential(Box::new(
                 key_fallback::KeyFallback::new(TUNET_NAME, u)?,
             )))
