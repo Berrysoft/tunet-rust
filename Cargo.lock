@@ -5288,7 +5288,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-helper"
-version = "0.15.0"
+version = "0.15.1"
 dependencies = [
  "allo-isolate",
  "async-stream",
@@ -5357,7 +5357,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-settings"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "dirs",
  "keyring",
