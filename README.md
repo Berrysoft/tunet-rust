@@ -161,7 +161,7 @@ $ tunet deletecred
 ## 编译说明
 使用 `cargo` 直接编译：
 ``` bash
-$ cargo build --release
+$ cargo build --release --workspace --exclude native
 ```
 即可在 `target/release` 下找到编译好的程序。
 
