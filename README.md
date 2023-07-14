@@ -171,3 +171,9 @@ $ cd tunet-flutter
 $ make apk
 ```
 即可在 `tunet-flutter/build/app/outputs/flutter-apk/app-<架构>-release.apk` 找到打包。
+
+## 安装说明
+从 Releases 即可找到最新版分发。
+
+### Arch Linux
+有第三方打包的 AUR 和 [archlinuxcn](https://www.archlinuxcn.org/) 源可以安装。
