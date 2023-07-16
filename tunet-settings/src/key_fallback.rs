@@ -39,6 +39,7 @@ impl KeyFallback {
 
     fn save_cred_file(&self, map: &HashMap<String, Password>) -> Result<()> {
         let f = File::create(&self.service_path).map_err(|e| Error::NoStorageAccess(e.into()))?;
+        f.metadata()?.permissions().set_mode(0o600);
         let writer = BufWriter::new(f);
         serde_json::to_writer(writer, map).map_err(|e| Error::PlatformFailure(e.into()))
     }
