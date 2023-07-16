@@ -10,6 +10,7 @@ use std::io::{stdin, stdout, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 use thiserror::Error;
 
+#[cfg(target_os = "linux")]
 mod key_fallback;
 
 #[derive(Debug, Error)]
@@ -56,12 +57,14 @@ impl SettingsReader {
     }
 
     fn entry(u: &str) -> SettingsResult<Entry> {
-        if cfg!(target_os = "linux") {
-            Ok(Entry::new_with_credential(Box::new(
-                key_fallback::KeyFallback::new(TUNET_NAME, u)?,
-            )))
-        } else {
-            Ok(Entry::new(TUNET_NAME, u)?)
+        cfg_if::cfg_if! {
+            if #[cfg(target_os = "linux")] {
+                Ok(Entry::new_with_credential(Box::new(
+                    key_fallback::KeyFallback::new(TUNET_NAME, u)?,
+                )))
+            } else {
+                Ok(Entry::new(TUNET_NAME, u)?)
+            }
         }
     }
 
