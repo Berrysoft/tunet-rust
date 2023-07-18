@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::{base64::Base64, serde_as};
 use std::{
     collections::HashMap,
-    fs::File,
+    fs::{File, Permissions},
     io::{BufReader, BufWriter},
     os::unix::fs::PermissionsExt,
     path::PathBuf,
@@ -40,10 +40,8 @@ impl KeyFallback {
 
     fn save_cred_file(&self, map: &HashMap<String, Password>) -> Result<()> {
         let f = File::create(&self.service_path).map_err(|e| Error::NoStorageAccess(e.into()))?;
-        f.metadata()
-            .map_err(|e| Error::PlatformFailure(e.into()))?
-            .permissions()
-            .set_mode(0o600);
+        f.set_permissions(Permissions::from_mode(0o600))
+            .map_err(|e| Error::PlatformFailure(e.into()))?;
         let writer = BufWriter::new(f);
         serde_json::to_writer(writer, map).map_err(|e| Error::PlatformFailure(e.into()))
     }
