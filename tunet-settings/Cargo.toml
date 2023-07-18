@@ -13,4 +13,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 dirs = { workspace = true }
 rpassword = "7"
+cfg-if = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
 serde_with = { workspace = true, features = ["base64"] }
