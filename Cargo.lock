@@ -1671,9 +1671,9 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_codegen"
-version = "1.78.0"
+version = "1.79.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "806fda793565903e334ff0ae6d974f539a2637351276bf1c60d024fbabe14e2b"
+checksum = "e6d3fe430b3774982599d7c08cba5d0450bb5f40a3e95da6589c222af5fd411a"
 dependencies = [
  "anyhow",
  "atty",
@@ -1695,7 +1695,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "strum_macros 0.24.3",
- "syn 1.0.109",
+ "syn 2.0.26",
  "tempfile",
  "thiserror",
  "toml 0.5.11",
