@@ -755,9 +755,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.3.15"
+version = "4.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f644d0dac522c8b05ddc39aaaccc5b136d5dc4ff216610c5641e3be5becf56c"
+checksum = "74bb1b4028935821b2d6b439bba2e970bdcf740832732437ead910c632e30d7d"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -766,9 +766,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.3.15"
+version = "4.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af410122b9778e024f9e0fb35682cc09cc3f85cad5e8d3ba8f47a9702df6e73d"
+checksum = "5ae467cbb0111869b765e13882a1dbbd6cb52f58203d8b80c44f667d4dd19843"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1646,9 +1646,9 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge"
-version = "1.78.0"
+version = "1.79.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "614e0d9e63b6a83b4aaccf24363858ec977643334ce9d397b4b51254f4bd1a39"
+checksum = "0c8be4e3bf1221c2ce3e8006d548f4d3618deda475f192a65e0d55b33796cacc"
 dependencies = [
  "allo-isolate",
  "anyhow",
@@ -1671,16 +1671,16 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_codegen"
-version = "1.78.0"
+version = "1.79.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "806fda793565903e334ff0ae6d974f539a2637351276bf1c60d024fbabe14e2b"
+checksum = "e6d3fe430b3774982599d7c08cba5d0450bb5f40a3e95da6589c222af5fd411a"
 dependencies = [
  "anyhow",
  "atty",
  "cargo_metadata",
  "cbindgen",
  "chrono",
- "clap 4.3.15",
+ "clap 4.3.16",
  "convert_case 0.5.0",
  "delegate",
  "enum-iterator",
@@ -1695,7 +1695,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "strum_macros 0.24.3",
- "syn 1.0.109",
+ "syn 2.0.26",
  "tempfile",
  "thiserror",
  "toml 0.5.11",
@@ -1704,9 +1704,9 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_macros"
-version = "1.78.0"
+version = "1.79.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79f50b7e25ca3a833a5feabd0fdadb52ea10fc37f053deca87847059634a45ea"
+checksum = "237edf0d1cea56e5699ee37f906c265de99d55657df4ff2c006ada9541c04996"
 
 [[package]]
 name = "fnv"
@@ -4481,9 +4481,9 @@ checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
 name = "signal-hook"
-version = "0.3.16"
+version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b824b6e687aff278cdbf3b36f07aa52d4bd4099699324d5da86a2ebce3aa00b3"
+checksum = "8621587d4798caf8eb44879d42e56b9a93ea5dcd315a6487c357130095b62801"
 dependencies = [
  "libc",
  "signal-hook-registry",
@@ -5248,7 +5248,7 @@ version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "clap 4.3.15",
+ "clap 4.3.16",
  "console",
  "enum_dispatch",
  "futures-util",
@@ -5265,7 +5265,7 @@ name = "tunet-cui"
 version = "0.9.0"
 dependencies = [
  "anyhow",
- "clap 4.3.15",
+ "clap 4.3.16",
  "crossterm",
  "futures-util",
  "ratatui",
@@ -5343,7 +5343,7 @@ version = "0.9.0"
 dependencies = [
  "anyhow",
  "cfg-if",
- "clap 4.3.15",
+ "clap 4.3.16",
  "dirs",
  "enum_dispatch",
  "env_logger",
