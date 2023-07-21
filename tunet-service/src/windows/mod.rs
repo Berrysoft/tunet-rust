@@ -2,8 +2,7 @@ mod notify;
 
 use crate::SERVICE_NAME;
 use anyhow::Result;
-use clap::Parser;
-use std::{ffi::OsString, time::Duration};
+use std::{ffi::OsString, sync::Mutex, time::Duration};
 use tokio::{signal::windows::ctrl_c, sync::watch};
 use tokio_stream::{wrappers::WatchStream, StreamExt};
 use windows_service::{
@@ -31,7 +30,10 @@ fn open_service(manager: &ServiceManager) -> Result<Service> {
     )?)
 }
 
-fn create_service(manager: &ServiceManager) -> Result<Service> {
+fn create_service(
+    manager: &ServiceManager,
+    interval: Option<humantime::Duration>,
+) -> Result<Service> {
     let service_info = ServiceInfo {
         name: SERVICE_NAME.into(),
         display_name: "TsinghuaNet Background Task".into(),
@@ -39,7 +41,11 @@ fn create_service(manager: &ServiceManager) -> Result<Service> {
         start_type: ServiceStartType::AutoStart,
         error_control: ServiceErrorControl::Normal,
         executable_path: std::env::current_exe()?,
-        launch_arguments: vec!["start".into()],
+        launch_arguments: if let Some(d) = interval {
+            vec!["start".into(), "--interval".into(), d.to_string().into()]
+        } else {
+            vec!["start".into()]
+        },
         dependencies: vec![],
         account_name: None,
         account_password: None,
@@ -74,14 +80,9 @@ pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
         delete_service(&service)?;
     }
 
-    let service = create_service(&manager)?;
+    let service = create_service(&manager, interval)?;
 
-    let service_args = if let Some(d) = interval {
-        vec!["--interval".to_string(), d.to_string()]
-    } else {
-        vec![]
-    };
-    service.start(&service_args)?;
+    service.start::<&str>(&[])?;
     Ok(())
 }
 
@@ -94,20 +95,25 @@ pub fn unregister() -> Result<()> {
     Ok(())
 }
 
-pub fn start(_interval: Option<humantime::Duration>) -> Result<()> {
+static START_INTERVAL: Mutex<Option<humantime::Duration>> = Mutex::new(None);
+
+pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
+    *START_INTERVAL.lock().unwrap() = interval;
     service_dispatcher::start(SERVICE_NAME, ffi_service_entry)?;
     Ok(())
 }
 
 define_windows_service!(ffi_service_entry, service_entry);
 
-fn service_entry(args: Vec<OsString>) {
-    if let Err(e) = service_entry_impl(args) {
+fn service_entry(_args: Vec<OsString>) {
+    if let Err(e) = service_entry_impl() {
         notify::error(e.to_string()).ok();
     }
 }
 
-fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
+fn service_entry_impl() -> Result<()> {
+    let interval = START_INTERVAL.lock().unwrap().as_ref().cloned();
+
     let (tx, rx) = watch::channel(());
 
     let event_handler = move |control_event| -> ServiceControlHandlerResult {
@@ -136,7 +142,7 @@ fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(service_main(args, rx))?;
+        .block_on(service_main(interval, rx))?;
 
     status_handle.set_service_status(ServiceStatus {
         service_type: ServiceType::OWN_PROCESS,
@@ -151,18 +157,14 @@ fn service_entry_impl(args: Vec<OsString>) -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Parser)]
-struct ServiceOptions {
-    #[clap(short, long)]
+async fn service_main(
     interval: Option<humantime::Duration>,
-}
-
-async fn service_main(args: Vec<OsString>, rx: watch::Receiver<()>) -> Result<()> {
+    rx: watch::Receiver<()>,
+) -> Result<()> {
     winlog2::init(SERVICE_NAME)?;
-    let options = ServiceOptions::try_parse_from(args)?;
     let mut ctrlc = ctrl_c()?;
     let mut stopc = WatchStream::new(rx).skip(1);
-    let mut timer = crate::create_timer(options.interval);
+    let mut timer = crate::create_timer(interval);
     let mut events = netstatus::NetStatus::watch();
     loop {
         tokio::select! {
