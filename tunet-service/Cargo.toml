@@ -1,7 +1,7 @@
 [package]
 name = "tunet-service"
-version = "0.9.0"
-description = "A service daemon for Tsinghua University campus network."
+version = "0.9.1"
+description = "Tsinghua University network service daemon"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
