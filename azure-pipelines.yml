@@ -125,6 +125,11 @@ jobs:
     displayName: "Install cargo-deb"
 
   - script: |
+      sudo apt-get update
+      sudo apt-get install crossbuild-essential-$(cross)
+    displayName: "Install cross-build essentials"
+
+  - script: |
       cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/tunet.$(ubuntuDist).$(arch).deb -p tunet
     displayName: "Package"
 
