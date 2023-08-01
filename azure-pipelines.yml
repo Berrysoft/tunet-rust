@@ -67,20 +67,41 @@ jobs:
       #   ubuntuDist: 'focal'
       #   target: 'x86_64-unknown-linux-gnu'
       #   arch: 'x86_64'
-      #   cross: ''
-      # focal-arm64:
-      #   image: 'ubuntu-20.04'
-      #   ubuntuDist: 'focal'
-      #   target: 'aarch64-unknown-linux-gnu'
-      #   arch: 'aarch64'
-      #   cross: 'arm64'
-      #   sslver: '1.1'
       jammy-x64:
         image: 'ubuntu-22.04'
         ubuntuDist: 'jammy'
         target: 'x86_64-unknown-linux-gnu'
         arch: 'x86_64'
-        cross: ''
+  pool:
+    vmImage: $(image)
+  
+  steps:
+  - script: cargo install cargo-deb
+    displayName: "Install cargo-deb"
+
+  - script: |
+      rustup target add $(target)
+      cargo build --release --workspace --exclude native --target $(target)
+    displayName: "Build"
+
+  - script: |
+      cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/tunet.$(ubuntuDist).$(arch).deb -p tunet
+    displayName: "Package"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'publish'
+
+- job: Build_Ubuntu_Cross
+  strategy:
+    matrix:
+      focal-arm64:
+        image: 'ubuntu-20.04'
+        ubuntuDist: 'focal'
+        target: 'aarch64-unknown-linux-gnu'
+        arch: 'aarch64'
+        cross: 'arm64'
+        sslver: '1.1'
       jammy-arm64:
         image: 'ubuntu-22.04'
         ubuntuDist: 'jammy'
@@ -92,34 +113,16 @@ jobs:
     vmImage: $(image)
   
   steps:
-  - script: |
-      sudo dpkg --add-architecture $(cross)
-
-      sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list
-      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list
-      sudo sed -i "s/deb-src/deb-src [arch=amd64]/" /etc/apt/sources.list.d/*
-      sudo sed -i "s/deb/deb [arch=amd64]/" /etc/apt/sources.list.d/*
-      sudo tee /etc/apt/sources.list.d/$(cross)-cross-compile-sources.list > /dev/null <<EOT
-      deb [arch=$(cross)] http://ports.ubuntu.com/ $(ubuntuDist) main restricted universe multiverse
-      deb [arch=$(cross)] http://ports.ubuntu.com/ $(ubuntuDist)-updates main restricted universe multiverse
-      deb [arch=$(cross)] http://ports.ubuntu.com/ $(ubuntuDist)-backports main restricted universe multiverse
-      EOT
-
-      sudo apt-get update
-      sudo apt-get install crossbuild-essential-$(cross):amd64 libc6-dev-$(cross)-cross:amd64 libssl-dev:$(cross) libssl$(sslver):$(cross) libc6:$(cross) libgcc-s1:$(cross) libfreetype-dev:$(cross)
-    displayName: "Install cross-build packages"
-    condition: ne(variables.cross, '')
-
-  - script: cargo install cargo-deb
-    displayName: "Install cargo-deb"
+  - script: cargo install cross
+    displayName: "Install cross"
 
   - script: |
       rustup target add $(target)
-      cargo build --release --workspace --exclude native --target $(target)
+      cross build --release --workspace --exclude native --target $(target)
     displayName: "Build"
-    env:
-      PKG_CONFIG_ALLOW_CROSS: 1
+
+  - script: cargo install cargo-deb
+    displayName: "Install cargo-deb"
 
   - script: |
       cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/tunet.$(ubuntuDist).$(arch).deb -p tunet
