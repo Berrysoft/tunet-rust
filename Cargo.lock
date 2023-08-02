@@ -3124,9 +3124,9 @@ dependencies = [
 
 [[package]]
 name = "netlink_wi"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af1d754e51de3d5ebad02ee70f3b9090d7ab3d440a7a9ed088865d2390a69fff"
+checksum = "d3723c65745ca9d4798031f7cb15bf739ab5cda58af7a1d946cbaf7670e71e3b"
 dependencies = [
  "bitflags 2.3.3",
  "log",
