@@ -31,7 +31,7 @@ dependencies:
     sdk: flutter
 
   ffi: ^2.0.2
-  flutter_rust_bridge: ^1.78.0
+  flutter_rust_bridge: ^1.80.1
   meta: ^1.9.1
   uuid: ^3.0.7
   freezed_annotation: ^2.2.0
@@ -43,7 +43,7 @@ dependencies:
   flutter_secure_storage: ^8.0.0
   permission_handler: ^10.3.0
 
-  system_theme: ^2.2.0
+  system_theme: ^2.3.1
   fluttertoast: ^8.2.2
   binding: ^1.0.0
   shimmer_animation: ^2.1.0+1
