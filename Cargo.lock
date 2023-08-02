@@ -187,6 +187,9 @@ name = "anyhow"
 version = "1.0.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b13c32d80ecc7ab747b80c3784bce54ee8a7a0cc4fbda9bf4cda2cf6fe90854"
+dependencies = [
+ "backtrace",
+]
 
 [[package]]
 name = "arrayref"
@@ -1659,9 +1662,9 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_codegen"
-version = "1.79.0"
+version = "1.80.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6d3fe430b3774982599d7c08cba5d0450bb5f40a3e95da6589c222af5fd411a"
+checksum = "58bf32c380d8409f9583cec381fba2fd543543d59ca2370156eef165040143d6"
 dependencies = [
  "anyhow",
  "atty",
