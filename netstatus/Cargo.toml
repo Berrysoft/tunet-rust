@@ -29,4 +29,4 @@ tokio-stream = { workspace = true, features = ["sync"] }
 pin-project = "1"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-netlink_wi = "0.4"
+netlink_wi = "0.5"
