@@ -15,8 +15,8 @@ tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 futures-util = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
-crossterm = { version = "0.27", features = ["event-stream"] }
-tui = { version = "0.21", package = "ratatui" }
+crossterm = { version = "0.26", features = ["event-stream"] }
+tui = { version = "0.22", package = "ratatui" }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winresource = { workspace = true }
