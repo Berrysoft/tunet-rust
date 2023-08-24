@@ -4,7 +4,7 @@ use anyhow::Result;
 use drop_guard::guard;
 use futures_util::{pin_mut, StreamExt, TryStreamExt};
 use itertools::Itertools;
-use mac_address::*;
+use mac_address2::{MacAddress, MacAddressIterator};
 use netstatus::*;
 use std::borrow::Cow;
 use std::collections::HashMap;

@@ -1,5 +1,5 @@
 use crate::*;
-use tui::{backend::Backend, style::*, Frame};
+use ratatui::{backend::Backend, style::*, Frame};
 use tunet_model::*;
 
 fn get_flux_color(flux: u64, total: bool) -> Color {
@@ -130,7 +130,7 @@ pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
     let max_flux = (max.to_gb() * 1.1).ceil().max(1.0) as u64;
 
     let dataset = Dataset::default()
-        .marker(tui::symbols::Marker::Dot)
+        .marker(ratatui::symbols::Marker::Dot)
         .graph_type(GraphType::Line)
         .style(Style::default().fg(get_flux_color(max.0, true)))
         .data(&details);

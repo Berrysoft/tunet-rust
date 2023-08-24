@@ -11,7 +11,7 @@ tunet-helper = { workspace = true }
 netstatus = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true }
-mac_address = { workspace = true }
+mac_address2 = { workspace = true }
 anyhow = { workspace = true }
 itertools = { workspace = true }
 drop_guard = "0.3"

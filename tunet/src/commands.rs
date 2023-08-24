@@ -5,7 +5,7 @@ use console::{style, Color};
 use enum_dispatch::enum_dispatch;
 use futures_util::{pin_mut, stream::TryStreamExt};
 use itertools::Itertools;
-use mac_address::{MacAddress, MacAddressIterator};
+use mac_address2::{MacAddress, MacAddressIterator};
 use std::cmp::Reverse;
 use std::io::{stdin, stdout, Write};
 use std::net::Ipv4Addr;

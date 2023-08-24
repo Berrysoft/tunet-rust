@@ -53,7 +53,7 @@ anyhow = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }
 async-trait = { workspace = true }
-mac_address = { workspace = true }
+mac_address2 = { workspace = true }
 clap = { workspace = true }
 itertools = { workspace = true }
 console = "0.15"

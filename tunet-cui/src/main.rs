@@ -8,14 +8,14 @@ use crossterm::{
     terminal::*,
 };
 use futures_util::TryStreamExt;
-use tokio::runtime::Builder as RuntimeBuilder;
-use tui::{
+use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::*,
     text::*,
     widgets::*,
     Terminal,
 };
+use tokio::runtime::Builder as RuntimeBuilder;
 use tunet_helper::*;
 use tunet_model::Action;
 use tunet_settings::*;

@@ -1,6 +1,6 @@
 use crate::{accent_color, App, DetailModel, HomeModel, NetInfo, SettingsModel};
 use anyhow::Result;
-use mac_address::MacAddress;
+use mac_address2::MacAddress;
 use plotters::{
     prelude::{ChartBuilder, IntoDrawingArea, RangedDate, SVGBackend},
     series::LineSeries,

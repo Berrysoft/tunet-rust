@@ -2,12 +2,12 @@ use anyhow::Result;
 pub use crossterm::event::Event as TerminalEvent;
 use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
 use futures_util::{pin_mut, Stream, StreamExt};
+use ratatui::layout::Rect;
 use std::{
     pin::Pin,
     task::{Context, Poll},
 };
 use tokio::sync::mpsc::*;
-use tui::layout::Rect;
 use tunet_model::*;
 
 #[derive(Debug)]

@@ -3,7 +3,7 @@ use async_stream::try_stream;
 use chrono::Local;
 use data_encoding::HEXLOWER;
 use futures_core::Stream;
-use mac_address::MacAddress;
+use mac_address2::MacAddress;
 use md5::{Digest, Md5};
 use select::document::Document;
 use select::predicate::*;
