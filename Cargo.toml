@@ -71,5 +71,5 @@ objc = "0.2"
 core-foundation = "0.9"
 system-configuration = "0.5"
 
-windows = "0.48"
+windows = "0.51"
 winresource = "0.1"

@@ -6,8 +6,7 @@ use std::{
     ptr::null_mut,
 };
 use windows::{
-    core::{HSTRING, PWSTR},
-    w,
+    core::{w, HSTRING, PWSTR},
     Win32::{
         Foundation::HANDLE,
         System::{
@@ -32,8 +31,7 @@ struct OwnedEnvironmentBlock(*mut c_void);
 impl OwnedEnvironmentBlock {
     pub fn new(token: &impl AsRawHandle) -> Result<Self> {
         let mut env = null_mut();
-        unsafe { CreateEnvironmentBlock(&mut env, HANDLE(token.as_raw_handle() as _), false) }
-            .ok()?;
+        unsafe { CreateEnvironmentBlock(&mut env, HANDLE(token.as_raw_handle() as _), false) }?;
         Ok(Self(env))
     }
 }
@@ -41,7 +39,7 @@ impl OwnedEnvironmentBlock {
 impl Drop for OwnedEnvironmentBlock {
     fn drop(&mut self) {
         unsafe {
-            DestroyEnvironmentBlock(self.0).ok().ok();
+            DestroyEnvironmentBlock(self.0).ok();
         }
     }
 }
@@ -52,8 +50,7 @@ impl OwnedSession {
     pub fn enumerate() -> Result<Self> {
         let mut buffer = null_mut();
         let mut count = 0;
-        unsafe { WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &mut buffer, &mut count) }
-            .ok()?;
+        unsafe { WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &mut buffer, &mut count) }?;
         Ok(Self(buffer, count))
     }
 }
@@ -84,8 +81,7 @@ fn session_state(session_id: u32) -> Result<WTS_CONNECTSTATE_CLASS> {
             WTSConnectState,
             &mut pstate as *mut _ as _,
             &mut bytesread,
-        )
-        .ok()?;
+        )?;
         let state = *pstate;
         WTSFreeMemory(pstate as _);
         Ok(state)
@@ -95,7 +91,7 @@ fn session_state(session_id: u32) -> Result<WTS_CONNECTSTATE_CLASS> {
 fn user_token(session_id: u32) -> Result<OwnedHandle> {
     let mut token = HANDLE::default();
     unsafe {
-        WTSQueryUserToken(session_id, &mut token).ok()?;
+        WTSQueryUserToken(session_id, &mut token)?;
         Ok(OwnedHandle::from_raw_handle(token.0 as _))
     }
 }
@@ -134,8 +130,7 @@ fn command_as(
             &app_dir,
             &si,
             &mut pi,
-        )
-        .ok()?;
+        )?;
         let thread = OwnedHandle::from_raw_handle(pi.hThread.0 as _);
         let process = OwnedHandle::from_raw_handle(pi.hProcess.0 as _);
         Ok((thread, process))
@@ -185,8 +180,7 @@ pub fn error(s: impl AsRef<str>) -> Result<()> {
             0,
             &mut res,
             false,
-        )
-        .ok()?;
+        )?;
     }
     Ok(())
 }
