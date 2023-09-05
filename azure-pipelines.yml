@@ -92,51 +92,6 @@ jobs:
     inputs:
       ArtifactName: 'publish'
 
-- job: Build_Ubuntu_Cross
-  strategy:
-    matrix:
-      focal-arm64:
-        image: 'ubuntu-20.04'
-        ubuntuDist: 'focal'
-        target: 'aarch64-unknown-linux-gnu'
-        arch: 'aarch64'
-        cross: 'arm64'
-        sslver: '1.1'
-      jammy-arm64:
-        image: 'ubuntu-22.04'
-        ubuntuDist: 'jammy'
-        target: 'aarch64-unknown-linux-gnu'
-        arch: 'aarch64'
-        cross: 'arm64'
-        sslver: '3'
-  pool:
-    vmImage: $(image)
-  
-  steps:
-  - script: cargo install cross
-    displayName: "Install cross"
-
-  - script: |
-      rustup target add $(target)
-      cross build --release --workspace --exclude native --target $(target)
-    displayName: "Build"
-
-  - script: cargo install cargo-deb
-    displayName: "Install cargo-deb"
-
-  - script: |
-      sudo apt-get update
-      sudo apt-get install crossbuild-essential-$(cross)
-    displayName: "Install cross-build essentials"
-
-  - script: |
-      cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/tunet.$(ubuntuDist).$(arch).deb -p tunet
-    displayName: "Package"
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      ArtifactName: 'publish'
-
 - job: Build_Mac
   pool:
     vmImage: 'macOS-latest'
