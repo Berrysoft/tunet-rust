@@ -383,6 +383,9 @@ impl TUNetCommand for DeleteCred {
 }
 
 fn naive_rfc3339(datetime: NetDateTime) -> String {
-    DateTime::<FixedOffset>::from_local(datetime.0, FixedOffset::east_opt(8 * 3600).unwrap())
+    datetime
+        .0
+        .and_local_timezone(FixedOffset::east_opt(8 * 3600).unwrap())
+        .unwrap()
         .to_rfc3339()
 }
