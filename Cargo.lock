@@ -73,6 +73,7 @@ checksum = "c258c1a017ecaccfb34c8fa46ecbb2f5402584e31082c12b5caf0be82ac5ac44"
 dependencies = [
  "anyhow",
  "atomic",
+ "backtrace",
  "chrono",
 ]
 
@@ -1756,12 +1757,13 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge"
-version = "1.81.0"
+version = "1.82.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5855fcecefa781ff89553b91b376a1aa9505df13aadc78caa7062534b0d5aabc"
+checksum = "a23db02978984f7832254240b32fd92aa7ac085c159ad5684a8f8274ba636cb4"
 dependencies = [
  "allo-isolate",
  "anyhow",
+ "backtrace",
  "build-target",
  "bytemuck",
  "cc",
