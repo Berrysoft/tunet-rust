@@ -1,5 +1,5 @@
 use crate::*;
-use ratatui::{backend::Backend, style::*, Frame};
+use ratatui::{style::*, Frame};
 use tunet_model::*;
 
 fn get_flux_color(flux: u64, total: bool) -> Color {
@@ -12,7 +12,7 @@ fn get_flux_color(flux: u64, total: bool) -> Color {
     }
 }
 
-pub fn draw<B: Backend>(m: &Model, f: &mut Frame<B>) {
+pub fn draw(m: &Model, f: &mut Frame) {
     let global_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(f.size().height - 1), Constraint::Min(1)])
