@@ -54,7 +54,7 @@ dependencies:
 
   fl_chart: ^0.64.0
 
-  package_info_plus: ^4.2.0
+  package_info_plus: ^5.0.1
   font_awesome_flutter: ^10.4.0
   url_launcher: ^6.1.11
 
