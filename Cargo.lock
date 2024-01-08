@@ -831,9 +831,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.4.12"
+version = "4.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcfab8ba68f3668e89f6ff60f5b205cea56aa7b769451a59f34b8682f51c056d"
+checksum = "33e92c5c1a78c62968ec57dbc2440366a2d6e5a23faf829970ff1585dc6b18e2"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -841,9 +841,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.4.12"
+version = "4.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb7fb5e4e979aec3be7791562fcba452f94ad85e954da024396433e0e25a79e9"
+checksum = "f4323769dc8a61e2c39ad7dc26f6f2800524691a44d74fe3d1071a5c24db6370"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1833,7 +1833,7 @@ dependencies = [
  "cargo_metadata",
  "cbindgen",
  "chrono",
- "clap 4.4.12",
+ "clap 4.4.14",
  "convert_case 0.5.0",
  "delegate-attr",
  "enum-iterator",
@@ -5687,7 +5687,7 @@ version = "0.9.1"
 dependencies = [
  "anyhow",
  "async-trait",
- "clap 4.4.12",
+ "clap 4.4.14",
  "console",
  "enum_dispatch",
  "futures-util",
@@ -5704,7 +5704,7 @@ name = "tunet-cui"
 version = "0.9.1"
 dependencies = [
  "anyhow",
- "clap 4.4.12",
+ "clap 4.4.14",
  "crossterm",
  "futures-util",
  "ratatui",
@@ -5782,7 +5782,7 @@ version = "0.9.1"
 dependencies = [
  "anyhow",
  "cfg-if",
- "clap 4.4.12",
+ "clap 4.4.14",
  "dirs",
  "enum_dispatch",
  "env_logger",
