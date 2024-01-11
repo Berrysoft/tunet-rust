@@ -16,7 +16,6 @@ impl NetConnect {
     }
 }
 
-#[async_trait]
 impl TUNetHelper for NetConnect {
     async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
         let password_md5 = {
@@ -43,6 +42,6 @@ impl TUNetHelper for NetConnect {
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
         let res = self.client.get(NET_FLUX_URI).send().await?;
-        Ok(res.text().await?.parse()?)
+        res.text().await?.parse()
     }
 }

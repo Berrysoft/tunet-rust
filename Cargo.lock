@@ -249,7 +249,7 @@ version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17ae5ebefcc48e7452b4987947920dac9450be1110cadf34d1b8c116bdbaf97c"
 dependencies = [
- "async-lock 3.2.0",
+ "async-lock 3.3.0",
  "async-task",
  "concurrent-queue",
  "fastrand 2.0.1",
@@ -295,7 +295,7 @@ version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6afaa937395a620e33dc6a742c593c01aced20aa376ffb0f628121198578ccc7"
 dependencies = [
- "async-lock 3.2.0",
+ "async-lock 3.3.0",
  "cfg-if",
  "concurrent-queue",
  "futures-io",
@@ -319,9 +319,9 @@ dependencies = [
 
 [[package]]
 name = "async-lock"
-version = "3.2.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7125e42787d53db9dd54261812ef17e937c95a51e4d291373b670342fa44310c"
+checksum = "d034b430882f8381900d3fe6f0aaa3ad94f2cb4ac519b429692a1bc2dda4ae7b"
 dependencies = [
  "event-listener 4.0.3",
  "event-listener-strategy",
@@ -592,7 +592,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a37913e8dc4ddcc604f0c6d3bf2887c995153af3611de9e23c352b44c1b9118"
 dependencies = [
  "async-channel",
- "async-lock 3.2.0",
+ "async-lock 3.3.0",
  "async-task",
  "fastrand 2.0.1",
  "futures-io",
@@ -947,7 +947,7 @@ dependencies = [
  "cfg-if",
  "log",
  "objc",
- "windows",
+ "windows 0.52.0",
 ]
 
 [[package]]
@@ -994,15 +994,15 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.15.7"
+version = "0.15.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c926e00cc70edefdc64d3a5ff31cc65bb97a3460097762bd23afb4d8145fccf8"
+checksum = "0e1f83fc076bd6dd27517eacdf25fef6c4dfe5f1d7448bafaaf3a26f13b5e4eb"
 dependencies = [
  "encode_unicode",
  "lazy_static",
  "libc",
  "unicode-width",
- "windows-sys 0.45.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2228,9 +2228,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.22"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d6250322ef6e60f93f9a2162799302cd6f68f79f6e5d85c8c16f14d1d958178"
+checksum = "b553656127a00601c8ae5590fcfdc118e4083a7924b6cf4ffc1ea4b99dc429d7"
 dependencies = [
  "bytes",
  "fnv",
@@ -3480,7 +3480,7 @@ dependencies = [
  "system-configuration",
  "tokio",
  "tokio-stream",
- "windows",
+ "windows 0.52.0",
 ]
 
 [[package]]
@@ -5069,9 +5069,9 @@ dependencies = [
 
 [[package]]
 name = "softbuffer"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "826da2ead8e85d1b4ea579fae3d58ec10c81a77d61deab8918c4a4f7514b2948"
+checksum = "f266ce2aa23eaaaa4e758ed44495d505d00fb79f359d46f6c1900cb053123b62"
 dependencies = [
  "as-raw-xcb-connection",
  "bytemuck",
@@ -5290,7 +5290,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "006851c9ccefa3c38a7646b8cec804bb429def3da10497bfa977179869c3e8e2"
 dependencies = [
  "quick-xml 0.30.0",
- "windows",
+ "windows 0.51.1",
 ]
 
 [[package]]
@@ -5319,9 +5319,9 @@ dependencies = [
 
 [[package]]
 name = "termcolor"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff1bc3d3f05aff0403e8ac0d92ced918ec05b666a43f83297ccef5bea8a3d449"
+checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
 ]
@@ -5669,7 +5669,6 @@ name = "tunet"
 version = "0.9.1"
 dependencies = [
  "anyhow",
- "async-trait",
  "clap 4.4.14",
  "console",
  "enum_dispatch",
@@ -5724,12 +5723,10 @@ version = "0.15.1"
 dependencies = [
  "allo-isolate",
  "async-stream",
- "async-trait",
  "authtea",
  "base64",
  "chrono",
  "data-encoding",
- "enum_dispatch",
  "futures-core",
  "hmac",
  "mac_address2",
@@ -5782,7 +5779,7 @@ dependencies = [
  "tokio-stream",
  "tunet-helper",
  "tunet-settings",
- "windows",
+ "windows 0.52.0",
  "windows-service",
  "winlog2",
 ]
@@ -6346,6 +6343,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "windows"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e48a53791691ab099e5e2ad123536d0fff50652600abaf43bbf952894110d0be"
+dependencies = [
+ "windows-core 0.52.0",
+ "windows-targets 0.52.0",
+]
+
+[[package]]
 name = "windows-core"
 version = "0.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6636,9 +6643,9 @@ dependencies = [
 
 [[package]]
 name = "winnow"
-version = "0.5.33"
+version = "0.5.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7520bbdec7211caa7c4e682eb1fbe07abe20cee6756b6e00f537c82c11816aa"
+checksum = "b7cf47b659b318dccbd69cc4797a39ae128f533dce7902a1096044d1967b9c16"
 dependencies = [
  "memchr",
 ]

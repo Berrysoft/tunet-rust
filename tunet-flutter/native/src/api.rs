@@ -3,15 +3,12 @@ use chrono::Datelike;
 use flutter_rust_bridge::{frb, RustOpaque, StreamSink};
 
 pub use netstatus::NetStatus;
-pub use std::{
-    net::Ipv4Addr,
-    sync::{Arc, Mutex},
-};
+pub use std::{net::Ipv4Addr, sync::Mutex};
 pub use tokio::{runtime::Handle, sync::mpsc};
 pub use tunet_helper::{
-    usereg::{NetDateTime, NetDetail, NetUser},
-    Balance, Duration as NewDuration, Flux, NaiveDate, NaiveDateTime, NaiveDuration as Duration,
-    NetFlux, NetState,
+    usereg::{NetDateTime, NetDetail},
+    Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
+    NetState,
 };
 pub use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 

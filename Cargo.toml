@@ -35,7 +35,6 @@ tunet-helper = { path = "tunet-helper" }
 tunet-model = { path = "tunet-model" }
 tunet-settings = { path = "tunet-settings" }
 
-async-trait = "0.1"
 once_cell = "1"
 
 anyhow = "1"
@@ -71,5 +70,5 @@ objc = "0.2"
 core-foundation = "0.9"
 system-configuration = "0.5"
 
-windows = "0.51"
+windows = "0.52"
 winresource = "0.1"

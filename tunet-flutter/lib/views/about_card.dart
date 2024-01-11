@@ -5,7 +5,7 @@ import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class AboutCard extends StatelessWidget {
-  const AboutCard({Key? key}) : super(key: key);
+  const AboutCard({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,4 @@
 use anyhow::Result;
-use async_trait::async_trait;
 use clap::Parser;
 use console::{style, Color};
 use enum_dispatch::enum_dispatch;
@@ -23,7 +22,6 @@ fn get_flux_color(f: &Flux, total: bool) -> Color {
     }
 }
 
-#[async_trait]
 #[enum_dispatch(TUNet)]
 pub trait TUNetCommand {
     async fn run(&self) -> Result<()>;
@@ -58,7 +56,6 @@ pub struct Login {
     host: Option<NetState>,
 }
 
-#[async_trait]
 impl TUNetCommand for Login {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
@@ -79,7 +76,6 @@ pub struct Logout {
     host: Option<NetState>,
 }
 
-#[async_trait]
 impl TUNetCommand for Logout {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
@@ -101,7 +97,6 @@ pub struct Status {
     nuon: bool,
 }
 
-#[async_trait]
 impl TUNetCommand for Status {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
@@ -142,7 +137,6 @@ fn is_self(mac_addrs: &[MacAddress], u: &NetUser) -> bool {
         .any(|it| Some(it) == u.mac_address.as_ref())
 }
 
-#[async_trait]
 impl TUNetCommand for Online {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
@@ -194,7 +188,6 @@ pub struct UseregConnect {
     address: Ipv4Addr,
 }
 
-#[async_trait]
 impl TUNetCommand for UseregConnect {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
@@ -216,7 +209,6 @@ pub struct UseregDrop {
     address: Ipv4Addr,
 }
 
-#[async_trait]
 impl TUNetCommand for UseregDrop {
     async fn run(&self) -> Result<()> {
         let client = create_http_client()?;
@@ -351,7 +343,6 @@ impl Detail {
     }
 }
 
-#[async_trait]
 impl TUNetCommand for Detail {
     async fn run(&self) -> Result<()> {
         if self.grouping {
@@ -365,7 +356,6 @@ impl TUNetCommand for Detail {
 #[derive(Debug, Parser)]
 pub struct DeleteCred {}
 
-#[async_trait]
 impl TUNetCommand for DeleteCred {
     async fn run(&self) -> Result<()> {
         let mut reader = SettingsReader::new()?;

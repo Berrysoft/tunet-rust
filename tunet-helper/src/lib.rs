@@ -1,8 +1,7 @@
 #![forbid(unsafe_code)]
 
-use async_trait::async_trait;
-use enum_dispatch::enum_dispatch;
 use std::fmt::{Display, Formatter};
+use std::future::Future;
 use thiserror::Error;
 
 pub use chrono::{
@@ -180,28 +179,51 @@ impl std::str::FromStr for NetState {
     }
 }
 
-#[async_trait]
-#[enum_dispatch(TUNetConnect)]
 pub trait TUNetHelper: Send + Sync {
-    async fn login(&self, u: &str, p: &str) -> NetHelperResult<String>;
-    async fn logout(&self, u: &str) -> NetHelperResult<String>;
-    async fn flux(&self) -> NetHelperResult<NetFlux>;
+    fn login(&self, u: &str, p: &str) -> impl Future<Output = NetHelperResult<String>> + Send;
+    fn logout(&self, u: &str) -> impl Future<Output = NetHelperResult<String>> + Send;
+    fn flux(&self) -> impl Future<Output = NetHelperResult<NetFlux>> + Send;
 }
 
-#[enum_dispatch]
 #[derive(Clone)]
 pub enum TUNetConnect {
-    NetConnect,
-    Auth4Connect,
-    Auth6Connect,
+    Net(NetConnect),
+    Auth4(Auth4Connect),
+    Auth6(Auth6Connect),
+}
+
+impl TUNetHelper for TUNetConnect {
+    async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
+        match self {
+            Self::Net(inner) => TUNetHelper::login(inner, u, p).await,
+            Self::Auth4(inner) => TUNetHelper::login(inner, u, p).await,
+            Self::Auth6(inner) => TUNetHelper::login(inner, u, p).await,
+        }
+    }
+
+    async fn logout(&self, u: &str) -> NetHelperResult<String> {
+        match self {
+            TUNetConnect::Net(inner) => TUNetHelper::logout(inner, u).await,
+            TUNetConnect::Auth4(inner) => TUNetHelper::logout(inner, u).await,
+            TUNetConnect::Auth6(inner) => TUNetHelper::logout(inner, u).await,
+        }
+    }
+
+    async fn flux(&self) -> NetHelperResult<NetFlux> {
+        match self {
+            TUNetConnect::Net(inner) => TUNetHelper::flux(inner).await,
+            TUNetConnect::Auth4(inner) => TUNetHelper::flux(inner).await,
+            TUNetConnect::Auth6(inner) => TUNetHelper::flux(inner).await,
+        }
+    }
 }
 
 impl TUNetConnect {
     pub fn new(s: NetState, client: HttpClient) -> NetHelperResult<TUNetConnect> {
         match s {
-            NetState::Net => Ok(Self::NetConnect(net::NetConnect::new(client))),
-            NetState::Auth4 => Ok(Self::Auth4Connect(auth::AuthConnect::new(client))),
-            NetState::Auth6 => Ok(Self::Auth6Connect(auth::AuthConnect::new(client))),
+            NetState::Net => Ok(Self::Net(net::NetConnect::new(client))),
+            NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::new(client))),
+            NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::new(client))),
             _ => Err(NetHelperError::InvalidHost),
         }
     }

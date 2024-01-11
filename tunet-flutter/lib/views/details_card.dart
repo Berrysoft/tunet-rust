@@ -4,7 +4,7 @@ import 'package:shimmer_animation/shimmer_animation.dart';
 import '../runtime.dart';
 
 class DetailsCard extends StatefulWidget {
-  const DetailsCard({Key? key}) : super(key: key);
+  const DetailsCard({super.key});
 
   @override
   State<StatefulWidget> createState() => _DetailsCardState();

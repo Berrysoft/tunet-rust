@@ -32,7 +32,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final ManagedRuntime runtime;
 
-  const MyApp({Key? key, required this.runtime}) : super(key: key);
+  const MyApp({super.key, required this.runtime});
 
   @override
   Widget build(BuildContext context) {

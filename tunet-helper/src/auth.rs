@@ -132,11 +132,10 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
     }
 }
 
-#[async_trait]
 impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
     async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
         let ac_id = self.get_ac_id().await.unwrap_or(1);
-        Ok(self.try_login(ac_id, u, p).await?)
+        self.try_login(ac_id, u, p).await
     }
 
     async fn logout(&self, u: &str) -> NetHelperResult<String> {
@@ -154,7 +153,7 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
         let res = self.client.get(U::flux_uri()).send().await?;
-        Ok(res.text().await?.parse()?)
+        res.text().await?.parse()
     }
 }
 

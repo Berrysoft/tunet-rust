@@ -52,7 +52,6 @@ tunet-settings = { workspace = true }
 anyhow = { workspace = true }
 futures-util = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }
-async-trait = { workspace = true }
 mac_address2 = { workspace = true }
 clap = { workspace = true }
 itertools = { workspace = true }
