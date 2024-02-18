@@ -1,6 +1,7 @@
+use crate::frb_generated::{RustOpaque, StreamSink};
 use anyhow::Result;
 use chrono::Datelike;
-use flutter_rust_bridge::{frb, RustOpaque, StreamSink};
+use flutter_rust_bridge::frb;
 
 pub use netstatus::NetStatus;
 pub use std::{net::Ipv4Addr, sync::Mutex};
@@ -200,7 +201,7 @@ impl Runtime {
                             UpdateMsg::OnlineBusy => UpdateMsgWrap::OnlineBusy(model.online_busy()),
                             UpdateMsg::DetailBusy => UpdateMsgWrap::DetailBusy(model.detail_busy()),
                         };
-                        sink.add(msg);
+                        sink.add(msg).unwrap();
                     }));
 
                     if (!config.username.is_empty()) && (!config.password.is_empty()) {

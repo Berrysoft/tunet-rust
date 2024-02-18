@@ -123,7 +123,8 @@ class ManagedRuntime extends NotifyPropertyChanged {
   ManagedRuntime({required this.runtime});
 
   static Future<ManagedRuntime> newRuntime() async {
-    final runtime = await Runtime.newRuntime(bridge: api);
+    await initialized;
+    final runtime = await Runtime.newRuntime();
     return ManagedRuntime(runtime: runtime);
   }
 

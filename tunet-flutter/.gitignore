@@ -49,5 +49,6 @@ jniLibs
 
 pubspec.lock
 
-lib/bridge_*.dart
-native/src/bridge_*.rs
+lib/api*.dart
+lib/frb_*.dart
+native/src/frb_*.rs

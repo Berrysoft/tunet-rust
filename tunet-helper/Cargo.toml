@@ -28,7 +28,7 @@ mac_address2 = { workspace = true }
 once_cell = { workspace = true }
 regex = { version = "1", default-features = false, features = ["std"] }
 thiserror = { workspace = true }
-allo-isolate = { version = "0.1", optional = true }
+allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 reqwest = { version = "0.11", default-features = false, features = [
