@@ -9,8 +9,6 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    print("dummy_value=\(dummy_method_to_enforce_bundling())")
-
     let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
     let statusChannel = FlutterMethodChannel(name: "io.github.berrysoft.tunet_flutter/status",
                                              binaryMessenger: controller.binaryMessenger)
