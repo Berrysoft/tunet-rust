@@ -28,6 +28,7 @@ ServiceDefinitions.json
 Runner/GeneratedPluginRegistrant.*
 Runner/bridge.h
 Runner/bridge_*.h
+Podfile.lock
 
 # Exceptions to above rules.
 !default.mode1v3
