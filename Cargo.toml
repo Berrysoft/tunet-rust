@@ -68,9 +68,9 @@ tokio-stream = "0.1"
 
 objc = "0.2"
 core-foundation = "0.9"
-system-configuration = "0.5"
+system-configuration = "0.6"
 
-windows = "0.52"
+windows = "0.53"
 winresource = "0.1"
 
 [patch.'crates-io']
