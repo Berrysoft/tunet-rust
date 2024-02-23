@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:binding/binding.dart';
 import 'package:binding/src/binding_base.dart';
 import 'package:collection/collection.dart';
 import 'package:data_size/data_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -123,7 +125,12 @@ class ManagedRuntime extends NotifyPropertyChanged {
   ManagedRuntime({required this.runtime});
 
   static Future<ManagedRuntime> newRuntime() async {
-    await initialized;
+    if (Platform.isIOS || Platform.isMacOS) {
+      await RustLib.init(
+          externalLibrary: ExternalLibrary.process(iKnowHowToUseIt: true));
+    } else {
+      await RustLib.init();
+    }
     final runtime = await Runtime.newRuntime();
     return ManagedRuntime(runtime: runtime);
   }
