@@ -71,7 +71,7 @@ pub fn watch() -> impl Stream<Item = ()> {
             tx.send(()).ok();
         })
         .unwrap_or_else(|e| log::warn!("{}", e));
-        sc.schedule_with_runloop(&CFRunLoop::get_current(), unsafe { kCFRunLoopDefaultMode })
+        unsafe { sc.schedule_with_runloop(&CFRunLoop::get_current(), kCFRunLoopDefaultMode) }
             .unwrap_or_else(|e| log::warn!("{}", e));
         CFRunLoop::run_current();
     });
