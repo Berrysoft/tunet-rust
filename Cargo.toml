@@ -73,6 +73,3 @@ system-configuration = "0.6"
 windows = "0.53"
 winresource = "0.1"
 
-[patch.'crates-io']
-flutter_rust_bridge = { git = "https://github.com/Berrysoft/flutter_rust_bridge.git", branch = "fix/full-dep-decl" }
-flutter_rust_bridge_codegen = { git = "https://github.com/Berrysoft/flutter_rust_bridge.git", branch = "fix/full-dep-decl" }
