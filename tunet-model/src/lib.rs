@@ -15,7 +15,7 @@ use std::sync::{
 };
 use tokio::sync::mpsc::*;
 use tokio::time::sleep;
-use tunet_helper::{suggest, usereg::*, *};
+use tunet_helper::{usereg::*, *};
 
 #[derive(Debug, Default)]
 pub struct DetailDaily {
