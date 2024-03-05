@@ -75,7 +75,7 @@ class _OnlinesCardState extends State<OnlinesCard> {
                 rows = [
                   DataRow(
                     cells: List.filled(
-                      5,
+                      6,
                       DataCell(Shimmer(child: const Text('               '))),
                     ),
                     onSelectChanged: (_) {},
@@ -104,6 +104,7 @@ class _OnlinesCardState extends State<OnlinesCard> {
                     child: DataTable(
                       columns: const [
                         DataColumn(label: Text('IP地址')),
+                        DataColumn(label: Text('IPv6地址')),
                         DataColumn(label: Text('登录时间')),
                         DataColumn(label: Text('流量')),
                         DataColumn(label: Text('MAC地址')),
@@ -132,6 +133,10 @@ DataRow _netUserToRow(
       DataCell(Text(InternetAddress.fromRawAddress(
         Uint8List.fromList(u.address.octets),
         type: InternetAddressType.IPv4,
+      ).address)),
+      DataCell(Text(InternetAddress.fromRawAddress(
+        Uint8List.fromList(u.addressV6.octets),
+        type: InternetAddressType.IPv6,
       ).address)),
       DataCell(Text(DateFormat('MM-dd HH:mm').format(u.loginTime.field0))),
       DataCell(Text(u.flux.field0.formatByteSize())),

@@ -19,7 +19,7 @@ pub fn draw(m: &Model, f: &mut Frame) {
         .split(f.size());
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Length(34), Constraint::Percentage(100)])
+        .constraints([Constraint::Length(51), Constraint::Percentage(100)])
         .split(global_chunks[0]);
     let title_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -73,9 +73,18 @@ pub fn draw(m: &Model, f: &mut Frame) {
             .map(|u| {
                 ListItem::new(Text::from(vec![
                     Line::from(vec![
-                        Span::styled("IP 地址  ", subtitle_style),
+                        Span::styled("IP地址   ", subtitle_style),
                         Span::styled(
                             u.address.to_string(),
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("IPv6地址 ", subtitle_style),
+                        Span::styled(
+                            u.address_v6.to_string(),
                             Style::default()
                                 .fg(Color::Yellow)
                                 .add_modifier(Modifier::BOLD),
@@ -94,7 +103,7 @@ pub fn draw(m: &Model, f: &mut Frame) {
                     ]),
                     Line::from({
                         let mut spans = vec![
-                            Span::styled("MAC 地址 ", subtitle_style),
+                            Span::styled("MAC地址  ", subtitle_style),
                             Span::styled(
                                 u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
                                 Style::default().fg(Color::LightCyan),

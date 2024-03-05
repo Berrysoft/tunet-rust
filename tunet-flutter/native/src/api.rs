@@ -4,6 +4,7 @@ use chrono::Datelike;
 use flutter_rust_bridge::frb;
 
 pub use netstatus::NetStatus;
+use std::net::Ipv6Addr;
 pub use std::{net::Ipv4Addr, sync::Mutex};
 pub use tokio::{runtime::Handle, sync::mpsc};
 pub use tunet_helper::{
@@ -83,6 +84,7 @@ pub struct DetailDailyWrap {
 
 pub struct NetUserWrap {
     pub address: Ipv4AddrWrap,
+    pub address_v6: Ipv6AddrWrap,
     pub login_time: NetDateTime,
     pub mac_address: String,
     pub flux: Flux,
@@ -95,6 +97,18 @@ pub struct Ipv4AddrWrap {
 
 impl From<Ipv4Addr> for Ipv4AddrWrap {
     fn from(value: Ipv4Addr) -> Self {
+        Self {
+            octets: value.octets(),
+        }
+    }
+}
+
+pub struct Ipv6AddrWrap {
+    pub octets: [u8; 16],
+}
+
+impl From<Ipv6Addr> for Ipv6AddrWrap {
+    fn from(value: Ipv6Addr) -> Self {
         Self {
             octets: value.octets(),
         }
@@ -168,6 +182,7 @@ impl Runtime {
                                     .iter()
                                     .map(|u| NetUserWrap {
                                         address: u.address.into(),
+                                        address_v6: u.address_v6.into(),
                                         login_time: u.login_time,
                                         mac_address: u
                                             .mac_address

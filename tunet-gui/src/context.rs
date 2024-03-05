@@ -247,6 +247,7 @@ fn update_online(app: App, onlines: Vec<NetUser>, is_local: Vec<bool>) {
     for (user, is_local) in onlines.into_iter().zip(is_local) {
         let items: Rc<VecModel<StandardListViewItem>> = Rc::new(VecModel::default());
         items.push(user.address.to_string().as_str().into());
+        items.push(user.address_v6.to_string().as_str().into());
         items.push(user.login_time.to_string().as_str().into());
         items.push(user.flux.to_string().as_str().into());
         items.push(

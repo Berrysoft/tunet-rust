@@ -23,6 +23,7 @@ export component SettingsPage inherits VerticalBox {
         font-size: 1.5rem;
         font-weight: 700;
     }
+
     GridBox {
         un := LineEdit {
             col: 0;
@@ -30,12 +31,14 @@ export component SettingsPage inherits VerticalBox {
             text: SettingsModel.username;
             placeholder-text: "用户名";
         }
+
         pw := LineEdit {
             col: 0;
             row: 1;
             input-type: password;
             placeholder-text: "密码";
         }
+
         Button {
             col: 1;
             row: 0;
@@ -46,12 +49,16 @@ export component SettingsPage inherits VerticalBox {
                 pw.text = "";
             }
         }
+
         del_at_exit_btn := Button {
             col: 1;
             row: 1;
             text: "删除并退出";
-            clicked => { msgbox.show() }
+            clicked => {
+                msgbox.show()
+            }
         }
+
         msgbox := PopupWindow {
             x: del_at_exit_btn.x + del_at_exit_btn.width - 100pt;
             y: del_at_exit_btn.y + del_at_exit_btn.height;
@@ -60,44 +67,58 @@ export component SettingsPage inherits VerticalBox {
                 height: confirm-layout.height;
                 background: confirm_layout.background;
             }
+
             confirm_layout := Dialog {
                 width: 100pt;
                 title: "删除凭据并退出";
                 Text {
                     text: "删除后程序将会退出。";
                 }
+
                 StandardButton {
                     kind: yes;
-                    clicked => { SettingsModel.del_and_exit() }
+                    clicked => {
+                        SettingsModel.del_and_exit()
+                    }
                 }
             }
         }
     }
+
     Text {
         text: "管理连接";
         horizontal-alignment: center;
         font-size: 1.5rem;
         font-weight: 700;
     }
+
     HorizontalBox {
         iptext := LineEdit {
             placeholder-text: "IP地址";
         }
+
         Button {
             text: "认证IP";
             enabled: !SettingsModel.busy;
-            clicked => { SettingsModel.connect-ip(iptext.text) }
+            clicked => {
+                SettingsModel.connect-ip(iptext.text)
+            }
         }
+
         Button {
             text: "下线IP";
             enabled: !SettingsModel.busy;
-            clicked => { SettingsModel.drop-ip(iptext.text) }
+            clicked => {
+                SettingsModel.drop-ip(iptext.text)
+            }
         }
     }
+
     VerticalBox {
         StandardTableView {
             columns: [
                 { title: "IP地址" },
+                { title: "IPv6地址" },
                 { title: "登录时间" },
                 { title: "流量" },
                 { title: "MAC地址" },
@@ -105,10 +126,13 @@ export component SettingsPage inherits VerticalBox {
             ];
             rows: SettingsModel.onlines;
         }
+
         Button {
             text: "刷新";
             enabled: !SettingsModel.busy;
-            clicked => { SettingsModel.refresh() }
+            clicked => {
+                SettingsModel.refresh()
+            }
         }
     }
 }

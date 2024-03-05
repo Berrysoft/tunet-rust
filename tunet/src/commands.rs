@@ -150,11 +150,12 @@ impl TUNetCommand for Online {
             .unwrap_or_default();
         pin_mut!(us);
         if self.nuon {
-            print!("[[address login_time flux mac_address is_self]; ");
+            print!("[[address address_v6 login_time flux mac_address is_self]; ");
             while let Some(u) = us.try_next().await? {
                 print!(
-                    "[\"{}\" {} {}b \"{}\" {}] ",
+                    "[\"{}\" \"{}\" {} {}b \"{}\" {}] ",
                     u.address,
+                    u.address_v6,
                     naive_rfc3339(u.login_time),
                     u.flux.0,
                     u.mac_address.map(|a| a.to_string()).unwrap_or_default(),
@@ -163,12 +164,13 @@ impl TUNetCommand for Online {
             }
             println!("]");
         } else {
-            println!("    IP地址            登录时间         流量        MAC地址");
+            println!("    IP地址                      IPv6地址                      登录时间         流量        MAC地址");
             while let Some(u) = us.try_next().await? {
                 let is_self = is_self(&mac_addrs, &u);
                 println!(
-                    "{:15} {:20} {:>8} {} {}",
+                    "{:15} {:39} {:20} {:>8} {} {}",
                     style(u.address).yellow(),
+                    style(u.address_v6).yellow(),
                     style(u.login_time).green(),
                     style(u.flux).fg(get_flux_color(&u.flux, true)),
                     style(u.mac_address.map(|a| a.to_string()).unwrap_or_default()).cyan(),

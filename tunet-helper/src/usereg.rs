@@ -6,7 +6,7 @@ use mac_address2::MacAddress;
 use md5::{Digest, Md5};
 use select::document::Document;
 use select::predicate::*;
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, Ipv6Addr};
 use std::ops::Deref;
 use std::str::FromStr;
 use url::Url;
@@ -39,15 +39,23 @@ impl Deref for NetDateTime {
 #[derive(Debug, Clone, Copy)]
 pub struct NetUser {
     pub address: Ipv4Addr,
+    pub address_v6: Ipv6Addr,
     pub login_time: NetDateTime,
     pub mac_address: Option<MacAddress>,
     pub flux: Flux,
 }
 
 impl NetUser {
-    pub fn from_detail(a: Ipv4Addr, t: NetDateTime, m: Option<MacAddress>, f: Flux) -> Self {
+    pub fn from_detail(
+        a: Ipv4Addr,
+        a6: Ipv6Addr,
+        t: NetDateTime,
+        m: Option<MacAddress>,
+        f: Flux,
+    ) -> Self {
         NetUser {
             address: a,
+            address_v6: a6,
             login_time: t,
             mac_address: m,
             flux: f,
@@ -110,7 +118,8 @@ pub struct UseregHelper {
 }
 
 static USEREG_LOG_URI: &str = "https://usereg.tsinghua.edu.cn/do.php";
-static USEREG_INFO_URI: &str = "https://usereg.tsinghua.edu.cn/online_user_ipv4.php";
+static USEREG_INFO_URI: &str = "https://usereg.tsinghua.edu.cn/import_online_user.php";
+static USEREG_INFO_URI2: &str = "https://usereg.tsinghua.edu.cn/1x_online_user.php";
 static USEREG_CONNECT_URI: &str = "https://usereg.tsinghua.edu.cn/ip_login.php";
 static USEREG_DETAIL_URI: &str = "https://usereg.tsinghua.edu.cn/user_detail_list.php";
 static DATE_TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
@@ -184,24 +193,29 @@ impl UseregHelper {
     pub fn users(&self) -> impl Stream<Item = NetHelperResult<NetUser>> {
         let client = self.client.clone();
         try_stream! {
-            let res = client.get(USEREG_INFO_URI).send().await?;
-            let doc = {
-                let doc = Document::from(res.text().await?.as_str());
-                doc
-                    .find(Name("tr").descendant(Attr("align", "center")))
-                    .skip(1)
-                    .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>())
-                    .collect::<Vec<_>>()
-            };
-            for tds in doc {
-                yield NetUser::from_detail(
-                    tds[0]
-                        .parse()
-                        .unwrap_or_else(|_| Ipv4Addr::new(0, 0, 0, 0)),
-                    tds[1].parse().unwrap_or_default(),
-                    tds[6].parse().ok(),
-                    tds[2].parse().unwrap_or_default(),
-                );
+            for uri in [USEREG_INFO_URI, USEREG_INFO_URI2] {
+                let res = client.get(uri).send().await?;
+                let doc = {
+                    let doc = Document::from(res.text().await?.as_str());
+                    doc
+                        .find(Name("tr").descendant(Attr("align", "center")))
+                        .skip(1)
+                        .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>())
+                        .collect::<Vec<_>>()
+                };
+                for tds in doc {
+                    yield NetUser::from_detail(
+                        tds[0]
+                            .parse()
+                            .unwrap_or_else(|_| Ipv4Addr::new(0, 0, 0, 0)),
+                        tds[1]
+                            .parse()
+                            .unwrap_or_else(|_| Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)),
+                        tds[2].parse().unwrap_or_default(),
+                        tds[7].parse().ok(),
+                        tds[3].parse().unwrap_or_default(),
+                    );
+                }
             }
         }
     }
