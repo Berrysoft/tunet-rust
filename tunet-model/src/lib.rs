@@ -137,7 +137,7 @@ impl Model {
             Action::Tick => {
                 if !self.flux.username.is_empty() {
                     self.flux.online_time =
-                        Duration(self.flux.online_time.0 + NaiveDuration::seconds(1));
+                        Duration(self.flux.online_time.0 + NaiveDuration::try_seconds(1).unwrap());
                     self.update(UpdateMsg::Flux);
                 }
             }
