@@ -27,14 +27,14 @@ impl Event {
     pub fn new() -> Result<Self> {
         let (tx, rx) = channel(32);
         let (mtx, mrx) = channel(32);
-        let mut e = Self {
-            model: Model::new(mtx)?,
+        let (utx, urx) = channel(32);
+        let e = Self {
+            model: Model::new(mtx, utx)?,
             tx,
             rx,
         };
-        e.attach_callback();
         e.spawn_terminal_event();
-        e.spawn_model_action(mrx);
+        e.spawn_model_action(mrx, urx);
         Ok(e)
     }
 
@@ -43,18 +43,6 @@ impl Event {
         self.spawn_timer();
         self.spawn_online();
         self.spawn_details();
-    }
-
-    #[allow(clippy::single_match)]
-    fn attach_callback(&mut self) {
-        let tx = self.tx.clone();
-        self.model.update = Some(Box::new(move |_model, msg| match msg {
-            UpdateMsg::State => {
-                let tx = tx.clone();
-                tokio::spawn(async move { tx.send(Ok(EventType::UpdateState)).await.ok() });
-            }
-            _ => {}
-        }));
     }
 
     fn spawn_terminal_event(&self) {
@@ -70,11 +58,22 @@ impl Event {
         });
     }
 
-    fn spawn_model_action(&self, mut mrx: Receiver<Action>) {
+    fn spawn_model_action(&self, mut mrx: Receiver<Action>, mut urx: Receiver<UpdateMsg>) {
         let tx = self.tx.clone();
         tokio::spawn(async move {
             while let Some(a) = mrx.recv().await {
                 tx.send(Ok(EventType::ModelAction(a))).await?;
+            }
+            Ok::<_, anyhow::Error>(())
+        });
+        let tx = self.tx.clone();
+        tokio::spawn(async move {
+            while let Some(u) = urx.recv().await {
+                #[allow(clippy::single_match)]
+                match u {
+                    UpdateMsg::State => tx.send(Ok(EventType::UpdateState)).await?,
+                    _ => {}
+                }
             }
             Ok::<_, anyhow::Error>(())
         });

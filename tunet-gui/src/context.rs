@@ -8,7 +8,10 @@ use plotters::{
 };
 use slint::{ComponentHandle, Image, ModelRc, SharedString, StandardListViewItem, VecModel};
 use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex as SyncMutex};
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{
+    mpsc::{self, channel},
+    Mutex,
+};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
     Datelike, Flux, NetFlux, NetState,
@@ -33,15 +36,21 @@ impl UpdateContext {
         &self.weak_app
     }
 
-    pub async fn create_model(&self, tx: mpsc::Sender<Action>) -> Result<Arc<Mutex<Model>>> {
-        let model = Arc::new(Mutex::new(Model::new(tx)?));
-        let context = self.clone();
-        let update = move |model: &Model, msg| {
-            context.update(model, msg);
-        };
+    pub async fn create_model(
+        &self,
+        action_sender: mpsc::Sender<Action>,
+    ) -> Result<Arc<Mutex<Model>>> {
+        let (update_sender, mut update_receiver) = channel(32);
+        let model = Arc::new(Mutex::new(Model::new(action_sender, update_sender)?));
         {
-            let mut model = model.lock().await;
-            model.update = Some(Box::new(update));
+            let model = model.clone();
+            let context = self.clone();
+            tokio::spawn(async move {
+                while let Some(msg) = update_receiver.recv().await {
+                    let model = model.lock().await;
+                    context.update(&model, msg)
+                }
+            });
         }
         Ok(model)
     }
