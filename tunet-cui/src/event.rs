@@ -1,12 +1,8 @@
 use anyhow::Result;
 pub use crossterm::event::Event as TerminalEvent;
-use crossterm::event::{KeyCode, MouseButton, MouseEventKind};
-use futures_util::{pin_mut, Stream, StreamExt};
+use crossterm::event::{EventStream, KeyCode, MouseButton, MouseEventKind};
+use futures_util::StreamExt;
 use ratatui::layout::Rect;
-use std::{
-    pin::Pin,
-    task::{Context, Poll},
-};
 use tokio::sync::mpsc::*;
 use tunet_model::*;
 
@@ -19,23 +15,21 @@ pub enum EventType {
 
 pub struct Event {
     pub model: Model,
-    tx: Sender<Result<EventType>>,
-    rx: Receiver<Result<EventType>>,
+    event: EventStream,
+    mrx: Receiver<Action>,
+    urx: Receiver<UpdateMsg>,
 }
 
 impl Event {
     pub fn new() -> Result<Self> {
-        let (tx, rx) = channel(32);
         let (mtx, mrx) = channel(32);
-        let mut e = Self {
-            model: Model::new(mtx)?,
-            tx,
-            rx,
-        };
-        e.attach_callback();
-        e.spawn_terminal_event();
-        e.spawn_model_action(mrx);
-        Ok(e)
+        let (utx, urx) = channel(32);
+        Ok(Self {
+            model: Model::new(mtx, utx)?,
+            event: EventStream::new(),
+            mrx,
+            urx,
+        })
     }
 
     pub fn start(&self) {
@@ -45,39 +39,22 @@ impl Event {
         self.spawn_details();
     }
 
-    #[allow(clippy::single_match)]
-    fn attach_callback(&mut self) {
-        let tx = self.tx.clone();
-        self.model.update = Some(Box::new(move |_model, msg| match msg {
-            UpdateMsg::State => {
-                let tx = tx.clone();
-                tokio::spawn(async move { tx.send(Ok(EventType::UpdateState)).await.ok() });
+    pub async fn next_event(&mut self) -> Result<Option<EventType>> {
+        loop {
+            tokio::select! {
+                e = self.event.next() => break if let Some(e) = e {
+                    Ok(Some(EventType::TerminalEvent(e?)))
+                } else {
+                    Ok(None)
+                },
+                a = self.mrx.recv() => break Ok(a.map(EventType::ModelAction)),
+                u = self.urx.recv() => match u {
+                    None => break Ok(None),
+                    Some(UpdateMsg::State) => break Ok(Some(EventType::UpdateState)),
+                    _ => {}
+                },
             }
-            _ => {}
-        }));
-    }
-
-    fn spawn_terminal_event(&self) {
-        let tx = self.tx.clone();
-        tokio::spawn(async move {
-            let stream = crossterm::event::EventStream::new();
-            pin_mut!(stream);
-            while let Some(e) = stream.next().await {
-                tx.send(e.map(EventType::TerminalEvent).map_err(anyhow::Error::from))
-                    .await?;
-            }
-            Ok::<_, anyhow::Error>(())
-        });
-    }
-
-    fn spawn_model_action(&self, mut mrx: Receiver<Action>) {
-        let tx = self.tx.clone();
-        tokio::spawn(async move {
-            while let Some(a) = mrx.recv().await {
-                tx.send(Ok(EventType::ModelAction(a))).await?;
-            }
-            Ok::<_, anyhow::Error>(())
-        });
+        }
     }
 
     fn spawn_watch_status(&self) {
@@ -151,13 +128,5 @@ impl Event {
             _ => {}
         };
         true
-    }
-}
-
-impl Stream for Event {
-    type Item = Result<EventType>;
-
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.rx.poll_recv(cx)
     }
 }

@@ -141,11 +141,14 @@ impl std::str::FromStr for NetFlux {
             Ok(NetFlux {
                 username: vec[0].to_string(),
                 flux: Flux(vec[6].parse::<u64>().unwrap_or_default()),
-                online_time: Duration(NaiveDuration::seconds(
-                    (vec[2].parse::<i64>().unwrap_or_default()
-                        - vec[1].parse::<i64>().unwrap_or_default())
-                    .max(0),
-                )),
+                online_time: Duration(
+                    NaiveDuration::try_seconds(
+                        (vec[2].parse::<i64>().unwrap_or_default()
+                            - vec[1].parse::<i64>().unwrap_or_default())
+                        .max(0),
+                    )
+                    .unwrap_or_default(),
+                ),
                 balance: Balance(vec[11].parse::<f64>().unwrap_or_default()),
             })
         } else if s.is_empty() {

@@ -7,7 +7,6 @@ use crossterm::{
     execute,
     terminal::*,
 };
-use futures_util::TryStreamExt;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::*,
@@ -87,7 +86,7 @@ async fn main_loop<B: Backend>(
             _ = interval.tick() => {
                 terminal.draw(|f| view::draw(&event.model, f))?;
             }
-            e = event.try_next() => {
+            e = event.next_event() => {
                 if let Some(e) = e? {
                     if !event.handle(e, terminal.size()?) {
                         break;

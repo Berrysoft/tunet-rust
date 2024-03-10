@@ -1,6 +1,6 @@
 [package]
 name = "tunet-cui"
-version = "0.9.2"
+version = "0.9.3"
 description = "Tsinghua University network CUI"
 edition.workspace = true
 authors.workspace = true

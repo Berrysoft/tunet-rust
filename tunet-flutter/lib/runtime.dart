@@ -131,7 +131,7 @@ class ManagedRuntime extends NotifyPropertyChanged {
     } else {
       await RustLib.init();
     }
-    final runtime = await Runtime.newRuntime();
+    final runtime = Runtime();
     return ManagedRuntime(runtime: runtime);
   }
 
