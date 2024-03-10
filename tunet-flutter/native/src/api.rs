@@ -129,6 +129,7 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    #[frb(sync)]
     pub fn new() -> Result<Runtime> {
         #[cfg(target_os = "android")]
         android_logger::init_once(
