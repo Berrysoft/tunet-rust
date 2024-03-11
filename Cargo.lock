@@ -3387,14 +3387,14 @@ dependencies = [
 
 [[package]]
 name = "mac_address2"
-version = "2.0.1"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea842174f669c1fef6c969bdfa0d0b4403783a5f0d53c1fd1de24a4a2e634d38"
+checksum = "dc5e04aa39a4dc96076bca67bf60b63201ff06f9568e62f7904293d39de8cb0b"
 dependencies = [
- "nix 0.26.4",
+ "nix 0.28.0",
  "thiserror",
  "widestring",
- "windows-sys 0.48.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3668,7 +3668,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "memoffset 0.7.1",
- "pin-utils",
 ]
 
 [[package]]
@@ -3680,6 +3679,19 @@ dependencies = [
  "bitflags 2.4.2",
  "cfg-if",
  "libc",
+]
+
+[[package]]
+name = "nix"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab2156c4fce2f8df6c499cc1c763e4394b7482525bf2a9701c9d79d215f519e4"
+dependencies = [
+ "bitflags 2.4.2",
+ "cfg-if",
+ "cfg_aliases 0.1.1",
+ "libc",
+ "memoffset 0.9.0",
 ]
 
 [[package]]
