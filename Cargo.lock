@@ -1799,7 +1799,7 @@ dependencies = [
  "bitflags 2.5.0",
  "fnv",
  "glow",
- "image",
+ "image 0.24.9",
  "imgref",
  "log",
  "lru",
@@ -2649,7 +2649,7 @@ dependencies = [
  "derive_more",
  "fontdue",
  "i-slint-common",
- "image",
+ "image 0.24.9",
  "itertools 0.12.1",
  "linked_hash_set",
  "lyon_extra",
@@ -2682,7 +2682,7 @@ dependencies = [
  "fontdue",
  "i-slint-common",
  "i-slint-core-macros",
- "image",
+ "image 0.24.9",
  "integer-sqrt",
  "lyon_algorithms",
  "lyon_extra",
@@ -2862,6 +2862,18 @@ dependencies = [
  "png",
  "qoi",
  "tiff",
+]
+
+[[package]]
+name = "image"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9b4f005360d32e9325029b38ba47ebd7a56f3316df09249368939562d518645"
+dependencies = [
+ "bytemuck",
+ "byteorder",
+ "num-traits",
+ "png",
 ]
 
 [[package]]
@@ -5982,7 +5994,7 @@ dependencies = [
  "anyhow",
  "color-theme",
  "i-slint-backend-winit",
- "image",
+ "image 0.25.0",
  "mac_address2",
  "paste",
  "plotters",
