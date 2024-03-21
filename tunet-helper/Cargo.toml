@@ -11,7 +11,7 @@ authtea = { workspace = true }
 netstatus = { workspace = true }
 async-stream = "0.3"
 futures-core = { workspace = true }
-reqwest = { version = "0.11", default-features = false, features = [
+reqwest = { version = "0.12", default-features = false, features = [
     "cookies",
     "json",
 ] }
@@ -31,12 +31,12 @@ thiserror = { workspace = true }
 allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
-reqwest = { version = "0.11", default-features = false, features = [
+reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
 ] }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-reqwest = { version = "0.11", default-features = false, features = [
+reqwest = { version = "0.12", default-features = false, features = [
     "native-tls",
 ] }
 
