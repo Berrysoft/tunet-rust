@@ -31,7 +31,7 @@ dependencies:
     sdk: flutter
 
   ffi: ^2.1.0
-  flutter_rust_bridge: 2.0.0-dev.28
+  flutter_rust_bridge: 2.0.0-dev.30
   meta: ^1.9.1
   uuid: ^4.1.0
   freezed_annotation: ^2.2.0
@@ -52,7 +52,7 @@ dependencies:
   duration: ^3.0.12
   data_size: ^0.2.0
 
-  fl_chart: ^0.66.0
+  fl_chart: ^0.67.0
 
   package_info_plus: ^5.0.1
   font_awesome_flutter: ^10.4.0
