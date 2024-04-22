@@ -1891,9 +1891,9 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_codegen"
-version = "2.0.0-dev.30"
+version = "2.0.0-dev.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75d5e6a93ef4ef69d2e409dfe9983c7b8f87179ed4b85c8256926d8dc5b1af7a"
+checksum = "7e165fed0f7deb5719e3f114592556ee2477e999d08eb82588b379073aea6503"
 dependencies = [
  "anyhow",
  "atty",
@@ -1908,6 +1908,7 @@ dependencies = [
  "enum_dispatch",
  "fern",
  "glob",
+ "hex",
  "include_dir",
  "indicatif",
  "indicatif-log-bridge",
@@ -1925,6 +1926,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "serial_test",
+ "sha1",
  "strum 0.24.1",
  "strum_macros 0.24.3",
  "syn 2.0.58",
