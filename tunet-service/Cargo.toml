@@ -33,7 +33,7 @@ windows = { workspace = true, features = [
     "Win32_System_Threading",
     "Win32_UI_WindowsAndMessaging",
 ] }
-windows-service = "0.6"
+windows-service = "0.7"
 is_elevated = "0.1"
 runas = "1"
 winlog2 = "0.3"
