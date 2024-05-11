@@ -148,6 +148,7 @@ jobs:
       keyAlias=$(key-alias)
       storeFile=$(keystore.secureFilePath)
       EOL
+      export JAVA_HOME=$(JAVA_HOME_17_X64)
       make apk
       cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $(Build.ArtifactStagingDirectory)/tunet.armeabi-v7a.apk
       cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $(Build.ArtifactStagingDirectory)/tunet.arm64-v8a.apk
