@@ -204,17 +204,17 @@ impl UseregHelper {
                         .collect::<Vec<_>>()
                 };
                 for tds in doc {
-                    yield NetUser::from_detail(
-                        tds[0]
-                            .parse()
-                            .unwrap_or_else(|_| Ipv4Addr::new(0, 0, 0, 0)),
-                        tds[1]
-                            .parse()
-                            .unwrap_or_else(|_| Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)),
-                        tds[2].parse().unwrap_or_default(),
-                        tds[7].parse().ok(),
-                        tds[3].parse().unwrap_or_default(),
-                    );
+                    if let Ok(ip) = tds[0].parse() {
+                        yield NetUser::from_detail(
+                            ip,
+                            tds[1]
+                                .parse()
+                                .unwrap_or_else(|_| Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)),
+                            tds[2].parse().unwrap_or_default(),
+                            tds[7].parse().ok(),
+                            tds[3].parse().unwrap_or_default(),
+                        );
+                    }
                 }
             }
         }
