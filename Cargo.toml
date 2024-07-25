@@ -54,9 +54,13 @@ base64 = "0.22"
 futures-core = "0.3"
 futures-util = "0.3"
 
-itertools = "0.12"
+itertools = "0.13"
 
-keyring = { version = "2", features = ["linux-no-secret-service"] }
+keyring = { version = "3", features = [
+    "apple-native",
+    "windows-native",
+    "linux-native",
+] }
 mac_address2 = "2"
 
 serde = "1"
@@ -70,5 +74,5 @@ objc = "0.2"
 core-foundation = "0.9"
 system-configuration = "0.6"
 
-windows = "0.56"
+windows = "0.58"
 winresource = "0.1"
