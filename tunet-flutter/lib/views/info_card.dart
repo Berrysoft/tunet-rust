@@ -39,7 +39,8 @@ class InfoCard extends StatelessWidget {
                 leading: const Icon(Icons.sync_alt_rounded),
                 title: Shimmer(
                   enabled: netFlux == null,
-                  child: Text(flux == null ? "" : flux.formatByteSize()),
+                  child:
+                      Text(flux == null ? "" : flux.toInt().formatByteSize()),
                 ),
               ),
               ListTile(

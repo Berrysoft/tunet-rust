@@ -139,7 +139,7 @@ DataRow _netUserToRow(
         type: InternetAddressType.IPv6,
       ).address)),
       DataCell(Text(DateFormat('MM-dd HH:mm').format(u.loginTime.field0))),
-      DataCell(Text(u.flux.field0.formatByteSize())),
+      DataCell(Text(u.flux.field0.toInt().formatByteSize())),
       DataCell(Text(u.macAddress)),
       DataCell(Text(u.isLocal ? '本机' : '未知')),
     ],

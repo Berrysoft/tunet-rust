@@ -271,7 +271,7 @@ class DetailsData extends DataTableSource {
       return DataRow(cells: [
         DataCell(Text(DateFormat('MM-dd HH:mm').format(d.loginTime.field0))),
         DataCell(Text(DateFormat('MM-dd HH:mm').format(d.logoutTime.field0))),
-        DataCell(Text(d.flux.field0.formatByteSize())),
+        DataCell(Text(d.flux.field0.toInt().formatByteSize())),
       ]);
     }
     return null;
@@ -300,7 +300,7 @@ class DetailsData extends DataTableSource {
         data.sortBy((d) => d.logoutTime.field0);
         break;
       case 2:
-        data.sortBy<num>((d) => d.flux.field0);
+        data.sortBy((d) => d.flux.field0);
         break;
     }
     if (!ascending) {
