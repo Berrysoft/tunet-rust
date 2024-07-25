@@ -28,7 +28,7 @@ impl DetailDaily {
     pub fn new(details: &[NetDetail]) -> Self {
         let details = details
             .iter()
-            .group_by(|d| d.logout_time.date())
+            .chunk_by(|d| d.logout_time.date())
             .into_iter()
             .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
             .collect::<HashMap<_, _>>();

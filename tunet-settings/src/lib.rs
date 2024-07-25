@@ -85,7 +85,7 @@ impl SettingsReader {
 
     pub fn delete(&mut self, u: &str) -> SettingsResult<()> {
         let entry = Self::entry(u)?;
-        entry.delete_password()?;
+        entry.delete_credential()?;
         if self.path.exists() {
             remove_file(self.path.as_path())?;
         }

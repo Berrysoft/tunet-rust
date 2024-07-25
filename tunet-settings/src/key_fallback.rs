@@ -45,23 +45,34 @@ impl KeyFallback {
         let writer = BufWriter::new(f);
         serde_json::to_writer(writer, map).map_err(|e| Error::PlatformFailure(e.into()))
     }
+
+    fn set_password_impl(&self, password: Password) -> Result<()> {
+        let mut cred = self.read_cred_file()?;
+        cred.insert(self.user.clone(), password);
+        self.save_cred_file(&cred)
+    }
 }
 
 impl CredentialApi for KeyFallback {
     fn set_password(&self, password: &str) -> Result<()> {
-        let mut cred = self.read_cred_file()?;
-        cred.insert(self.user.clone(), Password(password.as_bytes().to_vec()));
-        self.save_cred_file(&cred)
+        self.set_password_impl(Password(password.as_bytes().to_vec()))
+    }
+
+    fn set_secret(&self, password: &[u8]) -> Result<()> {
+        self.set_password_impl(Password(password.to_vec()))
     }
 
     fn get_password(&self) -> Result<String> {
-        let mut cred = self.read_cred_file()?;
-        cred.remove(&self.user)
-            .ok_or(Error::NoEntry)
-            .and_then(|p| String::from_utf8(p.0).map_err(|e| Error::BadEncoding(e.into_bytes())))
+        self.get_secret()
+            .and_then(|p| String::from_utf8(p).map_err(|e| Error::BadEncoding(e.into_bytes())))
     }
 
-    fn delete_password(&self) -> Result<()> {
+    fn get_secret(&self) -> Result<Vec<u8>> {
+        let mut cred = self.read_cred_file()?;
+        cred.remove(&self.user).ok_or(Error::NoEntry).map(|p| p.0)
+    }
+
+    fn delete_credential(&self) -> Result<()> {
         let mut cred = self.read_cred_file()?;
         cred.remove(&self.user);
         self.save_cred_file(&cred)

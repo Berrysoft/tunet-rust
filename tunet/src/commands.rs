@@ -297,7 +297,7 @@ impl Detail {
             .await?;
         let mut details = details
             .into_iter()
-            .group_by(|detail| detail.logout_time.date())
+            .chunk_by(|detail| detail.logout_time.date())
             .into_iter()
             .map(|(key, group)| (key, Flux(group.map(|detail| detail.flux.0).sum::<u64>())))
             .collect::<Vec<_>>();
