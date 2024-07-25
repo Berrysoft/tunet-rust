@@ -17,7 +17,7 @@ anyhow = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 log = { workspace = true }
 chrono = { workspace = true }
-flutter_rust_bridge = { version = "2.0.0-dev.35", features = ["chrono"] }
+flutter_rust_bridge = { version = "2.0.0", features = ["chrono"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.13"
@@ -26,4 +26,4 @@ android_logger = "0.13"
 oslog = "0.2"
 
 [build-dependencies]
-flutter_rust_bridge_codegen = "2.0.0-dev.35"
+flutter_rust_bridge_codegen = "2.0.0"
