@@ -5972,7 +5972,6 @@ dependencies = [
  "mac_address2",
  "md-5",
  "netstatus",
- "once_cell",
  "regex",
  "reqwest",
  "select",

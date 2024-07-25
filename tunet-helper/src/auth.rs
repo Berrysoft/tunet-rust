@@ -8,11 +8,11 @@ use base64::{
 use data_encoding::HEXLOWER;
 use hmac::{Hmac, Mac};
 use md5::Md5;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use std::marker::PhantomData;
+use std::sync::LazyLock;
 use url::Url;
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ pub struct AuthConnect<U: AuthConnectUri + Send + Sync> {
     _p: PhantomData<U>,
 }
 
-pub static AUTH_BASE64: Lazy<GeneralPurpose> = Lazy::new(|| {
+pub static AUTH_BASE64: LazyLock<GeneralPurpose> = LazyLock::new(|| {
     let alphabet =
         Alphabet::new("LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA").unwrap();
     GeneralPurpose::new(&alphabet, PAD)
@@ -29,7 +29,8 @@ pub static AUTH_BASE64: Lazy<GeneralPurpose> = Lazy::new(|| {
 
 static REDIRECT_URI: &str = "http://www.tsinghua.edu.cn/";
 
-static AC_ID_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"/index_([0-9]+)\.html").unwrap());
+static AC_ID_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"/index_([0-9]+)\.html").unwrap());
 
 impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
     pub fn new(client: HttpClient) -> Self {

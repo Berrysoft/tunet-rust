@@ -25,7 +25,6 @@ serde_json = { workspace = true }
 select = "0.6"
 chrono = { workspace = true }
 mac_address2 = { workspace = true }
-once_cell = { workspace = true }
 regex = { version = "1", default-features = false, features = ["std"] }
 thiserror = { workspace = true }
 allo-isolate = { version = "0.1", features = ["chrono"], optional = true }

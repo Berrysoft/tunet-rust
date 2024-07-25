@@ -1,9 +1,9 @@
 use crate::{suggest::ping, *};
 use netstatus::NetStatus;
-use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
+use std::sync::LazyLock;
 
-static SUGGEST_SSID_MAP: Lazy<BTreeMap<&'static str, NetState>> = Lazy::new(|| {
+static SUGGEST_SSID_MAP: LazyLock<BTreeMap<&'static str, NetState>> = LazyLock::new(|| {
     BTreeMap::from([
         ("Tsinghua", NetState::Auth4),
         ("Tsinghua-5G", NetState::Auth4),
