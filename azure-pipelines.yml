@@ -94,7 +94,7 @@ jobs:
 
 - job: Build_Mac
   pool:
-    vmImage: 'macOS-latest'
+    vmImage: 'macOS-13'
   
   steps:
   - script: |
@@ -161,7 +161,7 @@ jobs:
 
 - job: Build_iOS
   pool:
-    vmImage: 'macOS-latest'
+    vmImage: 'macOS-13'
 
   steps:
   - script: |
