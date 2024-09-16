@@ -69,7 +69,7 @@ tokio = "1"
 tokio-stream = "0.1"
 
 objc = "0.2"
-core-foundation = "0.9"
+core-foundation = "0.10"
 system-configuration = "0.6"
 
 windows = "0.58"

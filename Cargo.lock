@@ -3560,7 +3560,7 @@ name = "netstatus"
 version = "0.1.2"
 dependencies = [
  "cfg-if",
- "core-foundation 0.9.4",
+ "core-foundation 0.10.0",
  "futures-util",
  "log",
  "netlink_wi",
