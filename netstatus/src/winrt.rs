@@ -1,12 +1,11 @@
 use crate::*;
-use futures_util::future::Either;
+use flume::{r#async::RecvStream, unbounded};
+use futures_util::{future::Either, stream::pending};
 use pin_project::pin_project;
 use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-use tokio::sync::watch;
-use tokio_stream::{pending, wrappers::WatchStream};
 use windows::{core::*, Foundation::EventRegistrationToken, Networking::Connectivity::*};
 
 fn current_impl() -> Result<NetStatus> {
@@ -32,7 +31,7 @@ pub fn current() -> NetStatus {
 }
 
 fn watch_impl() -> Result<impl Stream<Item = ()>> {
-    let (tx, rx) = watch::channel(());
+    let (tx, rx) = unbounded();
     let token = NetworkInformation::NetworkStatusChanged(&NetworkStatusChangedEventHandler::new(
         move |_| {
             tx.send(()).ok();
@@ -40,7 +39,7 @@ fn watch_impl() -> Result<impl Stream<Item = ()>> {
         },
     ))?;
     Ok(StatusWatchStream {
-        s: WatchStream::new(rx),
+        rx: rx.into_stream(),
         token: NetworkStatusChangedToken(token),
     })
 }
@@ -55,7 +54,7 @@ pub fn watch() -> impl Stream<Item = ()> {
 #[pin_project]
 struct StatusWatchStream {
     #[pin]
-    s: WatchStream<()>,
+    rx: RecvStream<'static, ()>,
     token: NetworkStatusChangedToken,
 }
 
@@ -63,7 +62,7 @@ impl Stream for StatusWatchStream {
     type Item = ();
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.project().s.poll_next(cx)
+        self.project().rx.poll_next(cx)
     }
 }
 

@@ -51,7 +51,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             ],
         )
         .unwrap();
-        let res = self.client.get(uri).send().await?;
+        let res = self.client.get(uri)?.send().await?;
         let t = res.text().await?;
         let mut json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
         Ok(json
@@ -61,7 +61,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
     }
 
     async fn get_ac_id(&self) -> Option<i32> {
-        let res = self.client.get(REDIRECT_URI).send().await.ok()?;
+        let res = self.client.get(REDIRECT_URI).ok()?.send().await.ok()?;
         let t = res.text().await.ok()?;
         let cap = AC_ID_REGEX.captures(&t)?;
         cap[1].parse::<i32>().ok()
@@ -107,7 +107,12 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             ("chksum", &HEXLOWER.encode(&chksum)),
             ("callback", "callback"),
         ];
-        let res = self.client.post(U::log_uri()).form(&params).send().await?;
+        let res = self
+            .client
+            .post(U::log_uri())?
+            .form(&params)?
+            .send()
+            .await?;
         let t = res.text().await?;
         Self::parse_response(&t)
     }
@@ -147,13 +152,18 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
             ("username", u),
             ("callback", "callback"),
         ];
-        let res = self.client.post(U::log_uri()).form(&params).send().await?;
+        let res = self
+            .client
+            .post(U::log_uri())?
+            .form(&params)?
+            .send()
+            .await?;
         let t = res.text().await?;
         Self::parse_response(&t)
     }
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
-        let res = self.client.get(U::flux_uri()).send().await?;
+        let res = self.client.get(U::flux_uri())?.send().await?;
         res.text().await?.parse()
     }
 }

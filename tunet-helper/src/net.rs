@@ -30,18 +30,18 @@ impl TUNetHelper for NetConnect {
             ("username", u),
             ("password", &password_md5),
         ];
-        let res = self.client.post(NET_LOG_URI).form(&params).send().await?;
+        let res = self.client.post(NET_LOG_URI)?.form(&params)?.send().await?;
         Ok(res.text().await?)
     }
 
     async fn logout(&self, _u: &str) -> NetHelperResult<String> {
         let params = [("action", "logout")];
-        let res = self.client.post(NET_LOG_URI).form(&params).send().await?;
+        let res = self.client.post(NET_LOG_URI)?.form(&params)?.send().await?;
         Ok(res.text().await?)
     }
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
-        let res = self.client.get(NET_FLUX_URI).send().await?;
+        let res = self.client.get(NET_FLUX_URI)?.send().await?;
         res.text().await?.parse()
     }
 }

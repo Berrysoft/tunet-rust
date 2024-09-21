@@ -1,9 +1,9 @@
 use anyhow::Result;
 pub use crossterm::event::Event as TerminalEvent;
 use crossterm::event::{EventStream, KeyCode, MouseButton, MouseEventKind};
-use futures_util::StreamExt;
-use ratatui::layout::Rect;
-use tokio::sync::mpsc::*;
+use flume::{bounded, Receiver};
+use futures_util::{FutureExt, StreamExt};
+use ratatui::layout::Size;
 use tunet_model::*;
 
 #[derive(Debug)]
@@ -22,8 +22,8 @@ pub struct Event {
 
 impl Event {
     pub fn new() -> Result<Self> {
-        let (mtx, mrx) = channel(32);
-        let (utx, urx) = channel(32);
+        let (mtx, mrx) = bounded(32);
+        let (utx, urx) = bounded(32);
         Ok(Self {
             model: Model::new(mtx, utx)?,
             event: EventStream::new(),
@@ -41,16 +41,16 @@ impl Event {
 
     pub async fn next_event(&mut self) -> Result<Option<EventType>> {
         loop {
-            tokio::select! {
-                e = self.event.next() => break if let Some(e) = e {
+            futures_util::select! {
+                e = self.event.next().fuse() => break if let Some(e) = e {
                     Ok(Some(EventType::TerminalEvent(e?)))
                 } else {
                     Ok(None)
                 },
-                a = self.mrx.recv() => break Ok(a.map(EventType::ModelAction)),
-                u = self.urx.recv() => match u {
-                    None => break Ok(None),
-                    Some(UpdateMsg::State) => break Ok(Some(EventType::UpdateState)),
+                a = self.mrx.recv_async().fuse() => break Ok(a.map(EventType::ModelAction).ok()),
+                u = self.urx.recv_async().fuse() => match u {
+                    Err(_) => break Ok(None),
+                    Ok(UpdateMsg::State) => break Ok(Some(EventType::UpdateState)),
                     _ => {}
                 },
             }
@@ -85,7 +85,7 @@ impl Event {
         self.model.queue(Action::Details);
     }
 
-    pub fn handle(&mut self, e: EventType, rect: Rect) -> bool {
+    pub fn handle(&mut self, e: EventType, rect: Size) -> bool {
         match e {
             EventType::TerminalEvent(e) => match e {
                 TerminalEvent::Key(k) => match k.code {

@@ -15,8 +15,8 @@ fn get_flux_color(flux: u64, total: bool) -> Color {
 pub fn draw(m: &Model, f: &mut Frame) {
     let global_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(f.size().height - 1), Constraint::Min(1)])
-        .split(f.size());
+        .constraints([Constraint::Length(f.area().height - 1), Constraint::Min(1)])
+        .split(f.area());
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Length(51), Constraint::Percentage(100)])
@@ -149,13 +149,13 @@ pub fn draw(m: &Model, f: &mut Frame) {
             Axis::default()
                 .title(Span::from(format!("日期/{}月", now.month())))
                 .bounds([1.0, now.day() as f64])
-                .labels((1..=now.day()).map(|d| Span::from(d.to_string())).collect()),
+                .labels((1..=now.day()).map(|d| Span::from(d.to_string()))),
         )
         .y_axis(
             Axis::default()
                 .title(Span::from("流量/GB"))
                 .bounds([0.0, max_flux as f64])
-                .labels((0..=max_flux).map(|f| Span::from(f.to_string())).collect()),
+                .labels((0..=max_flux).map(|f| Span::from(f.to_string()))),
         )
         .block(Block::default().title("流量详情").borders(Borders::all()));
     f.render_widget(chart, chunks[1]);

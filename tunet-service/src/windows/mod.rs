@@ -2,9 +2,9 @@ mod notify;
 
 use crate::SERVICE_NAME;
 use anyhow::Result;
+use compio::signal::ctrl_c;
+use futures_util::{FutureExt, StreamExt};
 use std::{ffi::OsString, sync::Mutex, time::Duration};
-use tokio::{signal::windows::ctrl_c, sync::watch};
-use tokio_stream::{wrappers::WatchStream, StreamExt};
 use windows_service::{
     define_windows_service,
     service::{
@@ -114,7 +114,7 @@ fn service_entry(_args: Vec<OsString>) {
 fn service_entry_impl() -> Result<()> {
     let interval = START_INTERVAL.lock().unwrap().as_ref().cloned();
 
-    let (tx, rx) = watch::channel(());
+    let (tx, rx) = flume::unbounded();
 
     let event_handler = move |control_event| -> ServiceControlHandlerResult {
         match control_event {
@@ -139,8 +139,7 @@ fn service_entry_impl() -> Result<()> {
         process_id: None,
     })?;
 
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
+    compio::runtime::RuntimeBuilder::new()
         .build()?
         .block_on(service_main(interval, rx))?;
 
@@ -159,16 +158,18 @@ fn service_entry_impl() -> Result<()> {
 
 async fn service_main(
     interval: Option<humantime::Duration>,
-    rx: watch::Receiver<()>,
+    rx: flume::Receiver<()>,
 ) -> Result<()> {
     winlog2::init(SERVICE_NAME)?;
-    let mut ctrlc = ctrl_c()?;
-    let mut stopc = WatchStream::new(rx).skip(1);
-    let mut timer = crate::create_timer(interval);
-    let mut events = netstatus::NetStatus::watch();
+    let mut stopc = rx.into_stream().skip(1);
+    let mut timer = crate::create_timer(interval).fuse();
+    let mut timer = std::pin::pin!(timer);
+    let mut events = netstatus::NetStatus::watch().fuse();
     loop {
-        tokio::select! {
-            _ = ctrlc.recv() => {
+        let mut ctrlc = ctrl_c();
+        let ctrlc = std::pin::pin!(ctrlc);
+        futures_util::select! {
+            _ = ctrlc.fuse() => {
                 break;
             }
             _ = stopc.next() => {

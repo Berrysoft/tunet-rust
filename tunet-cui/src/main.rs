@@ -2,11 +2,13 @@
 
 use anyhow::Result;
 use clap::Parser;
+use compio::runtime::RuntimeBuilder;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::*,
 };
+use futures_util::FutureExt;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::*,
@@ -14,7 +16,6 @@ use ratatui::{
     widgets::*,
     Terminal,
 };
-use tokio::runtime::Builder as RuntimeBuilder;
 use tunet_helper::*;
 use tunet_model::Action;
 use tunet_settings::*;
@@ -49,9 +50,7 @@ pub fn run(state: Option<NetState>) -> Result<()> {
     terminal.hide_cursor()?;
     terminal.clear()?;
 
-    let res = RuntimeBuilder::new_multi_thread()
-        .worker_threads(1)
-        .enable_all()
+    let res = RuntimeBuilder::new()
         .build()?
         .block_on(main_loop(&mut terminal, &u, &p, state));
 
@@ -78,15 +77,15 @@ async fn main_loop<B: Backend>(
         .queue(Action::Credential(u.to_string(), p.to_string()));
     event.model.queue(Action::State(state));
 
-    let mut interval = tokio::time::interval(std::time::Duration::from_micros(100));
+    let mut interval = compio::time::interval(std::time::Duration::from_micros(100));
     event.start();
 
     loop {
-        tokio::select! {
-            _ = interval.tick() => {
+        futures_util::select! {
+            _ = interval.tick().fuse() => {
                 terminal.draw(|f| view::draw(&event.model, f))?;
             }
-            e = event.next_event() => {
+            e = event.next_event().fuse() => {
                 if let Some(e) = e? {
                     if !event.handle(e, terminal.size()?) {
                         break;

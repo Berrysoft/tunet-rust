@@ -15,5 +15,5 @@ pub fn current() -> NetStatus {
 }
 
 pub fn watch() -> impl Stream<Item = ()> {
-    tokio_stream::pending()
+    futures_util::stream::pending()
 }

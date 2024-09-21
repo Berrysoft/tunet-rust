@@ -1,6 +1,7 @@
 use crate::{
     accent_color, context::UpdateContext, AboutModel, DetailModel, HomeModel, SettingsModel,
 };
+use futures_util::lock::Mutex;
 use slint::{
     quit_event_loop, ComponentHandle, Model as SlintModel, ModelExt, ModelRc, SortModel,
     StandardListViewItem,
@@ -9,7 +10,6 @@ use std::{
     cmp::{Ordering, Reverse},
     sync::Arc,
 };
-use tokio::sync::Mutex;
 use tunet_model::{Action, Model};
 use tunet_settings::SettingsReader;
 
@@ -17,7 +17,7 @@ use tunet_settings::SettingsReader;
 macro_rules! upgrade_spawn_body {
     ($m: ident, $w: expr, $t: expr) => {
         if let Some($m) = $w.upgrade() {
-            tokio::spawn($t);
+            compio::runtime::spawn($t).detach();
         }
     };
 }

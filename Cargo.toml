@@ -36,9 +36,14 @@ tunet-model = { path = "tunet-model" }
 tunet-settings = { path = "tunet-settings" }
 
 anyhow = "1"
+async-stream = "0.3"
 cfg-if = "1"
 enum_dispatch = "0.3"
 thiserror = "1"
+
+compio = "0.12"
+cyper = { version = "0.1.0-beta.6", default-features = false }
+flume = "0.11"
 
 chrono = { version = "0.4", default-features = false, features = [
     "clock",
@@ -65,11 +70,8 @@ serde = "1"
 serde_json = "1"
 serde_with = "3"
 
-tokio = "1"
-tokio-stream = "0.1"
-
 objc = "0.2"
-core-foundation = "0.9"
+core-foundation = "0.10"
 system-configuration = "0.6"
 
 windows = "0.58"

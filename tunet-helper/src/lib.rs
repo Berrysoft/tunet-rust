@@ -8,7 +8,7 @@ pub use chrono::{
     DateTime, Datelike, Duration as NaiveDuration, FixedOffset, Local, NaiveDate, NaiveDateTime,
     Timelike,
 };
-pub use reqwest::Client as HttpClient;
+pub use cyper::Client as HttpClient;
 
 mod auth;
 mod net;
@@ -31,7 +31,7 @@ pub enum NetHelperError {
     #[error("无法确定登录方式")]
     InvalidHost,
     #[error("网络请求错误：{0}")]
-    Reqwest(#[from] reqwest::Error),
+    Reqwest(#[from] cyper::Error),
     #[error("JSON 解析错误：{0}")]
     Json(#[from] serde_json::Error),
 }
@@ -245,12 +245,8 @@ impl TUNetConnect {
     }
 }
 
-pub fn create_http_client() -> NetHelperResult<HttpClient> {
-    Ok(reqwest::ClientBuilder::new()
-        .cookie_store(true)
-        .redirect(reqwest::redirect::Policy::none())
-        .no_proxy()
-        .build()?)
+pub fn create_http_client() -> HttpClient {
+    cyper::ClientBuilder::new().cookie_store(true).build()
 }
 
 #[cfg(feature = "dart")]

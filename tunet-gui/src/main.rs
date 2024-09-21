@@ -7,23 +7,23 @@ use bind::{bind_about_model, bind_detail_model, bind_home_model, bind_settings_m
 use context::UpdateContext;
 
 use anyhow::Result;
+use futures_util::lock::Mutex;
 use i_slint_backend_winit::WinitWindowAccessor;
 use slint::{PhysicalPosition, Window};
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
-use tunet_model::{Action, Model};
+use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 
 slint::include_modules!();
 
-#[tokio::main(worker_threads = 1)]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let app = App::new()?;
 
     let context = UpdateContext::new(&app);
-    let (tx, rx) = mpsc::channel(32);
-    let model = context.create_model(tx).await?;
-    start_model(&model).await?;
+    let (tx, rx) = flume::bounded(32);
+    let (ctx_tx, ctx_rx) = flume::bounded(1);
+    let (model, u_rx) = context.create_model(tx)?;
+    start_runtime(model.clone(), context.clone(), u_rx, rx, ctx_rx);
 
     {
         let home_model = app.global::<HomeModel>();
@@ -41,14 +41,32 @@ async fn main() -> Result<()> {
 
     app.show()?;
 
-    start_model_loop(model.clone(), rx);
-
     center_window(app.window());
 
     app.run()?;
 
-    stop_model(&model, context.del_at_exit()).await?;
+    ctx_tx.send(context.del_at_exit())?;
+
     Ok(())
+}
+
+fn start_runtime(
+    model: Arc<Mutex<Model>>,
+    context: UpdateContext,
+    update_receiver: flume::Receiver<UpdateMsg>,
+    action_receiver: flume::Receiver<Action>,
+    ctx_reciver: flume::Receiver<bool>,
+) {
+    std::thread::spawn(move || {
+        compio::runtime::RuntimeBuilder::new()
+            .build()?
+            .block_on(async {
+                start_model(&model).await?;
+                start_model_loop(model.clone(), context, update_receiver, action_receiver);
+                stop_model(&model, ctx_reciver.recv_async().await?).await?;
+                anyhow::Ok(())
+            })
+    });
 }
 
 async fn start_model(model: &Mutex<Model>) -> Result<()> {
@@ -63,12 +81,28 @@ async fn start_model(model: &Mutex<Model>) -> Result<()> {
     Ok(())
 }
 
-fn start_model_loop(model: Arc<Mutex<Model>>, mut rx: mpsc::Receiver<Action>) {
-    tokio::spawn(async move {
-        while let Some(a) = rx.recv().await {
+fn start_model_loop(
+    model: Arc<Mutex<Model>>,
+    context: UpdateContext,
+    update_receiver: flume::Receiver<UpdateMsg>,
+    rx: flume::Receiver<Action>,
+) {
+    {
+        let model = model.clone();
+        compio::runtime::spawn(async move {
+            while let Ok(msg) = update_receiver.recv_async().await {
+                let model = model.lock().await;
+                context.update(&model, msg)
+            }
+        })
+        .detach();
+    }
+    compio::runtime::spawn(async move {
+        while let Ok(a) = rx.recv_async().await {
             model.lock().await.handle(a);
         }
-    });
+    })
+    .detach();
 }
 
 async fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {

@@ -8,7 +8,7 @@ repository.workspace = true
 
 [dependencies]
 cfg-if = { workspace = true }
-tokio-stream = { workspace = true }
+futures-util = { workspace = true }
 log = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -16,7 +16,6 @@ windows = { workspace = true, features = [
     "Foundation",
     "Networking_Connectivity",
 ] }
-futures-util = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = { workspace = true }
@@ -24,8 +23,7 @@ system-configuration = { workspace = true }
 core-foundation = { workspace = true }
 
 [target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
-tokio = { workspace = true, features = ["sync"] }
-tokio-stream = { workspace = true, features = ["sync"] }
+flume = { workspace = true }
 pin-project = "1"
 
 [target.'cfg(target_os = "linux")'.dependencies]

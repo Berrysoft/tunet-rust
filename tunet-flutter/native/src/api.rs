@@ -1,7 +1,7 @@
 use crate::frb_generated::{RustOpaque, StreamSink};
 use anyhow::Result;
 use chrono::Datelike;
-use flutter_rust_bridge::frb;
+use flutter_rust_bridge::{frb, setup_default_user_utils};
 
 pub use netstatus::NetStatus;
 use std::net::Ipv6Addr;
@@ -131,20 +131,7 @@ pub struct Runtime {
 impl Runtime {
     #[frb(sync)]
     pub fn new() -> Result<Runtime> {
-        #[cfg(target_os = "android")]
-        android_logger::init_once(
-            android_logger::Config::default()
-                .with_max_level(log::LevelFilter::Trace)
-                .with_filter(
-                    android_logger::FilterBuilder::new()
-                        .parse("warn,tunet=trace,native=trace")
-                        .build(),
-                ),
-        );
-        #[cfg(target_os = "ios")]
-        oslog::OsLogger::new("io.github.berrysoft.tunet_flutter")
-            .level_filter(log::LevelFilter::Trace)
-            .init()?;
+        setup_default_user_utils();
 
         let (atx, arx) = mpsc::channel(32);
         let (utx, urx) = mpsc::channel(32);

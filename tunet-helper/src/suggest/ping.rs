@@ -1,7 +1,12 @@
 use crate::*;
 
+async fn can_connect_impl(client: &HttpClient, uri: &str) -> cyper::Result<()> {
+    client.head(uri)?.send().await?;
+    Ok(())
+}
+
 async fn can_connect(client: &HttpClient, uri: &str) -> bool {
-    client.head(uri).send().await.is_ok()
+    can_connect_impl(client, uri).await.is_ok()
 }
 
 pub async fn suggest(client: &HttpClient) -> NetState {
