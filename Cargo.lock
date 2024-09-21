@@ -1011,9 +1011,9 @@ dependencies = [
 
 [[package]]
 name = "compio-fs"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79aac370aaa26ff1c6ff34384a36d552aa3d135682451c8a4c5a7adf20ad337d"
+checksum = "36f645c7bd9c1e1ce5b0ca6aa9a77ec3908d2ed9200c6708a72bccd1c3f875c8"
 dependencies = [
  "cfg-if",
  "compio-buf",
