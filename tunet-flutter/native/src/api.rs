@@ -6,7 +6,6 @@ use flutter_rust_bridge::{frb, setup_default_user_utils};
 pub use netstatus::NetStatus;
 use std::net::Ipv6Addr;
 pub use std::{net::Ipv4Addr, sync::Mutex};
-pub use tokio::{runtime::Handle, sync::mpsc};
 pub use tunet_helper::{
     usereg::{NetDateTime, NetDetail},
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
@@ -122,10 +121,9 @@ pub struct RuntimeStartConfig {
 }
 
 pub struct Runtime {
-    pub arx: RustOpaque<Mutex<Option<mpsc::Receiver<Action>>>>,
-    pub urx: RustOpaque<Mutex<Option<mpsc::Receiver<UpdateMsg>>>>,
+    pub arx: RustOpaque<Mutex<Option<flume::Receiver<Action>>>>,
+    pub urx: RustOpaque<Mutex<Option<flume::Receiver<UpdateMsg>>>>,
     pub model: RustOpaque<Mutex<Model>>,
-    pub handle: RustOpaque<Mutex<Option<Handle>>>,
 }
 
 impl Runtime {
@@ -133,34 +131,27 @@ impl Runtime {
     pub fn new() -> Result<Runtime> {
         setup_default_user_utils();
 
-        let (atx, arx) = mpsc::channel(32);
-        let (utx, urx) = mpsc::channel(32);
+        let (atx, arx) = flume::bounded(32);
+        let (utx, urx) = flume::bounded(32);
         let model = Model::new(atx, utx)?;
         Ok(Self {
             arx: RustOpaque::new(Mutex::new(Some(arx))),
             urx: RustOpaque::new(Mutex::new(Some(urx))),
             model: RustOpaque::new(Mutex::new(model)),
-            handle: RustOpaque::new(Mutex::new(None)),
         })
     }
 
     pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
         let model = self.model.clone();
-        let mut arx = self.arx.lock().unwrap().take().unwrap();
-        let mut urx = self.urx.lock().unwrap().take().unwrap();
-        let runtime = tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(1)
-            .enable_all()
-            .build()
-            .unwrap();
-        let handle = runtime.handle().clone();
-        *self.handle.lock().unwrap() = Some(handle);
+        let arx = self.arx.lock().unwrap().take().unwrap();
+        let urx = self.urx.lock().unwrap().take().unwrap();
         std::thread::spawn(move || {
+            let runtime = compio::runtime::RuntimeBuilder::new().build().unwrap();
             runtime.block_on(async {
                 {
                     let model = model.clone();
-                    tokio::spawn(async move {
-                        while let Some(msg) = urx.recv().await {
+                    compio::runtime::spawn(async move {
+                        while let Ok(msg) = urx.recv_async().await {
                             let msg = {
                                 let model = model.lock().unwrap();
                                 match msg {
@@ -232,7 +223,7 @@ impl Runtime {
                     model.queue(Action::Status(Some(config.status)));
                     model.queue(Action::Timer);
                 }
-                while let Some(action) = arx.recv().await {
+                while let Ok(action) = arx.recv_async().await {
                     log::debug!("received action: {:?}", action);
                     model.lock().unwrap().handle(action);
                 }
@@ -241,7 +232,6 @@ impl Runtime {
     }
 
     fn queue(&self, a: Action) {
-        let _guard = self.handle.lock().unwrap().as_ref().unwrap().enter();
         self.model.lock().unwrap().queue(a);
     }
 
