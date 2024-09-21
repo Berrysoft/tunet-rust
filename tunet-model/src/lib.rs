@@ -95,8 +95,7 @@ impl Model {
     }
 
     pub fn queue(&self, action: Action) {
-        let action_sender = self.action_sender.clone();
-        spawn(async move { action_sender.send_async(action).await.ok() }).detach();
+        self.action_sender.send(action).ok();
     }
 
     pub fn handle(&mut self, action: Action) {

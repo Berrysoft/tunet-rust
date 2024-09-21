@@ -7,10 +7,9 @@ use bind::{bind_about_model, bind_detail_model, bind_home_model, bind_settings_m
 use context::UpdateContext;
 
 use anyhow::Result;
-use futures_util::lock::Mutex;
 use i_slint_backend_winit::WinitWindowAccessor;
 use slint::{PhysicalPosition, Window};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 
@@ -61,16 +60,16 @@ fn start_runtime(
         compio::runtime::RuntimeBuilder::new()
             .build()?
             .block_on(async {
-                start_model(&model).await?;
+                start_model(&model)?;
                 start_model_loop(model.clone(), context, update_receiver, action_receiver);
-                stop_model(&model, ctx_reciver.recv_async().await?).await?;
+                stop_model(&model, ctx_reciver.recv_async().await?)?;
                 anyhow::Ok(())
             })
     });
 }
 
-async fn start_model(model: &Mutex<Model>) -> Result<()> {
-    let model = model.lock().await;
+fn start_model(model: &Mutex<Model>) -> Result<()> {
+    let model = model.lock().unwrap();
     let settings_reader = SettingsReader::new()?;
     if let Ok((u, p)) = settings_reader.read_full() {
         model.queue(Action::Credential(u, p));
@@ -91,7 +90,7 @@ fn start_model_loop(
         let model = model.clone();
         compio::runtime::spawn(async move {
             while let Ok(msg) = update_receiver.recv_async().await {
-                let model = model.lock().await;
+                let model = model.lock().unwrap();
                 context.update(&model, msg)
             }
         })
@@ -99,16 +98,16 @@ fn start_model_loop(
     }
     compio::runtime::spawn(async move {
         while let Ok(a) = rx.recv_async().await {
-            model.lock().await.handle(a);
+            model.lock().unwrap().handle(a);
         }
     })
     .detach();
 }
 
-async fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {
+fn stop_model(model: &Mutex<Model>, del_at_exit: bool) -> Result<()> {
     let mut settings_reader = SettingsReader::new()?;
     if del_at_exit {
-        let model = model.lock().await;
+        let model = model.lock().unwrap();
         settings_reader.delete(&model.username)?;
     }
     Ok(())

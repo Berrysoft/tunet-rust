@@ -1,6 +1,5 @@
 use crate::{accent_color, App, DetailModel, HomeModel, NetInfo, SettingsModel};
 use anyhow::Result;
-use futures_util::lock::Mutex;
 use mac_address2::MacAddress;
 use plotters::{
     prelude::{ChartBuilder, IntoDrawingArea, RangedDate, SVGBackend},
@@ -8,7 +7,7 @@ use plotters::{
     style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle},
 };
 use slint::{ComponentHandle, Image, ModelRc, SharedString, StandardListViewItem, VecModel};
-use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex as SyncMutex};
+use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
     Datelike, Flux, NetFlux, NetState,
@@ -18,14 +17,14 @@ use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 #[derive(Clone)]
 pub struct UpdateContext {
     weak_app: slint::Weak<App>,
-    data: Arc<SyncMutex<UpdateData>>,
+    data: Arc<Mutex<UpdateData>>,
 }
 
 impl UpdateContext {
     pub fn new(app: &App) -> Self {
         Self {
             weak_app: app.as_weak(),
-            data: Arc::new(SyncMutex::new(UpdateData::default())),
+            data: Arc::new(Mutex::new(UpdateData::default())),
         }
     }
 

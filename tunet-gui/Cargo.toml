@@ -15,7 +15,6 @@ tunet-model = { workspace = true }
 anyhow = { workspace = true }
 mac_address2 = { workspace = true }
 compio = { workspace = true, features = ["time"] }
-futures-util = { workspace = true }
 flume = { workspace = true }
 slint = { version = "1", default-features = false, features = [
     "std",

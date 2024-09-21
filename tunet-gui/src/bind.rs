@@ -1,43 +1,42 @@
 use crate::{
     accent_color, context::UpdateContext, AboutModel, DetailModel, HomeModel, SettingsModel,
 };
-use futures_util::lock::Mutex;
 use slint::{
     quit_event_loop, ComponentHandle, Model as SlintModel, ModelExt, ModelRc, SortModel,
     StandardListViewItem,
 };
 use std::{
     cmp::{Ordering, Reverse},
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 use tunet_model::{Action, Model};
 use tunet_settings::SettingsReader;
 
 #[macro_export]
-macro_rules! upgrade_spawn_body {
+macro_rules! upgrade_body {
     ($m: ident, $w: expr, $t: expr) => {
         if let Some($m) = $w.upgrade() {
-            compio::runtime::spawn($t).detach();
+            $t
         }
     };
 }
 
 #[macro_export]
-macro_rules! upgrade_spawn {
+macro_rules! upgrade {
     ($m: ident, || $t: expr) => {{
         let weak_model = std::sync::Arc::downgrade(&$m);
-        move || $crate::upgrade_spawn_body!($m, weak_model, $t)
+        move || $crate::upgrade_body!($m, weak_model, $t)
     }};
     ($m: ident, | $($args: tt),* | $t: expr) => {{
         let weak_model = std::sync::Arc::downgrade(&$m);
-        move |$($args),*| $crate::upgrade_spawn_body!($m, weak_model, $t)
+        move |$($args),*| $crate::upgrade_body!($m, weak_model, $t)
     }};
 }
 
 #[macro_export]
 macro_rules! upgrade_queue_body {
     ($m: ident, $t: expr) => {
-        let model = $m.lock().await;
+        let model = $m.lock().unwrap();
         model.queue($t);
     };
 }
@@ -45,12 +44,12 @@ macro_rules! upgrade_queue_body {
 #[macro_export]
 macro_rules! upgrade_queue {
     ($m: ident, || $t: expr) => {
-        $crate::upgrade_spawn!($m, || async move {
+        $crate::upgrade!($m, || {
             $crate::upgrade_queue_body!($m, $t);
         })
     };
     ($m: ident, | $($args: tt),* | $t: expr) => {
-        $crate::upgrade_spawn!($m, |$($args),*| async move {
+        $crate::upgrade!($m, |$($args),*| {
             $crate::upgrade_queue_body!($m, $t);
         })
     };
@@ -157,8 +156,8 @@ pub fn bind_settings_model(
     model: &Arc<Mutex<Model>>,
     context: &UpdateContext,
 ) {
-    settings_model.on_set_credential(upgrade_spawn!(model, |username, password| async move {
-        let model = model.lock().await;
+    settings_model.on_set_credential(upgrade!(model, |username, password| {
+        let model = model.lock().unwrap();
         let mut reader = SettingsReader::new().unwrap();
         let password = if password.is_empty() {
             reader.read_password(&username).unwrap_or_default()

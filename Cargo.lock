@@ -6068,7 +6068,6 @@ dependencies = [
  "color-theme",
  "compio",
  "flume",
- "futures-util",
  "i-slint-backend-winit",
  "image 0.24.9",
  "mac_address2",
