@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
+use compio::signal::unix::signal;
+use futures_util::{FutureExt, StreamExt};
 use serde::Serialize;
 use std::path::PathBuf;
-use tokio::signal::unix::{signal, SignalKind};
-use tokio_stream::StreamExt;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
@@ -63,23 +63,25 @@ pub fn unregister() -> Result<()> {
 
 pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
     env_logger::try_init()?;
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
+    compio::runtime::RuntimeBuilder::new()
         .build()?
         .block_on(start_impl(interval))
 }
 
 async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
-    let mut ctrlc = signal(SignalKind::interrupt())?;
-    let mut kill = signal(SignalKind::terminate())?;
-    let mut timer = crate::create_timer(interval);
-    let mut events = netstatus::NetStatus::watch();
+    let mut timer = crate::create_timer(interval).fuse();
+    let mut timer = std::pin::pin!(timer);
+    let mut events = netstatus::NetStatus::watch().fuse();
     loop {
-        tokio::select! {
-            _ = ctrlc.recv() => {
+        let mut ctrlc = signal(libc::SIGINT);
+        let ctrlc = std::pin::pin!(ctrlc);
+        let mut kill = signal(libc::SIGTERM);
+        let kill = std::pin::pin!(kill);
+        futures_util::select! {
+            _ = ctrlc.fuse() => {
                 break;
             }
-            _ = kill.recv() => {
+            _ = kill.fuse() => {
                 break;
             }
             _ = timer.next() => {

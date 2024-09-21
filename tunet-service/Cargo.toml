@@ -38,6 +38,7 @@ runas = "1"
 winlog2 = "0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"
 dirs = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 plist = "1"

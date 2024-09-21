@@ -3787,7 +3787,7 @@ name = "netstatus"
 version = "0.1.2"
 dependencies = [
  "cfg-if",
- "core-foundation 0.10.0",
+ "core-foundation 0.9.4",
  "flume",
  "futures-util",
  "log",
@@ -6137,6 +6137,7 @@ dependencies = [
  "futures-util",
  "humantime",
  "is_elevated",
+ "libc",
  "log",
  "netstatus",
  "notify-rust",
