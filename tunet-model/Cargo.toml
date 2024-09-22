@@ -7,10 +7,11 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+flume = { workspace = true }
 tunet-helper = { workspace = true }
 netstatus = { workspace = true }
 futures-util = { workspace = true }
-tokio = { workspace = true }
+compio = { workspace = true }
 mac_address2 = { workspace = true }
 anyhow = { workspace = true }
 itertools = { workspace = true }

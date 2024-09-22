@@ -14,16 +14,16 @@ netstatus = { workspace = true }
 tunet-helper = { workspace = true, features = ["dart"] }
 tunet-model = { workspace = true }
 anyhow = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread"] }
+compio = { workspace = true }
+flume = { workspace = true }
 log = { workspace = true }
 chrono = { workspace = true }
-flutter_rust_bridge = { version = "2.1.0", features = ["chrono"] }
+flutter_rust_bridge = { version = "2.4.0", features = ["chrono"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.14"
-
-[target.'cfg(target_os = "ios")'.dependencies]
-oslog = "0.2"
+jni = "0.19"
+rustls-platform-verifier = { workspace = true }
 
 [build-dependencies]
-flutter_rust_bridge_codegen = "2.0.0"
+flutter_rust_bridge_codegen = "2.4.0"

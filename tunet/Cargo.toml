@@ -51,7 +51,7 @@ tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 anyhow = { workspace = true }
 futures-util = { workspace = true }
-tokio = { workspace = true, features = ["rt"] }
+compio = { workspace = true, features = ["macros"] }
 mac_address2 = { workspace = true }
 clap = { workspace = true }
 itertools = { workspace = true }

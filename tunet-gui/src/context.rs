@@ -7,11 +7,7 @@ use plotters::{
     style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle},
 };
 use slint::{ComponentHandle, Image, ModelRc, SharedString, StandardListViewItem, VecModel};
-use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex as SyncMutex};
-use tokio::sync::{
-    mpsc::{self, channel},
-    Mutex,
-};
+use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex};
 use tunet_helper::{
     usereg::{NetDetail, NetUser},
     Datelike, Flux, NetFlux, NetState,
@@ -21,14 +17,14 @@ use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
 #[derive(Clone)]
 pub struct UpdateContext {
     weak_app: slint::Weak<App>,
-    data: Arc<SyncMutex<UpdateData>>,
+    data: Arc<Mutex<UpdateData>>,
 }
 
 impl UpdateContext {
     pub fn new(app: &App) -> Self {
         Self {
             weak_app: app.as_weak(),
-            data: Arc::new(SyncMutex::new(UpdateData::default())),
+            data: Arc::new(Mutex::new(UpdateData::default())),
         }
     }
 
@@ -36,23 +32,13 @@ impl UpdateContext {
         &self.weak_app
     }
 
-    pub async fn create_model(
+    pub fn create_model(
         &self,
-        action_sender: mpsc::Sender<Action>,
-    ) -> Result<Arc<Mutex<Model>>> {
-        let (update_sender, mut update_receiver) = channel(32);
+        action_sender: flume::Sender<Action>,
+    ) -> Result<(Arc<Mutex<Model>>, flume::Receiver<UpdateMsg>)> {
+        let (update_sender, update_receiver) = flume::bounded(32);
         let model = Arc::new(Mutex::new(Model::new(action_sender, update_sender)?));
-        {
-            let model = model.clone();
-            let context = self.clone();
-            tokio::spawn(async move {
-                while let Some(msg) = update_receiver.recv().await {
-                    let model = model.lock().await;
-                    context.update(&model, msg)
-                }
-            });
-        }
-        Ok(model)
+        Ok((model, update_receiver))
     }
 
     fn update_username(&self, username: impl Into<SharedString>) {
@@ -293,7 +279,7 @@ fn draw_daily(
 ) -> Result<Image> {
     let color = accent_color();
     let color = RGBColor(color.r, color.g, color.b);
-    let scale = app.window().scale_factor();
+    let scale: f32 = app.window().scale_factor() as _;
     let (width, height) = ((width * scale) as u32, (height * scale) as u32);
     let text_color = RGBColor(text_color.red(), text_color.green(), text_color.blue());
 

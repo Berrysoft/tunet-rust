@@ -16,15 +16,14 @@ clap = { workspace = true }
 anyhow = { workspace = true }
 humantime = "2"
 enum_dispatch = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt", "signal", "time"] }
-tokio-stream = { workspace = true, features = ["time"] }
+async-stream = { workspace = true }
+compio = { workspace = true, features = ["macros", "signal", "time"] }
 futures-util = { workspace = true }
 notify-rust = "4"
 log = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-tokio = { workspace = true, features = ["sync"] }
-tokio-stream = { workspace = true, features = ["sync"] }
+flume = { workspace = true }
 windows = { workspace = true, features = [
     "Win32_Foundation",
     "Win32_Security",
@@ -39,6 +38,7 @@ runas = "1"
 winlog2 = "0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"
 dirs = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 plist = "1"

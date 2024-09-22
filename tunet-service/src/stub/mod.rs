@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use tokio::signal::ctrl_c;
-use tokio_stream::StreamExt;
+use compio::signal::ctrl_c;
+use futures_util::{FutureExt, StreamExt};
 
 pub fn register(_interval: Option<humantime::Duration>) -> Result<()> {
     Err(anyhow!("不支持的命令"))
@@ -12,17 +12,19 @@ pub fn unregister() -> Result<()> {
 
 pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
     env_logger::try_init()?;
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
+    compio::runtime::RuntimeBuilder::new()
         .build()?
         .block_on(start_impl(interval))
 }
 
 async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
-    let mut timer = crate::create_timer(interval);
+    let mut timer = crate::create_timer(interval).fuse();
+    let mut timer = std::pin::pin!(timer);
     loop {
-        tokio::select! {
-            _ = ctrl_c() => {
+        let mut ctrlc = ctrl_c();
+        let ctrlc = std::pin::pin!(ctrlc);
+        futures_util::select! {
+            _ = ctrlc.fuse() => {
                 break;
             }
             _ = timer.next() => {

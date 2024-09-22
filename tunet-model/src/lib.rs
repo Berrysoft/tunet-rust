@@ -1,7 +1,9 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
+use compio::runtime::spawn;
 use drop_guard::guard;
+use flume::Sender;
 use futures_util::{pin_mut, StreamExt, TryStreamExt};
 use itertools::Itertools;
 use mac_address2::{MacAddress, MacAddressIterator};
@@ -13,8 +15,6 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use tokio::sync::mpsc::*;
-use tokio::time::sleep;
 use tunet_helper::{usereg::*, *};
 
 #[derive(Debug, Default)]
@@ -69,7 +69,7 @@ pub struct Model {
 
 impl Model {
     pub fn new(action_sender: Sender<Action>, update_sender: Sender<UpdateMsg>) -> Result<Self> {
-        let http = create_http_client()?;
+        let http = create_http_client();
 
         let mac_addrs = MacAddressIterator::new()
             .map(|it| it.collect::<Vec<_>>())
@@ -95,8 +95,7 @@ impl Model {
     }
 
     pub fn queue(&self, action: Action) {
-        let action_sender = self.action_sender.clone();
-        tokio::spawn(async move { action_sender.send(action).await.ok() });
+        self.action_sender.send(action).ok();
     }
 
     pub fn handle(&mut self, action: Action) {
@@ -112,10 +111,14 @@ impl Model {
                         let action_sender = self.action_sender.clone();
                         let http = self.http.clone();
                         let status = self.status.clone();
-                        tokio::spawn(async move {
+                        spawn(async move {
                             let state = suggest::suggest_with_status(&http, &status).await;
-                            action_sender.send(Action::State(Some(state))).await.ok()
-                        });
+                            action_sender
+                                .send_async(Action::State(Some(state)))
+                                .await
+                                .ok()
+                        })
+                        .detach();
                     }
                     Some(s) => {
                         self.state = s;
@@ -154,7 +157,7 @@ impl Model {
             Action::Flux => {
                 self.spawn_flux();
             }
-            Action::LoginDone(s) | Action::LogoutDone(s) => {
+            Action::LogDone(s) => {
                 self.log = s.into();
                 self.update(UpdateMsg::Log);
             }
@@ -182,23 +185,37 @@ impl Model {
                 let action_sender = self.action_sender.clone();
                 let usereg = self.usereg();
                 let (u, p) = (self.username.clone(), self.password.clone());
-                tokio::spawn(async move {
-                    usereg.login(&u, &p).await?;
-                    usereg.connect(addr).await?;
-                    action_sender.send(Action::Online).await?;
+                spawn(async move {
+                    match usereg.login(&u, &p).await {
+                        Ok(_) => {
+                            usereg.connect(addr).await?;
+                            action_sender.send_async(Action::Online).await?;
+                        }
+                        Err(e) => {
+                            action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                        }
+                    }
                     anyhow::Ok(())
-                });
+                })
+                .detach();
             }
             Action::Drop(addr) => {
                 let action_sender = self.action_sender.clone();
                 let usereg = self.usereg();
                 let (u, p) = (self.username.clone(), self.password.clone());
-                tokio::spawn(async move {
-                    usereg.login(&u, &p).await?;
-                    usereg.drop(addr).await?;
-                    action_sender.send(Action::Online).await?;
+                spawn(async move {
+                    match usereg.login(&u, &p).await {
+                        Ok(_) => {
+                            usereg.drop(addr).await?;
+                            action_sender.send_async(Action::Online).await?;
+                        }
+                        Err(e) => {
+                            action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                        }
+                    }
                     anyhow::Ok(())
-                });
+                })
+                .detach();
             }
             Action::Details => {
                 self.spawn_details();
@@ -215,31 +232,33 @@ impl Model {
 
     pub fn update(&self, msg: UpdateMsg) {
         let update_sender = self.update_sender.clone();
-        tokio::spawn(async move { update_sender.send(msg).await });
+        spawn(async move { update_sender.send_async(msg).await }).detach();
     }
 
     fn spawn_watch_status(&self) {
         let action_sender = self.action_sender.clone();
-        tokio::spawn(async move {
+        spawn(async move {
             let mut events = NetStatus::watch();
             while let Some(()) = events.next().await {
-                action_sender.send(Action::Status(None)).await?;
+                action_sender.send_async(Action::Status(None)).await?;
             }
             anyhow::Ok(())
-        });
+        })
+        .detach();
     }
 
     fn spawn_timer(&self) {
         let action_sender = self.action_sender.clone();
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
+        spawn(async move {
+            let mut interval = compio::time::interval(std::time::Duration::from_secs(1));
             loop {
                 interval.tick().await;
-                action_sender.send(Action::Tick).await?;
+                action_sender.send_async(Action::Tick).await?;
             }
             #[allow(unreachable_code)]
             anyhow::Ok(())
-        });
+        })
+        .detach();
     }
 
     fn client(&self) -> Option<TUNetConnect> {
@@ -255,19 +274,20 @@ impl Model {
             let action_sender = self.action_sender.clone();
             let (u, p) = (self.username.clone(), self.password.clone());
             if let Some(client) = self.client() {
-                tokio::spawn(async move {
+                spawn(async move {
                     let _lock = lock;
                     let res = client.login(&u, &p).await;
                     let ok = res.is_ok();
                     action_sender
-                        .send(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
+                        .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
                     if ok {
-                        sleep(std::time::Duration::from_secs(1)).await;
+                        compio::time::sleep(std::time::Duration::from_secs(1)).await;
                         Self::flux_impl(client, action_sender, true).await?;
                     }
                     anyhow::Ok(())
-                });
+                })
+                .detach();
             }
         }
     }
@@ -277,18 +297,19 @@ impl Model {
             let action_sender = self.action_sender.clone();
             let u = self.username.clone();
             if let Some(client) = self.client() {
-                tokio::spawn(async move {
+                spawn(async move {
                     let _lock = lock;
                     let res = client.logout(&u).await;
                     let ok = res.is_ok();
                     action_sender
-                        .send(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
+                        .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
                     if ok {
                         Self::flux_impl(client, action_sender, true).await?;
                     }
                     anyhow::Ok(())
-                });
+                })
+                .detach();
             }
         }
     }
@@ -297,10 +318,11 @@ impl Model {
         if let Some(lock) = self.log_busy.lock() {
             let action_sender = self.action_sender.clone();
             if let Some(client) = self.client() {
-                tokio::spawn(async move {
+                spawn(async move {
                     let _lock = lock;
                     Self::flux_impl(client, action_sender, false).await
-                });
+                })
+                .detach();
             }
         }
     }
@@ -314,12 +336,12 @@ impl Model {
         match flux {
             Ok(flux) => {
                 action_sender
-                    .send(Action::FluxDone(flux, None, keep_msg))
+                    .send_async(Action::FluxDone(flux, None, keep_msg))
                     .await?;
             }
             Err(err) => {
                 action_sender
-                    .send(Action::FluxDone(
+                    .send_async(Action::FluxDone(
                         NetFlux::default(),
                         Some(err.to_string()),
                         keep_msg,
@@ -335,16 +357,23 @@ impl Model {
             let action_sender = self.action_sender.clone();
             let usereg = self.usereg();
             let (u, p) = (self.username.clone(), self.password.clone());
-            tokio::spawn(async move {
+            spawn(async move {
                 let _lock = lock;
-                usereg.login(&u, &p).await?;
-                let users = usereg.users();
-                pin_mut!(users);
-                action_sender
-                    .send(Action::OnlineDone(users.try_collect().await?))
-                    .await?;
+                match usereg.login(&u, &p).await {
+                    Ok(_) => {
+                        let users = usereg.users();
+                        pin_mut!(users);
+                        action_sender
+                            .send_async(Action::OnlineDone(users.try_collect().await?))
+                            .await?;
+                    }
+                    Err(e) => {
+                        action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                    }
+                }
                 anyhow::Ok(())
-            });
+            })
+            .detach();
         }
     }
 
@@ -353,16 +382,23 @@ impl Model {
             let action_sender = self.action_sender.clone();
             let usereg = self.usereg();
             let (u, p) = (self.username.clone(), self.password.clone());
-            tokio::spawn(async move {
+            spawn(async move {
                 let _lock = lock;
-                usereg.login(&u, &p).await?;
-                let details = usereg.details(NetDetailOrder::LogoutTime, false);
-                pin_mut!(details);
-                action_sender
-                    .send(Action::DetailsDone(details.try_collect().await?))
-                    .await?;
+                match usereg.login(&u, &p).await {
+                    Ok(_) => {
+                        let details = usereg.details(NetDetailOrder::LogoutTime, false);
+                        pin_mut!(details);
+                        action_sender
+                            .send_async(Action::DetailsDone(details.try_collect().await?))
+                            .await?;
+                    }
+                    Err(e) => {
+                        action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                    }
+                }
                 anyhow::Ok(())
-            });
+            })
+            .detach();
         }
     }
 
@@ -388,9 +424,8 @@ pub enum Action {
     Timer,
     Tick,
     Login,
-    LoginDone(String),
     Logout,
-    LogoutDone(String),
+    LogDone(String),
     Flux,
     FluxDone(NetFlux, Option<String>, bool),
     Online,
@@ -444,16 +479,18 @@ impl BusyBool {
         {
             let msg = self.msg;
             let action_sender = self.action_sender.clone();
-            tokio::spawn(async move {
-                action_sender.send(Action::Update(msg)).await.ok();
-            });
+            spawn(async move {
+                action_sender.send_async(Action::Update(msg)).await.ok();
+            })
+            .detach();
             Some(guard(
                 (self.lock.clone(), self.action_sender.clone(), self.msg),
                 |(lock, action_sender, msg)| {
                     lock.store(false, Ordering::Release);
-                    tokio::spawn(async move {
-                        action_sender.send(Action::Update(msg)).await.ok();
-                    });
+                    spawn(async move {
+                        action_sender.send_async(Action::Update(msg)).await.ok();
+                    })
+                    .detach();
                 },
             ))
         } else {

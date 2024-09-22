@@ -143,19 +143,24 @@ impl UseregHelper {
         ];
         let res = self
             .client
-            .post(USEREG_LOG_URI)
-            .form(&params)
+            .post(USEREG_LOG_URI)?
+            .form(&params)?
             .send()
             .await?;
-        Ok(res.text().await?)
+        let text = res.text().await?;
+        if text == "ok" {
+            Ok(text)
+        } else {
+            Err(NetHelperError::Log(text))
+        }
     }
 
     pub async fn logout(&self) -> NetHelperResult<String> {
         let params = [("action", "logout")];
         let res = self
             .client
-            .post(USEREG_LOG_URI)
-            .form(&params)
+            .post(USEREG_LOG_URI)?
+            .form(&params)?
             .send()
             .await?;
         Ok(res.text().await?)
@@ -172,8 +177,8 @@ impl UseregHelper {
         ];
         let res = self
             .client
-            .post(USEREG_CONNECT_URI)
-            .form(&params)
+            .post(USEREG_CONNECT_URI)?
+            .form(&params)?
             .send()
             .await?;
         Ok(res.text().await?)
@@ -183,8 +188,8 @@ impl UseregHelper {
         let params = [("action", "drop"), ("user_ip", &addr.to_string())];
         let res = self
             .client
-            .post(USEREG_INFO_URI)
-            .form(&params)
+            .post(USEREG_INFO_URI)?
+            .form(&params)?
             .send()
             .await?;
         Ok(res.text().await?)
@@ -194,15 +199,12 @@ impl UseregHelper {
         let client = self.client.clone();
         try_stream! {
             for uri in [USEREG_INFO_URI, USEREG_INFO_URI2] {
-                let res = client.get(uri).send().await?;
-                let doc = {
-                    let doc = Document::from(res.text().await?.as_str());
-                    doc
-                        .find(Name("tr").descendant(Attr("align", "center")))
-                        .skip(1)
-                        .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>())
-                        .collect::<Vec<_>>()
-                };
+                let res = client.get(uri)?.send().await?;
+                let doc = Document::from(res.text().await?.as_str());
+                let doc = doc
+                    .find(Name("tr").descendant(Attr("align", "center")))
+                    .skip(1)
+                    .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>());
                 for tds in doc {
                     if let Ok(ip) = tds[0].parse() {
                         yield NetUser::from_detail(
@@ -245,15 +247,12 @@ impl UseregHelper {
                     ],
                 )
                 .unwrap();
-                let res = client.get(uri).send().await?;
-                let doc = {
-                    let doc = Document::from(res.text().await?.as_str());
-                    doc
+                let res = client.get(uri)?.send().await?;
+                let doc = Document::from(res.text().await?.as_str());
+                let doc = doc
                         .find(Name("tr").descendant(Attr("align", "center")))
                         .skip(1)
-                        .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>())
-                        .collect::<Vec<_>>()
-                };
+                        .map(|node| node.find(Name("td")).skip(1).map(|n| n.text()).collect::<Vec<_>>());
                 let mut new_len = 0;
                 for tds in doc {
                     if !tds.is_empty() {

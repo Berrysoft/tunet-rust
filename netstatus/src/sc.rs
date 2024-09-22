@@ -3,6 +3,7 @@ use core_foundation::{
     base::TCFType,
     runloop::{kCFRunLoopDefaultMode, CFRunLoop, CFRunLoopRef},
 };
+use flume::{r#async::RecvStream, unbounded};
 use objc::{
     runtime::{Class, Object},
     *,
@@ -16,8 +17,6 @@ use std::{
     thread::JoinHandle,
 };
 use system_configuration::network_reachability::{ReachabilityFlags, SCNetworkReachability};
-use tokio::sync::watch;
-use tokio_stream::wrappers::WatchStream;
 
 #[link(name = "CoreWLAN", kind = "framework")]
 extern "C" {
@@ -63,7 +62,7 @@ pub fn current() -> NetStatus {
 }
 
 pub fn watch() -> impl Stream<Item = ()> {
-    let (tx, rx) = watch::channel(());
+    let (tx, rx) = unbounded();
     let loop_thread = std::thread::spawn(move || {
         let mut sc =
             SCNetworkReachability::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
@@ -76,7 +75,7 @@ pub fn watch() -> impl Stream<Item = ()> {
         CFRunLoop::run_current();
     });
     StatusWatchStream {
-        s: WatchStream::new(rx),
+        rx: rx.into_stream(),
         thread: CFJThread {
             handle: Some(loop_thread),
         },
@@ -86,7 +85,7 @@ pub fn watch() -> impl Stream<Item = ()> {
 #[pin_project]
 struct StatusWatchStream {
     #[pin]
-    s: WatchStream<()>,
+    rx: RecvStream<'static, ()>,
     thread: CFJThread,
 }
 
@@ -94,7 +93,7 @@ impl Stream for StatusWatchStream {
     type Item = ();
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.project().s.poll_next(cx)
+        self.project().rx.poll_next(cx)
     }
 }
 

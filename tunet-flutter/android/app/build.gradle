@@ -47,7 +47,7 @@ android {
 
     defaultConfig {
         applicationId "io.github.berrysoft.tunet_flutter"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 22
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -64,6 +64,8 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles "proguard-rules.pro"
         }
     }
     namespace 'io.github.berrysoft.tunet_flutter'
@@ -101,4 +103,8 @@ flutter {
             args profileMode
         }
     }
+}
+
+dependencies {
+    implementation "rustls:rustls-platform-verifier:latest.release"
 }

@@ -14,7 +14,8 @@ tunet-settings = { workspace = true }
 tunet-model = { workspace = true }
 anyhow = { workspace = true }
 mac_address2 = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
+compio = { workspace = true, features = ["time"] }
+flume = { workspace = true }
 slint = { version = "1", default-features = false, features = [
     "std",
     "compat-1-0",
