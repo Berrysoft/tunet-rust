@@ -74,7 +74,6 @@ serde = "1"
 serde_json = "1"
 serde_with = "3"
 
-objc = "0.2"
 core-foundation = "0.9"
 system-configuration = "0.6"
 

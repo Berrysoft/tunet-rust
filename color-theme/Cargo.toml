@@ -14,4 +14,4 @@ windows = { workspace = true, features = ["UI_ViewManagement"] }
 log = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc = { workspace = true }
+objc2-app-kit = { version = "0.2", features = ["NSColor", "NSColorSpace"] }

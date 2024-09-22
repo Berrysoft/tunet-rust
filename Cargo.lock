@@ -916,7 +916,7 @@ version = "0.2.0"
 dependencies = [
  "cfg-if",
  "log",
- "objc",
+ "objc2-app-kit",
  "windows 0.58.0",
 ]
 
@@ -3836,7 +3836,7 @@ dependencies = [
  "futures-util",
  "log",
  "netlink_wi",
- "objc",
+ "objc2-core-wlan",
  "pin-project",
  "system-configuration",
  "windows 0.58.0",
@@ -4131,6 +4131,17 @@ dependencies = [
  "block2",
  "objc2",
  "objc2-contacts",
+ "objc2-foundation",
+]
+
+[[package]]
+name = "objc2-core-wlan"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b1a3ebc1931c0dcc20b3643c1caffaa3eb833a085bae27f42796a2977b3088"
+dependencies = [
+ "bitflags 2.6.0",
+ "objc2",
  "objc2-foundation",
 ]
 

@@ -4,10 +4,7 @@ use core_foundation::{
     runloop::{kCFRunLoopDefaultMode, CFRunLoop, CFRunLoopRef},
 };
 use flume::{r#async::RecvStream, unbounded};
-use objc::{
-    runtime::{Class, Object},
-    *,
-};
+use objc2_core_wlan::CWWiFiClient;
 use pin_project::pin_project;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
@@ -18,24 +15,15 @@ use std::{
 };
 use system_configuration::network_reachability::{ReachabilityFlags, SCNetworkReachability};
 
-#[link(name = "CoreWLAN", kind = "framework")]
-extern "C" {
-    #[link_name = "OBJC_CLASS_$_CWWiFiClient"]
-    static OBJC_CLASS__CWWiFiClient: Class;
-}
-
 unsafe fn get_ssid() -> Option<String> {
-    let client: *mut Object = msg_send![&OBJC_CLASS__CWWiFiClient, sharedWiFiClient];
-    let interface: *mut Object = msg_send![client, interface];
-    let name: *mut Object = msg_send![interface, ssid];
-    if !name.is_null() {
-        let name = std::ffi::CStr::from_ptr(msg_send![name, UTF8String])
-            .to_string_lossy()
-            .into_owned();
-        Some(name)
-    } else {
-        None
-    }
+    CWWiFiClient::sharedWiFiClient()
+        .interface()
+        .and_then(|interface| interface.ssid())
+        .map(|name| {
+            std::ffi::CStr::from_ptr(name.UTF8String())
+                .to_string_lossy()
+                .into_owned()
+        })
 }
 
 pub fn current() -> NetStatus {
