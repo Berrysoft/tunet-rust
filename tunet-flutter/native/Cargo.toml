@@ -20,8 +20,10 @@ log = { workspace = true }
 chrono = { workspace = true }
 flutter_rust_bridge = { version = "2.4.0", default-features = false, features = [
     "anyhow",
+    "chrono",
     "dart-opaque",
     "log",
+    "rust-async",
     "user-utils",
 ] }
 
