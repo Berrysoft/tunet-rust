@@ -66,6 +66,10 @@ keyring = { version = "3", features = [
 ] }
 mac_address2 = "2"
 
+rustls = { version = "0.23", default-features = false }
+rustls-platform-verifier = "0.3"
+
+
 serde = "1"
 serde_json = "1"
 serde_with = "3"

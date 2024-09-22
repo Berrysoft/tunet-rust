@@ -129,6 +129,16 @@ pub struct Runtime {
 impl Runtime {
     #[frb(sync)]
     pub fn new() -> Result<Runtime> {
+        #[cfg(target_os = "android")]
+        android_logger::init_once(
+            android_logger::Config::default()
+                .with_max_level(log::LevelFilter::Trace)
+                .with_filter(
+                    android_logger::FilterBuilder::new()
+                        .parse("warn,tunet=trace,native=trace")
+                        .build(),
+                ),
+        );
         setup_default_user_utils();
 
         let (atx, arx) = flume::bounded(32);
