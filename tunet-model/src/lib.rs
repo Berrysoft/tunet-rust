@@ -157,7 +157,7 @@ impl Model {
             Action::Flux => {
                 self.spawn_flux();
             }
-            Action::LoginDone(s) | Action::LogoutDone(s) => {
+            Action::LogDone(s) => {
                 self.log = s.into();
                 self.update(UpdateMsg::Log);
             }
@@ -186,9 +186,15 @@ impl Model {
                 let usereg = self.usereg();
                 let (u, p) = (self.username.clone(), self.password.clone());
                 spawn(async move {
-                    usereg.login(&u, &p).await?;
-                    usereg.connect(addr).await?;
-                    action_sender.send_async(Action::Online).await?;
+                    match usereg.login(&u, &p).await {
+                        Ok(_) => {
+                            usereg.connect(addr).await?;
+                            action_sender.send_async(Action::Online).await?;
+                        }
+                        Err(e) => {
+                            action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                        }
+                    }
                     anyhow::Ok(())
                 })
                 .detach();
@@ -198,9 +204,15 @@ impl Model {
                 let usereg = self.usereg();
                 let (u, p) = (self.username.clone(), self.password.clone());
                 spawn(async move {
-                    usereg.login(&u, &p).await?;
-                    usereg.drop(addr).await?;
-                    action_sender.send_async(Action::Online).await?;
+                    match usereg.login(&u, &p).await {
+                        Ok(_) => {
+                            usereg.drop(addr).await?;
+                            action_sender.send_async(Action::Online).await?;
+                        }
+                        Err(e) => {
+                            action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                        }
+                    }
                     anyhow::Ok(())
                 })
                 .detach();
@@ -267,7 +279,7 @@ impl Model {
                     let res = client.login(&u, &p).await;
                     let ok = res.is_ok();
                     action_sender
-                        .send_async(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
+                        .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
                     if ok {
                         compio::time::sleep(std::time::Duration::from_secs(1)).await;
@@ -290,7 +302,7 @@ impl Model {
                     let res = client.logout(&u).await;
                     let ok = res.is_ok();
                     action_sender
-                        .send_async(Action::LoginDone(res.unwrap_or_else(|e| e.to_string())))
+                        .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
                         .await?;
                     if ok {
                         Self::flux_impl(client, action_sender, true).await?;
@@ -347,12 +359,18 @@ impl Model {
             let (u, p) = (self.username.clone(), self.password.clone());
             spawn(async move {
                 let _lock = lock;
-                usereg.login(&u, &p).await?;
-                let users = usereg.users();
-                pin_mut!(users);
-                action_sender
-                    .send_async(Action::OnlineDone(users.try_collect().await?))
-                    .await?;
+                match usereg.login(&u, &p).await {
+                    Ok(_) => {
+                        let users = usereg.users();
+                        pin_mut!(users);
+                        action_sender
+                            .send_async(Action::OnlineDone(users.try_collect().await?))
+                            .await?;
+                    }
+                    Err(e) => {
+                        action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                    }
+                }
                 anyhow::Ok(())
             })
             .detach();
@@ -366,12 +384,18 @@ impl Model {
             let (u, p) = (self.username.clone(), self.password.clone());
             spawn(async move {
                 let _lock = lock;
-                usereg.login(&u, &p).await?;
-                let details = usereg.details(NetDetailOrder::LogoutTime, false);
-                pin_mut!(details);
-                action_sender
-                    .send_async(Action::DetailsDone(details.try_collect().await?))
-                    .await?;
+                match usereg.login(&u, &p).await {
+                    Ok(_) => {
+                        let details = usereg.details(NetDetailOrder::LogoutTime, false);
+                        pin_mut!(details);
+                        action_sender
+                            .send_async(Action::DetailsDone(details.try_collect().await?))
+                            .await?;
+                    }
+                    Err(e) => {
+                        action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                    }
+                }
                 anyhow::Ok(())
             })
             .detach();
@@ -400,9 +424,8 @@ pub enum Action {
     Timer,
     Tick,
     Login,
-    LoginDone(String),
     Logout,
-    LogoutDone(String),
+    LogDone(String),
     Flux,
     FluxDone(NetFlux, Option<String>, bool),
     Online,

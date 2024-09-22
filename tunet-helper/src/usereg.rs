@@ -147,7 +147,12 @@ impl UseregHelper {
             .form(&params)?
             .send()
             .await?;
-        Ok(res.text().await?)
+        let text = res.text().await?;
+        if text == "ok" {
+            Ok(text)
+        } else {
+            Err(NetHelperError::Log(text))
+        }
     }
 
     pub async fn logout(&self) -> NetHelperResult<String> {
