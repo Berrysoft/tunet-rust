@@ -3710,7 +3710,6 @@ dependencies = [
  "flutter_rust_bridge_codegen",
  "log",
  "netstatus",
- "rustls",
  "tunet-helper",
  "tunet-model",
 ]
@@ -6125,6 +6124,7 @@ dependencies = [
  "md-5",
  "netstatus",
  "regex",
+ "rustls",
  "select",
  "serde_json",
  "sha-1",
