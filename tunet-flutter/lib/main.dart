@@ -48,12 +48,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '清华校园网',
       theme: ThemeData(
-        colorSchemeSeed: this.accent,
+        colorSchemeSeed: accent,
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        colorSchemeSeed: this.accent,
+        colorSchemeSeed: accent,
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system,

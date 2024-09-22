@@ -20,5 +20,7 @@ log = { workspace = true }
 chrono = { workspace = true }
 flutter_rust_bridge = { version = "2.4.0", features = ["chrono"] }
 
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+
 [build-dependencies]
 flutter_rust_bridge_codegen = "2.4.0"

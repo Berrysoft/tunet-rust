@@ -213,7 +213,8 @@ impl Runtime {
                             };
                             sink.add(msg).unwrap();
                         }
-                    });
+                    })
+                    .detach();
                 }
                 {
                     let model = model.lock().unwrap();

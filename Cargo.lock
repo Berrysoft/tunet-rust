@@ -3710,6 +3710,7 @@ dependencies = [
  "flutter_rust_bridge_codegen",
  "log",
  "netstatus",
+ "rustls",
  "tunet-helper",
  "tunet-model",
 ]
