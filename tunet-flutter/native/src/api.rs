@@ -154,91 +154,90 @@ impl Runtime {
     #[frb(sync)]
     pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
         let model = self.model.clone();
+        {
+            let model = model.lock().unwrap();
+            if (!config.username.is_empty()) && (!config.password.is_empty()) {
+                model.queue(Action::Credential(config.username, config.password));
+            }
+            model.queue(Action::Status(Some(config.status)));
+            model.queue(Action::Timer);
+        }
         let arx = self.arx.lock().unwrap().take().unwrap();
         let urx = self.urx.lock().unwrap().take().unwrap();
         std::thread::spawn(move || {
             let runtime = compio::runtime::RuntimeBuilder::new().build().unwrap();
             runtime.block_on(async {
-                {
-                    let model = model.clone();
-                    compio::runtime::spawn(async move {
-                        while let Ok(msg) = urx.recv_async().await {
-                            let msg = {
-                                let model = model.lock().unwrap();
-                                match msg {
-                                    UpdateMsg::Credential => {
-                                        UpdateMsgWrap::Credential(model.username.clone())
-                                    }
-                                    UpdateMsg::State => UpdateMsgWrap::State(model.state),
-                                    UpdateMsg::Status => {
-                                        UpdateMsgWrap::Status(model.status.to_string())
-                                    }
-                                    UpdateMsg::Log => UpdateMsgWrap::Log(model.log.to_string()),
-                                    UpdateMsg::Flux => UpdateMsgWrap::Flux(model.flux.clone()),
-                                    UpdateMsg::Online => UpdateMsgWrap::Online(
-                                        model
-                                            .users
-                                            .iter()
-                                            .map(|u| NetUserWrap {
-                                                address: u.address.into(),
-                                                address_v6: u.address_v6.into(),
-                                                login_time: u.login_time,
-                                                mac_address: u
-                                                    .mac_address
-                                                    .map(|addr| addr.to_string())
-                                                    .unwrap_or_default(),
-                                                flux: u.flux,
-                                                is_local: model
-                                                    .mac_addrs
-                                                    .iter()
-                                                    .any(|it| Some(it) == u.mac_address.as_ref()),
-                                            })
-                                            .collect(),
-                                    ),
-                                    UpdateMsg::Details => {
-                                        UpdateMsgWrap::Details(model.details.clone(), {
-                                            let data = DetailDaily::new(&model.details);
-                                            DetailDailyWrap {
-                                                details: data
-                                                    .details
-                                                    .into_iter()
-                                                    .map(|(date, flux)| DetailDailyPoint {
-                                                        day: date.day(),
-                                                        flux,
-                                                    })
-                                                    .collect(),
-                                                now_month: data.now.month(),
-                                                now_day: data.now.day(),
-                                                max_flux: data.max_flux,
-                                            }
-                                        })
-                                    }
-                                    UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(model.log_busy()),
-                                    UpdateMsg::OnlineBusy => {
-                                        UpdateMsgWrap::OnlineBusy(model.online_busy())
-                                    }
-                                    UpdateMsg::DetailBusy => {
-                                        UpdateMsgWrap::DetailBusy(model.detail_busy())
-                                    }
+                let update_task = async {
+                    while let Ok(msg) = urx.recv_async().await {
+                        let msg = {
+                            let model = model.lock().unwrap();
+                            match msg {
+                                UpdateMsg::Credential => {
+                                    UpdateMsgWrap::Credential(model.username.clone())
                                 }
-                            };
-                            sink.add(msg).unwrap();
-                        }
-                    })
-                    .detach();
-                }
-                {
-                    let model = model.lock().unwrap();
-                    if (!config.username.is_empty()) && (!config.password.is_empty()) {
-                        model.queue(Action::Credential(config.username, config.password));
+                                UpdateMsg::State => UpdateMsgWrap::State(model.state),
+                                UpdateMsg::Status => {
+                                    UpdateMsgWrap::Status(model.status.to_string())
+                                }
+                                UpdateMsg::Log => UpdateMsgWrap::Log(model.log.to_string()),
+                                UpdateMsg::Flux => UpdateMsgWrap::Flux(model.flux.clone()),
+                                UpdateMsg::Online => UpdateMsgWrap::Online(
+                                    model
+                                        .users
+                                        .iter()
+                                        .map(|u| NetUserWrap {
+                                            address: u.address.into(),
+                                            address_v6: u.address_v6.into(),
+                                            login_time: u.login_time,
+                                            mac_address: u
+                                                .mac_address
+                                                .map(|addr| addr.to_string())
+                                                .unwrap_or_default(),
+                                            flux: u.flux,
+                                            is_local: model
+                                                .mac_addrs
+                                                .iter()
+                                                .any(|it| Some(it) == u.mac_address.as_ref()),
+                                        })
+                                        .collect(),
+                                ),
+                                UpdateMsg::Details => {
+                                    UpdateMsgWrap::Details(model.details.clone(), {
+                                        let data = DetailDaily::new(&model.details);
+                                        DetailDailyWrap {
+                                            details: data
+                                                .details
+                                                .into_iter()
+                                                .map(|(date, flux)| DetailDailyPoint {
+                                                    day: date.day(),
+                                                    flux,
+                                                })
+                                                .collect(),
+                                            now_month: data.now.month(),
+                                            now_day: data.now.day(),
+                                            max_flux: data.max_flux,
+                                        }
+                                    })
+                                }
+                                UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(model.log_busy()),
+                                UpdateMsg::OnlineBusy => {
+                                    UpdateMsgWrap::OnlineBusy(model.online_busy())
+                                }
+                                UpdateMsg::DetailBusy => {
+                                    UpdateMsgWrap::DetailBusy(model.detail_busy())
+                                }
+                            }
+                        };
+                        sink.add(msg).unwrap();
                     }
-                    model.queue(Action::Status(Some(config.status)));
-                    model.queue(Action::Timer);
-                }
-                while let Ok(action) = arx.recv_async().await {
-                    log::debug!("received action: {:?}", action);
-                    model.lock().unwrap().handle(action);
-                }
+                };
+                let handle_task = async {
+                    while let Ok(action) = arx.recv_async().await {
+                        log::debug!("received action: {:?}", action);
+                        model.lock().unwrap().handle(action);
+                    }
+                };
+                futures_util::join!(update_task, handle_task);
             });
         });
     }

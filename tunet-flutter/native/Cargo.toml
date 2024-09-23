@@ -15,6 +15,7 @@ tunet-helper = { workspace = true, features = ["dart"] }
 tunet-model = { workspace = true }
 anyhow = { workspace = true }
 compio = { workspace = true }
+futures-util = { workspace = true }
 flume = { workspace = true }
 log = { workspace = true }
 chrono = { workspace = true }
