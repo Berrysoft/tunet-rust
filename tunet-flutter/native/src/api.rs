@@ -1,11 +1,11 @@
-use crate::frb_generated::{RustOpaque, StreamSink};
+use crate::frb_generated::StreamSink;
 use anyhow::Result;
 use chrono::Datelike;
 use flutter_rust_bridge::{frb, setup_default_user_utils};
 
 pub use netstatus::NetStatus;
-use std::net::Ipv6Addr;
 pub use std::{net::Ipv4Addr, sync::Mutex};
+use std::{net::Ipv6Addr, sync::Arc};
 pub use tunet_helper::{
     usereg::{NetDateTime, NetDetail},
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
@@ -121,9 +121,9 @@ pub struct RuntimeStartConfig {
 }
 
 pub struct Runtime {
-    pub arx: RustOpaque<Mutex<Option<flume::Receiver<Action>>>>,
-    pub urx: RustOpaque<Mutex<Option<flume::Receiver<UpdateMsg>>>>,
-    pub model: RustOpaque<Mutex<Model>>,
+    arx: Arc<Mutex<Option<flume::Receiver<Action>>>>,
+    urx: Arc<Mutex<Option<flume::Receiver<UpdateMsg>>>>,
+    model: Arc<Mutex<Model>>,
 }
 
 impl Runtime {
@@ -141,16 +141,17 @@ impl Runtime {
         );
         setup_default_user_utils();
 
-        let (atx, arx) = flume::bounded(32);
-        let (utx, urx) = flume::bounded(32);
+        let (atx, arx) = flume::unbounded();
+        let (utx, urx) = flume::unbounded();
         let model = Model::new(atx, utx)?;
         Ok(Self {
-            arx: RustOpaque::new(Mutex::new(Some(arx))),
-            urx: RustOpaque::new(Mutex::new(Some(urx))),
-            model: RustOpaque::new(Mutex::new(model)),
+            arx: Arc::new(Mutex::new(Some(arx))),
+            urx: Arc::new(Mutex::new(Some(urx))),
+            model: Arc::new(Mutex::new(model)),
         })
     }
 
+    #[frb(sync)]
     pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
         let model = self.model.clone();
         let arx = self.arx.lock().unwrap().take().unwrap();
@@ -246,42 +247,52 @@ impl Runtime {
         self.model.lock().unwrap().queue(a);
     }
 
+    #[frb(sync)]
     pub fn queue_credential(&self, u: String, p: String) {
         self.queue(Action::Credential(u, p));
     }
 
+    #[frb(sync)]
     pub fn queue_login(&self) {
         self.queue(Action::Login);
     }
 
+    #[frb(sync)]
     pub fn queue_logout(&self) {
         self.queue(Action::Logout);
     }
 
+    #[frb(sync)]
     pub fn queue_flux(&self) {
         self.queue(Action::Flux);
     }
 
+    #[frb(sync)]
     pub fn queue_state(&self, s: Option<NetState>) {
         self.queue(Action::State(s));
     }
 
+    #[frb(sync)]
     pub fn queue_status(&self, s: NetStatus) {
         self.queue(Action::Status(Some(s)));
     }
 
+    #[frb(sync)]
     pub fn queue_details(&self) {
         self.queue(Action::Details);
     }
 
+    #[frb(sync)]
     pub fn queue_onlines(&self) {
         self.queue(Action::Online);
     }
 
+    #[frb(sync)]
     pub fn queue_connect(&self, ip: Ipv4AddrWrap) {
         self.queue(Action::Connect(Ipv4Addr::from(ip.octets)));
     }
 
+    #[frb(sync)]
     pub fn queue_drop(&self, ips: Vec<Ipv4AddrWrap>) {
         for ip in ips {
             self.queue(Action::Drop(Ipv4Addr::from(ip.octets)));

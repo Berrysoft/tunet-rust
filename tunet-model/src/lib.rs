@@ -192,7 +192,9 @@ impl Model {
                             action_sender.send_async(Action::Online).await?;
                         }
                         Err(e) => {
-                            action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                            action_sender
+                                .send_async(Action::LogDone(e.to_string()))
+                                .await?;
                         }
                     }
                     anyhow::Ok(())
@@ -210,7 +212,9 @@ impl Model {
                             action_sender.send_async(Action::Online).await?;
                         }
                         Err(e) => {
-                            action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                            action_sender
+                                .send_async(Action::LogDone(e.to_string()))
+                                .await?;
                         }
                     }
                     anyhow::Ok(())
@@ -368,7 +372,9 @@ impl Model {
                             .await?;
                     }
                     Err(e) => {
-                        action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                        action_sender
+                            .send_async(Action::LogDone(e.to_string()))
+                            .await?;
                     }
                 }
                 anyhow::Ok(())
@@ -393,7 +399,9 @@ impl Model {
                             .await?;
                     }
                     Err(e) => {
-                        action_sender.send_async(Action::LogDone(e.to_string())).await?;
+                        action_sender
+                            .send_async(Action::LogDone(e.to_string()))
+                            .await?;
                     }
                 }
                 anyhow::Ok(())

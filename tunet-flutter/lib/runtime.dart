@@ -145,41 +145,41 @@ class ManagedRuntime extends NotifyPropertyChanged {
     );
 
     await for (final msg in runtime.start(config: config)) {
-      await msg.when<Future<void>>(
-        credential: (username) async {
-          await queueState();
-          await queueDetails();
-          await queueOnlines();
+      msg.when<void>(
+        credential: (username) {
+          queueState();
+          queueDetails();
+          queueOnlines();
           this.username = username;
         },
-        state: (state) async {
-          await queueFlux();
+        state: (state) {
+          queueFlux();
           this.state = state;
         },
-        status: (status) async {
-          await queueState();
+        status: (status) {
+          queueState();
           this.status = status;
         },
-        log: (logText) async {
+        log: (logText) {
           this.logText = logText;
         },
-        flux: (netFlux) async {
+        flux: (netFlux) {
           this.netFlux = netFlux;
         },
-        online: (onlines) async {
+        online: (onlines) {
           this.onlines = onlines;
         },
-        details: (details, daily) async {
+        details: (details, daily) {
           detailsData.setData(details);
           this.daily = daily;
         },
-        logBusy: (logBusy) async {
+        logBusy: (logBusy) {
           this.logBusy = logBusy;
         },
-        onlineBusy: (onlineBusy) async {
+        onlineBusy: (onlineBusy) {
           this.onlineBusy = onlineBusy;
         },
-        detailBusy: (detailBusy) async {
+        detailBusy: (detailBusy) {
           this.detailBusy = detailBusy;
         },
       );
@@ -223,34 +223,33 @@ class ManagedRuntime extends NotifyPropertyChanged {
     await storage.write(key: '$u@tunet', value: p);
   }
 
-  Future<void> queueState({NetState? s}) => runtime.queueState(s: s);
-  Future<void> queueStatus() async {
-    await runtime.queueStatus(s: await loadStatus());
+  void queueState({NetState? s}) => runtime.queueState(s: s);
+  void queueStatus() async {
+    runtime.queueStatus(s: await loadStatus());
   }
 
-  Future<void> queueCredential({required String u, required String p}) async {
+  void queueCredential({required String u, required String p}) async {
     await saveCredential(u, p);
-    await runtime.queueCredential(u: u, p: p);
+    runtime.queueCredential(u: u, p: p);
   }
 
-  Future<void> queueLogin() => runtime.queueLogin();
-  Future<void> queueLogout() => runtime.queueLogout();
-  Future<void> queueFlux() => runtime.queueFlux();
+  void queueLogin() => runtime.queueLogin();
+  void queueLogout() => runtime.queueLogout();
+  void queueFlux() => runtime.queueFlux();
 
-  Future<void> queueDetails() async {
+  void queueDetails() {
     detailsData.setData(List.empty());
     daily = null;
-    await runtime.queueDetails();
+    runtime.queueDetails();
   }
 
-  Future<void> queueOnlines() async {
+  void queueOnlines() {
     onlines = null;
-    await runtime.queueOnlines();
+    runtime.queueOnlines();
   }
 
-  Future<void> queueConnect({required Ipv4AddrWrap ip}) =>
-      runtime.queueConnect(ip: ip);
-  Future<void> queueDrop({required List<Ipv4AddrWrap> ips}) =>
+  void queueConnect({required Ipv4AddrWrap ip}) => runtime.queueConnect(ip: ip);
+  void queueDrop({required List<Ipv4AddrWrap> ips}) =>
       runtime.queueDrop(ips: ips);
 }
 
