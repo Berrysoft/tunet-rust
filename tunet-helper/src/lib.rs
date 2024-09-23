@@ -252,17 +252,8 @@ pub fn create_http_client() -> HttpClient {
 
 #[cfg(target_os = "android")]
 pub fn create_http_client() -> HttpClient {
-    use rustls::ClientConfig;
-    use rustls_platform_verifier::Verifier;
-    use std::sync::Arc;
-
     cyper::ClientBuilder::new()
-        .use_rustls(Arc::new(
-            ClientConfig::builder()
-                .dangerous()
-                .with_custom_certificate_verifier(Arc::new(Verifier::new()))
-                .with_no_client_auth(),
-        ))
+        .use_rustls(std::sync::Arc::new(rustls_platform_verifier::tls_config()))
         .cookie_store(true)
         .build()
 }
