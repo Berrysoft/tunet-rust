@@ -245,17 +245,8 @@ impl TUNetConnect {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 pub fn create_http_client() -> HttpClient {
     cyper::ClientBuilder::new().cookie_store(true).build()
-}
-
-#[cfg(target_os = "android")]
-pub fn create_http_client() -> HttpClient {
-    cyper::ClientBuilder::new()
-        .use_rustls(std::sync::Arc::new(rustls_platform_verifier::tls_config()))
-        .cookie_store(true)
-        .build()
 }
 
 #[cfg(feature = "dart")]

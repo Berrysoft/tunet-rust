@@ -32,7 +32,6 @@ allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
 [target.'cfg(target_os = "android")'.dependencies]
 cyper = { workspace = true, default-features = false, features = ["rustls"] }
 rustls = { workspace = true, default-features = false, features = ["ring"] }
-rustls-platform-verifier = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 cyper = { workspace = true, default-features = false, features = [
