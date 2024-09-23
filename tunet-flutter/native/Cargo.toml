@@ -23,7 +23,7 @@ flutter_rust_bridge = { version = "2.4.0", features = ["chrono"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.14"
-jni = "0.19"
+jni = "0.21"
 rustls-platform-verifier = { workspace = true }
 
 [build-dependencies]
