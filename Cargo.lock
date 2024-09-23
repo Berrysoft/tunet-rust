@@ -3022,6 +3022,7 @@ dependencies = [
  "bytemuck",
  "byteorder-lite",
  "num-traits",
+ "png",
 ]
 
 [[package]]
@@ -6182,7 +6183,7 @@ dependencies = [
  "compio",
  "flume",
  "i-slint-backend-winit",
- "image 0.24.9",
+ "image 0.25.2",
  "mac_address2",
  "paste",
  "plotters",
