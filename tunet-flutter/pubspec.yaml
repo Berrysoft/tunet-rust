@@ -68,7 +68,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-  ffigen: ^14.0.0
+  ffigen: ^15.0.0
   build_runner: ^2.4.5
   freezed: ^2.3.5
 
