@@ -39,7 +39,7 @@ anyhow = "1"
 async-stream = "0.3"
 cfg-if = "1"
 enum_dispatch = "0.3"
-thiserror = "1"
+thiserror = "2"
 
 compio = "0.12"
 cyper = { version = "0.1", default-features = false }
