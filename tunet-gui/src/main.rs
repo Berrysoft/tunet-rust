@@ -16,6 +16,11 @@ use tunet_settings::SettingsReader;
 slint::include_modules!();
 
 fn main() -> Result<()> {
+    #[cfg(target_os = "linux")]
+    if std::env::var("WAYLAND_DISPLAY").is_ok() {
+        wayland_set_app_id()?;
+    }
+
     let app = App::new()?;
 
     let context = UpdateContext::new(&app);
@@ -138,4 +143,16 @@ fn accent_color() -> color_theme::Color {
         g: 120,
         b: 212,
     })
+}
+
+#[cfg(target_os = "linux")]
+fn wayland_set_app_id() -> Result<(), slint::platform::SetPlatformError> {
+    use i_slint_backend_winit::winit::platform::wayland::WindowAttributesExtWayland;
+
+    let backend = i_slint_backend_winit::Backend::builder()
+        .with_window_attributes_hook(|attr| attr.with_name("io.github.berrysoft.tunet", ""))
+        .build()
+        .unwrap();
+
+    slint::platform::set_platform(Box::new(backend))
 }
