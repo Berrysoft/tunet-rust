@@ -11,8 +11,7 @@ use std::net::Ipv4Addr;
 use tunet_helper::{usereg::*, *};
 use tunet_settings::*;
 
-fn get_flux_color(f: &Flux, total: bool) -> Color {
-    let flux = f.0;
+fn get_flux_color(&Flux(flux): &Flux, total: bool) -> Color {
     if flux == 0 {
         Color::Cyan
     } else if flux < if total { 20_000_000_000 } else { 2_000_000_000 } {
@@ -317,8 +316,8 @@ impl Detail {
         }
         if self.nuon {
             print!("[[login_time flux]; ");
-            for (date, flux) in details {
-                print!("[{} {}b] ", date, flux.0);
+            for (date, Flux(flux)) in details {
+                print!("[{} {}b] ", date, flux);
             }
             println!("]");
         } else {
