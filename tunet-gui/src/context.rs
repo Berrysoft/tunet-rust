@@ -283,8 +283,8 @@ fn draw_daily(
     let (width, height) = ((width * scale) as u32, (height * scale) as u32);
     let text_color = RGBColor(text_color.red(), text_color.green(), text_color.blue());
 
-    let date_range = (details.now.with_day(1).unwrap(), details.now);
-    let flux_range = (0, details.max_flux.0);
+    let (date_start, date_end) = (details.now.with_day(1).unwrap(), details.now);
+    let (flux_start, Flux(flux_end)) = (0, details.max_flux);
 
     let mut buffer = String::new();
     let backend = SVGBackend::with_string(&mut buffer, (width, height));
@@ -301,8 +301,8 @@ fn draw_daily(
             .margin_top(10.0 * scale)
             .margin_right(20.0 * scale)
             .build_cartesian_2d(
-                RangedDate::from(date_range.0..date_range.1),
-                flux_range.0..flux_range.1,
+                RangedDate::from(date_start..date_end),
+                flux_start..flux_end,
             )?;
         chart
             .configure_mesh()
