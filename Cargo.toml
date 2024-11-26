@@ -41,8 +41,8 @@ cfg-if = "1"
 enum_dispatch = "0.3"
 thiserror = "2"
 
-compio = "0.12"
-cyper = { version = "0.1", default-features = false }
+compio = "0.13"
+cyper = { version = "0.2", default-features = false }
 flume = "0.11"
 
 chrono = { version = "0.4", default-features = false, features = [
@@ -67,7 +67,7 @@ keyring = { version = "3", features = [
 mac_address2 = "2"
 
 rustls = { version = "0.23", default-features = false }
-rustls-platform-verifier = "0.3"
+rustls-platform-verifier = "0.4"
 
 
 serde = "1"
