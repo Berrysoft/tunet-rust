@@ -960,9 +960,9 @@ dependencies = [
 
 [[package]]
 name = "compio"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb5dcaed4ddf9ebe6824624cc58db7297bdf7340edc90ef49d44bfe6d3173bea"
+checksum = "0fe8bc9e08b21482403f5f5ada7e2837c62333ee2cbb90514acf1a3c92def509"
 dependencies = [
  "compio-buf",
  "compio-dispatcher",
@@ -4887,7 +4887,6 @@ dependencies = [
  "rand",
  "ring",
  "rustc-hash 2.0.0",
- "rustls",
  "rustls-pki-types",
  "slab",
  "thiserror 2.0.3",
