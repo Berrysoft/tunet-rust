@@ -57,7 +57,7 @@ base64 = "0.22"
 futures-core = "0.3"
 futures-util = "0.3"
 
-itertools = "0.13"
+itertools = "0.14"
 
 keyring = { version = "3", features = [
     "apple-native",
@@ -67,7 +67,7 @@ keyring = { version = "3", features = [
 mac_address2 = "2"
 
 rustls = { version = "0.23", default-features = false }
-rustls-platform-verifier = "0.4"
+rustls-platform-verifier = "0.5"
 
 
 serde = "1"
@@ -77,5 +77,5 @@ serde_with = "3"
 core-foundation = "0.9"
 system-configuration = "0.6"
 
-windows = "0.58"
+windows = "0.59"
 winresource = "0.1"
