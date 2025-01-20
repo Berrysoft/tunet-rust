@@ -11,12 +11,10 @@ pub use chrono::{
 pub use cyper::Client as HttpClient;
 
 mod auth;
-mod net;
 pub mod suggest;
 pub mod usereg;
 
 pub use auth::{Auth4Connect, Auth6Connect};
-pub use net::NetConnect;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
@@ -162,7 +160,6 @@ impl std::str::FromStr for NetFlux {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NetState {
     Unknown,
-    Net,
     Auth4,
     Auth6,
 }
@@ -170,9 +167,7 @@ pub enum NetState {
 impl std::str::FromStr for NetState {
     type Err = NetHelperError;
     fn from_str(s: &str) -> NetHelperResult<Self> {
-        if s.eq_ignore_ascii_case("net") {
-            Ok(NetState::Net)
-        } else if s.eq_ignore_ascii_case("auth4") {
+        if s.eq_ignore_ascii_case("auth4") {
             Ok(NetState::Auth4)
         } else if s.eq_ignore_ascii_case("auth6") {
             Ok(NetState::Auth6)
@@ -190,7 +185,6 @@ pub trait TUNetHelper: Send + Sync {
 
 #[derive(Clone)]
 pub enum TUNetConnect {
-    Net(NetConnect),
     Auth4(Auth4Connect),
     Auth6(Auth6Connect),
 }
@@ -198,7 +192,6 @@ pub enum TUNetConnect {
 impl TUNetHelper for TUNetConnect {
     async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
         match self {
-            Self::Net(inner) => TUNetHelper::login(inner, u, p).await,
             Self::Auth4(inner) => TUNetHelper::login(inner, u, p).await,
             Self::Auth6(inner) => TUNetHelper::login(inner, u, p).await,
         }
@@ -206,7 +199,6 @@ impl TUNetHelper for TUNetConnect {
 
     async fn logout(&self, u: &str) -> NetHelperResult<String> {
         match self {
-            TUNetConnect::Net(inner) => TUNetHelper::logout(inner, u).await,
             TUNetConnect::Auth4(inner) => TUNetHelper::logout(inner, u).await,
             TUNetConnect::Auth6(inner) => TUNetHelper::logout(inner, u).await,
         }
@@ -214,7 +206,6 @@ impl TUNetHelper for TUNetConnect {
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
         match self {
-            TUNetConnect::Net(inner) => TUNetHelper::flux(inner).await,
             TUNetConnect::Auth4(inner) => TUNetHelper::flux(inner).await,
             TUNetConnect::Auth6(inner) => TUNetHelper::flux(inner).await,
         }
@@ -224,7 +215,6 @@ impl TUNetHelper for TUNetConnect {
 impl TUNetConnect {
     pub fn new(s: NetState, client: HttpClient) -> NetHelperResult<TUNetConnect> {
         match s {
-            NetState::Net => Ok(Self::Net(net::NetConnect::new(client))),
             NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::new(client))),
             NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::new(client))),
             _ => Err(NetHelperError::InvalidHost),
@@ -296,7 +286,6 @@ mod impl_dart {
         fn into_dart(self) -> DartCObject {
             match self {
                 NetState::Unknown => 0,
-                NetState::Net => 1,
                 NetState::Auth4 => 2,
                 NetState::Auth6 => 3,
             }

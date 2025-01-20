@@ -180,17 +180,17 @@ pub struct Auth4Uri;
 impl AuthConnectUri for Auth4Uri {
     #[inline]
     fn log_uri() -> &'static str {
-        "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
+        "https://tauth4.tsinghua.edu.cn/cgi-bin/srun_portal"
     }
 
     #[inline]
     fn challenge_uri() -> &'static str {
-        "https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge"
+        "https://tauth4.tsinghua.edu.cn/cgi-bin/get_challenge"
     }
 
     #[inline]
     fn flux_uri() -> &'static str {
-        "https://auth4.tsinghua.edu.cn/rad_user_info.php"
+        "https://tauth4.tsinghua.edu.cn/cgi-bin/rad_user_info"
     }
 }
 
@@ -200,17 +200,17 @@ pub struct Auth6Uri;
 impl AuthConnectUri for Auth6Uri {
     #[inline]
     fn log_uri() -> &'static str {
-        "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal"
+        "https://tauth6.tsinghua.edu.cn/cgi-bin/srun_portal"
     }
 
     #[inline]
     fn challenge_uri() -> &'static str {
-        "https://auth6.tsinghua.edu.cn/cgi-bin/get_challenge"
+        "https://tauth6.tsinghua.edu.cn/cgi-bin/get_challenge"
     }
 
     #[inline]
     fn flux_uri() -> &'static str {
-        "https://auth6.tsinghua.edu.cn/rad_user_info.php"
+        "https://tauth6.tsinghua.edu.cn/cgi-bin/rad_user_info"
     }
 }
 
