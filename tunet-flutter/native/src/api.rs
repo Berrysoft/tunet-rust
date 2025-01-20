@@ -29,7 +29,6 @@ pub enum UpdateMsgWrap {
 #[frb(mirror(NetState))]
 pub enum _NetState {
     Unknown,
-    Net,
     Auth4,
     Auth6,
 }
