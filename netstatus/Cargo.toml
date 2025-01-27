@@ -18,7 +18,7 @@ windows = { workspace = true, features = [
 ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2-core-wlan = { version = "0.2", features = [
+objc2-core-wlan = { version = "0.3", features = [
     "CWInterface",
     "CWWiFiClient",
 ] }
