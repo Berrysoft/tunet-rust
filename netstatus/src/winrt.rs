@@ -6,7 +6,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-use windows::{core::*, Foundation::EventRegistrationToken, Networking::Connectivity::*};
+use windows::{core::*, Networking::Connectivity::*};
 
 fn current_impl() -> Result<NetStatus> {
     let profile = NetworkInformation::GetInternetConnectionProfile()?;
@@ -66,7 +66,7 @@ impl Stream for StatusWatchStream {
     }
 }
 
-struct NetworkStatusChangedToken(EventRegistrationToken);
+struct NetworkStatusChangedToken(i64);
 
 impl Drop for NetworkStatusChangedToken {
     fn drop(&mut self) {

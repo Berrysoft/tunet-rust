@@ -8,7 +8,7 @@ pub struct AuthTea {
 #[inline]
 fn to_u32_with_len(a: &[u8]) -> Vec<u8> {
     let c = a.len();
-    let n = (c + 3) / 4;
+    let n = c.div_ceil(4);
     let mut v = vec![0; (n + 1) * 4];
     v[..c].copy_from_slice(a);
     write_u32(&mut v[n * 4..][..4], c as u32);

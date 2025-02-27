@@ -31,7 +31,7 @@ struct OwnedEnvironmentBlock(*mut c_void);
 impl OwnedEnvironmentBlock {
     pub fn new(token: &impl AsRawHandle) -> Result<Self> {
         let mut env = null_mut();
-        unsafe { CreateEnvironmentBlock(&mut env, HANDLE(token.as_raw_handle() as _), false) }?;
+        unsafe { CreateEnvironmentBlock(&mut env, Some(HANDLE(token.as_raw_handle())), false) }?;
         Ok(Self(env))
     }
 }
@@ -50,7 +50,15 @@ impl OwnedSession {
     pub fn enumerate() -> Result<Self> {
         let mut buffer = null_mut();
         let mut count = 0;
-        unsafe { WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &mut buffer, &mut count) }?;
+        unsafe {
+            WTSEnumerateSessionsW(
+                Some(WTS_CURRENT_SERVER_HANDLE),
+                0,
+                1,
+                &mut buffer,
+                &mut count,
+            )
+        }?;
         Ok(Self(buffer, count))
     }
 }
@@ -76,7 +84,7 @@ fn session_state(session_id: u32) -> Result<WTS_CONNECTSTATE_CLASS> {
     let mut bytesread = 0;
     unsafe {
         WTSQuerySessionInformationW(
-            WTS_CURRENT_SERVER_HANDLE,
+            Some(WTS_CURRENT_SERVER_HANDLE),
             session_id,
             WTSConnectState,
             &mut pstate as *mut _ as _,
@@ -119,9 +127,9 @@ fn command_as(
 
     unsafe {
         CreateProcessAsUserW(
-            HANDLE(token.as_raw_handle() as _),
+            Some(HANDLE(token.as_raw_handle())),
             &app_name,
-            PWSTR(command_line.as_mut_ptr()),
+            Some(PWSTR(command_line.as_mut_ptr())),
             None,
             None,
             false,
@@ -170,7 +178,7 @@ pub fn error(s: impl AsRef<str>) -> Result<()> {
     let mut res = MESSAGEBOX_RESULT(0);
     unsafe {
         WTSSendMessageW(
-            WTS_CURRENT_SERVER_HANDLE,
+            Some(WTS_CURRENT_SERVER_HANDLE),
             WTSGetActiveConsoleSessionId(),
             title,
             (title.as_wide().len() * 2) as _,
