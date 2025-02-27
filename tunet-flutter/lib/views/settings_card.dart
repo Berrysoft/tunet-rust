@@ -55,7 +55,6 @@ class SettingsCard extends StatelessWidget {
                 runtime.queueState(s: value);
               },
               itemBuilder: (context) => [
-                NetState.Net,
                 NetState.Auth4,
                 NetState.Auth6,
               ]

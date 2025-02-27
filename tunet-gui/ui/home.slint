@@ -52,7 +52,7 @@ export component HomePage inherits VerticalBox {
 
     HorizontalBox {
         ComboBox {
-            model: ["Net", "Auth4", "Auth6"];
+            model: ["Auth4", "Auth6"];
             current-index: HomeModel.state;
             selected(s) => { HomeModel.state-changed(s) }
         }
