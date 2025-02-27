@@ -82,10 +82,8 @@ flutter {
 ].each {
     def taskPostfix = it.key
     def profileMode = it.value
-    tasks.whenTaskAdded { task ->
-        if (task.name == "assemble$taskPostfix") {
-            task.dependsOn "cargoBuild$taskPostfix"
-        }
+    tasks.named("assemble$taskPostfix").configure { task ->
+        task.dependsOn "cargoBuild$taskPostfix"
     }
     tasks.register("cargoBuild$taskPostfix", Exec) {
         workingDir "../../native"
