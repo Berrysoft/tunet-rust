@@ -23,7 +23,7 @@ class DailyCard extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 getTitlesWidget: (value, meta) => SideTitleWidget(
-                  axisSide: meta.axisSide,
+                  meta: meta,
                   child: Text(value.toInt().formatByteSize()),
                 ),
                 showTitles: true,
@@ -33,7 +33,7 @@ class DailyCard extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 getTitlesWidget: (value, meta) => SideTitleWidget(
-                  axisSide: meta.axisSide,
+                  meta: meta,
                   child: Text(value.toInt().toString()),
                 ),
                 showTitles: true,
