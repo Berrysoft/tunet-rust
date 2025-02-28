@@ -6516,7 +6516,7 @@ dependencies = [
 
 [[package]]
 name = "tunet"
-version = "0.9.4"
+version = "0.9.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -6533,7 +6533,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-cui"
-version = "0.9.4"
+version = "0.9.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -6550,7 +6550,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-gui"
-version = "0.9.4"
+version = "0.9.5"
 dependencies = [
  "anyhow",
  "color-theme",
@@ -6610,7 +6610,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-service"
-version = "0.9.4"
+version = "0.9.5"
 dependencies = [
  "anyhow",
  "async-stream",
