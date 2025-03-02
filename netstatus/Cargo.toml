@@ -15,12 +15,15 @@ log = { workspace = true }
 windows = { workspace = true, features = ["Networking_Connectivity"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+libc = { workspace = true }
 objc2-core-wlan = { version = "0.3", features = [
     "CWInterface",
     "CWWiFiClient",
 ] }
-system-configuration = { workspace = true }
-core-foundation = { workspace = true }
+objc2-system-configuration = { version = "0.3", features = [
+    "SCNetworkReachability",
+] }
+objc2-core-foundation = { version = "0.3", features = ["CFRunLoop"] }
 
 [target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
 flume = { workspace = true }

@@ -73,8 +73,7 @@ serde = "1"
 serde_json = "1"
 serde_with = "3"
 
-core-foundation = "0.9"
-system-configuration = "0.6"
+libc = "0.2"
 
 windows = "0.60"
 winresource = "0.1"
