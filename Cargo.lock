@@ -1337,6 +1337,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb4a24b1aaf0fd0ce8b45161144d6f42cd91677fd5940fd431183eb023b3a2b8"
 
 [[package]]
+name = "convert_case"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb402b8d4c85569410425650ce3eddc7d698ed96d39a73f941b08fb63082f1e7"
+dependencies = [
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "cookie"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1555,10 +1564,28 @@ checksum = "829d955a0bb380ef178a640b91779e3987da38c9aea133b20614cfed8cdea9c6"
 dependencies = [
  "bitflags 2.9.0",
  "crossterm_winapi",
- "futures-core",
  "mio 1.0.3",
  "parking_lot",
  "rustix 0.38.44",
+ "signal-hook",
+ "signal-hook-mio",
+ "winapi",
+]
+
+[[package]]
+name = "crossterm"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8b9f2e4c67f833b660cdb0a3523065869fb35570177239812ed4c905aeff87b"
+dependencies = [
+ "bitflags 2.9.0",
+ "crossterm_winapi",
+ "derive_more 2.0.1",
+ "document-features",
+ "futures-core",
+ "mio 1.0.3",
+ "parking_lot",
+ "rustix 1.0.5",
  "signal-hook",
  "signal-hook-mio",
  "winapi",
@@ -1760,7 +1787,16 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
 dependencies = [
- "derive_more-impl",
+ "derive_more-impl 1.0.0",
+]
+
+[[package]]
+name = "derive_more"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
+dependencies = [
+ "derive_more-impl 2.0.1",
 ]
 
 [[package]]
@@ -1773,6 +1809,18 @@ dependencies = [
  "quote",
  "syn 2.0.100",
  "unicode-xid",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
+dependencies = [
+ "convert_case 0.7.1",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
 ]
 
 [[package]]
@@ -2261,7 +2309,7 @@ dependencies = [
  "cbindgen",
  "chrono",
  "clap",
- "convert_case",
+ "convert_case 0.5.0",
  "derivative",
  "enum-iterator",
  "enum_dispatch",
@@ -3137,7 +3185,7 @@ dependencies = [
  "cfg-if",
  "cfg_aliases 0.2.1",
  "copypasta",
- "derive_more",
+ "derive_more 1.0.0",
  "futures",
  "glutin",
  "glutin-winit",
@@ -3170,7 +3218,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f13e0029668831db31490d9e6e2ae49bc327a0c08ee1ea7380a3b6b47a8b8d61"
 dependencies = [
  "cfg-if",
- "derive_more",
+ "derive_more 1.0.0",
  "fontdb",
  "libloading",
  "ttf-parser 0.25.1",
@@ -3185,7 +3233,7 @@ dependencies = [
  "by_address",
  "codemap",
  "codemap-diagnostic",
- "derive_more",
+ "derive_more 1.0.0",
  "fontdue",
  "i-slint-common",
  "image",
@@ -3219,7 +3267,7 @@ dependencies = [
  "chrono",
  "clru",
  "const-field-offset",
- "derive_more",
+ "derive_more 1.0.0",
  "euclid",
  "fontdue",
  "i-slint-common",
@@ -3274,7 +3322,7 @@ dependencies = [
  "const-field-offset",
  "core-foundation 0.9.4",
  "core-text",
- "derive_more",
+ "derive_more 1.0.0",
  "dwrote",
  "femtovg",
  "glow",
@@ -3304,7 +3352,7 @@ dependencies = [
  "cfg-if",
  "cfg_aliases 0.2.1",
  "const-field-offset",
- "derive_more",
+ "derive_more 1.0.0",
  "glow",
  "glutin",
  "i-slint-common",
@@ -5705,7 +5753,7 @@ dependencies = [
  "bitflags 2.9.0",
  "cassowary",
  "compact_str",
- "crossterm",
+ "crossterm 0.28.1",
  "indoc",
  "instability",
  "itertools 0.13.0",
@@ -6522,7 +6570,7 @@ version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8dd74685ecfbc42918b9bf6de3ffcd9966ca3ab03d0955c6b2e9931e767f2823"
 dependencies = [
- "derive_more",
+ "derive_more 1.0.0",
  "i-slint-compiler",
  "spin_on",
  "toml_edit 0.22.24",
@@ -7226,7 +7274,7 @@ dependencies = [
  "anyhow",
  "clap",
  "compio",
- "crossterm",
+ "crossterm 0.29.0",
  "flume",
  "futures-util",
  "ratatui",
