@@ -34,13 +34,13 @@ dependencies:
   flutter_rust_bridge: ^2.6.0
   meta: ^1.9.1
   uuid: ^4.1.0
-  freezed_annotation: ^2.2.0
+  freezed_annotation: ^3.0.0
 
   intl: ^0.20.2
   collection: ^1.17.1
 
   shared_preferences: ^2.1.2
-  flutter_secure_storage: ^9.0.0
+  flutter_secure_storage: ^10.0.0-beta.4
   permission_handler: ^12.0.0+1
 
   dynamic_color: ^1.7.0
@@ -70,7 +70,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   ffigen: ^18.1.0
   build_runner: ^2.4.5
-  freezed: ^2.3.5
+  freezed: ^3.0.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
