@@ -27,4 +27,4 @@ jni = "0.21"
 rustls-platform-verifier = { workspace = true }
 
 [build-dependencies]
-flutter_rust_bridge_codegen = "2.6.0"
+flutter_rust_bridge_codegen = "2.10.0"
