@@ -2239,9 +2239,9 @@ dependencies = [
 
 [[package]]
 name = "flutter_rust_bridge_codegen"
-version = "2.9.0"
+version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce4b53008b970ccd5a2405bf711beb664c43e7fd216624a606e3a60b49b6753c"
+checksum = "6f9092110d6f6dc82421bb00c5adc23f1595fc9146074ff856cb17c3af647407"
 dependencies = [
  "anyhow",
  "cargo_metadata",
