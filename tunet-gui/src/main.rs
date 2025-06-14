@@ -6,12 +6,17 @@ use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 use winio::{
     App, Button, ButtonEvent, Child, Color, ComboBox, ComboBoxEvent, Component, ComponentSender,
-    Enable, Grid, HAlign, Label, Layoutable, Margin, Size, VAlign, Visible, Window, WindowEvent,
+    Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, Size, VAlign, Visible, Window,
+    WindowEvent,
 };
 
 fn main() {
-    let cred = read_cred().unwrap_or_default();
-    App::new().run::<MainModel>(cred)
+    let mut reader = SettingsReader::new().unwrap();
+    let cred = reader.read_full().unwrap_or_default();
+    let save = App::new().run::<MainModel>(cred);
+    if let MainEvent::Delete(u) = save {
+        reader.delete(&u).unwrap();
+    }
 }
 
 fn accent_color() -> Color {
@@ -23,18 +28,19 @@ fn accent_color() -> Color {
     Color::new(c.r, c.g, c.b, 255)
 }
 
-fn read_cred() -> Option<(String, String)> {
-    let reader = SettingsReader::new().ok()?;
-    reader.read_full().ok()
-}
-
 enum MainMessage {
     Noop,
     Refresh,
-    Close,
+    Close(bool),
     ComboSelect,
+    Cred,
     Action(Action),
     Update(UpdateMsg),
+}
+
+enum MainEvent {
+    Save,
+    Delete(String),
 }
 
 struct MainModel {
@@ -50,6 +56,10 @@ struct MainModel {
     login_button: Child<Button>,
     logout_button: Child<Button>,
     refresh_button: Child<Button>,
+    username_input: Child<Edit>,
+    password_input: Child<Edit>,
+    cred_button: Child<Button>,
+    del_button: Child<Button>,
     info1: Child<Label>,
     info2: Child<Label>,
 }
@@ -57,7 +67,7 @@ struct MainModel {
 impl Component for MainModel {
     type Init<'a> = (String, String);
     type Message = MainMessage;
-    type Event = ();
+    type Event = MainEvent;
 
     fn init(init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Self {
         let (action_sender, action_receiver) = flume::unbounded();
@@ -122,6 +132,16 @@ impl Component for MainModel {
         let mut refresh_button = Child::<Button>::init(&window);
         refresh_button.set_text("刷新");
 
+        let username_input = Child::<Edit>::init(&window);
+        let mut password_input = Child::<Edit>::init(&window);
+        password_input.set_password(true);
+
+        let mut cred_button = Child::<Button>::init(&window);
+        cred_button.set_text("更新凭据");
+
+        let mut del_button = Child::<Button>::init(&window);
+        del_button.set_text("删除并退出");
+
         let mut info1 = Child::<Label>::init(&window);
         info1.set_text("服务热线（8:00~20:00）010-62784859");
         info1.set_halign(HAlign::Center);
@@ -147,6 +167,10 @@ impl Component for MainModel {
             login_button,
             logout_button,
             refresh_button,
+            username_input,
+            password_input,
+            cred_button,
+            del_button,
             info1,
             info2,
         }
@@ -156,7 +180,7 @@ impl Component for MainModel {
         let fut_window = self.window.start(
             sender,
             |e| match e {
-                WindowEvent::Close => Some(MainMessage::Close),
+                WindowEvent::Close => Some(MainMessage::Close(true)),
                 WindowEvent::Resize | WindowEvent::Move => Some(MainMessage::Refresh),
                 _ => None,
             },
@@ -194,16 +218,44 @@ impl Component for MainModel {
             },
             || MainMessage::Noop,
         );
+        let fut_cred = self.cred_button.start(
+            sender,
+            |e| match e {
+                ButtonEvent::Click => Some(MainMessage::Cred),
+                _ => None,
+            },
+            || MainMessage::Noop,
+        );
+        let fut_del = self.del_button.start(
+            sender,
+            |e| match e {
+                ButtonEvent::Click => Some(MainMessage::Close(false)),
+                _ => None,
+            },
+            || MainMessage::Noop,
+        );
 
-        futures_util::join!(fut_window, fut_combo, fut_login, fut_logout, fut_refresh);
+        futures_util::join!(
+            fut_window,
+            fut_combo,
+            fut_login,
+            fut_logout,
+            fut_refresh,
+            fut_cred,
+            fut_del
+        );
     }
 
     async fn update(&mut self, message: Self::Message, sender: &ComponentSender<Self>) -> bool {
         match message {
             MainMessage::Noop => false,
             MainMessage::Refresh => true,
-            MainMessage::Close => {
-                sender.output(());
+            MainMessage::Close(save) => {
+                sender.output(if save {
+                    MainEvent::Save
+                } else {
+                    MainEvent::Delete(self.username_input.text())
+                });
                 false
             }
             MainMessage::ComboSelect => {
@@ -217,6 +269,13 @@ impl Component for MainModel {
                     )));
                 false
             }
+            MainMessage::Cred => {
+                self.model.queue(Action::Credential(
+                    self.username_input.text(),
+                    self.password_input.text(),
+                ));
+                false
+            }
             MainMessage::Action(a) => {
                 self.model.handle(a);
                 false
@@ -225,7 +284,7 @@ impl Component for MainModel {
                 match m {
                     UpdateMsg::Credential => {
                         self.model.queue(Action::State(None));
-                        //self.update_username(&model.username);
+                        self.username_input.set_text(&self.model.username);
                     }
                     UpdateMsg::State => {
                         self.model.queue(Action::Flux);
@@ -339,6 +398,38 @@ impl Component for MainModel {
                 .column(2)
                 .row(3)
                 .margin(margin)
+                .finish();
+
+            let mut cred_grid = Grid::from_str("1*,auto", "1*,1*").unwrap();
+            cred_grid
+                .push(&mut self.username_input)
+                .column(0)
+                .row(0)
+                .margin(margin)
+                .finish();
+            cred_grid
+                .push(&mut self.password_input)
+                .column(0)
+                .row(1)
+                .margin(margin)
+                .finish();
+            cred_grid
+                .push(&mut self.cred_button)
+                .column(1)
+                .row(0)
+                .margin(margin)
+                .finish();
+            cred_grid
+                .push(&mut self.del_button)
+                .column(1)
+                .row(1)
+                .margin(margin)
+                .finish();
+
+            grid.push(&mut cred_grid)
+                .column(0)
+                .column_span(3)
+                .row(4)
                 .finish();
 
             grid.push(&mut self.info1)
