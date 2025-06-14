@@ -113,7 +113,7 @@ pub async fn run_once(quiet: bool) -> Result<()> {
             }
         }
         Err(e) => {
-            log::error!("{}", e);
+            log::error!("{e}");
         }
     }
     Ok(())

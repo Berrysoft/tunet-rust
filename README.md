@@ -23,18 +23,6 @@ $ tunet-gui
 | ------- | ------------------------------------ | ----------------------------------- |
 | Android | ![Android](assets/android.light.png) | ![Android](assets/android.dark.png) |
 
-## CUI（命令行图形界面）
-使用如下命令启动：
-
-``` bash
-# 使用默认（自动判断）方式登录/注销
-$ tunet-cui
-# 使用 auth4 方式登录/注销
-$ tunet-cui -s auth4
-```
-
-![Console](assets/console.png)
-
 ## 命令行
 ### 登录/注销
 ``` bash

@@ -15,11 +15,6 @@ assets = [
         "755",
     ],
     [
-        "target/release/tunet-cui",
-        "usr/bin/",
-        "755",
-    ],
-    [
         "target/release/tunet-gui",
         "usr/bin/",
         "755",
@@ -52,9 +47,7 @@ tunet-settings = { workspace = true }
 anyhow = { workspace = true }
 futures-util = { workspace = true }
 compio = { workspace = true, features = ["macros"] }
-mac_address2 = { workspace = true }
 clap = { workspace = true }
-itertools = { workspace = true }
 console = "0.15"
 enum_dispatch = { workspace = true }
 

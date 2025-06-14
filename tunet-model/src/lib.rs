@@ -4,50 +4,14 @@ use anyhow::Result;
 use compio::runtime::spawn;
 use drop_guard::guard;
 use flume::Sender;
-use futures_util::{pin_mut, StreamExt, TryStreamExt};
-use itertools::Itertools;
-use mac_address2::{MacAddress, MacAddressIterator};
+use futures_util::StreamExt;
 use netstatus::*;
 use std::borrow::Cow;
-use std::collections::HashMap;
-use std::net::Ipv4Addr;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use tunet_helper::{usereg::*, *};
-
-#[derive(Debug, Default)]
-pub struct DetailDaily {
-    pub details: Vec<(NaiveDate, Flux)>,
-    pub now: NaiveDate,
-    pub max_flux: Flux,
-}
-
-impl DetailDaily {
-    pub fn new(details: &[NetDetail]) -> Self {
-        let details = details
-            .iter()
-            .chunk_by(|d| d.logout_time.date())
-            .into_iter()
-            .map(|(key, group)| (key.day(), group.map(|d| d.flux.0).sum::<u64>()))
-            .collect::<HashMap<_, _>>();
-        let mut grouped_details = vec![];
-        let now = Local::now().date_naive();
-        let mut max = 0;
-        for d in 1u32..=now.day() {
-            if let Some(f) = details.get(&d) {
-                max += *f;
-            }
-            grouped_details.push((now.with_day(d).unwrap(), Flux(max)))
-        }
-        Self {
-            details: grouped_details,
-            now,
-            max_flux: Flux(max),
-        }
-    }
-}
+use tunet_helper::*;
 
 pub struct Model {
     action_sender: Sender<Action>,
@@ -59,21 +23,12 @@ pub struct Model {
     pub status: NetStatus,
     pub log: Cow<'static, str>,
     log_busy: BusyBool,
-    online_busy: BusyBool,
-    detail_busy: BusyBool,
     pub flux: NetFlux,
-    pub users: Vec<NetUser>,
-    pub details: Vec<NetDetail>,
-    pub mac_addrs: Vec<MacAddress>,
 }
 
 impl Model {
     pub fn new(action_sender: Sender<Action>, update_sender: Sender<UpdateMsg>) -> Result<Self> {
         let http = create_http_client();
-
-        let mac_addrs = MacAddressIterator::new()
-            .map(|it| it.collect::<Vec<_>>())
-            .unwrap_or_default();
 
         Ok(Self {
             action_sender: action_sender.clone(),
@@ -85,12 +40,7 @@ impl Model {
             status: NetStatus::Unknown,
             log: Cow::default(),
             log_busy: BusyBool::new(action_sender.clone(), UpdateMsg::LogBusy),
-            online_busy: BusyBool::new(action_sender.clone(), UpdateMsg::OnlineBusy),
-            detail_busy: BusyBool::new(action_sender, UpdateMsg::DetailBusy),
             flux: NetFlux::default(),
-            users: Vec::default(),
-            details: Vec::default(),
-            mac_addrs,
         })
     }
 
@@ -174,60 +124,6 @@ impl Model {
                 self.flux = f;
                 self.update(UpdateMsg::Flux);
             }
-            Action::Online => {
-                self.spawn_online();
-            }
-            Action::OnlineDone(us) => {
-                self.users = us;
-                self.update(UpdateMsg::Online);
-            }
-            Action::Connect(addr) => {
-                let action_sender = self.action_sender.clone();
-                let usereg = self.usereg();
-                let (u, p) = (self.username.clone(), self.password.clone());
-                spawn(async move {
-                    match usereg.login(&u, &p).await {
-                        Ok(_) => {
-                            usereg.connect(addr).await?;
-                            action_sender.send_async(Action::Online).await?;
-                        }
-                        Err(e) => {
-                            action_sender
-                                .send_async(Action::LogDone(e.to_string()))
-                                .await?;
-                        }
-                    }
-                    anyhow::Ok(())
-                })
-                .detach();
-            }
-            Action::Drop(addr) => {
-                let action_sender = self.action_sender.clone();
-                let usereg = self.usereg();
-                let (u, p) = (self.username.clone(), self.password.clone());
-                spawn(async move {
-                    match usereg.login(&u, &p).await {
-                        Ok(_) => {
-                            usereg.drop(addr).await?;
-                            action_sender.send_async(Action::Online).await?;
-                        }
-                        Err(e) => {
-                            action_sender
-                                .send_async(Action::LogDone(e.to_string()))
-                                .await?;
-                        }
-                    }
-                    anyhow::Ok(())
-                })
-                .detach();
-            }
-            Action::Details => {
-                self.spawn_details();
-            }
-            Action::DetailsDone(ds) => {
-                self.details = ds;
-                self.update(UpdateMsg::Details);
-            }
             Action::Update(msg) => {
                 self.update(msg);
             }
@@ -267,10 +163,6 @@ impl Model {
 
     fn client(&self) -> Option<TUNetConnect> {
         TUNetConnect::new(self.state, self.http.clone()).ok()
-    }
-
-    fn usereg(&self) -> UseregHelper {
-        UseregHelper::new(self.http.clone())
     }
 
     fn spawn_login(&self) {
@@ -356,70 +248,8 @@ impl Model {
         Ok(())
     }
 
-    fn spawn_online(&self) {
-        if let Some(lock) = self.online_busy.lock() {
-            let action_sender = self.action_sender.clone();
-            let usereg = self.usereg();
-            let (u, p) = (self.username.clone(), self.password.clone());
-            spawn(async move {
-                let _lock = lock;
-                match usereg.login(&u, &p).await {
-                    Ok(_) => {
-                        let users = usereg.users();
-                        pin_mut!(users);
-                        action_sender
-                            .send_async(Action::OnlineDone(users.try_collect().await?))
-                            .await?;
-                    }
-                    Err(e) => {
-                        action_sender
-                            .send_async(Action::LogDone(e.to_string()))
-                            .await?;
-                    }
-                }
-                anyhow::Ok(())
-            })
-            .detach();
-        }
-    }
-
-    fn spawn_details(&self) {
-        if let Some(lock) = self.detail_busy.lock() {
-            let action_sender = self.action_sender.clone();
-            let usereg = self.usereg();
-            let (u, p) = (self.username.clone(), self.password.clone());
-            spawn(async move {
-                let _lock = lock;
-                match usereg.login(&u, &p).await {
-                    Ok(_) => {
-                        let details = usereg.details(NetDetailOrder::LogoutTime, false);
-                        pin_mut!(details);
-                        action_sender
-                            .send_async(Action::DetailsDone(details.try_collect().await?))
-                            .await?;
-                    }
-                    Err(e) => {
-                        action_sender
-                            .send_async(Action::LogDone(e.to_string()))
-                            .await?;
-                    }
-                }
-                anyhow::Ok(())
-            })
-            .detach();
-        }
-    }
-
     pub fn log_busy(&self) -> bool {
         self.log_busy.get()
-    }
-
-    pub fn online_busy(&self) -> bool {
-        self.online_busy.get()
-    }
-
-    pub fn detail_busy(&self) -> bool {
-        self.detail_busy.get()
     }
 }
 
@@ -436,12 +266,6 @@ pub enum Action {
     LogDone(String),
     Flux,
     FluxDone(NetFlux, Option<String>, bool),
-    Online,
-    OnlineDone(Vec<NetUser>),
-    Connect(Ipv4Addr),
-    Drop(Ipv4Addr),
-    Details,
-    DetailsDone(Vec<NetDetail>),
     Update(UpdateMsg),
 }
 
@@ -453,11 +277,7 @@ pub enum UpdateMsg {
     Status,
     Log,
     Flux,
-    Online,
-    Details,
     LogBusy,
-    OnlineBusy,
-    DetailBusy,
 }
 
 struct BusyBool {

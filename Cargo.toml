@@ -7,7 +7,6 @@ members = [
     "tunet-settings",
     "tunet-model",
     "tunet",
-    "tunet-cui",
     "tunet-gui",
     "tunet-service",
     "tunet-flutter/native",
@@ -54,17 +53,13 @@ dirs = "6"
 log = "0.4"
 base64 = "0.22"
 
-futures-core = "0.3"
 futures-util = "0.3"
-
-itertools = "0.14"
 
 keyring = { version = "3", features = [
     "apple-native",
     "windows-native",
     "linux-native",
 ] }
-mac_address2 = "2"
 
 rustls = { version = "0.23", default-features = false }
 rustls-platform-verifier = "0.5"

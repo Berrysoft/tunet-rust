@@ -1,4 +1,4 @@
-import { Button, GridBox, HorizontalBox, LineEdit, StandardButton, StandardTableView, VerticalBox } from "std-widgets.slint";
+import { Button, GridBox, LineEdit, StandardButton, VerticalBox } from "std-widgets.slint";
 
 export global SettingsModel {
     in property <string> username;
@@ -8,12 +8,6 @@ export global SettingsModel {
     callback set_credential(string, string);
 
     callback del_and_exit();
-
-    in property <[[StandardListViewItem]]> onlines: [];
-    callback refresh();
-
-    callback connect_ip(string);
-    callback drop_ip(string);
 }
 
 export component SettingsPage inherits VerticalBox {
@@ -81,57 +75,6 @@ export component SettingsPage inherits VerticalBox {
                         SettingsModel.del_and_exit()
                     }
                 }
-            }
-        }
-    }
-
-    Text {
-        text: "管理连接";
-        horizontal-alignment: center;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    HorizontalBox {
-        iptext := LineEdit {
-            placeholder-text: "IP地址";
-        }
-
-        Button {
-            text: "认证IP";
-            enabled: !SettingsModel.busy;
-            clicked => {
-                SettingsModel.connect-ip(iptext.text)
-            }
-        }
-
-        Button {
-            text: "下线IP";
-            enabled: !SettingsModel.busy;
-            clicked => {
-                SettingsModel.drop-ip(iptext.text)
-            }
-        }
-    }
-
-    VerticalBox {
-        StandardTableView {
-            columns: [
-                { title: "IP地址" },
-                { title: "IPv6地址" },
-                { title: "登录时间" },
-                { title: "流量" },
-                { title: "MAC地址" },
-                { title: "设备" },
-            ];
-            rows: SettingsModel.onlines;
-        }
-
-        Button {
-            text: "刷新";
-            enabled: !SettingsModel.busy;
-            clicked => {
-                SettingsModel.refresh()
             }
         }
     }

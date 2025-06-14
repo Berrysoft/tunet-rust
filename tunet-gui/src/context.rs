@@ -1,18 +1,9 @@
-use crate::{accent_color, App, DetailModel, HomeModel, NetInfo, SettingsModel};
+use crate::{App, HomeModel, NetInfo, SettingsModel};
 use anyhow::Result;
-use mac_address2::MacAddress;
-use plotters::{
-    prelude::{ChartBuilder, IntoDrawingArea, RangedDate, SVGBackend},
-    series::LineSeries,
-    style::{Color as PlotColor, FontFamily, IntoTextStyle, RGBColor, ShapeStyle},
-};
-use slint::{ComponentHandle, Image, ModelRc, SharedString, StandardListViewItem, VecModel};
-use std::{cmp::Reverse, rc::Rc, sync::Arc, sync::Mutex};
-use tunet_helper::{
-    usereg::{NetDetail, NetUser},
-    Datelike, Flux, NetFlux, NetState,
-};
-use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
+use slint::{ComponentHandle, SharedString};
+use std::{sync::Arc, sync::Mutex};
+use tunet_helper::{NetFlux, NetState};
+use tunet_model::{Action, Model, UpdateMsg};
 
 #[derive(Clone)]
 pub struct UpdateContext {
@@ -91,62 +82,9 @@ impl UpdateContext {
             .unwrap();
     }
 
-    fn update_online(&self, onlines: &[NetUser], mac_addrs: &[MacAddress]) {
-        let onlines = onlines.to_vec();
-        let is_local = onlines
-            .iter()
-            .map(|user| {
-                mac_addrs
-                    .iter()
-                    .any(|it| Some(it) == user.mac_address.as_ref())
-            })
-            .collect::<Vec<_>>();
-        self.weak_app
-            .upgrade_in_event_loop(move |app| update_online(app, onlines, is_local))
-            .unwrap();
-    }
-
-    fn update_details(&self, details: &[NetDetail]) {
-        self.data.lock().unwrap().update_details(details.to_vec());
-        self.weak_app
-            .upgrade_in_event_loop({
-                let data = self.data.clone();
-                move |app| {
-                    let data = data.lock().unwrap();
-                    update_details(&app, &data.sorted_details);
-                }
-            })
-            .unwrap();
-    }
-
-    pub fn sort_details(&self, column: i32, descending: bool) {
-        self.weak_app
-            .upgrade_in_event_loop({
-                let data = self.data.clone();
-                move |app| {
-                    let mut data = data.lock().unwrap();
-                    data.sort(column, descending);
-                    update_details(&app, &data.sorted_details);
-                }
-            })
-            .unwrap();
-    }
-
     fn update_log_busy(&self, busy: bool) {
         self.weak_app
             .upgrade_in_event_loop(move |app| app.global::<HomeModel>().set_busy(busy))
-            .unwrap();
-    }
-
-    fn update_online_busy(&self, busy: bool) {
-        self.weak_app
-            .upgrade_in_event_loop(move |app| app.global::<SettingsModel>().set_busy(busy))
-            .unwrap();
-    }
-
-    fn update_detail_busy(&self, busy: bool) {
-        self.weak_app
-            .upgrade_in_event_loop(move |app| app.global::<DetailModel>().set_busy(busy))
             .unwrap();
     }
 
@@ -154,8 +92,6 @@ impl UpdateContext {
         match msg {
             UpdateMsg::Credential => {
                 model.queue(Action::State(None));
-                model.queue(Action::Online);
-                model.queue(Action::Details);
                 self.update_username(&model.username);
             }
             UpdateMsg::State => {
@@ -172,20 +108,8 @@ impl UpdateContext {
             UpdateMsg::Flux => {
                 self.update_info(&model.flux);
             }
-            UpdateMsg::Online => {
-                self.update_online(&model.users, &model.mac_addrs);
-            }
-            UpdateMsg::Details => {
-                self.update_details(&model.details);
-            }
             UpdateMsg::LogBusy => {
                 self.update_log_busy(model.log_busy());
-            }
-            UpdateMsg::OnlineBusy => {
-                self.update_online_busy(model.online_busy());
-            }
-            UpdateMsg::DetailBusy => {
-                self.update_detail_busy(model.detail_busy());
             }
         };
     }
@@ -197,141 +121,9 @@ impl UpdateContext {
     pub fn del_at_exit(&self) -> bool {
         self.data.lock().unwrap().del_at_exit
     }
-
-    pub fn draw_daily_chart(&self, width: f32, height: f32, text_color: slint::Color) -> Image {
-        let app = self.weak_app.upgrade().unwrap();
-        let data = self.data.lock().unwrap();
-        draw_daily(&app, width, height, text_color, &data.daily).unwrap()
-    }
 }
 
 #[derive(Debug, Default)]
 struct UpdateData {
     del_at_exit: bool,
-    sorted_details: Vec<NetDetail>,
-    daily: DetailDaily,
-}
-
-impl UpdateData {
-    pub fn update_details(&mut self, details: Vec<NetDetail>) {
-        self.daily = DetailDaily::new(&details);
-        self.sorted_details = details;
-    }
-
-    pub fn sort(&mut self, column: i32, descending: bool) {
-        if descending {
-            match column {
-                0 => self.sorted_details.sort_by_key(|d| Reverse(d.login_time)),
-                1 => self.sorted_details.sort_by_key(|d| Reverse(d.logout_time)),
-                2 => self.sorted_details.sort_by_key(|d| Reverse(d.flux)),
-                _ => unreachable!(),
-            }
-        } else {
-            match column {
-                0 => self.sorted_details.sort_by_key(|d| d.login_time),
-                1 => self.sorted_details.sort_by_key(|d| d.logout_time),
-                2 => self.sorted_details.sort_by_key(|d| d.flux),
-                _ => unreachable!(),
-            }
-        }
-    }
-}
-
-fn update_online(app: App, onlines: Vec<NetUser>, is_local: Vec<bool>) {
-    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> = Rc::new(VecModel::default());
-    for (user, is_local) in onlines.into_iter().zip(is_local) {
-        let items: Rc<VecModel<StandardListViewItem>> = Rc::new(VecModel::default());
-        items.push(user.address.to_string().as_str().into());
-        items.push(user.address_v6.to_string().as_str().into());
-        items.push(user.login_time.to_string().as_str().into());
-        items.push(user.flux.to_string().as_str().into());
-        items.push(
-            user.mac_address
-                .map(|addr| addr.to_string())
-                .unwrap_or_default()
-                .as_str()
-                .into(),
-        );
-        items.push(if is_local { "本机" } else { "未知" }.into());
-        row_data.push(items.into());
-    }
-    app.global::<SettingsModel>().set_onlines(row_data.into());
-}
-
-fn update_details(app: &App, details: &[NetDetail]) {
-    let row_data: Rc<VecModel<ModelRc<StandardListViewItem>>> = Rc::new(VecModel::default());
-    for d in details {
-        let items: Rc<VecModel<StandardListViewItem>> = Rc::new(VecModel::default());
-        items.push(d.login_time.to_string().as_str().into());
-        items.push(d.logout_time.to_string().as_str().into());
-        items.push(d.flux.to_string().as_str().into());
-        row_data.push(items.into());
-    }
-    app.global::<DetailModel>().set_details(row_data.into());
-}
-
-fn draw_daily(
-    app: &App,
-    width: f32,
-    height: f32,
-    text_color: slint::Color,
-    details: &DetailDaily,
-) -> Result<Image> {
-    let color = accent_color();
-    let color = RGBColor(color.r, color.g, color.b);
-    let scale: f32 = app.window().scale_factor() as _;
-    let (width, height) = ((width * scale) as u32, (height * scale) as u32);
-    let text_color = RGBColor(text_color.red(), text_color.green(), text_color.blue());
-
-    let (date_start, date_end) = (details.now.with_day(1).unwrap(), details.now);
-    let (flux_start, Flux(flux_end)) = (0, details.max_flux);
-
-    let mut buffer = String::new();
-    let backend = SVGBackend::with_string(&mut buffer, (width, height));
-    {
-        let root = backend.into_drawing_area();
-
-        let label_style = (FontFamily::SansSerif, 20.0 * scale)
-            .with_color(text_color)
-            .into_text_style(&root);
-
-        let mut chart = ChartBuilder::on(&root)
-            .x_label_area_size(35.0 * scale)
-            .y_label_area_size(75.0 * scale)
-            .margin_top(10.0 * scale)
-            .margin_right(20.0 * scale)
-            .build_cartesian_2d(
-                RangedDate::from(date_start..date_end),
-                flux_start..flux_end,
-            )?;
-        chart
-            .configure_mesh()
-            .disable_mesh()
-            .axis_style(ShapeStyle {
-                color: text_color.to_rgba(),
-                filled: false,
-                stroke_width: scale as _,
-            })
-            .x_label_style(label_style.clone())
-            .x_label_formatter(&|d| d.format("%m-%d").to_string())
-            .y_label_style(label_style)
-            .y_label_formatter(&|f| Flux(*f).to_string())
-            .y_labels(5)
-            .draw()?;
-        chart.draw_series(
-            LineSeries::new(
-                details.details.iter().map(|(d, f)| (*d, f.0)),
-                ShapeStyle {
-                    color: color.to_rgba(),
-                    filled: true,
-                    stroke_width: (scale * 2.0) as _,
-                },
-            )
-            .point_size((scale * 3.0) as _),
-        )?;
-
-        root.present()?;
-    }
-
-    Image::load_from_svg_data(buffer.as_bytes()).map_err(|_| anyhow::anyhow!("Cannot load SVG."))
 }

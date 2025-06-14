@@ -162,11 +162,11 @@ async fn service_main(
 ) -> Result<()> {
     winlog2::init(SERVICE_NAME)?;
     let mut stopc = rx.into_stream().skip(1);
-    let mut timer = crate::create_timer(interval).fuse();
+    let timer = crate::create_timer(interval).fuse();
     let mut timer = std::pin::pin!(timer);
     let mut events = netstatus::NetStatus::watch().fuse();
     loop {
-        let mut ctrlc = ctrl_c();
+        let ctrlc = ctrl_c();
         let ctrlc = std::pin::pin!(ctrlc);
         futures_util::select! {
             _ = ctrlc.fuse() => {
@@ -183,7 +183,7 @@ async fn service_main(
                 log::info!("Net status changed.");
                 if let Some(()) = e {
                     if let Err(msg) = notify::notify(false) {
-                        log::error!("{}", msg);
+                        log::error!("{msg}");
                     }
                 } else {
                     break;

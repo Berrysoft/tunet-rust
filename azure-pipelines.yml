@@ -36,7 +36,6 @@ jobs:
   - pwsh: |
       cd target/$(target)/release
       cp tunet.exe $(Build.BinariesDirectory)/
-      cp tunet-cui.exe $(Build.BinariesDirectory)/
       cp tunet-gui.exe $(Build.BinariesDirectory)/
       cp tunet-service.exe $(Build.BinariesDirectory)/
     displayName: 'Copy Binaries'

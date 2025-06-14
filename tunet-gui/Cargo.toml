@@ -13,7 +13,6 @@ tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-model = { workspace = true }
 anyhow = { workspace = true }
-mac_address2 = { workspace = true }
 compio = { workspace = true, features = ["time"] }
 flume = { workspace = true }
 slint = { version = "1", default-features = false, features = [
@@ -24,11 +23,6 @@ slint = { version = "1", default-features = false, features = [
 ] }
 i-slint-backend-winit = "1"
 paste = "1"
-plotters = { version = "0.3", default-features = false, features = [
-    "svg_backend",
-    "chrono",
-    "line_series",
-] }
 
 [build-dependencies]
 slint-build = "1"

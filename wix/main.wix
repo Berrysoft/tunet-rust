@@ -10,9 +10,6 @@
     <Feature Id="feature_tunet_cli" Title="Command Line Interface (CLI)" Description="Installs CLI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
       <ComponentRef Id="tunet_cli_binary" />
     </Feature>
-    <Feature Id="feature_tunet_cui" Title="Console User Interface (CUI)" Description="Installs CUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
-      <ComponentRef Id="tunet_cui_binary" />
-    </Feature>
     <Feature Id="feature_tunet_gui" Title="Graphical Interface (GUI)" Description="Installs GUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
       <ComponentRef Id="tunet_gui_binary" />
       <ComponentRef Id="tunet_gui_shortcut" />
@@ -44,10 +41,6 @@
 
           <Component Id="tunet_cli_binary">
             <File Id="tunet_cli_exe" Name="tunet.exe" DiskId="1" KeyPath="yes" />
-          </Component>
-
-          <Component Id="tunet_cui_binary">
-            <File Id="tunet_cui_exe" Name="tunet-cui.exe" DiskId="1" KeyPath="yes" />
           </Component>
 
           <Component Id="tunet_gui_binary">
