@@ -6804,7 +6804,6 @@ dependencies = [
  "compio",
  "console",
  "enum_dispatch",
- "futures-util",
  "tunet-helper",
  "tunet-settings",
  "winresource",
