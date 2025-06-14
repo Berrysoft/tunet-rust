@@ -1,17 +1,15 @@
 use crate::frb_generated::StreamSink;
 use anyhow::Result;
-use chrono::Datelike;
 use flutter_rust_bridge::{frb, setup_default_user_utils};
 
 pub use netstatus::NetStatus;
 pub use std::{net::Ipv4Addr, sync::Mutex};
 use std::{net::Ipv6Addr, sync::Arc};
 pub use tunet_helper::{
-    usereg::{NetDateTime, NetDetail},
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
     NetState,
 };
-pub use tunet_model::{Action, DetailDaily, Model, UpdateMsg};
+pub use tunet_model::{Action, Model, UpdateMsg};
 
 pub enum UpdateMsgWrap {
     Credential(String),
@@ -19,11 +17,7 @@ pub enum UpdateMsgWrap {
     Status(String),
     Log(String),
     Flux(NetFlux),
-    Online(Vec<NetUserWrap>),
-    Details(Vec<NetDetail>, DetailDailyWrap),
     LogBusy(bool),
-    OnlineBusy(bool),
-    DetailBusy(bool),
 }
 
 #[frb(mirror(NetState))]
@@ -60,34 +54,6 @@ pub struct _Balance(pub f64);
 
 #[frb(mirror(NetDateTime))]
 pub struct _NetDateTime(pub NaiveDateTime);
-
-#[frb(mirror(NetDetail))]
-pub struct _NetDetail {
-    pub login_time: NetDateTime,
-    pub logout_time: NetDateTime,
-    pub flux: Flux,
-}
-
-pub struct DetailDailyPoint {
-    pub day: u32,
-    pub flux: Flux,
-}
-
-pub struct DetailDailyWrap {
-    pub details: Vec<DetailDailyPoint>,
-    pub now_month: u32,
-    pub now_day: u32,
-    pub max_flux: Flux,
-}
-
-pub struct NetUserWrap {
-    pub address: Ipv4AddrWrap,
-    pub address_v6: Ipv6AddrWrap,
-    pub login_time: NetDateTime,
-    pub mac_address: String,
-    pub flux: Flux,
-    pub is_local: bool,
-}
 
 pub struct Ipv4AddrWrap {
     pub octets: [u8; 4],
@@ -180,51 +146,7 @@ impl Runtime {
                                 }
                                 UpdateMsg::Log => UpdateMsgWrap::Log(model.log.to_string()),
                                 UpdateMsg::Flux => UpdateMsgWrap::Flux(model.flux.clone()),
-                                UpdateMsg::Online => UpdateMsgWrap::Online(
-                                    model
-                                        .users
-                                        .iter()
-                                        .map(|u| NetUserWrap {
-                                            address: u.address.into(),
-                                            address_v6: u.address_v6.into(),
-                                            login_time: u.login_time,
-                                            mac_address: u
-                                                .mac_address
-                                                .map(|addr| addr.to_string())
-                                                .unwrap_or_default(),
-                                            flux: u.flux,
-                                            is_local: model
-                                                .mac_addrs
-                                                .iter()
-                                                .any(|it| Some(it) == u.mac_address.as_ref()),
-                                        })
-                                        .collect(),
-                                ),
-                                UpdateMsg::Details => {
-                                    UpdateMsgWrap::Details(model.details.clone(), {
-                                        let data = DetailDaily::new(&model.details);
-                                        DetailDailyWrap {
-                                            details: data
-                                                .details
-                                                .into_iter()
-                                                .map(|(date, flux)| DetailDailyPoint {
-                                                    day: date.day(),
-                                                    flux,
-                                                })
-                                                .collect(),
-                                            now_month: data.now.month(),
-                                            now_day: data.now.day(),
-                                            max_flux: data.max_flux,
-                                        }
-                                    })
-                                }
                                 UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(model.log_busy()),
-                                UpdateMsg::OnlineBusy => {
-                                    UpdateMsgWrap::OnlineBusy(model.online_busy())
-                                }
-                                UpdateMsg::DetailBusy => {
-                                    UpdateMsgWrap::DetailBusy(model.detail_busy())
-                                }
                             }
                         };
                         sink.add(msg).unwrap();
@@ -273,16 +195,6 @@ impl Runtime {
     #[frb(sync)]
     pub fn queue_status(&self, s: NetStatus) {
         self.queue(Action::Status(Some(s)));
-    }
-
-    #[frb(sync)]
-    pub fn queue_details(&self) {
-        self.queue(Action::Details);
-    }
-
-    #[frb(sync)]
-    pub fn queue_onlines(&self) {
-        self.queue(Action::Online);
     }
 
     #[frb(sync)]

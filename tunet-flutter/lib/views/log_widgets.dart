@@ -37,8 +37,6 @@ class LogWidgets extends StatelessWidget {
                   ? null
                   : () {
                       runtime.queueFlux();
-                      runtime.queueOnlines();
-                      runtime.queueDetails();
                     },
               icon: const Icon(Icons.refresh_rounded),
             ),

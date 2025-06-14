@@ -30,26 +30,6 @@ class ManagedRuntime extends NotifyPropertyChanged {
     }
   }
 
-  static const String detailBusyProperty = "detailBusy";
-  bool _detailBusy = false;
-  bool get detailBusy => _detailBusy;
-  set detailBusy(bool value) {
-    if (_detailBusy != value) {
-      _detailBusy = value;
-      propertyChanged(propertyName: detailBusyProperty);
-    }
-  }
-
-  static const String onlineBusyProperty = "onlineBusy";
-  bool _onlineBusy = false;
-  bool get onlineBusy => _onlineBusy;
-  set onlineBusy(bool value) {
-    if (_onlineBusy != value) {
-      _onlineBusy = value;
-      propertyChanged(propertyName: onlineBusyProperty);
-    }
-  }
-
   static const String logTextProperty = "logText";
   String _logText = "";
   String get logText => _logText;
@@ -90,16 +70,6 @@ class ManagedRuntime extends NotifyPropertyChanged {
     }
   }
 
-  static const String dailyProperty = "daily";
-  DetailDailyWrap? _daily;
-  DetailDailyWrap? get daily => _daily;
-  set daily(DetailDailyWrap? value) {
-    if (_daily != value) {
-      _daily = value;
-      propertyChanged(propertyName: dailyProperty);
-    }
-  }
-
   static const String usernameProperty = "username";
   String _username = "";
   String get username => _username;
@@ -109,18 +79,6 @@ class ManagedRuntime extends NotifyPropertyChanged {
       propertyChanged(propertyName: usernameProperty);
     }
   }
-
-  static const String onlinesProperty = "onlines";
-  List<NetUserWrap>? _onlines = List.empty();
-  List<NetUserWrap>? get onlines => _onlines;
-  set onlines(List<NetUserWrap>? value) {
-    if (_onlines != value) {
-      _onlines = value;
-      propertyChanged(propertyName: onlinesProperty);
-    }
-  }
-
-  DetailsData detailsData = DetailsData();
 
   ManagedRuntime({required this.runtime});
 
@@ -148,8 +106,6 @@ class ManagedRuntime extends NotifyPropertyChanged {
       msg.when<void>(
         credential: (username) {
           queueState();
-          queueDetails();
-          queueOnlines();
           this.username = username;
         },
         state: (state) {
@@ -166,21 +122,8 @@ class ManagedRuntime extends NotifyPropertyChanged {
         flux: (netFlux) {
           this.netFlux = netFlux;
         },
-        online: (onlines) {
-          this.onlines = onlines;
-        },
-        details: (details, daily) {
-          detailsData.setData(details);
-          this.daily = daily;
-        },
         logBusy: (logBusy) {
           this.logBusy = logBusy;
-        },
-        onlineBusy: (onlineBusy) {
-          this.onlineBusy = onlineBusy;
-        },
-        detailBusy: (detailBusy) {
-          this.detailBusy = detailBusy;
         },
       );
     }
@@ -236,77 +179,6 @@ class ManagedRuntime extends NotifyPropertyChanged {
   void queueLogin() => runtime.queueLogin();
   void queueLogout() => runtime.queueLogout();
   void queueFlux() => runtime.queueFlux();
-
-  void queueDetails() {
-    detailsData.setData(List.empty());
-    daily = null;
-    runtime.queueDetails();
-  }
-
-  void queueOnlines() {
-    onlines = null;
-    runtime.queueOnlines();
-  }
-
-  void queueConnect({required Ipv4AddrWrap ip}) => runtime.queueConnect(ip: ip);
-  void queueDrop({required List<Ipv4AddrWrap> ips}) =>
-      runtime.queueDrop(ips: ips);
-}
-
-class DetailsData extends DataTableSource {
-  List<NetDetail> data = List.empty();
-
-  void setData(List<NetDetail> data) {
-    this.data = data;
-    sortColumnIndex = null;
-    sortAscending = true;
-    notifyListeners();
-  }
-
-  @override
-  DataRow? getRow(int index) {
-    if (index >= 0 && index < data.length) {
-      final d = data[index];
-      return DataRow(cells: [
-        DataCell(Text(DateFormat('MM-dd HH:mm').format(d.loginTime.field0))),
-        DataCell(Text(DateFormat('MM-dd HH:mm').format(d.logoutTime.field0))),
-        DataCell(Text(d.flux.field0.toInt().formatByteSize())),
-      ]);
-    }
-    return null;
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get rowCount => data.length;
-
-  @override
-  int get selectedRowCount => 0;
-
-  int? sortColumnIndex;
-  bool sortAscending = true;
-
-  void sort(int columnIndex, bool ascending) {
-    sortColumnIndex = columnIndex;
-    sortAscending = ascending;
-    switch (columnIndex) {
-      case 0:
-        data.sortBy((d) => d.loginTime.field0);
-        break;
-      case 1:
-        data.sortBy((d) => d.logoutTime.field0);
-        break;
-      case 2:
-        data.sortBy((d) => d.flux.field0);
-        break;
-    }
-    if (!ascending) {
-      reverse(data);
-    }
-    notifyListeners();
-  }
 }
 
 class PropertyChangedCallbackWrap<T extends NotifyPropertyChanged>

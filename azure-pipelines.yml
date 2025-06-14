@@ -117,7 +117,7 @@ jobs:
 
 - job: Build_Android
   pool:
-    vmImage: 'ubuntu-22.04'
+    vmImage: 'ubuntu-24.04'
   variables:
   - group: 'Android sign'
   

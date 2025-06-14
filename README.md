@@ -42,37 +42,11 @@ $ tunet status
 # 使用 auth4 方式
 $ tunet status -s auth4
 ```
-### 查询/强制下线在线 IP
-``` bash
-# 查询
-$ tunet online
-# IP 上线
-$ tunet connect -a IP地址
-# IP 下线
-$ tunet drop -a IP地址
-```
-### 流量明细
-``` bash
-# 使用默认排序（注销时间，升序）查询明细
-$ tunet detail
-# 使用登录时间（升序）查询明细
-$ tunet detail -o login
-# 使用流量降序查询明细
-$ tunet detail -o flux -d
-# 使用流量降序查询明细，并按注销日期组合
-$ tunet detail -o flux -dg
-```
 ### Nushell 集成
-`status`、`online`、`detail` 子命令支持 `--nuon` 参数，可以配合 Nushell 得到结构化的数据：
+`status` 子命令支持 `--nuon` 参数，可以配合 Nushell 得到结构化的数据：
 ``` bash
 # 在线状态表格
 > tunet status --nuon | from nuon
-# 查询在线 IP 表格
-> tunet online --nuon | from nuon
-# 明细表格
-> tunet detail --nuon | from nuon
-# 使用流量降序查询明细，并按注销日期组合
-> tunet detail -g --nuon | from nuon | sort-by flux -r
 ```
 
 ### Windows 服务/macOS launchd
