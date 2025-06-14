@@ -8,4 +8,4 @@ export 'frb_generated.dart';
 export 'api.dart';
 
 // Re-export necessary types.
-export 'lib.dart';
+export 'dep.dart';
