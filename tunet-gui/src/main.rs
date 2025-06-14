@@ -5,9 +5,9 @@ use tunet_helper::NetState;
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 use winio::{
-    App, Button, ButtonEvent, Child, Color, ComboBox, ComboBoxEvent, Component, ComponentSender,
-    Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, Size, VAlign, Visible, Window,
-    WindowEvent,
+    App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox, ComboBoxEvent, Component,
+    ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, Point, Rect, Size,
+    SolidColorBrush, VAlign, Visible, Window, WindowEvent,
 };
 
 fn main() {
@@ -47,6 +47,7 @@ struct MainModel {
     model: Model,
     window: Child<Window>,
     state_combo: Child<ComboBox>,
+    canvas: Child<Canvas>,
     username: Child<Label>,
     flux: Child<Label>,
     online_time: Child<Label>,
@@ -109,6 +110,8 @@ impl Component for MainModel {
         state_combo.insert(0, "Auth4");
         state_combo.insert(1, "Auth6");
 
+        let canvas = Child::<Canvas>::init(&window);
+
         let mut username = Child::<Label>::init(&window);
         username.set_text("用户：");
         let mut flux = Child::<Label>::init(&window);
@@ -157,6 +160,7 @@ impl Component for MainModel {
         Self {
             model,
             window,
+            canvas,
             state_combo,
             username,
             flux,
@@ -280,47 +284,50 @@ impl Component for MainModel {
                 self.model.handle(a);
                 false
             }
-            MainMessage::Update(m) => {
-                match m {
-                    UpdateMsg::Credential => {
-                        self.model.queue(Action::State(None));
-                        self.username_input.set_text(&self.model.username);
-                    }
-                    UpdateMsg::State => {
-                        self.model.queue(Action::Flux);
-                        let index = match self.model.state {
-                            NetState::Unknown => None,
-                            NetState::Auth4 => Some(0),
-                            NetState::Auth6 => Some(1),
-                        };
-                        self.state_combo.set_selection(index);
-                    }
-                    UpdateMsg::Status => {
-                        self.model.queue(Action::State(None));
-                        self.status.set_text(format!("网络：{}", self.model.status));
-                    }
-                    UpdateMsg::Log => {
-                        self.log.set_text(&self.model.log);
-                    }
-                    UpdateMsg::Flux => {
-                        self.username
-                            .set_text(format!("用户：{}", self.model.flux.username));
-                        self.flux
-                            .set_text(format!("流量：{}", self.model.flux.flux));
-                        self.online_time
-                            .set_text(format!("时长：{}", self.model.flux.online_time));
-                        self.balance
-                            .set_text(format!("余额：{}", self.model.flux.balance));
-                    }
-                    UpdateMsg::LogBusy => {
-                        let busy = self.model.log_busy();
-                        self.login_button.set_enabled(!busy);
-                        self.logout_button.set_enabled(!busy);
-                        self.refresh_button.set_enabled(!busy);
-                    }
+            MainMessage::Update(m) => match m {
+                UpdateMsg::Credential => {
+                    self.model.queue(Action::State(None));
+                    self.username_input.set_text(&self.model.username);
+                    false
                 }
-                true
-            }
+                UpdateMsg::State => {
+                    self.model.queue(Action::Flux);
+                    let index = match self.model.state {
+                        NetState::Unknown => None,
+                        NetState::Auth4 => Some(0),
+                        NetState::Auth6 => Some(1),
+                    };
+                    self.state_combo.set_selection(index);
+                    false
+                }
+                UpdateMsg::Status => {
+                    self.model.queue(Action::State(None));
+                    self.status.set_text(format!("网络：{}", self.model.status));
+                    false
+                }
+                UpdateMsg::Log => {
+                    self.log.set_text(&self.model.log);
+                    false
+                }
+                UpdateMsg::Flux => {
+                    self.username
+                        .set_text(format!("用户：{}", self.model.flux.username));
+                    self.flux
+                        .set_text(format!("流量：{}", self.model.flux.flux));
+                    self.online_time
+                        .set_text(format!("时长：{}", self.model.flux.online_time));
+                    self.balance
+                        .set_text(format!("余额：{}", self.model.flux.balance));
+                    true
+                }
+                UpdateMsg::LogBusy => {
+                    let busy = self.model.log_busy();
+                    self.login_button.set_enabled(!busy);
+                    self.logout_button.set_enabled(!busy);
+                    self.refresh_button.set_enabled(!busy);
+                    false
+                }
+            },
         }
     }
 
@@ -334,6 +341,13 @@ impl Component for MainModel {
                 .column(0)
                 .column_span(3)
                 .row(0)
+                .margin(margin)
+                .finish();
+
+            grid.push(&mut self.canvas)
+                .column(0)
+                .column_span(3)
+                .row(1)
                 .margin(margin)
                 .finish();
 
@@ -447,5 +461,42 @@ impl Component for MainModel {
 
             grid.set_size(csize);
         }
+
+        const ARC_WIDTH: f64 = 20.0;
+        use std::f64::consts::*;
+
+        let size = self.canvas.size();
+        let (width, height) = (size.width - ARC_WIDTH, size.height - ARC_WIDTH);
+        if width <= 0.0 || height <= 0.0 {
+            return;
+        }
+        let color = accent_color();
+        let pen = BrushPen::new(SolidColorBrush::new(color), ARC_WIDTH);
+        let color_t1 = color.with_alpha(168);
+        let pen_t1 = BrushPen::new(SolidColorBrush::new(color_t1), ARC_WIDTH);
+        let color_t2 = color.with_alpha(84);
+        let pen_t2 = BrushPen::new(SolidColorBrush::new(color_t2), ARC_WIDTH);
+
+        let arc_rect = if width > height {
+            Rect::new(
+                Point::new((width - height + ARC_WIDTH) / 2.0, ARC_WIDTH / 2.0),
+                Size::new(height, height),
+            )
+        } else {
+            Rect::new(
+                Point::new(ARC_WIDTH / 2.0, (height - width + ARC_WIDTH) / 2.0),
+                Size::new(width, width),
+            )
+        };
+        let mut ctx = self.canvas.context();
+        let flux = &self.model.flux;
+        let flux_gb = flux.flux.to_gb();
+        ctx.draw_arc(pen_t2, arc_rect, FRAC_PI_2, PI * 2.0 + FRAC_PI_2 - 0.001);
+        let free_angle =
+            0.0f64.max(50.0 / (flux.balance.0 + 50.0f64.max(flux_gb)) * 2.0 * PI - 0.001);
+        ctx.draw_arc(pen_t1, arc_rect, FRAC_PI_2, FRAC_PI_2 + free_angle);
+        let flux_angle =
+            0.0f64.max(flux_gb / (flux.balance.0 + 50.0f64.max(flux_gb)) * 2.0 * PI - 0.001);
+        ctx.draw_arc(pen, arc_rect, FRAC_PI_2, FRAC_PI_2 + flux_angle);
     }
 }
