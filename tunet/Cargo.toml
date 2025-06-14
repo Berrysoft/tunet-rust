@@ -45,7 +45,6 @@ assets = [
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 anyhow = { workspace = true }
-futures-util = { workspace = true }
 compio = { workspace = true, features = ["macros"] }
 clap = { workspace = true }
 console = "0.15"
