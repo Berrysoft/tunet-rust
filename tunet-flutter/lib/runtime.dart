@@ -2,13 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'package:binding/binding.dart';
 import 'package:binding/src/binding_base.dart';
-import 'package:collection/collection.dart';
-import 'package:data_size/data_size.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'ffi.dart';
@@ -103,29 +99,23 @@ class ManagedRuntime extends NotifyPropertyChanged {
     );
 
     await for (final msg in runtime.start(config: config)) {
-      msg.when<void>(
-        credential: (username) {
+      switch (msg) {
+        case UpdateMsgWrap_Credential(:final field0):
           queueState();
-          this.username = username;
-        },
-        state: (state) {
+          username = field0;
+        case UpdateMsgWrap_State(:final field0):
           queueFlux();
-          this.state = state;
-        },
-        status: (status) {
+          state = field0;
+        case UpdateMsgWrap_Status(:final field0):
           queueState();
-          this.status = status;
-        },
-        log: (logText) {
-          this.logText = logText;
-        },
-        flux: (netFlux) {
-          this.netFlux = netFlux;
-        },
-        logBusy: (logBusy) {
-          this.logBusy = logBusy;
-        },
-      );
+          status = field0;
+        case UpdateMsgWrap_Log(:final field0):
+          logText = field0;
+        case UpdateMsgWrap_Flux(:final field0):
+          netFlux = field0;
+        case UpdateMsgWrap_LogBusy(:final field0):
+          logBusy = field0;
+      }
     }
   }
 
