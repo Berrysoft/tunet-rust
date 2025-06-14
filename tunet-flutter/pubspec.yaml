@@ -34,14 +34,11 @@ dependencies:
   flutter_rust_bridge: ^2.6.0
   meta: ^1.9.1
   uuid: ^4.1.0
-  freezed_annotation: ^2.2.0
-
-  intl: ^0.20.2
-  collection: ^1.17.1
+  freezed_annotation: ^3.0.0
 
   shared_preferences: ^2.1.2
   flutter_secure_storage: ^9.0.0
-  permission_handler: ^12.0.0+1
+  permission_handler: ^12.0.0
 
   dynamic_color: ^1.7.0
   fluttertoast: ^8.2.2
@@ -51,8 +48,6 @@ dependencies:
   format: ^1.3.0
   duration: ^4.0.3
   data_size: ^0.2.0
-
-  fl_chart: ^0.71.0
 
   package_info_plus: ^8.0.0
   font_awesome_flutter: ^10.4.0
@@ -67,10 +62,10 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
-  ffigen: ^18.1.0
+  flutter_lints: ^6.0.0
+  ffigen: ^19.0.0
   build_runner: ^2.4.5
-  freezed: ^2.3.5
+  freezed: ^3.0.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

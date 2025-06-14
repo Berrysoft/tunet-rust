@@ -90,8 +90,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         let chksum = {
             let mut sha1 = Sha1::new();
             sha1.update(format!(
-                "{0}{1}{0}{2}{0}{4}{0}{0}200{0}1{0}{3}",
-                token, u, password_md5, info, ac_id
+                "{token}{u}{token}{password_md5}{token}{ac_id}{token}{token}200{token}1{token}{info}"
             ));
             sha1.finalize()
         };
@@ -102,7 +101,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             ("n", "200"),
             ("type", "1"),
             ("username", u),
-            ("password", &format!("{{MD5}}{}", password_md5)),
+            ("password", &format!("{{MD5}}{password_md5}")),
             ("info", &info),
             ("chksum", &HEXLOWER.encode(&chksum)),
             ("callback", "callback"),

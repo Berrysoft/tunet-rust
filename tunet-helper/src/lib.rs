@@ -12,7 +12,6 @@ pub use cyper::Client as HttpClient;
 
 mod auth;
 pub mod suggest;
-pub mod usereg;
 
 pub use auth::{Auth4Connect, Auth6Connect};
 
@@ -56,14 +55,14 @@ impl Flux {
         }
         flux /= 1000.0;
         if flux < 1000.0 {
-            return format!("{:.2} K", flux);
+            return format!("{flux:.2} K");
         }
         flux /= 1000.0;
         if flux < 1000.0 {
-            return format!("{:.2} M", flux);
+            return format!("{flux:.2} M");
         }
         flux /= 1000.0;
-        format!("{:.2} G", flux)
+        format!("{flux:.2} G")
     }
 }
 
@@ -105,9 +104,9 @@ impl Display for Duration {
         let (total_h, min) = (total_min / 60, total_min % 60);
         let (day, h) = (total_h / 24, total_h % 24);
         let str = if day != 0 {
-            format!("{}.{:02}:{:02}:{:02}", day, h, min, sec)
+            format!("{day}.{h:02}:{min:02}:{sec:02}")
         } else {
-            format!("{:02}:{:02}:{:02}", h, min, sec)
+            format!("{h:02}:{min:02}:{sec:02}")
         };
         f.pad(&str)
     }

@@ -6,6 +6,3 @@ export 'frb_generated.dart';
 
 // Re-export all of your API files here
 export 'api.dart';
-
-// Re-export necessary types.
-export 'lib.dart';

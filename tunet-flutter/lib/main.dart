@@ -7,11 +7,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tunet/views/about_card.dart';
 import 'package:tunet/views/main_app_bar.dart';
-import 'views/daily_card.dart';
-import 'views/details_card.dart';
 import 'views/flux_paint.dart';
 import 'views/info_card.dart';
-import 'views/onlines_card.dart';
 import 'views/settings_card.dart';
 import 'runtime.dart';
 
@@ -118,9 +115,6 @@ class _MainPageState extends State<MainPage> {
             FluxPaint(),
             InfoCard(),
             SettingsCard(),
-            OnlinesCard(),
-            DailyCard(),
-            DetailsCard(),
             AboutCard(),
           ],
         ),

@@ -3,7 +3,7 @@
 mod bind;
 mod context;
 
-use bind::{bind_about_model, bind_detail_model, bind_home_model, bind_settings_model};
+use bind::{bind_about_model, bind_home_model, bind_settings_model};
 use context::UpdateContext;
 
 use anyhow::Result;
@@ -32,9 +32,6 @@ fn main() -> Result<()> {
     {
         let home_model = app.global::<HomeModel>();
         bind_home_model(&home_model, &model);
-
-        let detail_model = app.global::<DetailModel>();
-        bind_detail_model(&detail_model, &model, &context);
 
         let settings_model = app.global::<SettingsModel>();
         bind_settings_model(&settings_model, &model, &context);

@@ -25,7 +25,7 @@ cp ${workspace}/logo.icns ${resource_dir}/
 binary_dir=${content_dir}/MacOS
 mkdir -p ${binary_dir}
 
-binaries=(tunet tunet-cui tunet-gui tunet-service)
+binaries=(tunet tunet-gui tunet-service)
 for b in "${binaries[@]}"
 do
     echo Creating $b

@@ -51,5 +51,5 @@ pubspec.lock
 
 lib/api*.dart
 lib/frb_*.dart
-lib/lib.dart
+lib/dep.dart
 native/src/frb_*.rs

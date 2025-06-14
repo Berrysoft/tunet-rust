@@ -27,16 +27,12 @@ class _MainAppBarState extends State<MainAppBar> {
 
     final provider = BindingProvider.of(context);
     provider.add(ManagedRuntime.logBusyProperty, busyCallback);
-    provider.add(ManagedRuntime.onlineBusyProperty, busyCallback);
-    provider.add(ManagedRuntime.detailBusyProperty, busyCallback);
   }
 
   @override
   void dispose() {
     final provider = BindingProvider.of(context);
     provider.remove(ManagedRuntime.logBusyProperty, busyCallback);
-    provider.remove(ManagedRuntime.onlineBusyProperty, busyCallback);
-    provider.remove(ManagedRuntime.detailBusyProperty, busyCallback);
 
     super.dispose();
   }
@@ -45,8 +41,6 @@ class _MainAppBarState extends State<MainAppBar> {
   Widget build(BuildContext context) {
     final runtime = BindingSource.of<ManagedRuntime>(context);
     final logBusy = runtime.logBusy;
-    final onlineBusy = runtime.onlineBusy;
-    final detailBusy = runtime.detailBusy;
     return AppBar(
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -71,12 +65,10 @@ class _MainAppBarState extends State<MainAppBar> {
           icon: const Icon(Icons.logout_rounded),
         ),
         IconButton(
-          onPressed: (logBusy || onlineBusy || detailBusy)
+          onPressed: logBusy
               ? null
               : () {
                   runtime.queueStatus();
-                  runtime.queueOnlines();
-                  runtime.queueDetails();
                 },
           icon: const Icon(Icons.refresh_rounded),
         ),

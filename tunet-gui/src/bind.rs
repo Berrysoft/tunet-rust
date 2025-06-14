@@ -1,6 +1,4 @@
-use crate::{
-    accent_color, context::UpdateContext, AboutModel, DetailModel, HomeModel, SettingsModel,
-};
+use crate::{accent_color, context::UpdateContext, AboutModel, HomeModel, SettingsModel};
 use slint::{
     quit_event_loop, ComponentHandle, Model as SlintModel, ModelExt, ModelRc, SortModel,
     StandardListViewItem,
@@ -125,32 +123,6 @@ pub fn bind_home_model(home_model: &HomeModel, model: &Arc<Mutex<Model>>) {
     home_model.on_refresh(upgrade_queue!(model, || Action::Flux));
 }
 
-pub fn bind_detail_model(
-    detail_model: &DetailModel,
-    model: &Arc<Mutex<Model>>,
-    context: &UpdateContext,
-) {
-    detail_model.on_daily_chart({
-        let context = context.clone();
-        move |width, height, text_color| context.draw_daily_chart(width, height, text_color)
-    });
-
-    detail_model.on_refresh(upgrade_queue!(model, || Action::Details));
-
-    detail_model.on_sort_ascending({
-        let context = context.clone();
-        move |index| {
-            context.sort_details(index, false);
-        }
-    });
-    detail_model.on_sort_descending({
-        let context = context.clone();
-        move |index| {
-            context.sort_details(index, true);
-        }
-    });
-}
-
 pub fn bind_settings_model(
     settings_model: &SettingsModel,
     model: &Arc<Mutex<Model>>,
@@ -174,15 +146,6 @@ pub fn bind_settings_model(
             quit_event_loop().unwrap();
         }
     });
-
-    settings_model.on_refresh(upgrade_queue!(model, || Action::Online));
-
-    settings_model.on_connect_ip(upgrade_queue!(model, |ip| Action::Connect(
-        ip.parse().unwrap()
-    )));
-    settings_model.on_drop_ip(upgrade_queue!(model, |ip| Action::Drop(
-        ip.parse().unwrap()
-    )));
 }
 
 pub fn bind_about_model(about_model: &AboutModel, context: &UpdateContext) {
