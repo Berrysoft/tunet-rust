@@ -75,6 +75,11 @@ jobs:
     vmImage: $(image)
   
   steps:
+  - script: |
+      sudo apt-get update
+      sudo apt-get install qt6-base-dev
+    displayName: 'Install qt6'
+
   - script: cargo install cargo-deb
     displayName: "Install cargo-deb"
 
