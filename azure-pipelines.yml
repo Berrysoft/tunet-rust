@@ -117,7 +117,7 @@ jobs:
 
 - job: Build_Android
   pool:
-    vmImage: 'ubuntu-24.04'
+    vmImage: 'ubuntu-22.04'
   variables:
   - group: 'Android sign'
   
@@ -130,7 +130,9 @@ jobs:
     displayName: 'Install cargo-ndk'
 
   - script: |
-      sudo snap install flutter --classic
+      wget https://storage.flutter-io.cn/flutter_infra_release/releases/stable/linux/flutter_linux_3.32.4-stable.tar.xz
+      mkdir -p ~/development/
+      tar -xvf flutter_linux_3.32.4-stable.tar.xz -C ~/development/
     displayName: 'Install flutter'
 
   - task: DownloadSecureFile@1
@@ -148,6 +150,7 @@ jobs:
       storeFile=$(keystore.secureFilePath)
       EOL
       export JAVA_HOME=$(JAVA_HOME_17_X64)
+      export PATH="$HOME/development/flutter/bin:$PATH"
       make apk
       cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $(Build.ArtifactStagingDirectory)/tunet.armeabi-v7a.apk
       cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $(Build.ArtifactStagingDirectory)/tunet.arm64-v8a.apk
