@@ -328,11 +328,11 @@ impl Component for MainModel {
                 UpdateMsg::Status => {
                     self.model.queue(Action::State(None));
                     self.status.set_text(format!("网络：{}", self.model.status));
-                    false
+                    true
                 }
                 UpdateMsg::Log => {
                     self.log.set_text(&self.model.log);
-                    false
+                    true
                 }
                 UpdateMsg::Flux => {
                     self.username
@@ -373,6 +373,7 @@ impl Component for MainModel {
                 .column(0)
                 .column_span(3)
                 .row(1)
+                .row_span(2)
                 .margin(margin)
                 .finish();
 
