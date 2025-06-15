@@ -6,8 +6,9 @@ use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 use winio::{
     App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox, ComboBoxEvent, Component,
-    ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, Monitor, Point, Rect,
-    Size, SolidColorBrush, VAlign, Visible, Window, WindowEvent,
+    ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, MessageBox,
+    MessageBoxButton, MessageBoxResponse, MessageBoxStyle, Monitor, Point, Rect, Size,
+    SolidColorBrush, VAlign, Visible, Window, WindowEvent,
 };
 
 fn main() {
@@ -31,9 +32,10 @@ fn accent_color() -> Color {
 enum MainMessage {
     Noop,
     Refresh,
-    Close(bool),
+    Close,
     ComboSelect,
     Cred,
+    Del,
     Action(Action),
     Update(UpdateMsg),
 }
@@ -198,7 +200,7 @@ impl Component for MainModel {
         let fut_window = self.window.start(
             sender,
             |e| match e {
-                WindowEvent::Close => Some(MainMessage::Close(true)),
+                WindowEvent::Close => Some(MainMessage::Close),
                 WindowEvent::Resize => Some(MainMessage::Refresh),
                 _ => None,
             },
@@ -247,7 +249,7 @@ impl Component for MainModel {
         let fut_del = self.del_button.start(
             sender,
             |e| match e {
-                ButtonEvent::Click => Some(MainMessage::Close(false)),
+                ButtonEvent::Click => Some(MainMessage::Del),
                 _ => None,
             },
             || MainMessage::Noop,
@@ -268,12 +270,8 @@ impl Component for MainModel {
         match message {
             MainMessage::Noop => false,
             MainMessage::Refresh => true,
-            MainMessage::Close(save) => {
-                sender.output(if save {
-                    MainEvent::Save
-                } else {
-                    MainEvent::Delete(self.username_input.text())
-                });
+            MainMessage::Close => {
+                sender.output(MainEvent::Save);
                 false
             }
             MainMessage::ComboSelect => {
@@ -292,6 +290,19 @@ impl Component for MainModel {
                     self.username_input.text(),
                     self.password_input.text(),
                 ));
+                false
+            }
+            MainMessage::Del => {
+                let res = MessageBox::new()
+                    .title("删除并退出")
+                    .message("将删除保存的凭据并退出应用程序")
+                    .buttons(MessageBoxButton::Ok | MessageBoxButton::Cancel)
+                    .style(MessageBoxStyle::Warning)
+                    .show(Some(&self.window))
+                    .await;
+                if let MessageBoxResponse::Ok = res {
+                    sender.output(MainEvent::Delete(self.username_input.text()));
+                }
                 false
             }
             MainMessage::Action(a) => {
