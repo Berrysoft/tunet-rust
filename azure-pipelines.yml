@@ -85,6 +85,8 @@ jobs:
 
   - script: |
       rustup target add $(target)
+      ln -s ~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld ~/.cargo/bin/ld.lld
+      export PATH=~/.cargo/bin:$PATH
       cargo build --release --workspace --exclude native --target $(target)
     displayName: "Build"
     env:
@@ -93,8 +95,6 @@ jobs:
   - script: |
       cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/tunet.$(ubuntuDist).$(arch).deb -p tunet
     displayName: "Package"
-    env:
-      RUSTFLAGS: "-Clinker-plugin-lto -Clinker=clang -Clink-arg=-flto -Clink-arg=-fuse-ld=lld"
 
   - task: PublishBuildArtifacts@1
     inputs:
