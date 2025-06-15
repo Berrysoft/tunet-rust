@@ -13,7 +13,7 @@ use winio::{
 fn main() {
     let mut reader = SettingsReader::new().unwrap();
     let cred = reader.read_full().unwrap_or_default();
-    let save = App::new().run::<MainModel>(cred);
+    let save = App::new_with_name("io.github.berrysoft.tunet").run::<MainModel>(cred);
     if let MainEvent::Delete(u) = save {
         reader.delete(&u).unwrap();
     }
