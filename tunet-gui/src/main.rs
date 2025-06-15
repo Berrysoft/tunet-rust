@@ -57,6 +57,8 @@ struct MainModel {
     login_button: Child<Button>,
     logout_button: Child<Button>,
     refresh_button: Child<Button>,
+    username_label: Child<Label>,
+    password_label: Child<Label>,
     username_input: Child<Edit>,
     password_input: Child<Edit>,
     cred_button: Child<Button>,
@@ -135,6 +137,11 @@ impl Component for MainModel {
         let mut refresh_button = Child::<Button>::init(&window);
         refresh_button.set_text("刷新");
 
+        let mut username_label = Child::<Label>::init(&window);
+        username_label.set_text("用户：");
+        let mut password_label = Child::<Label>::init(&window);
+        password_label.set_text("密码：");
+
         let username_input = Child::<Edit>::init(&window);
         let mut password_input = Child::<Edit>::init(&window);
         password_input.set_password(true);
@@ -171,6 +178,8 @@ impl Component for MainModel {
             login_button,
             logout_button,
             refresh_button,
+            username_label,
+            password_label,
             username_input,
             password_input,
             cred_button,
@@ -414,28 +423,46 @@ impl Component for MainModel {
                 .margin(margin)
                 .finish();
 
-            let mut cred_grid = Grid::from_str("1*,auto", "1*,1*").unwrap();
+            let mut cred_grid = Grid::from_str("auto,1*,auto", "1*,1*").unwrap();
+            let mut label_margin = margin;
+            label_margin.right = 0.0;
+            let mut input_margin = margin;
+            input_margin.left = 0.0;
             cred_grid
-                .push(&mut self.username_input)
+                .push(&mut self.username_label)
                 .column(0)
                 .row(0)
-                .margin(margin)
+                .valign(VAlign::Center)
+                .margin(label_margin)
+                .finish();
+            cred_grid
+                .push(&mut self.password_label)
+                .column(0)
+                .row(1)
+                .valign(VAlign::Center)
+                .margin(label_margin)
+                .finish();
+            cred_grid
+                .push(&mut self.username_input)
+                .column(1)
+                .row(0)
+                .margin(input_margin)
                 .finish();
             cred_grid
                 .push(&mut self.password_input)
-                .column(0)
+                .column(1)
                 .row(1)
-                .margin(margin)
+                .margin(input_margin)
                 .finish();
             cred_grid
                 .push(&mut self.cred_button)
-                .column(1)
+                .column(2)
                 .row(0)
                 .margin(margin)
                 .finish();
             cred_grid
                 .push(&mut self.del_button)
-                .column(1)
+                .column(2)
                 .row(1)
                 .margin(margin)
                 .finish();
