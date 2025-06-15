@@ -4984,6 +4984,7 @@ checksum = "271414315aff87387382ec3d271b52d7ae78726f5d44ac98b4f4030c91880486"
 [[package]]
 name = "winio"
 version = "0.5.0"
+source = "git+https://github.com/compio-rs/winio.git#171a0ced4e46d156b3c58c9771cf1584c54f75a2"
 dependencies = [
  "block2",
  "cfg-if",

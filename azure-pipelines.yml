@@ -87,10 +87,14 @@ jobs:
       rustup target add $(target)
       cargo build --release --workspace --exclude native --target $(target)
     displayName: "Build"
+    env:
+      RUSTFLAGS: "-Clinker-plugin-lto -Clinker=clang -Clink-arg=-flto -Clink-arg=-fuse-ld=lld"
 
   - script: |
       cargo deb --target $(target) --no-build -o $(Build.ArtifactStagingDirectory)/tunet.$(ubuntuDist).$(arch).deb -p tunet
     displayName: "Package"
+    env:
+      RUSTFLAGS: "-Clinker-plugin-lto -Clinker=clang -Clink-arg=-flto -Clink-arg=-fuse-ld=lld"
 
   - task: PublishBuildArtifacts@1
     inputs:
