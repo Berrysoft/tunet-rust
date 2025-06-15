@@ -6,8 +6,8 @@ use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 use winio::{
     App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox, ComboBoxEvent, Component,
-    ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, Point, Rect, Size,
-    SolidColorBrush, VAlign, Visible, Window, WindowEvent,
+    ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, Monitor, Point, Rect,
+    Size, SolidColorBrush, VAlign, Visible, Window, WindowEvent,
 };
 
 fn main() {
@@ -107,6 +107,11 @@ impl Component for MainModel {
         window.set_text("清华校园网");
         #[cfg(windows)]
         window.set_icon_by_id(1);
+        {
+            let monitors = Monitor::all();
+            let region = monitors[0].client_scaled();
+            window.set_loc(region.origin + region.size / 2.0 - window.size() / 2.0);
+        }
 
         let mut state_combo = Child::<ComboBox>::init(&window);
         state_combo.insert(0, "Auth4");
@@ -194,7 +199,7 @@ impl Component for MainModel {
             sender,
             |e| match e {
                 WindowEvent::Close => Some(MainMessage::Close(true)),
-                WindowEvent::Resize | WindowEvent::Move => Some(MainMessage::Refresh),
+                WindowEvent::Resize => Some(MainMessage::Refresh),
                 _ => None,
             },
             || MainMessage::Noop,
@@ -489,7 +494,7 @@ impl Component for MainModel {
             grid.set_size(csize);
         }
 
-        const ARC_WIDTH: f64 = 20.0;
+        const ARC_WIDTH: f64 = 30.0;
         use std::f64::consts::*;
 
         let size = self.canvas.size();
