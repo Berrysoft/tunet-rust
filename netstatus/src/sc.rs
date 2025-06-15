@@ -3,14 +3,13 @@
 use crate::*;
 use flume::{r#async::RecvStream, unbounded};
 use objc2_core_foundation::{
-    kCFRunLoopDefaultMode, CFRetained, CFRunLoop, CFRunLoopGetCurrent, CFRunLoopRun, CFRunLoopStop,
+    kCFRunLoopDefaultMode, CFRetained, CFRunLoop,
     CFString,
 };
 use objc2_core_wlan::CWWiFiClient;
 use objc2_system_configuration::{
-    SCNetworkReachability, SCNetworkReachabilityContext, SCNetworkReachabilityCreateWithAddress,
-    SCNetworkReachabilityFlags, SCNetworkReachabilityGetFlags,
-    SCNetworkReachabilityScheduleWithRunLoop, SCNetworkReachabilitySetCallback,
+    SCNetworkReachability, SCNetworkReachabilityContext,
+    SCNetworkReachabilityFlags,
 };
 use pin_project::pin_project;
 use std::{
@@ -43,14 +42,13 @@ fn create_reachability() -> CFRetained<SCNetworkReachability> {
         sin_addr: libc::in_addr { s_addr: 0 },
         sin_zero: Default::default(),
     };
-    unsafe { SCNetworkReachabilityCreateWithAddress(None, NonNull::from(&mut addr).cast()) }
-        .unwrap()
+    unsafe { SCNetworkReachability::with_address(None, NonNull::from(&mut addr).cast()) }.unwrap()
 }
 
 pub fn current() -> NetStatus {
     let sc = create_reachability();
     let mut flag = MaybeUninit::uninit();
-    if unsafe { SCNetworkReachabilityGetFlags(&sc, NonNull::new_unchecked(flag.as_mut_ptr())) } {
+    if unsafe { sc.flags(NonNull::new_unchecked(flag.as_mut_ptr())) } {
         let flag = unsafe { flag.assume_init() };
         if !flag.contains(SCNetworkReachabilityFlags::Reachable) {
             return NetStatus::Unknown;
@@ -79,15 +77,11 @@ pub fn watch() -> impl Stream<Item = ()> {
         set_callback(sc.clone(), move |_| {
             tx.send(()).ok();
         });
-        let run_loop = unsafe { CFRunLoopGetCurrent() }.unwrap();
-        unsafe {
-            SCNetworkReachabilityScheduleWithRunLoop(
-                &sc,
-                &run_loop,
-                kCFRunLoopDefaultMode.unwrap_unchecked(),
-            )
-        };
-        unsafe { CFRunLoopRun() };
+        let run_loop = CFRunLoop::current().unwrap();
+        sc.schedule_with_run_loop(&run_loop, unsafe {
+            kCFRunLoopDefaultMode.unwrap_unchecked()
+        });
+        CFRunLoop::run();
     });
     StatusWatchStream {
         rx: rx.into_stream(),
@@ -122,7 +116,7 @@ impl Drop for CFJThread {
             let run_loop =
                 unsafe { _CFRunLoopGet0(handle.as_pthread_t()).map(|ret| CFRetained::retain(ret)) }
                     .unwrap();
-            unsafe { CFRunLoopStop(&run_loop) };
+            run_loop.stop();
             if let Err(e) = handle.join() {
                 std::panic::resume_unwind(e);
             }
@@ -150,8 +144,7 @@ fn set_callback<F: Fn(SCNetworkReachabilityFlags) + Sync + Send>(
         copyDescription: Some(NetworkReachabilityCallbackContext::<F>::copy_ctx_description),
     };
     unsafe {
-        SCNetworkReachabilitySetCallback(
-            &sc,
+        sc.set_callback(
             Some(NetworkReachabilityCallbackContext::<F>::callback),
             &mut callback_context,
         )

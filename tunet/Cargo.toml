@@ -1,6 +1,6 @@
 [package]
 name = "tunet"
-version = "0.9.5"
+version = "0.10.0"
 description = "Tsinghua University network CLI"
 edition.workspace = true
 authors.workspace = true
@@ -55,4 +55,4 @@ winresource = { workspace = true }
 
 [package.metadata.winresource]
 OriginalFilename = "tunet.exe"
-LegalCopyright = "Copyright © 2021-2023 Berrysoft"
+LegalCopyright = "Copyright © 2021-2025 Berrysoft"

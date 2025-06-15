@@ -1,6 +1,6 @@
 [package]
 name = "netstatus"
-version = "0.1.2"
+version = "0.1.3"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -21,6 +21,7 @@ objc2-core-wlan = { version = "0.3", features = [
     "CWWiFiClient",
 ] }
 objc2-system-configuration = { version = "0.3", features = [
+    "libc",
     "SCNetworkReachability",
 ] }
 objc2-core-foundation = { version = "0.3", features = ["CFRunLoop"] }

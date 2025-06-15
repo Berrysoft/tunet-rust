@@ -18,10 +18,10 @@ pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
 }
 
 async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
-    let mut timer = crate::create_timer(interval).fuse();
+    let timer = crate::create_timer(interval).fuse();
     let mut timer = std::pin::pin!(timer);
     loop {
-        let mut ctrlc = ctrl_c();
+        let ctrlc = ctrl_c();
         let ctrlc = std::pin::pin!(ctrlc);
         futures_util::select! {
             _ = ctrlc.fuse() => {
@@ -30,7 +30,7 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
             _ = timer.next() => {
                 log::info!("Timer triggered.");
                 if let Err(msg) = crate::run_once(true).await {
-                    log::error!("{}", msg);
+                    log::error!("{msg}");
                 }
             }
         }
