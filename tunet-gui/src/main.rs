@@ -5,8 +5,8 @@ use tunet_helper::NetState;
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 use winio::{
-    App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox, ComboBoxEvent, Component,
-    ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, MessageBox,
+    init, start, App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox, ComboBoxEvent,
+    Component, ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, MessageBox,
     MessageBoxButton, MessageBoxResponse, MessageBoxStyle, Monitor, Point, Rect, Size,
     SolidColorBrush, VAlign, Visible, Window, WindowEvent,
 };
@@ -104,70 +104,51 @@ impl Component for MainModel {
         model.queue(Action::Status(None));
         model.queue(Action::Timer);
 
-        let mut window = Child::<Window>::init(());
-        window.set_size(Size::new(300.0, 500.0));
-        window.set_text("清华校园网");
-        #[cfg(windows)]
-        window.set_icon_by_id(1);
-        {
-            let monitors = Monitor::all();
-            let region = monitors[0].client_scaled();
-            window.set_loc(region.origin + region.size / 2.0 - window.size() / 2.0);
+        init! {
+            window: Window = (()) => {
+                size: Size::new(300.0, 500.0),
+                text: "清华校园网",
+                loc: {
+                    let monitors = Monitor::all();
+                    let region = monitors[0].client_scaled();
+                    region.origin + region.size / 2.0 - window.size() / 2.0
+                }
+            },
+            state_combo: ComboBox = (&window),
+            canvas: Canvas = (&window),
+            username: Label = (&window) => { text: "用户：" },
+            flux: Label = (&window) => { text: "流量：" },
+            online_time: Label = (&window) => { text: "时长：" },
+            balance: Label = (&window) => { text: "余额：" },
+            status: Label = (&window) => { text: "网络：" },
+            log: Label = (&window) => { halign: HAlign::Center },
+            login_button: Button = (&window) => { text: "登录" },
+            logout_button: Button = (&window) => { text: "注销" },
+            refresh_button: Button = (&window) => { text: "刷新" },
+            username_label: Label = (&window) => { text: "用户：" },
+            password_label: Label = (&window) => { text: "密码：" },
+            username_input: Edit = (&window),
+            password_input: Edit = (&window) => { password: true },
+            cred_button: Button = (&window) => { text: "更新凭据" },
+            del_button: Button = (&window) => { text: "删除并退出" },
+            info1: Label = (&window) => {
+                text: "服务热线（8:00~20:00）010-62784859",
+                halign: HAlign::Center,
+            },
+            info2: Label = (&window) => {
+                text: format!(
+                    "版本 {} 版权所有 © 2021-2025 Berrysoft",
+                    env!("CARGO_PKG_VERSION")
+                ),
+                halign: HAlign::Center,
+            }
         }
 
-        let mut state_combo = Child::<ComboBox>::init(&window);
+        #[cfg(windows)]
+        window.set_icon_by_id(1);
+
         state_combo.insert(0, "Auth4");
         state_combo.insert(1, "Auth6");
-
-        let canvas = Child::<Canvas>::init(&window);
-
-        let mut username = Child::<Label>::init(&window);
-        username.set_text("用户：");
-        let mut flux = Child::<Label>::init(&window);
-        flux.set_text("流量：");
-        let mut online_time = Child::<Label>::init(&window);
-        online_time.set_text("时长：");
-        let mut balance = Child::<Label>::init(&window);
-        balance.set_text("余额：");
-        let mut status = Child::<Label>::init(&window);
-        status.set_text("网络：");
-
-        let mut log = Child::<Label>::init(&window);
-        log.set_halign(HAlign::Center);
-
-        let mut login_button = Child::<Button>::init(&window);
-        login_button.set_text("登录");
-
-        let mut logout_button = Child::<Button>::init(&window);
-        logout_button.set_text("注销");
-
-        let mut refresh_button = Child::<Button>::init(&window);
-        refresh_button.set_text("刷新");
-
-        let mut username_label = Child::<Label>::init(&window);
-        username_label.set_text("用户：");
-        let mut password_label = Child::<Label>::init(&window);
-        password_label.set_text("密码：");
-
-        let username_input = Child::<Edit>::init(&window);
-        let mut password_input = Child::<Edit>::init(&window);
-        password_input.set_password(true);
-
-        let mut cred_button = Child::<Button>::init(&window);
-        cred_button.set_text("更新凭据");
-
-        let mut del_button = Child::<Button>::init(&window);
-        del_button.set_text("删除并退出");
-
-        let mut info1 = Child::<Label>::init(&window);
-        info1.set_text("服务热线（8:00~20:00）010-62784859");
-        info1.set_halign(HAlign::Center);
-        let mut info2 = Child::<Label>::init(&window);
-        info2.set_text(format!(
-            "版本 {} 版权所有 © 2021-2025 Berrysoft",
-            env!("CARGO_PKG_VERSION")
-        ));
-        info2.set_halign(HAlign::Center);
 
         window.show();
 
@@ -197,73 +178,31 @@ impl Component for MainModel {
     }
 
     async fn start(&mut self, sender: &ComponentSender<Self>) {
-        let fut_window = self.window.start(
-            sender,
-            |e| match e {
-                WindowEvent::Close => Some(MainMessage::Close),
-                WindowEvent::Resize => Some(MainMessage::Refresh),
-                _ => None,
+        start! {
+            sender, default: MainMessage::Noop,
+            self.window => {
+                WindowEvent::Close => MainMessage::Close,
+                WindowEvent::Resize => MainMessage::Refresh,
             },
-            || MainMessage::Noop,
-        );
-        let fut_combo = self.state_combo.start(
-            sender,
-            |e| match e {
-                ComboBoxEvent::Select => Some(MainMessage::ComboSelect),
-                _ => None,
+            self.state_combo => {
+                ComboBoxEvent::Select => MainMessage::ComboSelect,
             },
-            || MainMessage::Noop,
-        );
-        let fut_login = self.login_button.start(
-            sender,
-            |e| match e {
-                ButtonEvent::Click => Some(MainMessage::Action(Action::Login)),
-                _ => None,
+            self.login_button => {
+                ButtonEvent::Click => MainMessage::Action(Action::Login),
             },
-            || MainMessage::Noop,
-        );
-        let fut_logout = self.logout_button.start(
-            sender,
-            |e| match e {
-                ButtonEvent::Click => Some(MainMessage::Action(Action::Logout)),
-                _ => None,
+            self.logout_button => {
+                ButtonEvent::Click => MainMessage::Action(Action::Logout),
             },
-            || MainMessage::Noop,
-        );
-        let fut_refresh = self.refresh_button.start(
-            sender,
-            |e| match e {
-                ButtonEvent::Click => Some(MainMessage::Action(Action::Flux)),
-                _ => None,
+            self.refresh_button => {
+                ButtonEvent::Click => MainMessage::Action(Action::Flux),
             },
-            || MainMessage::Noop,
-        );
-        let fut_cred = self.cred_button.start(
-            sender,
-            |e| match e {
-                ButtonEvent::Click => Some(MainMessage::Cred),
-                _ => None,
+            self.cred_button => {
+                ButtonEvent::Click => MainMessage::Cred,
             },
-            || MainMessage::Noop,
-        );
-        let fut_del = self.del_button.start(
-            sender,
-            |e| match e {
-                ButtonEvent::Click => Some(MainMessage::Del),
-                _ => None,
-            },
-            || MainMessage::Noop,
-        );
-
-        futures_util::join!(
-            fut_window,
-            fut_combo,
-            fut_login,
-            fut_logout,
-            fut_refresh,
-            fut_cred,
-            fut_del
-        );
+            self.del_button => {
+                ButtonEvent::Click => MainMessage::Del,
+            }
+        }
     }
 
     async fn update(&mut self, message: Self::Message, sender: &ComponentSender<Self>) -> bool {

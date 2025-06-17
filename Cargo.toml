@@ -42,7 +42,7 @@ thiserror = "2"
 
 compio = "0.14"
 cyper = { version = "0.3", default-features = false }
-winio = { git = "https://github.com/compio-rs/winio.git" }
+winio = "0.5"
 flume = "0.11"
 
 chrono = { version = "0.4", default-features = false, features = [
