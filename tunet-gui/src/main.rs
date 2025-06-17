@@ -50,6 +50,7 @@ struct MainModel {
     window: Child<Window>,
     state_combo: Child<ComboBox>,
     canvas: Child<Canvas>,
+    hidden: Child<Label>,
     username: Child<Label>,
     flux: Child<Label>,
     online_time: Child<Label>,
@@ -116,6 +117,7 @@ impl Component for MainModel {
             },
             state_combo: ComboBox = (&window),
             canvas: Canvas = (&window),
+            hidden: Label = (&window) => { text: "HIDDEN", visible: false },
             username: Label = (&window) => { text: "用户：" },
             flux: Label = (&window) => { text: "流量：" },
             online_time: Label = (&window) => { text: "时长：" },
@@ -157,6 +159,7 @@ impl Component for MainModel {
             window,
             canvas,
             state_combo,
+            hidden,
             username,
             flux,
             online_time,
@@ -300,7 +303,8 @@ impl Component for MainModel {
 
         let csize = self.window.client_size();
         {
-            let mut grid = Grid::from_str("1*,1*,1*", "auto,1*,auto,auto,auto,auto,auto").unwrap();
+            let mut grid =
+                Grid::from_str("1*,1*,1*", "auto,auto,1*,auto,auto,auto,auto,auto").unwrap();
             grid.push(&mut self.state_combo)
                 .column(0)
                 .column_span(3)
@@ -312,7 +316,14 @@ impl Component for MainModel {
                 .column(0)
                 .column_span(3)
                 .row(1)
-                .row_span(2)
+                .row_span(3)
+                .margin(margin)
+                .finish();
+
+            grid.push(&mut self.hidden)
+                .column(0)
+                .column_span(3)
+                .row(1)
                 .margin(margin)
                 .finish();
 
@@ -351,7 +362,7 @@ impl Component for MainModel {
             grid.push(&mut flux_grid)
                 .column(0)
                 .column_span(3)
-                .row(1)
+                .row(2)
                 .halign(HAlign::Center)
                 .valign(VAlign::Center)
                 .finish();
@@ -359,23 +370,23 @@ impl Component for MainModel {
             grid.push(&mut self.log)
                 .column(0)
                 .column_span(3)
-                .row(2)
+                .row(3)
                 .margin(margin)
                 .finish();
 
             grid.push(&mut self.login_button)
                 .column(0)
-                .row(3)
+                .row(4)
                 .margin(margin)
                 .finish();
             grid.push(&mut self.logout_button)
                 .column(1)
-                .row(3)
+                .row(4)
                 .margin(margin)
                 .finish();
             grid.push(&mut self.refresh_button)
                 .column(2)
-                .row(3)
+                .row(4)
                 .margin(margin)
                 .finish();
 
@@ -426,19 +437,19 @@ impl Component for MainModel {
             grid.push(&mut cred_grid)
                 .column(0)
                 .column_span(3)
-                .row(4)
+                .row(5)
                 .finish();
 
             grid.push(&mut self.info1)
                 .column(0)
                 .column_span(3)
-                .row(5)
+                .row(6)
                 .margin(margin)
                 .finish();
             grid.push(&mut self.info2)
                 .column(0)
                 .column_span(3)
-                .row(6)
+                .row(7)
                 .margin(margin)
                 .finish();
 
