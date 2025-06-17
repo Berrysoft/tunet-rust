@@ -113,17 +113,43 @@ impl Component for MainModel {
                     let monitors = Monitor::all();
                     let region = monitors[0].client_scaled();
                     region.origin + region.size / 2.0 - window.size() / 2.0
-                }
+                },
+                #[cfg(windows)]
+                icon_by_id: 1,
             },
             state_combo: ComboBox = (&window),
             canvas: Canvas = (&window),
             hidden: Label = (&window) => { text: "HIDDEN", visible: false },
-            username: Label = (&window) => { text: "用户：" },
-            flux: Label = (&window) => { text: "流量：" },
-            online_time: Label = (&window) => { text: "时长：" },
-            balance: Label = (&window) => { text: "余额：" },
-            status: Label = (&window) => { text: "网络：" },
-            log: Label = (&window) => { halign: HAlign::Center },
+            username: Label = (&window) => {
+                text: "用户：",
+                #[cfg(windows)]
+                transparent: true,
+            },
+            flux: Label = (&window) => {
+                text: "流量：",
+                #[cfg(windows)]
+                transparent: true,
+            },
+            online_time: Label = (&window) => {
+                text: "时长：",
+                #[cfg(windows)]
+                transparent: true,
+            },
+            balance: Label = (&window) => {
+                text: "余额：",
+                #[cfg(windows)]
+                transparent: true,
+            },
+            status: Label = (&window) => {
+                text: "网络：",
+                #[cfg(windows)]
+                transparent: true,
+            },
+            log: Label = (&window) => {
+                halign: HAlign::Center,
+                #[cfg(windows)]
+                transparent: true,
+            },
             login_button: Button = (&window) => { text: "登录" },
             logout_button: Button = (&window) => { text: "注销" },
             refresh_button: Button = (&window) => { text: "刷新" },
@@ -145,9 +171,6 @@ impl Component for MainModel {
                 halign: HAlign::Center,
             }
         }
-
-        #[cfg(windows)]
-        window.set_icon_by_id(1);
 
         state_combo.insert(0, "Auth4");
         state_combo.insert(1, "Auth6");
