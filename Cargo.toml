@@ -42,7 +42,7 @@ thiserror = "2"
 
 compio = "0.14"
 cyper = { version = "0.3", default-features = false }
-winio = "0.5"
+winio = "0.5.1"
 flume = "0.11"
 
 chrono = { version = "0.4", default-features = false, features = [

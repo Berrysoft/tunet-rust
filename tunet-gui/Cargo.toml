@@ -21,6 +21,9 @@ futures-util = { workspace = true }
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winresource = { workspace = true }
 
+[features]
+clang-lto = ["winio/clang-lto"]
+
 [package.metadata.winresource]
 OriginalFilename = "tunet-gui.exe"
 LegalCopyright = "Copyright © 2021-2025 Berrysoft"
