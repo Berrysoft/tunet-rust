@@ -69,13 +69,13 @@ pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
 }
 
 async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
-    let mut timer = crate::create_timer(interval).fuse();
+    let timer = crate::create_timer(interval).fuse();
     let mut timer = std::pin::pin!(timer);
     let mut events = netstatus::NetStatus::watch().fuse();
     loop {
-        let mut ctrlc = signal(libc::SIGINT);
+        let ctrlc = signal(libc::SIGINT);
         let ctrlc = std::pin::pin!(ctrlc);
-        let mut kill = signal(libc::SIGTERM);
+        let kill = signal(libc::SIGTERM);
         let kill = std::pin::pin!(kill);
         futures_util::select! {
             _ = ctrlc.fuse() => {
@@ -87,14 +87,14 @@ async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {
             _ = timer.next() => {
                 log::info!("Timer triggered.");
                 if let Err(msg) = crate::run_once(true).await {
-                    log::error!("{}", msg);
+                    log::error!("{msg}");
                 }
             }
             e = events.next() => {
                 log::info!("Net status changed.");
                 if let Some(()) = e {
                     if let Err(msg) = crate::run_once(false).await {
-                        log::error!("{}", msg);
+                        log::error!("{msg}");
                     }
                 } else {
                     break;
