@@ -8,7 +8,6 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-color-theme = { workspace = true }
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-model = { workspace = true }

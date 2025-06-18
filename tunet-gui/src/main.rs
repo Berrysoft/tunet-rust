@@ -21,12 +21,9 @@ fn main() {
 }
 
 fn accent_color() -> Color {
-    let c = color_theme::Color::accent().unwrap_or(color_theme::Color {
-        r: 0,
-        g: 120,
-        b: 212,
-    });
-    Color::new(c.r, c.g, c.b, 255)
+    winio::accent_color()
+        .map(|c| c.with_alpha(255))
+        .unwrap_or(Color::new(0, 120, 212, 255))
 }
 
 enum MainMessage {
