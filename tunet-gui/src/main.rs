@@ -278,13 +278,18 @@ impl Component for MainModel {
                     false
                 }
                 UpdateMsg::State => {
-                    self.model.queue(Action::Flux);
                     let index = match self.model.state {
                         NetState::Unknown => None,
                         NetState::Auth4 => Some(0),
                         NetState::Auth6 => Some(1),
                     };
-                    self.state_combo.set_selection(index);
+                    let old_index = self.state_combo.selection();
+                    if index != old_index {
+                        self.state_combo.set_selection(index);
+                        if index.is_some() {
+                            self.model.queue(Action::Flux);
+                        }
+                    }
                     false
                 }
                 UpdateMsg::Status => {

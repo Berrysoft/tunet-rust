@@ -5015,9 +5015,9 @@ checksum = "271414315aff87387382ec3d271b52d7ae78726f5d44ac98b4f4030c91880486"
 
 [[package]]
 name = "winio"
-version = "0.5.3"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27370deb0fd8bb919909e889a5b8c24f782c5209d533f3d92459782800de58c9"
+checksum = "7350fb8311978f116a440aef3014bbb496b87475f114db676572df04072c81e9"
 dependencies = [
  "block2",
  "cfg-if",
