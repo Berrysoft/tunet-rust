@@ -235,7 +235,7 @@ impl TUNetConnect {
 }
 
 pub fn create_http_client() -> HttpClient {
-    cyper::ClientBuilder::new().cookie_store(true).build()
+    cyper::ClientBuilder::new().build()
 }
 
 #[cfg(feature = "dart")]
