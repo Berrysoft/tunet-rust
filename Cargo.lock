@@ -2670,6 +2670,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88c6597e14493ab2e44ce58f2fdecf095a51f12ca57bec060a11c57332520551"
 dependencies = [
  "objc2-encode",
+ "objc2-proc-macros",
 ]
 
 [[package]]
@@ -2819,6 +2820,12 @@ dependencies = [
  "objc2",
  "objc2-foundation",
 ]
+
+[[package]]
+name = "objc2-proc-macros"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c42034b8cee04579dfb1fc264762ac9cbc84b03fdd00850d2ea45b356f1297e"
 
 [[package]]
 name = "objc2-quartz-core"

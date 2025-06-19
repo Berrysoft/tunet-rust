@@ -3,8 +3,8 @@ use anyhow::Result;
 use flutter_rust_bridge::{frb, setup_default_user_utils};
 
 pub use netstatus::NetStatus;
-pub use std::{net::Ipv4Addr, sync::Mutex};
-use std::{net::Ipv6Addr, sync::Arc};
+use std::sync::Arc;
+pub use std::sync::Mutex;
 pub use tunet_helper::{
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
     NetState,
@@ -54,30 +54,6 @@ pub struct _Balance(pub f64);
 
 #[frb(mirror(NetDateTime))]
 pub struct _NetDateTime(pub NaiveDateTime);
-
-pub struct Ipv4AddrWrap {
-    pub octets: [u8; 4],
-}
-
-impl From<Ipv4Addr> for Ipv4AddrWrap {
-    fn from(value: Ipv4Addr) -> Self {
-        Self {
-            octets: value.octets(),
-        }
-    }
-}
-
-pub struct Ipv6AddrWrap {
-    pub octets: [u8; 16],
-}
-
-impl From<Ipv6Addr> for Ipv6AddrWrap {
-    fn from(value: Ipv6Addr) -> Self {
-        Self {
-            octets: value.octets(),
-        }
-    }
-}
 
 pub struct RuntimeStartConfig {
     pub status: NetStatus,

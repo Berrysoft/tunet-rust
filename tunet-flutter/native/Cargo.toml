@@ -28,3 +28,6 @@ rustls-platform-verifier = { workspace = true }
 
 [build-dependencies]
 flutter_rust_bridge_codegen = "=2.10.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(frb_expand)"] }

@@ -131,8 +131,7 @@ impl Model {
     }
 
     pub fn update(&self, msg: UpdateMsg) {
-        let update_sender = self.update_sender.clone();
-        spawn(async move { update_sender.send_async(msg).await }).detach();
+        self.update_sender.send(msg).ok();
     }
 
     fn spawn_watch_status(&self) {
@@ -307,18 +306,12 @@ impl BusyBool {
         {
             let msg = self.msg;
             let action_sender = self.action_sender.clone();
-            spawn(async move {
-                action_sender.send_async(Action::Update(msg)).await.ok();
-            })
-            .detach();
+            action_sender.send(Action::Update(msg)).ok();
             Some(guard(
                 (self.lock.clone(), self.action_sender.clone(), self.msg),
                 |(lock, action_sender, msg)| {
                     lock.store(false, Ordering::Release);
-                    spawn(async move {
-                        action_sender.send_async(Action::Update(msg)).await.ok();
-                    })
-                    .detach();
+                    action_sender.send(Action::Update(msg)).ok();
                 },
             ))
         } else {
