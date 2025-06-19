@@ -1,6 +1,6 @@
 [package]
 name = "tunet"
-version = "0.10.1"
+version = "0.10.2"
 description = "Tsinghua University network CLI"
 edition.workspace = true
 authors.workspace = true
