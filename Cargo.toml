@@ -22,7 +22,6 @@ repository = "https://github.com/Berrysoft/tunet-rust"
 [profile.release]
 lto = true
 codegen-units = 1
-opt-level = "z"
 
 [workspace.dependencies]
 authtea = { path = "authtea" }

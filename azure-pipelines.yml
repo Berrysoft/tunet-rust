@@ -105,12 +105,12 @@ jobs:
   steps:
   - script: |
       rustup target add x86_64-apple-darwin
-      cargo build --release --workspace --exclude native --target x86_64-apple-darwin
+      cargo build --release --workspace --exclude native --target x86_64-apple-darwin --features objc-static
     displayName: "Build x64"
 
   - script: |
       rustup target add aarch64-apple-darwin
-      cargo build --release --workspace --exclude native --target aarch64-apple-darwin
+      cargo build --release --workspace --exclude native --target aarch64-apple-darwin --features objc-static
     displayName: "Build arm64"
 
   - script: |

@@ -22,6 +22,7 @@ winresource = { workspace = true }
 
 [features]
 clang-lto = ["winio/clang-lto"]
+objc-static = ["winio/objc-static"]
 
 [package.metadata.winresource]
 OriginalFilename = "tunet-gui.exe"
