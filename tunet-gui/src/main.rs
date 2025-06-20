@@ -12,12 +12,7 @@ use winio::{
 };
 
 fn main() {
-    let mut reader = SettingsReader::new().unwrap();
-    let cred = reader.read_full().unwrap_or_default();
-    let save = App::new_with_name("io.github.berrysoft.tunet").run::<MainModel>(cred);
-    if let MainEvent::Delete(u) = save {
-        reader.delete(&u).unwrap();
-    }
+    App::new_with_name("io.github.berrysoft.tunet").run::<MainModel>(())
 }
 
 fn accent_color() -> Color {
@@ -37,12 +32,8 @@ enum MainMessage {
     Update(UpdateMsg),
 }
 
-enum MainEvent {
-    Save,
-    Delete(String),
-}
-
 struct MainModel {
+    settings: SettingsReader,
     model: Model,
     window: Child<Window>,
     state_combo: Child<ComboBox>,
@@ -68,11 +59,14 @@ struct MainModel {
 }
 
 impl Component for MainModel {
-    type Init<'a> = (String, String);
+    type Init<'a> = ();
     type Message = MainMessage;
-    type Event = MainEvent;
+    type Event = ();
 
-    fn init(init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Self {
+    fn init(_init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Self {
+        let settings = SettingsReader::new().unwrap();
+        let (username, password) = settings.read_full().unwrap_or_default();
+
         let (action_sender, action_receiver) = flume::unbounded();
         let (update_sender, update_receiver) = flume::unbounded();
         let model = Model::new(action_sender, update_sender).unwrap();
@@ -95,7 +89,6 @@ impl Component for MainModel {
             .detach();
         }
 
-        let (username, password) = init;
         if !username.is_empty() {
             model.queue(Action::Credential(username, password));
         }
@@ -175,6 +168,7 @@ impl Component for MainModel {
         window.show();
 
         Self {
+            settings,
             model,
             window,
             canvas,
@@ -233,7 +227,7 @@ impl Component for MainModel {
             MainMessage::Noop => false,
             MainMessage::Refresh => true,
             MainMessage::Close => {
-                sender.output(MainEvent::Save);
+                sender.output(());
                 false
             }
             MainMessage::ComboSelect => {
@@ -248,10 +242,10 @@ impl Component for MainModel {
                 false
             }
             MainMessage::Cred => {
-                self.model.queue(Action::Credential(
-                    self.username_input.text(),
-                    self.password_input.text(),
-                ));
+                let u = self.username_input.text();
+                let p = self.password_input.text();
+                self.settings.save(&u, &p).unwrap();
+                self.model.queue(Action::Credential(u, p));
                 false
             }
             MainMessage::Del => {
@@ -263,7 +257,8 @@ impl Component for MainModel {
                     .show(Some(&self.window))
                     .await;
                 if let MessageBoxResponse::Ok = res {
-                    sender.output(MainEvent::Delete(self.username_input.text()));
+                    self.settings.delete(&self.username_input.text()).unwrap();
+                    sender.output(());
                 }
                 false
             }
