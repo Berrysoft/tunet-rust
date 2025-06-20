@@ -30,9 +30,9 @@ assets = [
         "644",
     ],
     [
-        "tunet.desktop",
-        "usr/share/applications/tunet.desktop",
-        "755",
+        "io.github.berrysoft.tunet.desktop",
+        "usr/share/applications/io.github.berrysoft.tunet.desktop",
+        "644",
     ],
     [
         "../tunet-service/tunet@.service",
