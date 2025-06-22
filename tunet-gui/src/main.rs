@@ -5,10 +5,10 @@ use tunet_helper::NetState;
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 use winio::{
-    init, start, App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox, ComboBoxEvent,
-    Component, ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable, Margin, MessageBox,
-    MessageBoxButton, MessageBoxResponse, MessageBoxStyle, Monitor, Point, Rect, Size,
-    SolidColorBrush, VAlign, Visible, Window, WindowEvent,
+    init, layout, start, App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox,
+    ComboBoxEvent, Component, ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable,
+    Margin, MessageBox, MessageBoxButton, MessageBoxResponse, MessageBoxStyle, Monitor, Point,
+    Rect, Size, SolidColorBrush, VAlign, Visible, Window, WindowEvent,
 };
 
 fn main() {
@@ -319,159 +319,47 @@ impl Component for MainModel {
     }
 
     fn render(&mut self, _sender: &ComponentSender<Self>) {
-        let margin = Margin::new_all_same(4.0);
-
         let csize = self.window.client_size();
         {
-            let mut grid =
-                Grid::from_str("1*,1*,1*", "auto,auto,1*,auto,auto,auto,auto,auto").unwrap();
-            grid.push(&mut self.state_combo)
-                .column(0)
-                .column_span(3)
-                .row(0)
-                .margin(margin)
-                .finish();
-
-            grid.push(&mut self.canvas)
-                .column(0)
-                .column_span(3)
-                .row(1)
-                .row_span(3)
-                .margin(margin)
-                .finish();
-
-            grid.push(&mut self.hidden)
-                .column(0)
-                .column_span(3)
-                .row(1)
-                .margin(margin)
-                .finish();
-
-            let mut flux_grid = Grid::from_str("1*", "1*,1*,1*,1*,1*").unwrap();
-            flux_grid
-                .push(&mut self.username)
-                .column(0)
-                .row(0)
-                .margin(margin)
-                .finish();
-            flux_grid
-                .push(&mut self.flux)
-                .column(0)
-                .row(1)
-                .margin(margin)
-                .finish();
-            flux_grid
-                .push(&mut self.online_time)
-                .column(0)
-                .row(2)
-                .margin(margin)
-                .finish();
-            flux_grid
-                .push(&mut self.balance)
-                .column(0)
-                .row(3)
-                .margin(margin)
-                .finish();
-            flux_grid
-                .push(&mut self.status)
-                .column(0)
-                .row(4)
-                .margin(margin)
-                .finish();
-
-            grid.push(&mut flux_grid)
-                .column(0)
-                .column_span(3)
-                .row(2)
-                .halign(HAlign::Center)
-                .valign(VAlign::Center)
-                .finish();
-
-            grid.push(&mut self.log)
-                .column(0)
-                .column_span(3)
-                .row(3)
-                .margin(margin)
-                .finish();
-
-            grid.push(&mut self.login_button)
-                .column(0)
-                .row(4)
-                .margin(margin)
-                .finish();
-            grid.push(&mut self.logout_button)
-                .column(1)
-                .row(4)
-                .margin(margin)
-                .finish();
-            grid.push(&mut self.refresh_button)
-                .column(2)
-                .row(4)
-                .margin(margin)
-                .finish();
-
-            let mut cred_grid = Grid::from_str("auto,1*,auto", "1*,1*").unwrap();
+            let margin = Margin::new_all_same(4.0);
             let mut label_margin = margin;
             label_margin.right = 0.0;
             let mut input_margin = margin;
             input_margin.left = 0.0;
-            cred_grid
-                .push(&mut self.username_label)
-                .column(0)
-                .row(0)
-                .valign(VAlign::Center)
-                .margin(label_margin)
-                .finish();
-            cred_grid
-                .push(&mut self.password_label)
-                .column(0)
-                .row(1)
-                .valign(VAlign::Center)
-                .margin(label_margin)
-                .finish();
-            cred_grid
-                .push(&mut self.username_input)
-                .column(1)
-                .row(0)
-                .margin(input_margin)
-                .finish();
-            cred_grid
-                .push(&mut self.password_input)
-                .column(1)
-                .row(1)
-                .margin(input_margin)
-                .finish();
-            cred_grid
-                .push(&mut self.cred_button)
-                .column(2)
-                .row(0)
-                .margin(margin)
-                .finish();
-            cred_grid
-                .push(&mut self.del_button)
-                .column(2)
-                .row(1)
-                .margin(margin)
-                .finish();
 
-            grid.push(&mut cred_grid)
-                .column(0)
-                .column_span(3)
-                .row(5)
-                .finish();
+            let mut flux_grid = layout! {
+                Grid::from_str("1*", "1*,1*,1*,1*,1*").unwrap(),
+                self.username    => { column: 0, row: 0, margin: margin },
+                self.flux        => { column: 0, row: 1, margin: margin },
+                self.online_time => { column: 0, row: 2, margin: margin },
+                self.balance     => { column: 0, row: 3, margin: margin },
+                self.status      => { column: 0, row: 4, margin: margin },
+            };
 
-            grid.push(&mut self.info1)
-                .column(0)
-                .column_span(3)
-                .row(6)
-                .margin(margin)
-                .finish();
-            grid.push(&mut self.info2)
-                .column(0)
-                .column_span(3)
-                .row(7)
-                .margin(margin)
-                .finish();
+            let mut cred_grid = layout! {
+                Grid::from_str("auto,1*,auto", "1*,1*").unwrap(),
+                self.username_label => { column: 0, row: 0, valign: VAlign::Center, margin: label_margin },
+                self.password_label => { column: 0, row: 1, valign: VAlign::Center, margin: label_margin },
+                self.username_input => { column: 1, row: 0, margin: input_margin },
+                self.password_input => { column: 1, row: 1, margin: input_margin },
+                self.cred_button    => { column: 2, row: 0, margin: margin },
+                self.del_button     => { column: 2, row: 1, margin: margin },
+            };
+
+            let mut grid = layout! {
+                Grid::from_str("1*,1*,1*", "auto,auto,1*,auto,auto,auto,auto,auto").unwrap(),
+                self.state_combo => { column: 0, column_span: 3, row: 0, margin: margin },
+                self.hidden => { column: 0, column_span: 3, row: 1, margin: margin },
+                self.canvas => { column: 0, column_span: 3, row: 1, row_span: 3, margin: margin },
+                flux_grid => { column: 0, column_span: 3, row: 2, halign: HAlign::Center, valign: VAlign::Center },
+                self.log => { column: 0, column_span: 3, row: 3, margin: margin },
+                self.login_button => { column: 0, row: 4, margin: margin },
+                self.logout_button => { column: 1, row: 4, margin: margin },
+                self.refresh_button => { column: 2, row: 4, margin: margin },
+                cred_grid => { column: 0, column_span: 3, row: 5 },
+                self.info1 => { column: 0, column_span: 3, row: 6, margin: margin },
+                self.info2 => { column: 0, column_span: 3, row: 7, margin: margin },
+            };
 
             grid.set_size(csize);
         }
