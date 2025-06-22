@@ -37,9 +37,9 @@ cfg-if = "1"
 enum_dispatch = "0.3"
 thiserror = "2"
 
-compio = "0.14"
-cyper = { version = "0.3", default-features = false }
-winio = "0.5.4"
+compio = "0.15"
+cyper = { version = "0.4", default-features = false }
+winio = "0.6"
 flume = "0.11"
 
 chrono = { version = "0.4", default-features = false, features = [
@@ -60,7 +60,7 @@ keyring = { version = "3", features = [
 ] }
 
 rustls = { version = "0.23", default-features = false }
-rustls-platform-verifier = "0.5"
+rustls-platform-verifier = "0.6"
 
 serde = "1"
 serde_json = "1"
