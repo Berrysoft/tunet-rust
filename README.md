@@ -4,24 +4,22 @@
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
 ## GUI（桌面端）
-基于 [Slint](https://slint-ui.com/) 开发。使用如下命令启动：
+基于 [winio](https://github.com/compio-rs/winio) 开发。使用如下命令启动：
 
 ``` bash
 $ tunet-gui
 ```
 
-| 平台    | 亮                                   | 暗                                  |
-| ------- | ------------------------------------ | ----------------------------------- |
-| Windows | ![Windows](assets/windows.light.png) | ![Windows](assets/windows.dark.png) |
-| Linux   | ![Linux](assets/linux.light.png)     | （暂无图片）                        |
-| macOS   | ![macOS](assets/mac.light.png)       | ![macOS](assets/mac.dark.png)       |
+| 亮                            | 暗                          |
+| ----------------------------- | --------------------------- |
+| ![light](assets/pc.light.png) | ![dark](assets/pc.dark.png) |
 
 ## GUI（移动端）
 基于 [Flutter](https://flutter.dev/) 开发。会尽量保证 iOS 版本能用，但是没钱发布。
 
-| 平台    | 亮                                   | 暗                                  |
-| ------- | ------------------------------------ | ----------------------------------- |
-| Android | ![Android](assets/android.light.png) | ![Android](assets/android.dark.png) |
+| 亮                                   | 暗                                  |
+| ------------------------------------ | ----------------------------------- |
+| ![Android](assets/android.light.png) | ![Android](assets/android.dark.png) |
 
 ## 命令行
 ### 登录/注销
@@ -88,20 +86,17 @@ $ tunet deletecred
       <th>平台</th>
       <th>网络状态</th>
       <th>WIFI SSID</th>
-      <th>MAC 地址</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Windows</td>
       <td colspan="2">Windows::Networking::Connectivity</td>
-      <td>GetAdaptersAddresses</td>
     </tr>
     <tr>
       <td>Linux</td>
       <td>（无）</td>
       <td>Netlink</td>
-      <td rowspan="4">getifaddrs</td>
     </tr>
     <tr>
       <td>Android</td>
