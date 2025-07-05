@@ -4,19 +4,14 @@ use compio::runtime::spawn;
 use tunet_helper::NetState;
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
-use winio::{
-    init, layout, start, App, BrushPen, Button, ButtonEvent, Canvas, Child, Color, ComboBox,
-    ComboBoxEvent, Component, ComponentSender, Edit, Enable, Grid, HAlign, Label, Layoutable,
-    Margin, MessageBox, MessageBoxButton, MessageBoxResponse, MessageBoxStyle, Monitor, Point,
-    Rect, Size, SolidColorBrush, VAlign, Visible, Window, WindowEvent,
-};
+use winio::prelude::*;
 
 fn main() {
-    App::new_with_name("io.github.berrysoft.tunet").run::<MainModel>(())
+    App::new("io.github.berrysoft.tunet").run::<MainModel>(())
 }
 
 fn accent_color() -> Color {
-    winio::accent_color()
+    Color::accent()
         .map(|c| c.with_alpha(255))
         .unwrap_or(Color::new(0, 120, 212, 255))
 }
@@ -194,7 +189,7 @@ impl Component for MainModel {
         }
     }
 
-    async fn start(&mut self, sender: &ComponentSender<Self>) {
+    async fn start(&mut self, sender: &ComponentSender<Self>) -> ! {
         start! {
             sender, default: MainMessage::Noop,
             self.window => {

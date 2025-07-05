@@ -21,7 +21,6 @@ futures-util = { workspace = true }
 winresource = { workspace = true }
 
 [features]
-clang-lto = ["winio/clang-lto"]
 objc-static = ["winio/objc-static"]
 
 [package.metadata.winresource]
