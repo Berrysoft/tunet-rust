@@ -97,7 +97,9 @@ jobs:
       rustup target add $(target)
       ln -s ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld ~/.cargo/bin/ld.lld
       export RUSTFLAGS="-Clinker-plugin-lto -Clinker=clang -Clink-arg=-flto -Clink-arg=-fuse-ld=$HOME/.cargo/bin/ld.lld"
-      cargo build --release --workspace --exclude native --target $(target) --features clang-lto
+      export CXX="clang++"
+      export CXXFLAGS="-flto"
+      cargo build --release --workspace --exclude native --target $(target)
     displayName: "Build"
 
   - script: |
