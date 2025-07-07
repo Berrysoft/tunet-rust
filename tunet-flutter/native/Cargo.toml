@@ -19,7 +19,7 @@ futures-util = { workspace = true }
 flume = { workspace = true }
 log = { workspace = true }
 chrono = { workspace = true }
-flutter_rust_bridge = { version = "=2.10.0", features = ["chrono"] }
+flutter_rust_bridge = { version = "=2.11.1", features = ["chrono"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.15"
