@@ -1231,7 +1231,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1407,7 +1407,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "778e2ac28f6c47af28e4907f13ffd1e1ddbd400980a9abd7c8df189bf578a5ad"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2937,6 +2937,12 @@ name = "once_cell_polyfill"
 version = "1.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4895175b425cb1f87721b59f0f286c2092bd4af812243672510e1ac53e2e0ad"
+
+[[package]]
+name = "oneshot"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4ce411919553d3f9fa53a0880544cda985a112117a0444d5ff1e870a893d6ea"
 
 [[package]]
 name = "openssl"
@@ -4619,7 +4625,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -5048,9 +5054,9 @@ checksum = "271414315aff87387382ec3d271b52d7ae78726f5d44ac98b4f4030c91880486"
 
 [[package]]
 name = "winio"
-version = "0.7.0"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "370858ee776a5044aff42a378a8608fd8b82ab5faffc9e81fa5618ebed3e8538"
+checksum = "9b3a7060fff5814629e06972ad49c3c13f10c036e0de20d954383deab3a3d012"
 dependencies = [
  "cfg-if",
  "compio",
@@ -5065,6 +5071,7 @@ dependencies = [
  "winio-ui-app-kit",
  "winio-ui-qt",
  "winio-ui-win32",
+ "winio-ui-winui",
 ]
 
 [[package]]
@@ -5075,9 +5082,9 @@ checksum = "f4e1d71e5e7fe651ed7ef6909dcaef026c9f9397f66b661a7a5122ed2a8944cd"
 
 [[package]]
 name = "winio-elm"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "547ace27bbb326a8aa830664ee1064e419578899ae90dead162e62305b7ad9ac"
+checksum = "142a4c88e0b51da15318b1e45512f83d0615419f1baacc44af2bef5765a3bb06"
 dependencies = [
  "futures-util",
  "inherit-methods-macro",
@@ -5090,14 +5097,15 @@ dependencies = [
 
 [[package]]
 name = "winio-handle"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01b442ee90eb0e4c74ca3beecfee08a7e09bce2bd80076958162f799ea26bba0"
+checksum = "870b1f73c9107d31e30390284c2367e9d8995ccd64e5370e125f7c14d1db4f44"
 dependencies = [
  "cfg-if",
  "objc2",
  "objc2-app-kit",
  "windows-sys 0.60.2",
+ "winio-winui3",
 ]
 
 [[package]]
@@ -5134,9 +5142,9 @@ dependencies = [
 
 [[package]]
 name = "winio-ui-app-kit"
-version = "0.1.1"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ad699c5b48ffb636418924cce1827399ae137fae6868b69d58994bc02bb0e32"
+checksum = "3305ebff66a7e6304831eac1603298e0c175a52a655fd750edd003efdc961e82"
 dependencies = [
  "block2",
  "compio",
@@ -5160,9 +5168,9 @@ dependencies = [
 
 [[package]]
 name = "winio-ui-qt"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74582c5f05207c48ceb2c8b161f078d6d29968f4202567a0f0c2dc087f69f20d"
+checksum = "025d21e81b635c1e1d89d953544d57a4743c4a5b03d0894f8351649a873136e7"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -5179,19 +5187,36 @@ dependencies = [
 
 [[package]]
 name = "winio-ui-win32"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0aae222b5574169567b2cb42ba338ef7d02d3fc8804c1d5db66f2cdf03c669c1"
+checksum = "16724f4799cf38cfaa3b7cf6195993f99e1fda7292a9e54da6c8553e218d9a43"
 dependencies = [
- "cfg-if",
  "compio",
  "compio-log",
- "embed-resource",
  "futures-util",
  "image",
  "inherit-methods-macro",
  "scoped-tls",
  "slab",
+ "widestring",
+ "windows",
+ "windows-sys 0.60.2",
+ "winio-handle",
+ "winio-pollable",
+ "winio-primitive",
+ "winio-ui-windows-common",
+]
+
+[[package]]
+name = "winio-ui-windows-common"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56f606f8dc2756eb38fc880b31d84d74a9b05ba90c14e03194f0b6832c6b0242"
+dependencies = [
+ "cfg-if",
+ "compio",
+ "embed-resource",
+ "image",
  "slim-detours-sys",
  "sync-unsafe-cell",
  "widestring",
@@ -5199,8 +5224,44 @@ dependencies = [
  "windows-numerics",
  "windows-sys 0.60.2",
  "winio-handle",
- "winio-pollable",
  "winio-primitive",
+]
+
+[[package]]
+name = "winio-ui-winui"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9fffd2531571ebf0b1758e9c7eb75b764e62c340c8360ab1309fc4f6d04fe72"
+dependencies = [
+ "compio",
+ "compio-log",
+ "compio-runtime",
+ "image",
+ "inherit-methods-macro",
+ "oneshot",
+ "scoped-tls",
+ "send_wrapper",
+ "widestring",
+ "windows",
+ "windows-sys 0.60.2",
+ "winio-callback",
+ "winio-handle",
+ "winio-primitive",
+ "winio-ui-windows-common",
+ "winio-winui3",
+]
+
+[[package]]
+name = "winio-winui3"
+version = "0.1.3+winui3-1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29e38b921378eaadc091df88aa6a0db7d483e3b53f8b33977e7dba7fa31dbecb"
+dependencies = [
+ "windows",
+ "windows-collections",
+ "windows-core",
+ "windows-future",
+ "windows-numerics",
 ]
 
 [[package]]
