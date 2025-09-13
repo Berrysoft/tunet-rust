@@ -37,9 +37,9 @@ cfg-if = "1"
 enum_dispatch = "0.3"
 thiserror = "2"
 
-compio = "0.15"
-cyper = { version = "0.4", default-features = false }
-winio = "0.7"
+compio = "0.16"
+cyper = { version = "0.5", default-features = false }
+winio = "0.8"
 flume = "0.11"
 
 chrono = { version = "0.4", default-features = false, features = [
@@ -68,5 +68,5 @@ serde_with = "3"
 
 libc = "0.2"
 
-windows = "0.61"
+windows = "0.62"
 winresource = "0.1"
