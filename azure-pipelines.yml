@@ -149,9 +149,9 @@ jobs:
     displayName: 'Install cargo-ndk'
 
   - script: |
-      wget https://storage.flutter-io.cn/flutter_infra_release/releases/stable/linux/flutter_linux_3.32.4-stable.tar.xz
+      wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.35.3-stable.tar.xz
       mkdir -p ~/development/
-      tar -xvf flutter_linux_3.32.4-stable.tar.xz -C ~/development/
+      tar -xvf flutter_linux_3.35.3-stable.tar.xz -C ~/development/
     displayName: 'Install flutter'
 
   - task: DownloadSecureFile@1
