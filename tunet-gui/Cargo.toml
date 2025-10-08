@@ -14,13 +14,16 @@ tunet-model = { workspace = true }
 anyhow = { workspace = true }
 compio = { workspace = true, features = ["time"] }
 flume = { workspace = true }
-winio = { workspace = true, features = ["win32-dark-mode"] }
+winio = { workspace = true, default-features = false, features = ["qt"] }
 futures-util = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winresource = { workspace = true }
 
 [features]
+default = ["win32"]
+win32 = ["winio/win32", "winio/win32-dark-mode"]
+winui = ["winio/winui", "winio/winui-enable-cbs", "winio/win32-dark-mode"]
 objc-static = ["winio/objc-static"]
 
 [package.metadata.winresource]
