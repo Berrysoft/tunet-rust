@@ -157,8 +157,9 @@ impl Component for MainModel {
             }
         }
 
-        state_combo.insert(0, "Auth4");
-        state_combo.insert(1, "Auth6");
+        state_combo.insert(0, "未知/自动");
+        state_combo.insert(1, "Auth4");
+        state_combo.insert(2, "Auth6");
 
         window.show();
 
@@ -229,8 +230,8 @@ impl Component for MainModel {
                 self.model
                     .queue(Action::State(self.state_combo.selection().and_then(
                         |i| match i {
-                            0 => Some(NetState::Auth4),
-                            1 => Some(NetState::Auth6),
+                            1 => Some(NetState::Auth4),
+                            2 => Some(NetState::Auth6),
                             _ => None,
                         },
                     )));
@@ -269,14 +270,14 @@ impl Component for MainModel {
                 }
                 UpdateMsg::State => {
                     let index = match self.model.state {
-                        NetState::Unknown => None,
-                        NetState::Auth4 => Some(0),
-                        NetState::Auth6 => Some(1),
+                        NetState::Unknown => 0,
+                        NetState::Auth4 => 1,
+                        NetState::Auth6 => 2,
                     };
                     let old_index = self.state_combo.selection();
-                    if index != old_index {
+                    if Some(index) != old_index {
                         self.state_combo.set_selection(index);
-                        if index.is_some() {
+                        if index != 0 {
                             self.model.queue(Action::Flux);
                         }
                     }

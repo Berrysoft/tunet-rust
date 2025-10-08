@@ -14,7 +14,7 @@ tunet-model = { workspace = true }
 anyhow = { workspace = true }
 compio = { workspace = true, features = ["time"] }
 flume = { workspace = true }
-winio = { workspace = true }
+winio = { workspace = true, features = ["win32-dark-mode"] }
 futures-util = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
