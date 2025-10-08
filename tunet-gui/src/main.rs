@@ -107,32 +107,32 @@ impl Component for MainModel {
             hidden: Label = (&window) => { text: "HIDDEN", visible: false },
             username: Label = (&window) => {
                 text: "用户：",
-                #[cfg(feature = "win32")]
+                #[cfg(all(windows, feature = "win32"))]
                 transparent: true,
             },
             flux: Label = (&window) => {
                 text: "流量：",
-                #[cfg(feature = "win32")]
+                #[cfg(all(windows, feature = "win32"))]
                 transparent: true,
             },
             online_time: Label = (&window) => {
                 text: "时长：",
-                #[cfg(feature = "win32")]
+                #[cfg(all(windows, feature = "win32"))]
                 transparent: true,
             },
             balance: Label = (&window) => {
                 text: "余额：",
-                #[cfg(feature = "win32")]
+                #[cfg(all(windows, feature = "win32"))]
                 transparent: true,
             },
             status: Label = (&window) => {
                 text: "网络：",
-                #[cfg(feature = "win32")]
+                #[cfg(all(windows, feature = "win32"))]
                 transparent: true,
             },
             log: Label = (&window) => {
                 halign: HAlign::Center,
-                #[cfg(feature = "win32")]
+                #[cfg(all(windows, feature = "win32"))]
                 transparent: true,
             },
             login_button: Button = (&window) => { text: "登录" },
