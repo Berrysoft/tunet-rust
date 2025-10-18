@@ -101,6 +101,10 @@ impl Component for MainModel {
                 },
                 #[cfg(windows)]
                 icon_by_id: 1,
+                #[cfg(windows)]
+                backdrop: Backdrop::MicaAlt,
+                #[cfg(target_os = "macos")]
+                vibrancy: Some(Vibrancy::Titlebar),
             },
             state_combo: ComboBox = (&window),
             canvas: Canvas = (&window),
