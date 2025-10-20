@@ -16,6 +16,7 @@ fn launchd_path() -> Result<PathBuf> {
     let mut p = dirs::home_dir().ok_or_else(|| anyhow!("Cannot get home dir"))?;
     p.push("Library");
     p.push("LaunchAgents");
+    std::fs::create_dir_all(&p)?;
     p.push("tunet-service.plist");
     Ok(p)
 }
