@@ -26,4 +26,4 @@ flume = { workspace = true }
 pin-project = "1"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-netlink_wi = "0.7"
+netlink_wi = "0.8"
