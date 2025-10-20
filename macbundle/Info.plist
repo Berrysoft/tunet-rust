@@ -40,5 +40,11 @@
 
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>需要获取 Wi-Fi SSID</string>
+
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>需要后台获取 Wi-Fi SSID</string>
 </dict>
 </plist>

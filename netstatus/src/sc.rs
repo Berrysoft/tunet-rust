@@ -3,6 +3,7 @@
 use crate::*;
 use flume::{r#async::RecvStream, unbounded};
 use objc2_core_foundation::{kCFRunLoopDefaultMode, CFRetained, CFRunLoop, CFString};
+use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
 use objc2_core_wlan::CWWiFiClient;
 use objc2_system_configuration::{
     SCNetworkReachability, SCNetworkReachabilityContext, SCNetworkReachabilityFlags,
@@ -20,6 +21,11 @@ use std::{
 };
 
 unsafe fn get_ssid() -> Option<String> {
+    let manager = CLLocationManager::new();
+    if manager.authorizationStatus() != CLAuthorizationStatus::AuthorizedAlways {
+        manager.requestAlwaysAuthorization();
+    }
+
     CWWiFiClient::sharedWiFiClient()
         .interface()
         .and_then(|interface| interface.ssid())
