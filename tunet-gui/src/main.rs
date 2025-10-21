@@ -101,7 +101,7 @@ impl Component for MainModel {
                 },
                 #[cfg(windows)]
                 icon_by_id: 1,
-                #[cfg(windows)]
+                #[cfg(all(windows, feature = "winui"))]
                 backdrop: Backdrop::MicaAlt,
                 #[cfg(target_os = "macos")]
                 vibrancy: Some(Vibrancy::FullScreenUI),
