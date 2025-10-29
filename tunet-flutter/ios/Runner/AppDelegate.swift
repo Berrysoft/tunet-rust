@@ -3,7 +3,7 @@ import NetworkExtension
 import SystemConfiguration
 import UIKit
 
-@UIApplicationMain
+@main
 @objc class AppDelegate: FlutterAppDelegate {
   override func application(
     _ application: UIApplication,

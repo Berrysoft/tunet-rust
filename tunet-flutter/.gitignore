@@ -53,3 +53,7 @@ lib/api*.dart
 lib/frb_*.dart
 lib/dep.dart
 native/src/frb_*.rs
+
+# FVM
+.fvm/
+.fvmrc
