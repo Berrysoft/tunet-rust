@@ -2,6 +2,10 @@ use anyhow::Result;
 use notify_rust::Notification;
 use tunet_helper::NetFlux;
 
+#[cfg(target_os = "macos")]
+#[link(name = "AppKit", kind = "framework")]
+extern "C" {}
+
 pub fn succeeded(flux: NetFlux) -> Result<()> {
     #[cfg(target_os = "macos")]
     let _ = notify_rust::set_application("io.github.berrysoft.tunet");
