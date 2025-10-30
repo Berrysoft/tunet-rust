@@ -14,3 +14,4 @@ futures-util = { workspace = true }
 compio = { workspace = true }
 anyhow = { workspace = true }
 drop_guard = "0.3"
+async-once-cell = "0.5"

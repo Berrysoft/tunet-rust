@@ -9,7 +9,7 @@ repository.workspace = true
 [dependencies]
 authtea = { workspace = true }
 netstatus = { workspace = true }
-cyper = { workspace = true, default-features = false, features = ["json"] }
+nyquest = { workspace = true, features = ["async"] }
 url = "2"
 md-5 = "0.10"
 sha-1 = "0.10"
@@ -23,13 +23,14 @@ thiserror = { workspace = true }
 allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
-cyper = { workspace = true, default-features = false, features = ["rustls"] }
+cyper = { workspace = true, default-features = false, features = [
+    "rustls",
+    "nyquest",
+] }
 rustls = { workspace = true, default-features = false, features = ["ring"] }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-cyper = { workspace = true, default-features = false, features = [
-    "native-tls",
-] }
+nyquest-preset = { workspace = true, features = ["async"] }
 
 [features]
 default = []

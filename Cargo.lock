@@ -124,6 +124,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arc-swap"
+version = "1.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
+
+[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -195,6 +201,12 @@ dependencies = [
  "event-listener-strategy",
  "pin-project-lite",
 ]
+
+[[package]]
+name = "async-once-cell"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4288f83726785267c6f2ef073a3d83dc3f9b81464e9f99898240cced85fce35a"
 
 [[package]]
 name = "async-process"
@@ -778,7 +790,6 @@ checksum = "1e4dfe47c4ac25e468dc64f7722bc07121cc49cbecdb91277eaa785f4c3f46a6"
 dependencies = [
  "compio-buf",
  "compio-io",
- "native-tls",
  "rustls",
 ]
 
@@ -901,6 +912,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "curl"
+version = "0.4.49"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79fc3b6dd0b87ba36e565715bf9a2ced221311db47bd18011676f24a6066edbc"
+dependencies = [
+ "curl-sys",
+ "libc",
+ "openssl-probe",
+ "openssl-sys",
+ "schannel",
+ "socket2",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "curl-sys"
+version = "0.4.83+curl-8.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5830daf304027db10c82632a464879d46a3f7c4ba17a31592657ad16c719b483"
+dependencies = [
+ "cc",
+ "libc",
+ "libz-sys",
+ "openssl-sys",
+ "pkg-config",
+ "vcpkg",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "cxx"
 version = "1.0.187"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -964,9 +1005,9 @@ dependencies = [
 
 [[package]]
 name = "cyper"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9f75d8280d755759a7c686ed4dbcc5330c82f09c3f3da8c945f6beb0a7ffc6e"
+checksum = "97d10644869d7045368113ffb2dd118ed70d7b016f5c082434efb57333b3de35"
 dependencies = [
  "async-stream",
  "base64",
@@ -979,9 +1020,9 @@ dependencies = [
  "hyper",
  "hyper-util",
  "mime",
+ "nyquest-interface",
  "send_wrapper",
  "serde",
- "serde_json",
  "serde_urlencoded",
  "thiserror 2.0.17",
  "url",
@@ -1573,21 +1614,6 @@ name = "foldhash"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
-
-[[package]]
-name = "foreign-types"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6f339eb8adc052cd2ca78910fda869aefa38d22d5cb648e6485e4d3fc06f3b1"
-dependencies = [
- "foreign-types-shared",
-]
-
-[[package]]
-name = "foreign-types-shared"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "form_urlencoded"
@@ -2362,6 +2388,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "libz-sys"
+version = "1.1.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b70e7a7df205e92a1a4cd9aaae7898dac0aa555503cc0a649494d0d60e7651d"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
 name = "link-cplusplus"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2551,23 +2589,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "native-tls"
-version = "0.2.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87de3442987e9dbec73158d5c715e7ad9072fda936bb03d19d7fa10e00520f0e"
-dependencies = [
- "libc",
- "log",
- "openssl",
- "openssl-probe",
- "openssl-sys",
- "schannel",
- "security-framework 2.11.1",
- "security-framework-sys",
- "tempfile",
-]
-
-[[package]]
 name = "neli"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2717,6 +2738,86 @@ checksum = "91df4bbde75afed763b708b7eee1e8e7651e02d97f6d5dd763e89367e957b23b"
 dependencies = [
  "hermit-abi",
  "libc",
+]
+
+[[package]]
+name = "nyquest"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea862ed3c6f57913a4114d259f295f4b8232b0f746d331d3f513210f32eb5adf"
+dependencies = [
+ "nyquest-interface",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "nyquest-backend-curl"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4660c21335787d473a299b41f3f4d20106eb184be31f141c07d6cd280d3da08c"
+dependencies = [
+ "curl",
+ "curl-sys",
+ "futures-channel",
+ "futures-util",
+ "nyquest-interface",
+ "slab",
+]
+
+[[package]]
+name = "nyquest-backend-nsurlsession"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42593a22b63008330adb88f83b73d8229c27e0e56060ee207aeca3969ddc1678"
+dependencies = [
+ "arc-swap",
+ "block2",
+ "cfg-if",
+ "futures-util",
+ "nyquest-interface",
+ "objc2",
+ "objc2-core-foundation",
+ "objc2-foundation",
+ "objc2-security",
+]
+
+[[package]]
+name = "nyquest-backend-winrt"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d68a6a7d3b9fd0d5c41919c3c7dc78b37fac67752842f504da49ce27258827c4"
+dependencies = [
+ "cfg-if",
+ "nyquest-interface",
+ "windows 0.61.3",
+ "windows-collections 0.2.0",
+ "windows-core 0.61.2",
+ "windows-future 0.2.1",
+]
+
+[[package]]
+name = "nyquest-interface"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f6179f2370e08ff66911c037b1b12d7127b40f1cc97df774a311db3706fdb53"
+dependencies = [
+ "cfg-if",
+ "futures-core",
+ "futures-io",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "nyquest-preset"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b125019f6607ddb0e2bc2e1db0b0336ddb50fcc3769adedfe45420172c82f0b"
+dependencies = [
+ "cfg-if",
+ "nyquest",
+ "nyquest-backend-curl",
+ "nyquest-backend-nsurlsession",
+ "nyquest-backend-winrt",
 ]
 
 [[package]]
@@ -3006,32 +3107,6 @@ name = "oneshot"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ce411919553d3f9fa53a0880544cda985a112117a0444d5ff1e870a893d6ea"
-
-[[package]]
-name = "openssl"
-version = "0.10.74"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24ad14dd45412269e1a30f52ad8f0664f0f4f4a89ee8fe28c3b3527021ebb654"
-dependencies = [
- "bitflags 2.10.0",
- "cfg-if",
- "foreign-types",
- "libc",
- "once_cell",
- "openssl-macros",
- "openssl-sys",
-]
-
-[[package]]
-name = "openssl-macros"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.108",
-]
 
 [[package]]
 name = "openssl-probe"
@@ -4449,6 +4524,8 @@ dependencies = [
  "hmac",
  "md-5",
  "netstatus",
+ "nyquest",
+ "nyquest-preset",
  "regex",
  "rustls",
  "serde_json",
@@ -4462,6 +4539,7 @@ name = "tunet-model"
 version = "0.4.0"
 dependencies = [
  "anyhow",
+ "async-once-cell",
  "compio",
  "drop_guard",
  "flume",
