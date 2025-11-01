@@ -1,5 +1,4 @@
 use crate::frb_generated::StreamSink;
-use anyhow::Result;
 use flutter_rust_bridge::{frb, setup_default_user_utils};
 
 pub use netstatus::NetStatus;
@@ -69,7 +68,7 @@ pub struct Runtime {
 
 impl Runtime {
     #[frb(sync)]
-    pub fn new() -> Result<Runtime> {
+    pub fn new() -> Runtime {
         #[cfg(target_os = "android")]
         android_logger::init_once(
             android_logger::Config::default()
@@ -84,12 +83,12 @@ impl Runtime {
 
         let (atx, arx) = flume::unbounded();
         let (utx, urx) = flume::unbounded();
-        let model = Model::new(atx, utx)?;
-        Ok(Self {
+        let model = Model::new(atx, utx);
+        Self {
             arx: Arc::new(Mutex::new(Some(arx))),
             urx: Arc::new(Mutex::new(Some(urx))),
             model: Arc::new(Mutex::new(model)),
-        })
+        }
     }
 
     #[frb(sync)]

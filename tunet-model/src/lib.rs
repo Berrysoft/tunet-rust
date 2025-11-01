@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
+use async_once_cell::OnceCell;
 use compio::runtime::spawn;
 use drop_guard::guard;
 use flume::Sender;
@@ -18,7 +19,7 @@ pub struct Model {
     update_sender: Sender<UpdateMsg>,
     pub username: String,
     password: String,
-    pub http: HttpClient,
+    pub http: Arc<OnceCell<HttpClient>>,
     pub state: NetState,
     pub status: NetStatus,
     pub log: Cow<'static, str>,
@@ -26,22 +27,24 @@ pub struct Model {
     pub flux: NetFlux,
 }
 
-impl Model {
-    pub fn new(action_sender: Sender<Action>, update_sender: Sender<UpdateMsg>) -> Result<Self> {
-        let http = create_http_client();
+async fn http_client(this: &OnceCell<HttpClient>) -> Result<&HttpClient> {
+    Ok(this.get_or_try_init(create_http_client()).await?)
+}
 
-        Ok(Self {
+impl Model {
+    pub fn new(action_sender: Sender<Action>, update_sender: Sender<UpdateMsg>) -> Self {
+        Self {
             action_sender: action_sender.clone(),
             update_sender,
             username: String::default(),
             password: String::default(),
-            http,
+            http: Arc::new(OnceCell::new()),
             state: NetState::Unknown,
             status: NetStatus::Unknown,
             log: Cow::default(),
             log_busy: BusyBool::new(action_sender.clone(), UpdateMsg::LogBusy),
             flux: NetFlux::default(),
-        })
+        }
     }
 
     pub fn queue(&self, action: Action) {
@@ -62,7 +65,8 @@ impl Model {
                         let http = self.http.clone();
                         let status = self.status.clone();
                         spawn(async move {
-                            let state = suggest::suggest_with_status(&http, &status).await;
+                            let http = http_client(&http).await.ok()?;
+                            let state = suggest::suggest_with_status(http, &status).await;
                             action_sender
                                 .send_async(Action::State(Some(state)))
                                 .await
@@ -160,30 +164,28 @@ impl Model {
         .detach();
     }
 
-    fn client(&self) -> Option<TUNetConnect> {
-        TUNetConnect::new(self.state, self.http.clone()).ok()
-    }
-
     fn spawn_login(&self) {
         if let Some(lock) = self.log_busy.lock() {
             let action_sender = self.action_sender.clone();
             let (u, p) = (self.username.clone(), self.password.clone());
-            if let Some(client) = self.client() {
-                spawn(async move {
-                    let _lock = lock;
-                    let res = client.login(&u, &p).await;
-                    let ok = res.is_ok();
-                    action_sender
-                        .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
-                        .await?;
-                    if ok {
-                        compio::time::sleep(std::time::Duration::from_secs(1)).await;
-                        Self::flux_impl(client, action_sender, true).await?;
-                    }
-                    anyhow::Ok(())
-                })
-                .detach();
-            }
+            let http = self.http.clone();
+            let state = self.state;
+            spawn(async move {
+                let _lock = lock;
+                let http = http_client(&http).await?;
+                let client = TUNetConnect::new(state, http.clone())?;
+                let res = client.login(&u, &p).await;
+                let ok = res.is_ok();
+                action_sender
+                    .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
+                    .await?;
+                if ok {
+                    compio::time::sleep(std::time::Duration::from_secs(1)).await;
+                    Self::flux_impl(client, action_sender, true).await?;
+                }
+                anyhow::Ok(())
+            })
+            .detach();
         }
     }
 
@@ -191,34 +193,38 @@ impl Model {
         if let Some(lock) = self.log_busy.lock() {
             let action_sender = self.action_sender.clone();
             let u = self.username.clone();
-            if let Some(client) = self.client() {
-                spawn(async move {
-                    let _lock = lock;
-                    let res = client.logout(&u).await;
-                    let ok = res.is_ok();
-                    action_sender
-                        .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
-                        .await?;
-                    if ok {
-                        Self::flux_impl(client, action_sender, true).await?;
-                    }
-                    anyhow::Ok(())
-                })
-                .detach();
-            }
+            let http = self.http.clone();
+            let state = self.state;
+            spawn(async move {
+                let _lock = lock;
+                let http = http_client(&http).await?;
+                let client = TUNetConnect::new(state, http.clone())?;
+                let res = client.logout(&u).await;
+                let ok = res.is_ok();
+                action_sender
+                    .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
+                    .await?;
+                if ok {
+                    Self::flux_impl(client, action_sender, true).await?;
+                }
+                anyhow::Ok(())
+            })
+            .detach();
         }
     }
 
     fn spawn_flux(&self) {
         if let Some(lock) = self.log_busy.lock() {
             let action_sender = self.action_sender.clone();
-            if let Some(client) = self.client() {
-                spawn(async move {
-                    let _lock = lock;
-                    Self::flux_impl(client, action_sender, false).await
-                })
-                .detach();
-            }
+            let http = self.http.clone();
+            let state = self.state;
+            spawn(async move {
+                let _lock = lock;
+                let http = http_client(&http).await?;
+                let client = TUNetConnect::new(state, http.clone())?;
+                Self::flux_impl(client, action_sender, false).await
+            })
+            .detach();
         }
     }
 

@@ -2,13 +2,14 @@
 
 use std::fmt::{Display, Formatter};
 use std::future::Future;
+use std::sync::Once;
 use thiserror::Error;
 
 pub use chrono::{
     DateTime, Datelike, Duration as NaiveDuration, FixedOffset, Local, NaiveDate, NaiveDateTime,
     Timelike,
 };
-pub use cyper::Client as HttpClient;
+pub use nyquest::AsyncClient as HttpClient;
 
 mod auth;
 pub mod suggest;
@@ -28,7 +29,7 @@ pub enum NetHelperError {
     #[error("无法确定登录方式")]
     InvalidHost,
     #[error("网络请求错误：{0}")]
-    Reqwest(#[from] cyper::Error),
+    Nyquest(#[from] nyquest::Error),
     #[error("JSON 解析错误：{0}")]
     Json(#[from] serde_json::Error),
 }
@@ -234,8 +235,27 @@ impl TUNetConnect {
     }
 }
 
-pub fn create_http_client() -> HttpClient {
-    cyper::ClientBuilder::new().build()
+pub async fn create_http_client() -> NetHelperResult<HttpClient> {
+    static ONCE: Once = Once::new();
+
+    #[cfg(not(target_os = "android"))]
+    ONCE.call_once(|| {
+        nyquest_preset::register();
+    });
+
+    #[cfg(target_os = "android")]
+    ONCE.call_once(|| {
+        cyper::nyquest::register();
+    });
+
+    Ok(nyquest::ClientBuilder::default()
+        .no_caching()
+        .no_cookies()
+        .no_proxy()
+        .no_redirects()
+        .user_agent(format!("tunet-helper/{}", env!("CARGO_PKG_VERSION")))
+        .build_async()
+        .await?)
 }
 
 #[cfg(feature = "dart")]

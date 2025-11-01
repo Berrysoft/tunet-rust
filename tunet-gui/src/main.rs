@@ -64,7 +64,7 @@ impl Component for MainModel {
 
         let (action_sender, action_receiver) = flume::unbounded();
         let (update_sender, update_receiver) = flume::unbounded();
-        let model = Model::new(action_sender, update_sender).unwrap();
+        let model = Model::new(action_sender, update_sender);
         {
             let sender = sender.clone();
             spawn(async move {

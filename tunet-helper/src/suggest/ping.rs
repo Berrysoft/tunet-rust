@@ -1,11 +1,13 @@
+use nyquest::Request;
+
 use crate::*;
 
-async fn can_connect_impl(client: &HttpClient, uri: &str) -> cyper::Result<()> {
-    client.head(uri)?.send().await?;
+async fn can_connect_impl(client: &HttpClient, uri: &'static str) -> nyquest::Result<()> {
+    client.request(Request::head(uri)).await?;
     Ok(())
 }
 
-async fn can_connect(client: &HttpClient, uri: &str) -> bool {
+async fn can_connect(client: &HttpClient, uri: &'static str) -> bool {
     can_connect_impl(client, uri).await.is_ok()
 }
 
