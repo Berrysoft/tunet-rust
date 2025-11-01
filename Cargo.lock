@@ -1005,12 +1005,13 @@ dependencies = [
 
 [[package]]
 name = "cyper"
-version = "0.5.2"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1eb0db60d9d07a8462cea26d40cc3319e601308fc7079ca27746e47bc9b1f8dc"
+checksum = "645bfe9d2aee0f19b13f4e7c4bc7e2db7d4fdcadd8dfa2f8ea8ac93b2f45fc23"
 dependencies = [
  "async-stream",
  "base64",
+ "cfg-if",
  "compio",
  "cyper-core",
  "encoding_rs",
@@ -1021,27 +1022,25 @@ dependencies = [
  "hyper-util",
  "mime",
  "nyquest-interface",
+ "rustls-platform-verifier",
  "send_wrapper",
  "serde",
  "serde_urlencoded",
  "thiserror 2.0.17",
+ "tower-service",
  "url",
 ]
 
 [[package]]
 name = "cyper-core"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae8a59084b282f715c9f2a0f2b6cda1a3720c311fcb75e86e0a788bfbbfeaee9"
+checksum = "767109cdb8dc2fb4846140d13546c7eaaf49a96d73454265e7d289522b2402ae"
 dependencies = [
- "cfg-if",
  "compio",
  "futures-util",
  "hyper",
- "hyper-util",
- "rustls-platform-verifier",
  "send_wrapper",
- "tower-service",
 ]
 
 [[package]]
