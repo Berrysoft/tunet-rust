@@ -1,5 +1,4 @@
 use crate::frb_generated::StreamSink;
-use anyhow::Result;
 use flutter_rust_bridge::{frb, setup_default_user_utils};
 
 pub use netstatus::NetStatus;
