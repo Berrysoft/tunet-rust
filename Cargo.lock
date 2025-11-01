@@ -477,9 +477,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.43"
+version = "1.2.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "739eb0f94557554b3ca9a86d2d37bebd49c5e6d0c1d2bda35ba5bdac830befc2"
+checksum = "37521ac7aabe3d13122dc382493e20c9416f299d2ccd5b3a5340a2570cdeb0f3"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -2742,9 +2742,9 @@ dependencies = [
 
 [[package]]
 name = "nyquest"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea862ed3c6f57913a4114d259f295f4b8232b0f746d331d3f513210f32eb5adf"
+checksum = "dcceef8c4c3d05fbb53107c09855efcc58db5986832c88d54ef97d9c9900f79e"
 dependencies = [
  "nyquest-interface",
  "thiserror 2.0.17",
@@ -2752,23 +2752,26 @@ dependencies = [
 
 [[package]]
 name = "nyquest-backend-curl"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4660c21335787d473a299b41f3f4d20106eb184be31f141c07d6cd280d3da08c"
+checksum = "cdf226df6cf8fb1697c4930cf8a52a7fbf9d0dea5caa9f75238a64387f51cb51"
 dependencies = [
  "curl",
  "curl-sys",
  "futures-channel",
  "futures-util",
+ "libc",
+ "memchr",
  "nyquest-interface",
+ "pin-project-lite",
  "slab",
 ]
 
 [[package]]
 name = "nyquest-backend-nsurlsession"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42593a22b63008330adb88f83b73d8229c27e0e56060ee207aeca3969ddc1678"
+checksum = "c6c578b7cf5efeb08c5d3d78094ef2cf1798f3c74a23c8bfb69213e0652eaa48"
 dependencies = [
  "arc-swap",
  "block2",
@@ -2783,11 +2786,12 @@ dependencies = [
 
 [[package]]
 name = "nyquest-backend-winrt"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d68a6a7d3b9fd0d5c41919c3c7dc78b37fac67752842f504da49ce27258827c4"
+checksum = "17f7f73f6e8444777e7e055be49de696756da442531ff3eac49ec2dde81baf20"
 dependencies = [
  "cfg-if",
+ "futures-util",
  "nyquest-interface",
  "windows 0.61.3",
  "windows-collections 0.2.0",
@@ -4830,9 +4834,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-root-certs"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05d651ec480de84b762e7be71e6efa7461699c19d9e2c272c8d93455f567786e"
+checksum = "ee3e3b5f5e80bc89f30ce8d0343bf4e5f12341c51f3e26cbeecbc7c85443e85b"
 dependencies = [
  "rustls-pki-types",
 ]
