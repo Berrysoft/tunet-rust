@@ -2574,7 +2574,6 @@ dependencies = [
  "android_logger",
  "chrono",
  "compio",
- "flume",
  "flutter_rust_bridge",
  "flutter_rust_bridge_codegen",
  "futures-util",
