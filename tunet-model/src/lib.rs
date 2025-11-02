@@ -173,7 +173,7 @@ impl Model {
                 sender.post(Action::LogDone(res.unwrap_or_else(|e| e.to_string())));
                 if ok {
                     compio::time::sleep(std::time::Duration::from_secs(1)).await;
-                    Self::flux_impl(client, &sender, true).await?;
+                    Self::flux_impl(client, &sender, true).await;
                 }
                 anyhow::Ok(())
             })
@@ -195,7 +195,7 @@ impl Model {
                 let ok = res.is_ok();
                 sender.post(Action::LogDone(res.unwrap_or_else(|e| e.to_string())));
                 if ok {
-                    Self::flux_impl(client, &sender, true).await?;
+                    Self::flux_impl(client, &sender, true).await;
                 }
                 anyhow::Ok(())
             })
@@ -212,17 +212,14 @@ impl Model {
                 let _lock = lock;
                 let http = http_client(&http).await?;
                 let client = TUNetConnect::new(state, http.clone())?;
-                Self::flux_impl(client, &sender, false).await
+                Self::flux_impl(client, &sender, false).await;
+                anyhow::Ok(())
             })
             .detach();
         }
     }
 
-    async fn flux_impl(
-        client: TUNetConnect,
-        sender: &ComponentSender<Self>,
-        keep_msg: bool,
-    ) -> Result<()> {
+    async fn flux_impl(client: TUNetConnect, sender: &ComponentSender<Self>, keep_msg: bool) {
         let flux = client.flux().await;
         match flux {
             Ok(flux) => sender.post(Action::FluxDone(flux, None, keep_msg)),
@@ -232,7 +229,6 @@ impl Model {
                 keep_msg,
             )),
         }
-        Ok(())
     }
 
     pub fn log_busy(&self) -> bool {

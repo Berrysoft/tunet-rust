@@ -3,7 +3,6 @@ use flutter_rust_bridge::{frb, setup_default_user_utils};
 
 use futures_util::StreamExt;
 pub use netstatus::NetStatus;
-use std::sync::Arc;
 pub use std::sync::Mutex;
 pub use tunet_helper::{
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
@@ -99,7 +98,7 @@ impl Component for ModelWrapper {
 
     async fn update(&mut self, message: Self::Message, _sender: &ComponentSender<Self>) -> bool {
         match message {
-            ModelWrapperMessage::Noop => false,
+            ModelWrapperMessage::Noop => {}
             ModelWrapperMessage::Msg(msg) => {
                 if let Some(sink) = &self.sink {
                     let msg = {
@@ -118,13 +117,12 @@ impl Component for ModelWrapper {
                     };
                     sink.add(msg).ok();
                 }
-                false
             }
             ModelWrapperMessage::Post(a) => {
                 self.model.post(a);
-                false
             }
         }
+        false
     }
 
     fn render(&mut self, _sender: &ComponentSender<Self>) {}
@@ -135,7 +133,7 @@ impl Component for ModelWrapper {
 }
 
 pub struct Runtime {
-    model: Arc<Mutex<Child<ModelWrapper>>>,
+    model: Mutex<Option<Child<ModelWrapper>>>,
     sender: ComponentSender<ModelWrapper>,
 }
 
@@ -148,7 +146,7 @@ impl Runtime {
                 .with_max_level(log::LevelFilter::Trace)
                 .with_filter(
                     android_logger::FilterBuilder::new()
-                        .parse("warn,tunet=trace,native=trace")
+                        .parse("warn,tunet=trace,native=trace,winio=trace")
                         .build(),
                 ),
         );
@@ -157,12 +155,11 @@ impl Runtime {
         let model = Child::<ModelWrapper>::init(());
         let sender = model.sender().clone();
         Self {
-            model: Arc::new(Mutex::new(model)),
+            model: Mutex::new(Some(model)),
             sender,
         }
     }
 
-    #[frb(sync)]
     pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
         {
             if (!config.username.is_empty()) && (!config.password.is_empty()) {
@@ -171,11 +168,10 @@ impl Runtime {
             self.queue(Action::Status(Some(config.status)));
             self.queue(Action::Timer);
         }
-        let model = self.model.clone();
+        let mut model = self.model.lock().unwrap().take().unwrap();
         std::thread::spawn(move || {
-            let runtime = compio::runtime::RuntimeBuilder::new().build().unwrap();
+            let runtime = compio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                let mut model = model.lock().unwrap();
                 model.sink = Some(sink);
                 let stream = model.run();
                 let mut stream = std::pin::pin!(stream);
