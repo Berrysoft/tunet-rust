@@ -16,7 +16,6 @@ tunet-model = { workspace = true }
 compio = { workspace = true }
 winio-elm = { workspace = true }
 futures-util = { workspace = true }
-flume = { workspace = true }
 log = { workspace = true }
 chrono = { workspace = true }
 flutter_rust_bridge = { version = "=2.11.1", features = ["chrono"] }
