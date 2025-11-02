@@ -8,9 +8,11 @@ use base64::{
 use data_encoding::HEXLOWER;
 use hmac::{Hmac, Mac};
 use md5::Md5;
+use nyquest::Request;
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
+use std::borrow::Cow;
 use std::marker::PhantomData;
 use std::sync::LazyLock;
 use url::Url;
@@ -51,7 +53,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             ],
         )
         .unwrap();
-        let res = self.client.get(uri)?.send().await?;
+        let res = self.client.request(Request::get(uri.to_string())).await?;
         let t = res.text().await?;
         let mut json: JsonValue = serde_json::from_str(&t[9..t.len() - 1])?;
         Ok(json
@@ -61,7 +63,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
     }
 
     async fn get_ac_id(&self) -> Option<i32> {
-        let res = self.client.get(REDIRECT_URI).ok()?.send().await.ok()?;
+        let res = self.client.request(Request::get(REDIRECT_URI)).await.ok()?;
         let t = res.text().await.ok()?;
         let cap = AC_ID_REGEX.captures(&t)?;
         cap[1].parse::<i32>().ok()
@@ -95,22 +97,22 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
             sha1.finalize()
         };
         let params = [
-            ("action", "login"),
-            ("ac_id", &ac_id.to_string()),
-            ("double_stack", "1"),
-            ("n", "200"),
-            ("type", "1"),
-            ("username", u),
-            ("password", &format!("{{MD5}}{password_md5}")),
-            ("info", &info),
-            ("chksum", &HEXLOWER.encode(&chksum)),
-            ("callback", "callback"),
+            ("action", Cow::Borrowed("login")),
+            ("ac_id", Cow::Owned(ac_id.to_string())),
+            ("double_stack", Cow::Borrowed("1")),
+            ("n", Cow::Borrowed("200")),
+            ("type", Cow::Borrowed("1")),
+            ("username", Cow::Owned(u.to_string())),
+            ("password", Cow::Owned(format!("{{MD5}}{password_md5}"))),
+            ("info", Cow::Owned(info)),
+            ("chksum", Cow::Owned(HEXLOWER.encode(&chksum))),
+            ("callback", Cow::Borrowed("callback")),
         ];
         let res = self
             .client
-            .post(U::log_uri())?
-            .form(&params)?
-            .send()
+            .request(Request::post(U::log_uri()).with_body(nyquest::Body::form(
+                params.map(|(k, v)| (Cow::Borrowed(k), v)),
+            )))
             .await?;
         let t = res.text().await?;
         Self::parse_response(&t)
@@ -145,24 +147,24 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
 
     async fn logout(&self, u: &str) -> NetHelperResult<String> {
         let params = [
-            ("action", "logout"),
-            ("ac_id", "1"),
-            ("double_stack", "1"),
-            ("username", u),
-            ("callback", "callback"),
+            ("action", Cow::Borrowed("logout")),
+            ("ac_id", Cow::Borrowed("1")),
+            ("double_stack", Cow::Borrowed("1")),
+            ("username", Cow::Owned(u.to_string())),
+            ("callback", Cow::Borrowed("callback")),
         ];
         let res = self
             .client
-            .post(U::log_uri())?
-            .form(&params)?
-            .send()
+            .request(Request::post(U::log_uri()).with_body(nyquest::Body::form(
+                params.map(|(k, v)| (Cow::Borrowed(k), v)),
+            )))
             .await?;
         let t = res.text().await?;
         Self::parse_response(&t)
     }
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
-        let res = self.client.get(U::flux_uri())?.send().await?;
+        let res = self.client.request(Request::get(U::flux_uri())).await?;
         res.text().await?.parse()
     }
 }

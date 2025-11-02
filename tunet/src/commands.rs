@@ -44,7 +44,7 @@ pub struct Login {
 
 impl TUNetCommand for Login {
     async fn run(&self) -> Result<()> {
-        let client = create_http_client();
+        let client = create_http_client().await?;
         let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
         let c = TUNetConnect::new_with_suggest(self.host, client).await?;
@@ -64,7 +64,7 @@ pub struct Logout {
 
 impl TUNetCommand for Logout {
     async fn run(&self) -> Result<()> {
-        let client = create_http_client();
+        let client = create_http_client().await?;
         let reader = SettingsReader::new()?;
         let u = reader.read_ask_username()?;
         let c = TUNetConnect::new_with_suggest(self.host, client).await?;
@@ -85,7 +85,7 @@ pub struct Status {
 
 impl TUNetCommand for Status {
     async fn run(&self) -> Result<()> {
-        let client = create_http_client();
+        let client = create_http_client().await?;
         let c = TUNetConnect::new_with_suggest(self.host, client).await?;
         let f = c.flux().await?;
         if self.nuon {

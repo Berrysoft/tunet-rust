@@ -38,9 +38,10 @@ enum_dispatch = "0.3"
 thiserror = "2"
 
 compio = "0.16"
-cyper = { version = "0.5", default-features = false }
+cyper = { version = "0.6", default-features = false }
+nyquest = "0.3"
+nyquest-preset = "0.3"
 winio = { version = "0.9", default-features = false }
-flume = "0.11"
 
 chrono = { version = "0.4", default-features = false, features = [
     "clock",
@@ -51,6 +52,7 @@ dirs = "6"
 log = "0.4"
 base64 = "0.22"
 
+flume = "0.11"
 futures-util = "0.3"
 
 keyring = { version = "3", features = [

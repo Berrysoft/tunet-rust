@@ -104,7 +104,7 @@ impl Command for RunOnce {
 pub async fn run_once(quiet: bool) -> Result<()> {
     match SettingsReader::new()?.read_full() {
         Ok((u, p)) => {
-            let client = create_http_client();
+            let client = create_http_client().await?;
             let c = TUNetConnect::new_with_suggest(None, client).await?;
             c.login(&u, &p).await?;
             let flux = c.flux().await?;
