@@ -42,6 +42,7 @@ cyper = { version = "0.6", default-features = false }
 nyquest = "0.3"
 nyquest-preset = "0.3"
 winio = { version = "0.9", default-features = false }
+winio-elm = "0.3.3"
 
 chrono = { version = "0.4", default-features = false, features = [
     "clock",

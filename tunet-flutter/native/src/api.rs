@@ -1,14 +1,15 @@
 use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::{frb, setup_default_user_utils};
 
+use futures_util::StreamExt;
 pub use netstatus::NetStatus;
-use std::sync::Arc;
 pub use std::sync::Mutex;
 pub use tunet_helper::{
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
     NetState,
 };
 pub use tunet_model::{Action, Model, UpdateMsg};
+use winio_elm::{Child, Component, ComponentSender};
 
 pub enum UpdateMsgWrap {
     Credential(String),
@@ -60,10 +61,80 @@ pub struct RuntimeStartConfig {
     pub password: String,
 }
 
+struct ModelWrapper {
+    model: Child<Model>,
+    sink: Option<StreamSink<UpdateMsgWrap>>,
+}
+
+enum ModelWrapperMessage {
+    Noop,
+    Msg(UpdateMsg),
+    Post(Action),
+}
+
+impl Component for ModelWrapper {
+    type Init<'a> = ();
+    type Message = ModelWrapperMessage;
+    type Event = ();
+
+    fn init(_init: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Self {
+        let model = Child::<Model>::init(());
+        Self { model, sink: None }
+    }
+
+    async fn start(&mut self, sender: &ComponentSender<Self>) -> ! {
+        self.model
+            .start(
+                sender,
+                |msg| Some(ModelWrapperMessage::Msg(msg)),
+                || ModelWrapperMessage::Noop,
+            )
+            .await
+    }
+
+    async fn update_children(&mut self) -> bool {
+        self.model.update().await
+    }
+
+    async fn update(&mut self, message: Self::Message, _sender: &ComponentSender<Self>) -> bool {
+        match message {
+            ModelWrapperMessage::Noop => {}
+            ModelWrapperMessage::Msg(msg) => {
+                if let Some(sink) = &self.sink {
+                    let msg = {
+                        match msg {
+                            UpdateMsg::Credential => {
+                                UpdateMsgWrap::Credential(self.model.username.clone())
+                            }
+                            UpdateMsg::State => UpdateMsgWrap::State(self.model.state),
+                            UpdateMsg::Status => {
+                                UpdateMsgWrap::Status(self.model.status.to_string())
+                            }
+                            UpdateMsg::Log => UpdateMsgWrap::Log(self.model.log.to_string()),
+                            UpdateMsg::Flux => UpdateMsgWrap::Flux(self.model.flux.clone()),
+                            UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(self.model.log_busy()),
+                        }
+                    };
+                    sink.add(msg).ok();
+                }
+            }
+            ModelWrapperMessage::Post(a) => {
+                self.model.post(a);
+            }
+        }
+        false
+    }
+
+    fn render(&mut self, _sender: &ComponentSender<Self>) {}
+
+    fn render_children(&mut self) {
+        self.model.render();
+    }
+}
+
 pub struct Runtime {
-    arx: Arc<Mutex<Option<flume::Receiver<Action>>>>,
-    urx: Arc<Mutex<Option<flume::Receiver<UpdateMsg>>>>,
-    model: Arc<Mutex<Model>>,
+    model: Mutex<Option<Child<ModelWrapper>>>,
+    sender: ComponentSender<ModelWrapper>,
 }
 
 impl Runtime {
@@ -81,65 +152,36 @@ impl Runtime {
         );
         setup_default_user_utils();
 
-        let (atx, arx) = flume::unbounded();
-        let (utx, urx) = flume::unbounded();
-        let model = Model::new(atx, utx);
+        let model = Child::<ModelWrapper>::init(());
+        let sender = model.sender().clone();
         Self {
-            arx: Arc::new(Mutex::new(Some(arx))),
-            urx: Arc::new(Mutex::new(Some(urx))),
-            model: Arc::new(Mutex::new(model)),
+            model: Mutex::new(Some(model)),
+            sender,
         }
     }
 
-    #[frb(sync)]
     pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
-        let model = self.model.clone();
         {
-            let model = model.lock().unwrap();
             if (!config.username.is_empty()) && (!config.password.is_empty()) {
-                model.queue(Action::Credential(config.username, config.password));
+                self.queue(Action::Credential(config.username, config.password));
             }
-            model.queue(Action::Status(Some(config.status)));
-            model.queue(Action::Timer);
+            self.queue(Action::Status(Some(config.status)));
+            self.queue(Action::Timer);
         }
-        let arx = self.arx.lock().unwrap().take().unwrap();
-        let urx = self.urx.lock().unwrap().take().unwrap();
+        let mut model = self.model.lock().unwrap().take().unwrap();
         std::thread::spawn(move || {
-            let runtime = compio::runtime::RuntimeBuilder::new().build().unwrap();
+            let runtime = compio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                let update_task = async {
-                    while let Ok(msg) = urx.recv_async().await {
-                        let msg = {
-                            let model = model.lock().unwrap();
-                            match msg {
-                                UpdateMsg::Credential => {
-                                    UpdateMsgWrap::Credential(model.username.clone())
-                                }
-                                UpdateMsg::State => UpdateMsgWrap::State(model.state),
-                                UpdateMsg::Status => {
-                                    UpdateMsgWrap::Status(model.status.to_string())
-                                }
-                                UpdateMsg::Log => UpdateMsgWrap::Log(model.log.to_string()),
-                                UpdateMsg::Flux => UpdateMsgWrap::Flux(model.flux.clone()),
-                                UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(model.log_busy()),
-                            }
-                        };
-                        sink.add(msg).unwrap();
-                    }
-                };
-                let handle_task = async {
-                    while let Ok(action) = arx.recv_async().await {
-                        log::debug!("received action: {:?}", action);
-                        model.lock().unwrap().handle(action);
-                    }
-                };
-                futures_util::join!(update_task, handle_task);
+                model.sink = Some(sink);
+                let stream = model.run();
+                let mut stream = std::pin::pin!(stream);
+                stream.next().await;
             });
         });
     }
 
     fn queue(&self, a: Action) {
-        self.model.lock().unwrap().queue(a);
+        self.sender.post(ModelWrapperMessage::Post(a));
     }
 
     #[frb(sync)]
