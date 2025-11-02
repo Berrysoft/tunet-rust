@@ -25,7 +25,7 @@ allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
 [target.'cfg(target_os = "android")'.dependencies]
 cyper = { workspace = true, default-features = false, features = [
     "rustls",
-    "nyquest",
+    "nyquest-async",
 ] }
 rustls = { workspace = true, default-features = false, features = ["ring"] }
 

@@ -1005,9 +1005,9 @@ dependencies = [
 
 [[package]]
 name = "cyper"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de8ee912434ac3c7daf7f3845482f49346ad4d13a8d8f0e2159628869bfdccc3"
+checksum = "8128de8e6aa0fc56b80bc5ca04e5a437df8751222e6add3ce44b7546653c6254"
 dependencies = [
  "async-stream",
  "base64",
