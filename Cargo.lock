@@ -1005,9 +1005,9 @@ dependencies = [
 
 [[package]]
 name = "cyper"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "645bfe9d2aee0f19b13f4e7c4bc7e2db7d4fdcadd8dfa2f8ea8ac93b2f45fc23"
+checksum = "de8ee912434ac3c7daf7f3845482f49346ad4d13a8d8f0e2159628869bfdccc3"
 dependencies = [
  "async-stream",
  "base64",
@@ -5657,11 +5657,11 @@ dependencies = [
 
 [[package]]
 name = "winresource"
-version = "0.1.23"
+version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edcacf11b6f48dd21b9ba002f991bdd5de29b2da8cc2800412f4b80f677e4957"
+checksum = "f882b1d5b5ab0c26bdd08afa85da4b829a982772088d1da911698e08976daf9b"
 dependencies = [
- "toml 0.8.23",
+ "toml 0.9.8",
  "version_check",
 ]
 
