@@ -7,11 +7,11 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-flume = { workspace = true }
 tunet-helper = { workspace = true }
 netstatus = { workspace = true }
 futures-util = { workspace = true }
 compio = { workspace = true, features = ["time"] }
+winio-elm = { workspace = true }
 anyhow = { workspace = true }
 drop_guard = "0.3"
 async-once-cell = "0.5"

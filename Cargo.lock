@@ -2572,7 +2572,6 @@ name = "native"
 version = "0.1.0"
 dependencies = [
  "android_logger",
- "anyhow",
  "chrono",
  "compio",
  "flume",
@@ -2585,6 +2584,7 @@ dependencies = [
  "rustls-platform-verifier",
  "tunet-helper",
  "tunet-model",
+ "winio-elm",
 ]
 
 [[package]]
@@ -4503,10 +4503,6 @@ dependencies = [
 name = "tunet-gui"
 version = "0.10.6"
 dependencies = [
- "anyhow",
- "compio",
- "flume",
- "futures-util",
  "tunet-helper",
  "tunet-model",
  "tunet-settings",
@@ -4545,10 +4541,10 @@ dependencies = [
  "async-once-cell",
  "compio",
  "drop_guard",
- "flume",
  "futures-util",
  "netstatus",
  "tunet-helper",
+ "winio-elm",
 ]
 
 [[package]]
@@ -5435,10 +5431,11 @@ checksum = "7686c3529f5b5716c4eee86ef71aca1bab265c35596ba344efa8f8c97f526f64"
 
 [[package]]
 name = "winio-elm"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaf7c71115b61703eb46cb0b4ca6ca09e777705e57fb1877f04c7b747af5d08b"
+checksum = "f08f1e189777cf7db739edb22693a5a47f334b4bb5e2be409012830277b79d18"
 dependencies = [
+ "async-stream",
  "futures-util",
  "inherit-methods-macro",
  "paste",

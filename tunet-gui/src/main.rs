@@ -1,6 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use compio::runtime::spawn;
 use tunet_helper::NetState;
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
@@ -29,7 +28,7 @@ enum MainMessage {
 
 struct MainModel {
     settings: SettingsReader,
-    model: Model,
+    model: Child<Model>,
     window: Child<Window>,
     state_combo: Child<ComboBox>,
     canvas: Child<Canvas>,
@@ -58,37 +57,18 @@ impl Component for MainModel {
     type Message = MainMessage;
     type Event = ();
 
-    fn init(_init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Self {
+    fn init(_init: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Self {
         let settings = SettingsReader::new().unwrap();
         let (username, password) = settings.read_full().unwrap_or_default();
 
-        let (action_sender, action_receiver) = flume::unbounded();
-        let (update_sender, update_receiver) = flume::unbounded();
-        let model = Model::new(action_sender, update_sender);
-        {
-            let sender = sender.clone();
-            spawn(async move {
-                while let Ok(a) = action_receiver.recv_async().await {
-                    sender.post(MainMessage::Action(a));
-                }
-            })
-            .detach();
-        }
-        {
-            let sender = sender.clone();
-            spawn(async move {
-                while let Ok(m) = update_receiver.recv_async().await {
-                    sender.post(MainMessage::Update(m));
-                }
-            })
-            .detach();
-        }
+        let mut model = Child::<Model>::init(());
 
         if !username.is_empty() {
-            model.queue(Action::Credential(username, password));
+            model.post(Action::Credential(username, password));
         }
-        model.queue(Action::Status(None));
-        model.queue(Action::Timer);
+        model.post(Action::Status(None));
+        model.post(Action::Timer);
+        model.post(Action::WatchStatus);
 
         init! {
             window: Window = (()) => {
@@ -201,6 +181,9 @@ impl Component for MainModel {
                 WindowEvent::Close => MainMessage::Close,
                 WindowEvent::Resize => MainMessage::Refresh,
             },
+            self.model => {
+                |m| Some(MainMessage::Update(m))
+            },
             self.state_combo => {
                 ComboBoxEvent::Select => MainMessage::ComboSelect,
             },
@@ -222,6 +205,10 @@ impl Component for MainModel {
         }
     }
 
+    async fn update_children(&mut self) -> bool {
+        self.model.update().await
+    }
+
     async fn update(&mut self, message: Self::Message, sender: &ComponentSender<Self>) -> bool {
         match message {
             MainMessage::Noop => false,
@@ -232,7 +219,7 @@ impl Component for MainModel {
             }
             MainMessage::ComboSelect => {
                 self.model
-                    .queue(Action::State(self.state_combo.selection().and_then(
+                    .post(Action::State(self.state_combo.selection().and_then(
                         |i| match i {
                             1 => Some(NetState::Auth4),
                             2 => Some(NetState::Auth6),
@@ -245,7 +232,7 @@ impl Component for MainModel {
                 let u = self.username_input.text();
                 let p = self.password_input.text();
                 self.settings.save(&u, &p).unwrap();
-                self.model.queue(Action::Credential(u, p));
+                self.model.post(Action::Credential(u, p));
                 false
             }
             MainMessage::Del => {
@@ -262,13 +249,10 @@ impl Component for MainModel {
                 }
                 false
             }
-            MainMessage::Action(a) => {
-                self.model.handle(a);
-                false
-            }
+            MainMessage::Action(a) => self.model.emit(a).await,
             MainMessage::Update(m) => match m {
                 UpdateMsg::Credential => {
-                    self.model.queue(Action::State(None));
+                    self.model.post(Action::State(None));
                     self.username_input.set_text(&self.model.username);
                     false
                 }
@@ -282,13 +266,13 @@ impl Component for MainModel {
                     if Some(index) != old_index {
                         self.state_combo.set_selection(index);
                         if index != 0 {
-                            self.model.queue(Action::Flux);
+                            self.model.post(Action::Flux);
                         }
                     }
                     false
                 }
                 UpdateMsg::Status => {
-                    self.model.queue(Action::State(None));
+                    self.model.post(Action::State(None));
                     self.status.set_text(format!("网络：{}", self.model.status));
                     true
                 }

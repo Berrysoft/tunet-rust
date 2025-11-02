@@ -4,7 +4,6 @@ use anyhow::Result;
 use async_once_cell::OnceCell;
 use compio::runtime::spawn;
 use drop_guard::guard;
-use flume::Sender;
 use futures_util::StreamExt;
 use netstatus::*;
 use std::borrow::Cow;
@@ -13,10 +12,9 @@ use std::sync::{
     Arc,
 };
 use tunet_helper::*;
+use winio_elm::{Component, ComponentSender};
 
 pub struct Model {
-    action_sender: Sender<Action>,
-    update_sender: Sender<UpdateMsg>,
     pub username: String,
     password: String,
     pub http: Arc<OnceCell<HttpClient>>,
@@ -31,142 +29,138 @@ async fn http_client(this: &OnceCell<HttpClient>) -> Result<&HttpClient> {
     Ok(this.get_or_try_init(create_http_client()).await?)
 }
 
-impl Model {
-    pub fn new(action_sender: Sender<Action>, update_sender: Sender<UpdateMsg>) -> Self {
+impl Component for Model {
+    type Init<'a> = ();
+    type Message = Action;
+    type Event = UpdateMsg;
+
+    fn init(_init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Self {
         Self {
-            action_sender: action_sender.clone(),
-            update_sender,
             username: String::default(),
             password: String::default(),
             http: Arc::new(OnceCell::new()),
             state: NetState::Unknown,
             status: NetStatus::Unknown,
             log: Cow::default(),
-            log_busy: BusyBool::new(action_sender.clone(), UpdateMsg::LogBusy),
+            log_busy: BusyBool::new(sender.clone(), UpdateMsg::LogBusy),
             flux: NetFlux::default(),
         }
     }
 
-    pub fn queue(&self, action: Action) {
-        self.action_sender.send(action).ok();
+    async fn start(&mut self, _sender: &ComponentSender<Self>) -> ! {
+        std::future::pending().await
     }
 
-    pub fn handle(&mut self, action: Action) {
-        match action {
+    async fn update(&mut self, message: Self::Message, sender: &ComponentSender<Self>) -> bool {
+        match message {
             Action::Credential(u, p) => {
                 self.username = u;
                 self.password = p;
-                self.update(UpdateMsg::Credential);
+                sender.output(UpdateMsg::Credential);
             }
             Action::State(s) => {
                 match s {
                     None => {
-                        let action_sender = self.action_sender.clone();
+                        let sender = sender.clone();
                         let http = self.http.clone();
                         let status = self.status.clone();
                         spawn(async move {
-                            let http = http_client(&http).await.ok()?;
+                            let http = http_client(&http).await?;
                             let state = suggest::suggest_with_status(http, &status).await;
-                            action_sender
-                                .send_async(Action::State(Some(state)))
-                                .await
-                                .ok()
+                            sender.post(Action::State(Some(state)));
+                            anyhow::Ok(())
                         })
                         .detach();
                     }
                     Some(s) => {
                         self.state = s;
-                        self.update(UpdateMsg::State);
+                        sender.output(UpdateMsg::State);
                     }
                 };
             }
             Action::WatchStatus => {
-                self.spawn_watch_status();
+                self.spawn_watch_status(sender);
             }
             Action::Status(status) => {
                 let status = status.unwrap_or_else(NetStatus::current);
                 self.status = status;
-                self.update(UpdateMsg::Status);
+                sender.output(UpdateMsg::Status);
             }
             Action::Timer => {
-                self.spawn_timer();
+                self.spawn_timer(sender);
             }
             Action::Tick => {
                 if !self.flux.username.is_empty() {
                     self.flux.online_time =
                         Duration(self.flux.online_time.0 + NaiveDuration::try_seconds(1).unwrap());
-                    self.update(UpdateMsg::Flux);
+                    sender.output(UpdateMsg::Flux);
                 }
             }
             Action::Login => {
                 self.log = "正在登录".into();
-                self.update(UpdateMsg::Log);
-                self.spawn_login();
+                sender.output(UpdateMsg::Log);
+                self.spawn_login(sender);
             }
             Action::Logout => {
                 self.log = "正在注销".into();
-                self.update(UpdateMsg::Log);
-                self.spawn_logout();
+                sender.output(UpdateMsg::Log);
+                self.spawn_logout(sender);
             }
             Action::Flux => {
-                self.spawn_flux();
+                self.spawn_flux(sender);
             }
             Action::LogDone(s) => {
                 self.log = s.into();
-                self.update(UpdateMsg::Log);
+                sender.output(UpdateMsg::Log);
             }
             Action::FluxDone(f, s, keep) => {
                 if keep {
                     if let Some(s) = s {
                         self.log = s.into();
-                        self.update(UpdateMsg::Log);
+                        sender.output(UpdateMsg::Log);
                     }
                 } else {
                     self.log = s.unwrap_or_default().into();
-                    self.update(UpdateMsg::Log);
+                    sender.output(UpdateMsg::Log);
                 }
                 self.flux = f;
-                self.update(UpdateMsg::Flux);
-            }
-            Action::Update(msg) => {
-                self.update(msg);
+                sender.output(UpdateMsg::Flux);
             }
         }
+        false
     }
 
-    pub fn update(&self, msg: UpdateMsg) {
-        self.update_sender.send(msg).ok();
-    }
+    fn render(&mut self, _sender: &ComponentSender<Self>) {}
+}
 
-    fn spawn_watch_status(&self) {
-        let action_sender = self.action_sender.clone();
+impl Model {
+    fn spawn_watch_status(&self, sender: &ComponentSender<Self>) {
+        let sender = sender.clone();
         spawn(async move {
             let mut events = NetStatus::watch();
             while let Some(()) = events.next().await {
-                action_sender.send_async(Action::Status(None)).await?;
+                sender.post(Action::Status(None));
             }
             anyhow::Ok(())
         })
         .detach();
     }
 
-    fn spawn_timer(&self) {
-        let action_sender = self.action_sender.clone();
+    fn spawn_timer(&self, sender: &ComponentSender<Self>) {
+        let sender = sender.clone();
         spawn(async move {
             let mut interval = compio::time::interval(std::time::Duration::from_secs(1));
             loop {
                 interval.tick().await;
-                action_sender.send_async(Action::Tick).await?;
+                sender.post(Action::Tick);
             }
-            #[allow(unreachable_code)]
-            anyhow::Ok(())
         })
         .detach();
     }
 
-    fn spawn_login(&self) {
+    fn spawn_login(&self, sender: &ComponentSender<Self>) {
         if let Some(lock) = self.log_busy.lock() {
-            let action_sender = self.action_sender.clone();
+            let sender = sender.clone();
             let (u, p) = (self.username.clone(), self.password.clone());
             let http = self.http.clone();
             let state = self.state;
@@ -176,12 +170,10 @@ impl Model {
                 let client = TUNetConnect::new(state, http.clone())?;
                 let res = client.login(&u, &p).await;
                 let ok = res.is_ok();
-                action_sender
-                    .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
-                    .await?;
+                sender.post(Action::LogDone(res.unwrap_or_else(|e| e.to_string())));
                 if ok {
                     compio::time::sleep(std::time::Duration::from_secs(1)).await;
-                    Self::flux_impl(client, action_sender, true).await?;
+                    Self::flux_impl(client, &sender, true).await?;
                 }
                 anyhow::Ok(())
             })
@@ -189,9 +181,9 @@ impl Model {
         }
     }
 
-    fn spawn_logout(&self) {
+    fn spawn_logout(&self, sender: &ComponentSender<Self>) {
         if let Some(lock) = self.log_busy.lock() {
-            let action_sender = self.action_sender.clone();
+            let sender = sender.clone();
             let u = self.username.clone();
             let http = self.http.clone();
             let state = self.state;
@@ -201,11 +193,9 @@ impl Model {
                 let client = TUNetConnect::new(state, http.clone())?;
                 let res = client.logout(&u).await;
                 let ok = res.is_ok();
-                action_sender
-                    .send_async(Action::LogDone(res.unwrap_or_else(|e| e.to_string())))
-                    .await?;
+                sender.post(Action::LogDone(res.unwrap_or_else(|e| e.to_string())));
                 if ok {
-                    Self::flux_impl(client, action_sender, true).await?;
+                    Self::flux_impl(client, &sender, true).await?;
                 }
                 anyhow::Ok(())
             })
@@ -213,16 +203,16 @@ impl Model {
         }
     }
 
-    fn spawn_flux(&self) {
+    fn spawn_flux(&self, sender: &ComponentSender<Self>) {
         if let Some(lock) = self.log_busy.lock() {
-            let action_sender = self.action_sender.clone();
+            let sender = sender.clone();
             let http = self.http.clone();
             let state = self.state;
             spawn(async move {
                 let _lock = lock;
                 let http = http_client(&http).await?;
                 let client = TUNetConnect::new(state, http.clone())?;
-                Self::flux_impl(client, action_sender, false).await
+                Self::flux_impl(client, &sender, false).await
             })
             .detach();
         }
@@ -230,25 +220,17 @@ impl Model {
 
     async fn flux_impl(
         client: TUNetConnect,
-        action_sender: Sender<Action>,
+        sender: &ComponentSender<Self>,
         keep_msg: bool,
     ) -> Result<()> {
         let flux = client.flux().await;
         match flux {
-            Ok(flux) => {
-                action_sender
-                    .send_async(Action::FluxDone(flux, None, keep_msg))
-                    .await?;
-            }
-            Err(err) => {
-                action_sender
-                    .send_async(Action::FluxDone(
-                        NetFlux::default(),
-                        Some(err.to_string()),
-                        keep_msg,
-                    ))
-                    .await?
-            }
+            Ok(flux) => sender.post(Action::FluxDone(flux, None, keep_msg)),
+            Err(err) => sender.post(Action::FluxDone(
+                NetFlux::default(),
+                Some(err.to_string()),
+                keep_msg,
+            )),
         }
         Ok(())
     }
@@ -271,7 +253,6 @@ pub enum Action {
     LogDone(String),
     Flux,
     FluxDone(NetFlux, Option<String>, bool),
-    Update(UpdateMsg),
 }
 
 #[repr(i32)]
@@ -287,15 +268,15 @@ pub enum UpdateMsg {
 
 struct BusyBool {
     lock: Arc<AtomicBool>,
-    action_sender: Sender<Action>,
+    sender: ComponentSender<Model>,
     msg: UpdateMsg,
 }
 
 impl BusyBool {
-    pub fn new(action_sender: Sender<Action>, msg: UpdateMsg) -> Self {
+    pub fn new(sender: ComponentSender<Model>, msg: UpdateMsg) -> Self {
         Self {
             lock: Arc::new(AtomicBool::new(false)),
-            action_sender,
+            sender,
             msg,
         }
     }
@@ -311,13 +292,13 @@ impl BusyBool {
             .is_ok()
         {
             let msg = self.msg;
-            let action_sender = self.action_sender.clone();
-            action_sender.send(Action::Update(msg)).ok();
+            let sender = self.sender.clone();
+            sender.output(msg);
             Some(guard(
-                (self.lock.clone(), self.action_sender.clone(), self.msg),
-                |(lock, action_sender, msg)| {
+                (self.lock.clone(), self.sender.clone(), self.msg),
+                |(lock, sender, msg)| {
                     lock.store(false, Ordering::Release);
-                    action_sender.send(Action::Update(msg)).ok();
+                    sender.output(msg);
                 },
             ))
         } else {

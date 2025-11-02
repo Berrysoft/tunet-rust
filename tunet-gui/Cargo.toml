@@ -11,11 +11,7 @@ repository.workspace = true
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-model = { workspace = true }
-anyhow = { workspace = true }
-compio = { workspace = true, features = ["time"] }
-flume = { workspace = true }
 winio = { workspace = true, default-features = false, features = ["qt"] }
-futures-util = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winresource = { workspace = true }
