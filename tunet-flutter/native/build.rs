@@ -11,12 +11,8 @@ fn main() {
     println!("cargo:rerun-if-changed={RUST_INPUT}");
     println!("cargo:rerun-if-changed=.flutter_rust_bridge.yml");
 
-    let os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let config = Config::from_files_auto().unwrap();
+    let meta_config = MetaConfig::default();
 
-    if matches!(os.as_str(), "android" | "ios") {
-        let config = Config::from_files_auto().unwrap();
-        let meta_config = MetaConfig::default();
-
-        generate(config, meta_config).unwrap();
-    }
+    generate(config, meta_config).unwrap();
 }
