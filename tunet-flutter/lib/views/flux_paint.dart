@@ -78,10 +78,10 @@ class _FluxPainter extends CustomPainter {
       ..color = accent
       ..style = PaintingStyle.fill;
     final f2 = Paint()
-      ..color = accent.withOpacity(0.66)
+      ..color = accent.withAlpha(168)
       ..style = PaintingStyle.fill;
     final f3 = Paint()
-      ..color = accent.withOpacity(0.33)
+      ..color = accent.withAlpha(84)
       ..style = PaintingStyle.fill;
 
     final fullWidth = size.width;
