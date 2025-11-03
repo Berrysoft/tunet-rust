@@ -64,9 +64,7 @@ pub fn unregister() -> Result<()> {
 
 pub fn start(interval: Option<humantime::Duration>) -> Result<()> {
     env_logger::try_init()?;
-    compio::runtime::RuntimeBuilder::new()
-        .build()?
-        .block_on(start_impl(interval))
+    compio::runtime::Runtime::new()?.block_on(start_impl(interval))
 }
 
 async fn start_impl(interval: Option<humantime::Duration>) -> Result<()> {

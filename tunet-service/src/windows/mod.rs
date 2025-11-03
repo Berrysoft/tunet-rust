@@ -139,9 +139,7 @@ fn service_entry_impl() -> Result<()> {
         process_id: None,
     })?;
 
-    compio::runtime::RuntimeBuilder::new()
-        .build()?
-        .block_on(service_main(interval, rx))?;
+    compio::runtime::Runtime::new()?.block_on(service_main(interval, rx))?;
 
     status_handle.set_service_status(ServiceStatus {
         service_type: ServiceType::OWN_PROCESS,

@@ -95,9 +95,7 @@ struct RunOnce {
 
 impl Command for RunOnce {
     fn run(&self) -> Result<()> {
-        compio::runtime::RuntimeBuilder::new()
-            .build()?
-            .block_on(run_once(self.quiet))
+        compio::runtime::Runtime::new()?.block_on(run_once(self.quiet))
     }
 }
 
