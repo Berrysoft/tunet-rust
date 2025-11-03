@@ -160,6 +160,7 @@ impl Runtime {
         }
     }
 
+    #[frb(sync)]
     pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
         {
             if (!config.username.is_empty()) && (!config.password.is_empty()) {
