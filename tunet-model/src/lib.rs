@@ -195,6 +195,7 @@ impl Model {
                 let ok = res.is_ok();
                 sender.post(Action::LogDone(res.unwrap_or_else(|e| e.to_string())));
                 if ok {
+                    compio::time::sleep(std::time::Duration::from_secs(1)).await;
                     Self::flux_impl(client, &sender, true).await;
                 }
                 anyhow::Ok(())
