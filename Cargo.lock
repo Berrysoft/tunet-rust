@@ -671,14 +671,13 @@ dependencies = [
 
 [[package]]
 name = "compio-io"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88db995ee3262e4349f102128c2685ec984ac1009cbb12ff6eec391a7616a0d8"
+checksum = "d125bc35ccd1ed098665218ce4f12a6c4a73855c151feff1b47fd7ba104f7955"
 dependencies = [
  "compio-buf",
  "futures-util",
  "paste",
- "pin-project-lite",
 ]
 
 [[package]]
@@ -784,12 +783,14 @@ dependencies = [
 
 [[package]]
 name = "compio-tls"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e4dfe47c4ac25e468dc64f7722bc07121cc49cbecdb91277eaa785f4c3f46a6"
+checksum = "1d8560dea318fdeb7a57548366b2ebf3a226324d2e045f316727667be8130899"
 dependencies = [
  "compio-buf",
  "compio-io",
+ "futures-rustls",
+ "futures-util",
  "rustls",
 ]
 
@@ -1705,6 +1706,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-rustls"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8f2f12607f92c69b12ed746fabf9ca4f5c482cba46679c1a75b874ed7c26adb"
+dependencies = [
+ "futures-io",
+ "rustls",
+ "rustls-pki-types",
+]
+
+[[package]]
 name = "futures-sink"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2192,9 +2204,9 @@ dependencies = [
 
 [[package]]
 name = "io-uring"
-version = "0.7.10"
+version = "0.7.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "046fa2d4d00aea763528b4950358d0ead425372445dc8ff86312b3c69ff7727b"
+checksum = "fdd7bddefd0a8833b88a4b68f90dae22c7450d11b354198baee3874fd811b344"
 dependencies = [
  "bitflags 2.10.0",
  "cfg-if",
@@ -3760,9 +3772,9 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d20c4491bc164fa2f6c5d44565947a52ad80b9505d8e36f8d54c27c739fcd0"
+checksum = "1317c3bf3e7df961da95b0a56a172a02abead31276215a0497241a7624b487ce"
 dependencies = [
  "dyn-clone",
  "ref-cast",
@@ -3939,7 +3951,7 @@ dependencies = [
  "indexmap 1.9.3",
  "indexmap 2.12.0",
  "schemars 0.9.0",
- "schemars 1.0.4",
+ "schemars 1.0.5",
  "serde_core",
  "serde_json",
  "serde_with_macros",
@@ -5430,9 +5442,9 @@ checksum = "7686c3529f5b5716c4eee86ef71aca1bab265c35596ba344efa8f8c97f526f64"
 
 [[package]]
 name = "winio-elm"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f08f1e189777cf7db739edb22693a5a47f334b4bb5e2be409012830277b79d18"
+checksum = "ef144afa4b595d698fec53d2864b0c77125855732477abb70b4adeb97bc141fd"
 dependencies = [
  "async-stream",
  "futures-util",
