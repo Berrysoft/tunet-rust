@@ -69,6 +69,15 @@ android {
         }
     }
     namespace 'io.github.berrysoft.tunet_flutter'
+
+    packaging {
+        dex {
+            useLegacyPackaging true
+        }
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
 }
 
 flutter {
