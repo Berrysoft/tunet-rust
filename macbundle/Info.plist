@@ -29,6 +29,8 @@
 
 	<key>CFBundleIconFile</key>
 	<string>logo</string>
+	<key>CFBundleIconName</key>
+	<string>logo</string>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
