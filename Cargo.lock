@@ -604,23 +604,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "362c95e8e1a569b50b7e6642156eccd3678f03b4afa59834f18fad8af5649587"
 dependencies = [
  "compio-buf",
- "compio-driver",
- "compio-fs",
+ "compio-driver 0.9.1",
+ "compio-fs 0.9.0",
  "compio-io",
  "compio-log",
  "compio-macros",
- "compio-net",
- "compio-quic",
- "compio-runtime",
+ "compio-net 0.9.0",
+ "compio-runtime 0.9.4",
  "compio-signal",
+]
+
+[[package]]
+name = "compio"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8a7cc183295c36483f1c9616f43c4ac1a9030ce6d9321d6cebb4c4bb21164c4"
+dependencies = [
+ "compio-buf",
+ "compio-driver 0.10.0",
+ "compio-fs 0.10.0",
+ "compio-io",
+ "compio-log",
+ "compio-net 0.10.0",
+ "compio-quic",
+ "compio-runtime 0.10.1",
  "compio-tls",
+ "compio-ws",
 ]
 
 [[package]]
 name = "compio-buf"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5881ed3b06004d5e505746e6780dbbaf76fc508201e57bb5c84fcb4d69b8c23e"
+checksum = "0aa3ebe7f9830a33aa801a223411c8dc011c3271cd5beed56284c86d227bc32e"
 dependencies = [
  "arrayvec",
  "bytes",
@@ -652,6 +668,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "compio-driver"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff5c12800e82a01d12046ccc29b014e1cbbb2fbe38c52534e0d40d4fc58881d5"
+dependencies = [
+ "cfg-if",
+ "cfg_aliases",
+ "compio-buf",
+ "compio-log",
+ "crossbeam-queue",
+ "flume",
+ "futures-util",
+ "io-uring",
+ "io_uring_buf_ring",
+ "libc",
+ "once_cell",
+ "paste",
+ "polling",
+ "slab",
+ "socket2",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "compio-fs"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -660,9 +700,27 @@ dependencies = [
  "cfg-if",
  "cfg_aliases",
  "compio-buf",
- "compio-driver",
+ "compio-driver 0.9.1",
  "compio-io",
- "compio-runtime",
+ "compio-runtime 0.9.4",
+ "libc",
+ "os_pipe",
+ "widestring",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "compio-fs"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c568022f90c2e2e8ea7ff4c4e8fde500753b5b9b6b6d870e25b5e656f9ea2892"
+dependencies = [
+ "cfg-if",
+ "cfg_aliases",
+ "compio-buf",
+ "compio-driver 0.10.0",
+ "compio-io",
+ "compio-runtime 0.10.1",
  "libc",
  "os_pipe",
  "widestring",
@@ -671,9 +729,9 @@ dependencies = [
 
 [[package]]
 name = "compio-io"
-version = "0.8.2"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d125bc35ccd1ed098665218ce4f12a6c4a73855c151feff1b47fd7ba104f7955"
+checksum = "d1e64c6d723589492a4f5041394301e9903466a606f6d9bcc11e406f9f07e9ec"
 dependencies = [
  "compio-buf",
  "futures-util",
@@ -709,9 +767,28 @@ checksum = "2e6ea7aa4a9f38d68dd0098a11232236cb3efd0ef3cab50ecdada3d745f1f776"
 dependencies = [
  "cfg-if",
  "compio-buf",
- "compio-driver",
+ "compio-driver 0.9.1",
  "compio-io",
- "compio-runtime",
+ "compio-runtime 0.9.4",
+ "either",
+ "libc",
+ "once_cell",
+ "socket2",
+ "widestring",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "compio-net"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bffab78b8a876111ca76450912ca6a5a164b0dd93973e342c5f438a6f478c735"
+dependencies = [
+ "cfg-if",
+ "compio-buf",
+ "compio-driver 0.10.0",
+ "compio-io",
+ "compio-runtime 0.10.1",
  "either",
  "libc",
  "once_cell",
@@ -722,16 +799,16 @@ dependencies = [
 
 [[package]]
 name = "compio-quic"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50a4320de726babe0948d92c4bc3d88b3b0d60b06f5a3c31ca85d2b0871f35f0"
+checksum = "53e101b05fe8608ce6fb2882ac331e211f2b0318449ae27c576c7456b4f1ec4e"
 dependencies = [
  "cfg_aliases",
  "compio-buf",
  "compio-io",
  "compio-log",
- "compio-net",
- "compio-runtime",
+ "compio-net 0.10.0",
+ "compio-runtime 0.10.1",
  "flume",
  "futures-util",
  "libc",
@@ -751,7 +828,30 @@ dependencies = [
  "async-task",
  "cfg-if",
  "compio-buf",
- "compio-driver",
+ "compio-driver 0.9.1",
+ "compio-log",
+ "core_affinity",
+ "crossbeam-queue",
+ "futures-util",
+ "libc",
+ "once_cell",
+ "pin-project-lite",
+ "scoped-tls",
+ "slab",
+ "socket2",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "compio-runtime"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83fd890a129a8086af857bbe18401689c130aa6ccfc7f3c029a7800f7256af3e"
+dependencies = [
+ "async-task",
+ "cfg-if",
+ "compio-buf",
+ "compio-driver 0.10.0",
  "compio-log",
  "core_affinity",
  "crossbeam-queue",
@@ -772,8 +872,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce4af41ace283997335ac64dc6ce11aec5149abebdb54257bf855e85cb251a95"
 dependencies = [
  "compio-buf",
- "compio-driver",
- "compio-runtime",
+ "compio-driver 0.9.1",
+ "compio-runtime 0.9.4",
  "libc",
  "once_cell",
  "os_pipe",
@@ -783,15 +883,29 @@ dependencies = [
 
 [[package]]
 name = "compio-tls"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d8560dea318fdeb7a57548366b2ebf3a226324d2e045f316727667be8130899"
+checksum = "84cd9ca48815f384f1a30400848beebcd8c7ead2f57bfe28ebc5560babea88ec"
 dependencies = [
  "compio-buf",
  "compio-io",
  "futures-rustls",
  "futures-util",
  "rustls",
+]
+
+[[package]]
+name = "compio-ws"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf7281a15e8f638697415f9838030e41a92c8a8954ddccfc46556a413c16dd9a"
+dependencies = [
+ "compio-buf",
+ "compio-io",
+ "compio-log",
+ "compio-net 0.10.0",
+ "compio-tls",
+ "tungstenite",
 ]
 
 [[package]]
@@ -1006,14 +1120,14 @@ dependencies = [
 
 [[package]]
 name = "cyper"
-version = "0.6.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8128de8e6aa0fc56b80bc5ca04e5a437df8751222e6add3ce44b7546653c6254"
+checksum = "71bb9c737073b5c1c90de1ecd172bc80dbcf0c9868f726ff0692b67231b12466"
 dependencies = [
  "async-stream",
  "base64",
  "cfg-if",
- "compio",
+ "compio 0.17.0",
  "cyper-core",
  "encoding_rs",
  "futures-util",
@@ -1034,11 +1148,11 @@ dependencies = [
 
 [[package]]
 name = "cyper-core"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "767109cdb8dc2fb4846140d13546c7eaaf49a96d73454265e7d289522b2402ae"
+checksum = "e53f8cde9bdfe28b1bec664feb1825c237f1b3948c2dfdba019540be3f660b3f"
 dependencies = [
- "compio",
+ "compio 0.17.0",
  "futures-util",
  "hyper",
  "send_wrapper",
@@ -2215,9 +2329,9 @@ dependencies = [
 
 [[package]]
 name = "io_uring_buf_ring"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a8867874ff5758b47c1dac069e6e86541432f9da8be9111c5e94154134f07d0"
+checksum = "bbe9ac631d954bb17eee5c932bd71bce3d5726c949c27729dd5c946b0de65471"
 dependencies = [
  "bytes",
  "io-uring",
@@ -2585,7 +2699,7 @@ version = "0.1.0"
 dependencies = [
  "android_logger",
  "chrono",
- "compio",
+ "compio 0.16.0",
  "flutter_rust_bridge",
  "flutter_rust_bridge_codegen",
  "futures-util",
@@ -4502,7 +4616,7 @@ version = "0.10.7"
 dependencies = [
  "anyhow",
  "clap",
- "compio",
+ "compio 0.16.0",
  "console",
  "enum_dispatch",
  "tunet-helper",
@@ -4550,7 +4664,7 @@ version = "0.5.0"
 dependencies = [
  "anyhow",
  "async-once-cell",
- "compio",
+ "compio 0.16.0",
  "drop_guard",
  "futures-util",
  "netstatus",
@@ -4566,7 +4680,7 @@ dependencies = [
  "async-stream",
  "cfg-if",
  "clap",
- "compio",
+ "compio 0.16.0",
  "dirs",
  "enum_dispatch",
  "env_logger",
@@ -4600,6 +4714,25 @@ dependencies = [
  "serde_json",
  "serde_with",
  "thiserror 2.0.17",
+]
+
+[[package]]
+name = "tungstenite"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8628dcc84e5a09eb3d8423d6cb682965dea9133204e8fb3efee74c2a0c259442"
+dependencies = [
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "rand",
+ "rustls",
+ "rustls-pki-types",
+ "sha1",
+ "thiserror 2.0.17",
+ "utf-8",
 ]
 
 [[package]]
@@ -4660,6 +4793,12 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
+
+[[package]]
+name = "utf-8"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 
 [[package]]
 name = "utf8_iter"
@@ -5419,7 +5558,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "631c61d80c66665e716db952d64f2ab236f98182629b861e348cacf6cbad8309"
 dependencies = [
  "cfg-if",
- "compio",
+ "compio 0.16.0",
  "compio-log",
  "futures-util",
  "image",
@@ -5486,7 +5625,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0b052ee9bd4223dd1914f079b54196c18a09d08945ade56ebcb144d8e0e2e7f"
 dependencies = [
- "compio",
+ "compio 0.16.0",
  "rustix 1.1.2",
 ]
 
@@ -5508,7 +5647,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65f894572e3e2a6e453736d0be970ae26da57b407744799fd40a586b53bfca34"
 dependencies = [
  "block2",
- "compio",
+ "compio 0.16.0",
  "compio-log",
  "image",
  "inherit-methods-macro",
@@ -5553,7 +5692,7 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e93c669301f4b6d343cc3620046a19e47d05167319a829f5b40460b2d7133bc"
 dependencies = [
- "compio",
+ "compio 0.16.0",
  "compio-log",
  "futures-util",
  "image",
@@ -5576,7 +5715,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50829c4bf229402db002a7fc65e86849cd3ec32c8de0e7b668a7e5dffc14f23e"
 dependencies = [
  "cfg-if",
- "compio",
+ "compio 0.16.0",
  "embed-resource",
  "image",
  "slim-detours-sys",
@@ -5596,9 +5735,9 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4844da8fda56a598aede802413f09d1c821d3f08d492e8c17d8f401923984e1"
 dependencies = [
- "compio",
+ "compio 0.16.0",
  "compio-log",
- "compio-runtime",
+ "compio-runtime 0.9.4",
  "image",
  "inherit-methods-macro",
  "oneshot",
