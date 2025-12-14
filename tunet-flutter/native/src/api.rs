@@ -1,15 +1,17 @@
 use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::{frb, setup_default_user_utils};
 
+use anyhow::Result;
 use futures_util::StreamExt;
 pub use netstatus::NetStatus;
+use std::convert::Infallible;
 pub use std::sync::Mutex;
 pub use tunet_helper::{
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
     NetState,
 };
 pub use tunet_model::{Action, Model, UpdateMsg};
-use winio_elm::{Child, Component, ComponentSender};
+use winio_elm::{Child, Component, ComponentSender, Root, RunEvent};
 
 pub enum UpdateMsgWrap {
     Credential(String),
@@ -63,7 +65,7 @@ pub struct RuntimeStartConfig {
 
 struct ModelWrapper {
     model: Child<Model>,
-    sink: Option<StreamSink<UpdateMsgWrap>>,
+    sink: StreamSink<UpdateMsgWrap>,
 }
 
 enum ModelWrapperMessage {
@@ -73,13 +75,14 @@ enum ModelWrapperMessage {
 }
 
 impl Component for ModelWrapper {
-    type Init<'a> = ();
+    type Error = anyhow::Error;
+    type Init<'a> = StreamSink<UpdateMsgWrap>;
     type Message = ModelWrapperMessage;
-    type Event = ();
+    type Event = Infallible;
 
-    fn init(_init: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Self {
-        let model = Child::<Model>::init(());
-        Self { model, sink: None }
+    async fn init(sink: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Result<Self> {
+        let model = Child::<Model>::init(()).await?;
+        Ok(Self { model, sink })
     }
 
     async fn start(&mut self, sender: &ComponentSender<Self>) -> ! {
@@ -92,49 +95,42 @@ impl Component for ModelWrapper {
             .await
     }
 
-    async fn update_children(&mut self) -> bool {
+    async fn update_children(&mut self) -> Result<bool> {
         self.model.update().await
     }
 
-    async fn update(&mut self, message: Self::Message, _sender: &ComponentSender<Self>) -> bool {
+    async fn update(
+        &mut self,
+        message: Self::Message,
+        _sender: &ComponentSender<Self>,
+    ) -> Result<bool> {
         match message {
             ModelWrapperMessage::Noop => {}
             ModelWrapperMessage::Msg(msg) => {
-                if let Some(sink) = &self.sink {
-                    let msg = {
-                        match msg {
-                            UpdateMsg::Credential => {
-                                UpdateMsgWrap::Credential(self.model.username.clone())
-                            }
-                            UpdateMsg::State => UpdateMsgWrap::State(self.model.state),
-                            UpdateMsg::Status => {
-                                UpdateMsgWrap::Status(self.model.status.to_string())
-                            }
-                            UpdateMsg::Log => UpdateMsgWrap::Log(self.model.log.to_string()),
-                            UpdateMsg::Flux => UpdateMsgWrap::Flux(self.model.flux.clone()),
-                            UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(self.model.log_busy()),
-                        }
-                    };
-                    sink.add(msg).ok();
-                }
+                let msg = match msg {
+                    UpdateMsg::Credential => UpdateMsgWrap::Credential(self.model.username.clone()),
+                    UpdateMsg::State => UpdateMsgWrap::State(self.model.state),
+                    UpdateMsg::Status => UpdateMsgWrap::Status(self.model.status.to_string()),
+                    UpdateMsg::Log => UpdateMsgWrap::Log(self.model.log.to_string()),
+                    UpdateMsg::Flux => UpdateMsgWrap::Flux(self.model.flux.clone()),
+                    UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(self.model.log_busy()),
+                };
+                self.sink.add(msg).map_err(|e| anyhow::anyhow!("{}", e))?;
             }
             ModelWrapperMessage::Post(a) => {
                 self.model.post(a);
             }
         }
-        false
+        Ok(false)
     }
 
-    fn render(&mut self, _sender: &ComponentSender<Self>) {}
-
-    fn render_children(&mut self) {
-        self.model.render();
+    fn render_children(&mut self) -> Result<()> {
+        self.model.render()
     }
 }
 
 pub struct Runtime {
-    model: Mutex<Option<Child<ModelWrapper>>>,
-    sender: ComponentSender<ModelWrapper>,
+    sender: Mutex<Option<ComponentSender<ModelWrapper>>>,
 }
 
 impl Runtime {
@@ -152,16 +148,12 @@ impl Runtime {
         );
         setup_default_user_utils();
 
-        let model = Child::<ModelWrapper>::init(());
-        let sender = model.sender().clone();
         Self {
-            model: Mutex::new(Some(model)),
-            sender,
+            sender: Mutex::new(None),
         }
     }
 
-    #[frb(sync)]
-    pub fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
+    pub async fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
         {
             if (!config.username.is_empty()) && (!config.password.is_empty()) {
                 self.queue(Action::Credential(config.username, config.password));
@@ -169,20 +161,40 @@ impl Runtime {
             self.queue(Action::Status(Some(config.status)));
             self.queue(Action::Timer);
         }
-        let mut model = self.model.lock().unwrap().take().unwrap();
+        let (tx, rx) = futures_channel::oneshot::channel();
         std::thread::spawn(move || {
             let runtime = compio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                model.sink = Some(sink);
+                let mut model = Root::<ModelWrapper>::init(sink).await.unwrap();
+                tx.send(model.sender().clone()).ok();
                 let stream = model.run();
                 let mut stream = std::pin::pin!(stream);
-                stream.next().await;
+                while let Some(event) = stream.next().await {
+                    match event {
+                        RunEvent::Event(e) => match e {},
+                        RunEvent::UpdateErr(e) => {
+                            log::error!("Update error: {:?}", e);
+                        }
+                        RunEvent::RenderErr(e) => {
+                            log::error!("Render error: {:?}", e);
+                        }
+                        _ => {
+                            log::warn!("Unknown event: {:?}", event);
+                        }
+                    }
+                }
             });
+            unreachable!("model ended unexpectedly");
         });
+        let sender = rx.await.unwrap();
+        self.sender.lock().unwrap().replace(sender);
     }
 
     fn queue(&self, a: Action) {
-        self.sender.post(ModelWrapperMessage::Post(a));
+        let sender = self.sender.lock().unwrap();
+        if let Some(sender) = sender.as_ref() {
+            sender.post(ModelWrapperMessage::Post(a));
+        }
     }
 
     #[frb(sync)]

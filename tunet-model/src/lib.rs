@@ -1,7 +1,6 @@
 #![forbid(unsafe_code)]
 
 use anyhow::Result;
-use async_once_cell::OnceCell;
 use compio::runtime::spawn;
 use drop_guard::guard;
 use futures_util::StreamExt;
@@ -17,7 +16,7 @@ use winio_elm::{Component, ComponentSender};
 pub struct Model {
     pub username: String,
     password: String,
-    pub http: Arc<OnceCell<HttpClient>>,
+    pub http: HttpClient,
     pub state: NetState,
     pub status: NetStatus,
     pub log: Cow<'static, str>,
@@ -25,33 +24,30 @@ pub struct Model {
     pub flux: NetFlux,
 }
 
-async fn http_client(this: &OnceCell<HttpClient>) -> Result<&HttpClient> {
-    Ok(this.get_or_try_init(create_http_client()).await?)
-}
-
 impl Component for Model {
+    type Error = anyhow::Error;
     type Init<'a> = ();
     type Message = Action;
     type Event = UpdateMsg;
 
-    fn init(_init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Self {
-        Self {
+    async fn init(_init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Result<Self> {
+        Ok(Self {
             username: String::default(),
             password: String::default(),
-            http: Arc::new(OnceCell::new()),
+            http: create_http_client().await?,
             state: NetState::Unknown,
             status: NetStatus::Unknown,
             log: Cow::default(),
             log_busy: BusyBool::new(sender.clone(), UpdateMsg::LogBusy),
             flux: NetFlux::default(),
-        }
+        })
     }
 
-    async fn start(&mut self, _sender: &ComponentSender<Self>) -> ! {
-        std::future::pending().await
-    }
-
-    async fn update(&mut self, message: Self::Message, sender: &ComponentSender<Self>) -> bool {
+    async fn update(
+        &mut self,
+        message: Self::Message,
+        sender: &ComponentSender<Self>,
+    ) -> Result<bool> {
         match message {
             Action::Credential(u, p) => {
                 self.username = u;
@@ -65,8 +61,7 @@ impl Component for Model {
                         let http = self.http.clone();
                         let status = self.status.clone();
                         spawn(async move {
-                            let http = http_client(&http).await?;
-                            let state = suggest::suggest_with_status(http, &status).await;
+                            let state = suggest::suggest_with_status(&http, &status).await;
                             sender.post(Action::State(Some(state)));
                             anyhow::Ok(())
                         })
@@ -127,10 +122,8 @@ impl Component for Model {
                 sender.output(UpdateMsg::Flux);
             }
         }
-        false
+        Ok(false)
     }
-
-    fn render(&mut self, _sender: &ComponentSender<Self>) {}
 }
 
 impl Model {
@@ -166,8 +159,7 @@ impl Model {
             let state = self.state;
             spawn(async move {
                 let _lock = lock;
-                let http = http_client(&http).await?;
-                let client = TUNetConnect::new(state, http.clone())?;
+                let client = TUNetConnect::new(state, http)?;
                 let res = client.login(&u, &p).await;
                 let ok = res.is_ok();
                 sender.post(Action::LogDone(res.unwrap_or_else(|e| e.to_string())));
@@ -189,8 +181,7 @@ impl Model {
             let state = self.state;
             spawn(async move {
                 let _lock = lock;
-                let http = http_client(&http).await?;
-                let client = TUNetConnect::new(state, http.clone())?;
+                let client = TUNetConnect::new(state, http)?;
                 let res = client.logout(&u).await;
                 let ok = res.is_ok();
                 sender.post(Action::LogDone(res.unwrap_or_else(|e| e.to_string())));
@@ -211,8 +202,7 @@ impl Model {
             let state = self.state;
             spawn(async move {
                 let _lock = lock;
-                let http = http_client(&http).await?;
-                let client = TUNetConnect::new(state, http.clone())?;
+                let client = TUNetConnect::new(state, http)?;
                 Self::flux_impl(client, &sender, false).await;
                 anyhow::Ok(())
             })
