@@ -1,12 +1,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use anyhow::Result;
 use tunet_helper::NetState;
 use tunet_model::{Action, Model, UpdateMsg};
 use tunet_settings::SettingsReader;
 use winio::prelude::*;
 
-fn main() {
-    App::new("io.github.berrysoft.tunet").run::<MainModel>(())
+fn main() -> Result<()> {
+    App::new("io.github.berrysoft.tunet")?.run::<MainModel>(())
 }
 
 fn accent_color() -> Color {
@@ -53,15 +54,16 @@ struct MainModel {
 }
 
 impl Component for MainModel {
+    type Error = anyhow::Error;
     type Init<'a> = ();
     type Message = MainMessage;
     type Event = ();
 
-    fn init(_init: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Self {
-        let settings = SettingsReader::new().unwrap();
+    async fn init(_init: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Result<Self> {
+        let settings = SettingsReader::new()?;
         let (username, password) = settings.read_full().unwrap_or_default();
 
-        let mut model = Child::<Model>::init(());
+        let mut model = Child::<Model>::init(()).await?;
 
         if !username.is_empty() {
             model.post(Action::Credential(username, password));
@@ -75,9 +77,9 @@ impl Component for MainModel {
                 size: Size::new(300.0, 500.0),
                 text: "清华校园网",
                 loc: {
-                    let monitors = Monitor::all();
+                    let monitors = Monitor::all()?;
                     let region = monitors[0].client_scaled();
-                    region.origin + region.size / 2.0 - window.size() / 2.0
+                    region.origin + region.size / 2.0 - window.size()? / 2.0
                 },
                 #[cfg(windows)]
                 icon_by_id: 1,
@@ -141,13 +143,13 @@ impl Component for MainModel {
             }
         }
 
-        state_combo.insert(0, "未知/自动");
-        state_combo.insert(1, "Auth4");
-        state_combo.insert(2, "Auth6");
+        state_combo.insert(0, "未知/自动")?;
+        state_combo.insert(1, "Auth4")?;
+        state_combo.insert(2, "Auth6")?;
 
-        window.show();
+        window.show()?;
 
-        Self {
+        Ok(Self {
             settings,
             model,
             window,
@@ -171,7 +173,7 @@ impl Component for MainModel {
             del_button,
             info1,
             info2,
-        }
+        })
     }
 
     async fn start(&mut self, sender: &ComponentSender<Self>) -> ! {
@@ -205,35 +207,39 @@ impl Component for MainModel {
         }
     }
 
-    async fn update_children(&mut self) -> bool {
+    async fn update_children(&mut self) -> Result<bool> {
         self.model.update().await
     }
 
-    async fn update(&mut self, message: Self::Message, sender: &ComponentSender<Self>) -> bool {
+    async fn update(
+        &mut self,
+        message: Self::Message,
+        sender: &ComponentSender<Self>,
+    ) -> Result<bool> {
         match message {
-            MainMessage::Noop => false,
-            MainMessage::Refresh => true,
+            MainMessage::Noop => Ok(false),
+            MainMessage::Refresh => Ok(true),
             MainMessage::Close => {
                 sender.output(());
-                false
+                Ok(false)
             }
             MainMessage::ComboSelect => {
                 self.model
-                    .post(Action::State(self.state_combo.selection().and_then(
+                    .post(Action::State(self.state_combo.selection()?.and_then(
                         |i| match i {
                             1 => Some(NetState::Auth4),
                             2 => Some(NetState::Auth6),
                             _ => None,
                         },
                     )));
-                false
+                Ok(false)
             }
             MainMessage::Cred => {
-                let u = self.username_input.text();
-                let p = self.password_input.text();
-                self.settings.save(&u, &p).unwrap();
+                let u = self.username_input.text()?;
+                let p = self.password_input.text()?;
+                self.settings.save(&u, &p)?;
                 self.model.post(Action::Credential(u, p));
-                false
+                Ok(false)
             }
             MainMessage::Del => {
                 let res = MessageBox::new()
@@ -242,19 +248,19 @@ impl Component for MainModel {
                     .buttons(MessageBoxButton::Ok | MessageBoxButton::Cancel)
                     .style(MessageBoxStyle::Warning)
                     .show(Some(&self.window))
-                    .await;
+                    .await?;
                 if let MessageBoxResponse::Ok = res {
-                    self.settings.delete(&self.username_input.text()).unwrap();
+                    self.settings.delete(&self.username_input.text()?)?;
                     sender.output(());
                 }
-                false
+                Ok(false)
             }
             MainMessage::Action(a) => self.model.emit(a).await,
             MainMessage::Update(m) => match m {
                 UpdateMsg::Credential => {
                     self.model.post(Action::State(None));
-                    self.username_input.set_text(&self.model.username);
-                    false
+                    self.username_input.set_text(&self.model.username)?;
+                    Ok(false)
                 }
                 UpdateMsg::State => {
                     let index = match self.model.state {
@@ -262,48 +268,49 @@ impl Component for MainModel {
                         NetState::Auth4 => 1,
                         NetState::Auth6 => 2,
                     };
-                    let old_index = self.state_combo.selection();
+                    let old_index = self.state_combo.selection()?;
                     if Some(index) != old_index {
-                        self.state_combo.set_selection(index);
+                        self.state_combo.set_selection(index)?;
                         if index != 0 {
                             self.model.post(Action::Flux);
                         }
                     }
-                    false
+                    Ok(false)
                 }
                 UpdateMsg::Status => {
                     self.model.post(Action::State(None));
-                    self.status.set_text(format!("网络：{}", self.model.status));
-                    true
+                    self.status
+                        .set_text(format!("网络：{}", self.model.status))?;
+                    Ok(true)
                 }
                 UpdateMsg::Log => {
-                    self.log.set_text(&self.model.log);
-                    true
+                    self.log.set_text(&self.model.log)?;
+                    Ok(true)
                 }
                 UpdateMsg::Flux => {
                     self.username
-                        .set_text(format!("用户：{}", self.model.flux.username));
+                        .set_text(format!("用户：{}", self.model.flux.username))?;
                     self.flux
-                        .set_text(format!("流量：{}", self.model.flux.flux));
+                        .set_text(format!("流量：{}", self.model.flux.flux))?;
                     self.online_time
-                        .set_text(format!("时长：{}", self.model.flux.online_time));
+                        .set_text(format!("时长：{}", self.model.flux.online_time))?;
                     self.balance
-                        .set_text(format!("余额：{}", self.model.flux.balance));
-                    true
+                        .set_text(format!("余额：{}", self.model.flux.balance))?;
+                    Ok(true)
                 }
                 UpdateMsg::LogBusy => {
                     let busy = self.model.log_busy();
-                    self.login_button.set_enabled(!busy);
-                    self.logout_button.set_enabled(!busy);
-                    self.refresh_button.set_enabled(!busy);
-                    false
+                    self.login_button.set_enabled(!busy)?;
+                    self.logout_button.set_enabled(!busy)?;
+                    self.refresh_button.set_enabled(!busy)?;
+                    Ok(false)
                 }
             },
         }
     }
 
-    fn render(&mut self, _sender: &ComponentSender<Self>) {
-        let csize = self.window.client_size();
+    fn render(&mut self, _sender: &ComponentSender<Self>) -> Result<()> {
+        let csize = self.window.client_size()?;
         {
             let margin = Margin::new_all_same(4.0);
             let mut label_margin = margin;
@@ -345,16 +352,16 @@ impl Component for MainModel {
                 self.info2 => { column: 0, column_span: 3, row: 7, margin: margin },
             };
 
-            grid.set_size(csize);
+            grid.set_size(csize)?;
         }
 
         const ARC_WIDTH: f64 = 30.0;
         use std::f64::consts::*;
 
-        let size = self.canvas.size();
+        let size = self.canvas.size()?;
         let (width, height) = (size.width - ARC_WIDTH, size.height - ARC_WIDTH);
         if width <= 0.0 || height <= 0.0 {
-            return;
+            return Ok(());
         }
         let color = accent_color();
         let pen = BrushPen::new(SolidColorBrush::new(color), ARC_WIDTH);
@@ -374,15 +381,17 @@ impl Component for MainModel {
                 Size::new(width, width),
             )
         };
-        let mut ctx = self.canvas.context();
+        let mut ctx = self.canvas.context()?;
         let flux = &self.model.flux;
         let flux_gb = flux.flux.to_gb();
-        ctx.draw_arc(pen_t2, arc_rect, FRAC_PI_2, PI * 2.0 + FRAC_PI_2 - 0.001);
+        ctx.draw_arc(pen_t2, arc_rect, FRAC_PI_2, PI * 2.0 + FRAC_PI_2 - 0.001)?;
         let free_angle =
             0.0f64.max(50.0 / (flux.balance.0 + 50.0f64.max(flux_gb)) * 2.0 * PI - 0.001);
-        ctx.draw_arc(pen_t1, arc_rect, FRAC_PI_2, FRAC_PI_2 + free_angle);
+        ctx.draw_arc(pen_t1, arc_rect, FRAC_PI_2, FRAC_PI_2 + free_angle)?;
         let flux_angle =
             0.0f64.max(flux_gb / (flux.balance.0 + 50.0f64.max(flux_gb)) * 2.0 * PI - 0.001);
-        ctx.draw_arc(pen, arc_rect, FRAC_PI_2, FRAC_PI_2 + flux_angle);
+        ctx.draw_arc(pen, arc_rect, FRAC_PI_2, FRAC_PI_2 + flux_angle)?;
+
+        Ok(())
     }
 }
