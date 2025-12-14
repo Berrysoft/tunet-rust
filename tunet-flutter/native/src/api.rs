@@ -4,8 +4,8 @@ use flutter_rust_bridge::{frb, setup_default_user_utils};
 use anyhow::Result;
 use futures_util::StreamExt;
 pub use netstatus::NetStatus;
+use std::convert::Infallible;
 pub use std::sync::Mutex;
-use std::{convert::Infallible, sync::Arc};
 pub use tunet_helper::{
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
     NetState,
@@ -115,7 +115,7 @@ impl Component for ModelWrapper {
                     UpdateMsg::Flux => UpdateMsgWrap::Flux(self.model.flux.clone()),
                     UpdateMsg::LogBusy => UpdateMsgWrap::LogBusy(self.model.log_busy()),
                 };
-                self.sink.add(msg)?;
+                self.sink.add(msg).map_err(|e| anyhow::anyhow!("{}", e))?;
             }
             ModelWrapperMessage::Post(a) => {
                 self.model.post(a);
@@ -165,7 +165,7 @@ impl Runtime {
         std::thread::spawn(move || {
             let runtime = compio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                let model = Root::<ModelWrapper>::init(sink).await.unwrap();
+                let mut model = Root::<ModelWrapper>::init(sink).await.unwrap();
                 tx.send(model.sender().clone()).ok();
                 let stream = model.run();
                 let mut stream = std::pin::pin!(stream);
