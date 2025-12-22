@@ -40,7 +40,7 @@ thiserror = "2"
 compio = "0.17"
 cyper = { version = "0.7", default-features = false }
 nyquest = "0.3"
-nyquest-preset = "0.3"
+nyquest-preset = "0.4"
 winio = { version = "0.10", default-features = false }
 winio-elm = "0.4.0"
 
