@@ -1031,7 +1031,7 @@ dependencies = [
  "hyper",
  "hyper-util",
  "mime",
- "nyquest-interface",
+ "nyquest-interface 0.3.0",
  "rustls-platform-verifier",
  "send_wrapper",
  "serde",
@@ -2771,15 +2771,25 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcceef8c4c3d05fbb53107c09855efcc58db5986832c88d54ef97d9c9900f79e"
 dependencies = [
- "nyquest-interface",
+ "nyquest-interface 0.3.0",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "nyquest"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c54715182b0e7fb868e03ca248e7ce988db1c3539448e2e89172e464c46fc63d"
+dependencies = [
+ "nyquest-interface 0.4.0",
  "thiserror 2.0.17",
 ]
 
 [[package]]
 name = "nyquest-backend-curl"
-version = "0.3.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdf226df6cf8fb1697c4930cf8a52a7fbf9d0dea5caa9f75238a64387f51cb51"
+checksum = "329eee26d73659edc1a067d405eed13ad20e110657243b64dd9ef769724d55b9"
 dependencies = [
  "curl",
  "curl-sys",
@@ -2787,22 +2797,22 @@ dependencies = [
  "futures-util",
  "libc",
  "memchr",
- "nyquest-interface",
+ "nyquest-interface 0.4.0",
  "pin-project-lite",
  "slab",
 ]
 
 [[package]]
 name = "nyquest-backend-nsurlsession"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6c578b7cf5efeb08c5d3d78094ef2cf1798f3c74a23c8bfb69213e0652eaa48"
+checksum = "92327e0b4eff40890cee5aa47d8f294174db62a18a21238015adbc937a4e3bb9"
 dependencies = [
  "arc-swap",
  "block2",
  "cfg-if",
  "futures-util",
- "nyquest-interface",
+ "nyquest-interface 0.4.0",
  "objc2",
  "objc2-core-foundation",
  "objc2-foundation",
@@ -2811,13 +2821,13 @@ dependencies = [
 
 [[package]]
 name = "nyquest-backend-winrt"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17f7f73f6e8444777e7e055be49de696756da442531ff3eac49ec2dde81baf20"
+checksum = "f7dd1a2bde71ed7e8bf33bcf5f56669aa3dea0f6d4a8b4b9c6557dd9766813ef"
 dependencies = [
  "cfg-if",
  "futures-util",
- "nyquest-interface",
+ "nyquest-interface 0.4.0",
  "windows 0.61.3",
  "windows-collections 0.2.0",
  "windows-core 0.61.2",
@@ -2837,13 +2847,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "nyquest-preset"
-version = "0.3.0"
+name = "nyquest-interface"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b125019f6607ddb0e2bc2e1db0b0336ddb50fcc3769adedfe45420172c82f0b"
+checksum = "bb05f2ed2f66e1ebe9135ebac41d17e00588841502c4fad99ed57476c13147ca"
 dependencies = [
  "cfg-if",
- "nyquest",
+ "futures-core",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "nyquest-preset"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea35ac70869718aceb64b004e507fd5644f58b574ff84ac5e936912a37ef2c54"
+dependencies = [
+ "cfg-if",
+ "nyquest 0.4.0",
  "nyquest-backend-curl",
  "nyquest-backend-nsurlsession",
  "nyquest-backend-winrt",
@@ -4560,7 +4581,7 @@ dependencies = [
  "hmac",
  "md-5",
  "netstatus",
- "nyquest",
+ "nyquest 0.3.1",
  "nyquest-preset",
  "regex",
  "rustls",
