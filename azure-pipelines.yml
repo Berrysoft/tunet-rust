@@ -36,12 +36,6 @@ jobs:
         publishName: 'tunet.winui3.x86_64'
         wixArch: x64
         vcArch: x64
-      x86-winui:
-        target: 'i686-pc-windows-msvc'
-        fargs: '--no-default-features --features winui'
-        publishName: 'tunet.winui3.i686'
-        wixArch: x86
-        vcArch: Win32
       arm64-winui:
         target: 'aarch64-pc-windows-msvc'
         fargs: '--no-default-features --features winui'
