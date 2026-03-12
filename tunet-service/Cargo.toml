@@ -12,7 +12,7 @@ netstatus = { workspace = true }
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 cfg-if = { workspace = true }
-clap = { workspace = true }
+argh = { workspace = true }
 anyhow = { workspace = true }
 humantime = "2"
 enum_dispatch = { workspace = true }

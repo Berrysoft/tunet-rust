@@ -44,11 +44,11 @@ nyquest-preset = "0.4"
 winio = { version = "0.11", default-features = false }
 winio-elm = "0.5"
 
+argh = "0.1"
 chrono = { version = "0.4", default-features = false, features = [
     "clock",
     "std",
 ] }
-clap = { version = "4", features = ["derive"] }
 dirs = "6"
 log = "0.4"
 base64 = "0.22"

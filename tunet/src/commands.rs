@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
+use argh::FromArgs;
 use console::{style, Color};
 use enum_dispatch::enum_dispatch;
 use std::io::{stdin, stdout, Write};
@@ -16,28 +16,39 @@ fn get_flux_color(&Flux(flux): &Flux, total: bool) -> Color {
     }
 }
 
-#[enum_dispatch(TUNet)]
+#[enum_dispatch(TUNetImpl)]
 pub trait TUNetCommand {
     async fn run(&self) -> Result<()>;
 }
 
+#[derive(Debug, FromArgs)]
+#[argh(description = "清华大学校园网客户端")]
+pub struct TUNet {
+    #[argh(subcommand)]
+    cmd: TUNetImpl,
+}
+
+impl TUNetCommand for TUNet {
+    async fn run(&self) -> Result<()> {
+        self.cmd.run().await
+    }
+}
+
 #[enum_dispatch]
-#[derive(Debug, Parser)]
-#[clap(about, version, author)]
-pub enum TUNet {
-    #[clap(name = "login", about = "登录")]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand)]
+enum TUNetImpl {
     Login,
-    #[clap(name = "logout", about = "注销")]
     Logout,
-    #[clap(name = "status", about = "查看在线状态")]
     Status,
-    #[clap(name = "deletecred", about = "删除用户名和密码")]
     DeleteCred,
 }
 
-#[derive(Debug, Parser)]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "login")]
+/// 登录
 pub struct Login {
-    #[clap(long, short = 's')]
+    #[argh(option, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
@@ -55,9 +66,11 @@ impl TUNetCommand for Login {
     }
 }
 
-#[derive(Debug, Parser)]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "logout")]
+/// 注销
 pub struct Logout {
-    #[clap(long, short = 's')]
+    #[argh(option, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
@@ -73,13 +86,15 @@ impl TUNetCommand for Logout {
         Ok(())
     }
 }
-#[derive(Debug, Parser)]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "status")]
+/// 查看在线状态
 pub struct Status {
-    #[clap(long, short = 's')]
+    #[argh(option, short = 's')]
     /// 连接方式
     host: Option<NetState>,
     /// 输出 NUON
-    #[clap(long, default_value = "false")]
+    #[argh(switch)]
     nuon: bool,
 }
 
@@ -110,7 +125,9 @@ impl TUNetCommand for Status {
     }
 }
 
-#[derive(Debug, Parser)]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "deletecred")]
+/// 删除用户名和密码
 pub struct DeleteCred {}
 
 impl TUNetCommand for DeleteCred {

@@ -46,7 +46,7 @@ tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 anyhow = { workspace = true }
 compio = { workspace = true, features = ["macros"] }
-clap = { workspace = true }
+argh = { workspace = true }
 console = "0.16"
 enum_dispatch = { workspace = true }
 

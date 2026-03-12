@@ -17,7 +17,7 @@ mod notification;
 use std::time::Instant;
 
 use anyhow::Result;
-use clap::Parser;
+use argh::FromArgs;
 use enum_dispatch::enum_dispatch;
 use futures_util::{future::Either, Stream};
 use tunet_helper::{create_http_client, TUNetConnect, TUNetHelper};
@@ -26,28 +26,44 @@ use tunet_settings::SettingsReader;
 pub const SERVICE_NAME: &str = "tunet-service";
 
 fn main() -> Result<()> {
-    let commands = Commands::parse();
+    let commands: Commands = argh::from_env();
     commands.run()
 }
 
-#[enum_dispatch(Commands)]
+#[enum_dispatch(CommandsImpl)]
 trait Command {
     fn run(&self) -> Result<()>;
 }
 
+#[derive(Debug, FromArgs)]
+#[argh(description = "清华校园网后台服务")]
+struct Commands {
+    #[argh(subcommand)]
+    cmd: CommandsImpl,
+}
+
+impl Command for Commands {
+    fn run(&self) -> Result<()> {
+        self.cmd.run()
+    }
+}
+
 #[enum_dispatch]
-#[derive(Debug, Parser)]
-#[clap(about, version, author)]
-enum Commands {
+#[derive(Debug, FromArgs)]
+#[argh(subcommand)]
+enum CommandsImpl {
     Register,
     Unregister,
     Start,
     RunOnce,
 }
 
-#[derive(Debug, Parser)]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "register")]
+/// 注册服务
 struct Register {
-    #[clap(short, long)]
+    #[argh(option, short = 'i')]
+    /// 定时登录的时间间隔，默认为网络状态改变时登录
     interval: Option<humantime::Duration>,
 }
 
@@ -63,8 +79,10 @@ impl Command for Register {
     }
 }
 
-#[derive(Debug, Parser)]
-struct Unregister;
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "unregister")]
+/// 注销服务
+struct Unregister {}
 
 impl Command for Unregister {
     fn run(&self) -> Result<()> {
@@ -75,9 +93,12 @@ impl Command for Unregister {
     }
 }
 
-#[derive(Debug, Parser)]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "start")]
+/// 启动服务
 struct Start {
-    #[clap(short, long, help = "Ignored on Windows.")]
+    #[argh(option, short = 'i')]
+    /// 定时登录的时间间隔，默认为网络状态改变时登录。在 Windows 上此选项无效。
     interval: Option<humantime::Duration>,
 }
 
@@ -87,9 +108,12 @@ impl Command for Start {
     }
 }
 
-#[derive(Debug, Parser)]
+#[derive(Debug, FromArgs)]
+#[argh(subcommand, name = "run-once")]
+/// 运行一次
 struct RunOnce {
-    #[clap(short, long, default_value = "false")]
+    #[argh(switch, short = 'q')]
+    /// 不显示系统通知
     quiet: bool,
 }
 
