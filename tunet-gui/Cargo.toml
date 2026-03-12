@@ -1,6 +1,6 @@
 [package]
 name = "tunet-gui"
-version = "0.10.7"
+version = "0.10.8"
 description = "Tsinghua University network GUI"
 edition.workspace = true
 authors.workspace = true
@@ -26,4 +26,4 @@ objc-static = ["winio/objc-static"]
 
 [package.metadata.winresource]
 OriginalFilename = "tunet-gui.exe"
-LegalCopyright = "Copyright © 2021-2025 Berrysoft"
+LegalCopyright = "Copyright © 2021-2026 Berrysoft"

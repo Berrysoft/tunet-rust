@@ -4733,7 +4733,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tunet"
-version = "0.10.7"
+version = "0.10.8"
 dependencies = [
  "anyhow",
  "argh",
@@ -4747,7 +4747,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-gui"
-version = "0.10.7"
+version = "0.10.8"
 dependencies = [
  "anyhow",
  "tunet-helper",
@@ -4759,7 +4759,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-helper"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "allo-isolate",
  "authtea",
@@ -4782,7 +4782,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-model"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "compio",
@@ -4795,7 +4795,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-service"
-version = "0.10.7"
+version = "0.10.8"
 dependencies = [
  "anyhow",
  "argh",

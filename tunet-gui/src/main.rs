@@ -136,7 +136,7 @@ impl Component for MainModel {
             },
             info2: Label = (&window) => {
                 text: format!(
-                    "版本 {} 版权所有 © 2021-2025 Berrysoft",
+                    "版本 {} 版权所有 © 2021-2026 Berrysoft",
                     env!("CARGO_PKG_VERSION")
                 ),
                 halign: HAlign::Center,
