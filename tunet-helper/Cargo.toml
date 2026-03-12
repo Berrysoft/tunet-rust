@@ -18,7 +18,7 @@ data-encoding = "2"
 base64 = { workspace = true }
 serde_json = { workspace = true }
 chrono = { workspace = true }
-regex = { version = "1", default-features = false, features = ["std"] }
+regex-lite = "0.1"
 thiserror = { workspace = true }
 allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
 

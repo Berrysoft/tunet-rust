@@ -9,7 +9,7 @@ use data_encoding::HEXLOWER;
 use hmac::{Hmac, Mac};
 use md5::Md5;
 use nyquest::Request;
-use regex::Regex;
+use regex_lite::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use std::borrow::Cow;
