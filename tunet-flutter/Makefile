@@ -1,20 +1,25 @@
+FLUTTER:=flutter
+
 .PHONY: get fmt clean run apk
 
 get:
-	flutter pub get
+	$(FLUTTER) pub get
 
 fmt:
 	cd native && cargo fmt
 	dart format .
 
 clean:
-	flutter clean
+	$(FLUTTER) clean
 	cd native && cargo clean
 
 run:
-	flutter run
+	$(FLUTTER) run
 
 apk: get
-	flutter build apk --split-per-abi
+	$(FLUTTER) build apk --split-per-abi
+
+ipa: get
+	$(FLUTTER) build ios --release --no-codesign
 
 .SECONDARY:

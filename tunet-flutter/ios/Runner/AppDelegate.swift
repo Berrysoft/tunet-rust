@@ -4,16 +4,21 @@ import SystemConfiguration
 import UIKit
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     print("dummy_value=\(dummy_method_to_enforce_bundling())")
 
-    let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
     let statusChannel = FlutterMethodChannel(name: "io.github.berrysoft.tunet_flutter/status",
-                                             binaryMessenger: controller.binaryMessenger)
+                                             binaryMessenger: engineBridge.applicationRegistrar.messenger())
     statusChannel.setMethodCallHandler {
       (call: FlutterMethodCall, result: @escaping FlutterResult) in
       if call.method == "getStatus" {
@@ -56,8 +61,5 @@ import UIKit
         result(FlutterMethodNotImplemented)
       }
     }
-
-    GeneratedPluginRegistrant.register(with: self)
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
