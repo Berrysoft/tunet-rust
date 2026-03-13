@@ -55,9 +55,9 @@ struct MainModel {
 
 impl Component for MainModel {
     type Error = anyhow::Error;
+    type Event = ();
     type Init<'a> = ();
     type Message = MainMessage;
-    type Event = ();
 
     async fn init(_init: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Result<Self> {
         let settings = SettingsReader::new()?;

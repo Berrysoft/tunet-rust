@@ -1,8 +1,9 @@
-use anyhow::{anyhow, Result};
+use std::path::PathBuf;
+
+use anyhow::{Result, anyhow};
 use compio::signal::unix::signal;
 use futures_util::{FutureExt, StreamExt};
 use serde::Serialize;
-use std::path::PathBuf;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]

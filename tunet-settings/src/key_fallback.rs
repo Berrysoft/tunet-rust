@@ -1,8 +1,3 @@
-use crate::{SettingsError, SettingsResult};
-use dirs::config_dir;
-use keyring::{credential::CredentialApi, Error, Result};
-use serde::{Deserialize, Serialize};
-use serde_with::{base64::Base64, serde_as};
 use std::{
     collections::HashMap,
     fs::{File, Permissions},
@@ -10,6 +5,13 @@ use std::{
     os::unix::fs::PermissionsExt,
     path::PathBuf,
 };
+
+use dirs::config_dir;
+use keyring::{Error, Result, credential::CredentialApi};
+use serde::{Deserialize, Serialize};
+use serde_with::{base64::Base64, serde_as};
+
+use crate::{SettingsError, SettingsResult};
 
 pub struct KeyFallback {
     service_path: PathBuf,

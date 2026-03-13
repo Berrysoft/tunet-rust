@@ -1,29 +1,30 @@
-use anyhow::Result;
 use std::{
     ffi::c_void,
     ops::Deref,
     os::windows::prelude::{AsRawHandle, FromRawHandle, OwnedHandle},
     ptr::null_mut,
 };
+
+use anyhow::Result;
 use windows::{
-    core::{w, HSTRING, PWSTR},
     Win32::{
         Foundation::HANDLE,
         System::{
             Environment::{CreateEnvironmentBlock, DestroyEnvironmentBlock},
             RemoteDesktop::{
-                WTSActive, WTSConnectState, WTSEnumerateSessionsW, WTSFreeMemory,
+                WTS_CONNECTSTATE_CLASS, WTS_CURRENT_SERVER_HANDLE, WTS_SESSION_INFOW, WTSActive,
+                WTSConnectState, WTSEnumerateSessionsW, WTSFreeMemory,
                 WTSGetActiveConsoleSessionId, WTSQuerySessionInformationW, WTSQueryUserToken,
-                WTSSendMessageW, WTS_CONNECTSTATE_CLASS, WTS_CURRENT_SERVER_HANDLE,
-                WTS_SESSION_INFOW,
+                WTSSendMessageW,
             },
             Threading::{
-                CreateProcessAsUserW, CREATE_UNICODE_ENVIRONMENT, PROCESS_INFORMATION,
+                CREATE_UNICODE_ENVIRONMENT, CreateProcessAsUserW, PROCESS_INFORMATION,
                 STARTF_USESHOWWINDOW, STARTUPINFOW,
             },
         },
         UI::WindowsAndMessaging::{MB_OK, MESSAGEBOX_RESULT, SW_HIDE},
     },
+    core::{HSTRING, PWSTR, w},
 };
 
 struct OwnedEnvironmentBlock(*mut c_void);

@@ -1,14 +1,5 @@
 #![allow(deprecated)]
 
-use crate::*;
-use flume::{r#async::RecvStream, unbounded};
-use objc2_core_foundation::{CFRetained, CFRunLoop, CFString, kCFRunLoopDefaultMode};
-use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
-use objc2_core_wlan::CWWiFiClient;
-use objc2_system_configuration::{
-    SCNetworkReachability, SCNetworkReachabilityContext, SCNetworkReachabilityFlags,
-};
-use pin_project::pin_project;
 use std::{
     ffi::c_void,
     mem::MaybeUninit,
@@ -19,6 +10,17 @@ use std::{
     task::{Context, Poll},
     thread::JoinHandle,
 };
+
+use flume::{r#async::RecvStream, unbounded};
+use objc2_core_foundation::{CFRetained, CFRunLoop, CFString, kCFRunLoopDefaultMode};
+use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
+use objc2_core_wlan::CWWiFiClient;
+use objc2_system_configuration::{
+    SCNetworkReachability, SCNetworkReachabilityContext, SCNetworkReachabilityFlags,
+};
+use pin_project::pin_project;
+
+use crate::*;
 
 fn get_ssid() -> Option<String> {
     unsafe {

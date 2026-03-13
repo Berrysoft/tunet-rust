@@ -1,17 +1,18 @@
-use crate::frb_generated::StreamSink;
-use flutter_rust_bridge::{frb, setup_default_user_utils};
-
-use anyhow::Result;
-use futures_util::StreamExt;
-pub use netstatus::NetStatus;
 use std::convert::Infallible;
 pub use std::sync::Mutex;
+
+use anyhow::Result;
+use flutter_rust_bridge::{frb, setup_default_user_utils};
+use futures_util::StreamExt;
+pub use netstatus::NetStatus;
 pub use tunet_helper::{
     Balance, Duration as NewDuration, Flux, NaiveDateTime, NaiveDuration as Duration, NetFlux,
     NetState,
 };
 pub use tunet_model::{Action, Model, UpdateMsg};
 use winio_elm::{Child, Component, ComponentSender, Root, RunEvent};
+
+use crate::frb_generated::StreamSink;
 
 pub enum UpdateMsgWrap {
     Credential(String),
@@ -76,9 +77,9 @@ enum ModelWrapperMessage {
 
 impl Component for ModelWrapper {
     type Error = anyhow::Error;
+    type Event = Infallible;
     type Init<'a> = StreamSink<UpdateMsgWrap>;
     type Message = ModelWrapperMessage;
-    type Event = Infallible;
 
     async fn init(sink: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Result<Self> {
         let model = Child::<Model>::init(()).await?;

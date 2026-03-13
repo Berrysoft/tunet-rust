@@ -1,8 +1,9 @@
+use std::io::{Write, stdin, stdout};
+
 use anyhow::Result;
 use argh::FromArgs;
-use console::{style, Color};
+use console::{Color, style};
 use enum_dispatch::enum_dispatch;
-use std::io::{stdin, stdout, Write};
 use tunet_helper::*;
 use tunet_settings::*;
 

@@ -19,8 +19,8 @@ use std::time::Instant;
 use anyhow::Result;
 use argh::FromArgs;
 use enum_dispatch::enum_dispatch;
-use futures_util::{future::Either, Stream};
-use tunet_helper::{create_http_client, TUNetConnect};
+use futures_util::{Stream, future::Either};
+use tunet_helper::{TUNetConnect, create_http_client};
 use tunet_settings::SettingsReader;
 
 pub const SERVICE_NAME: &str = "tunet-service";

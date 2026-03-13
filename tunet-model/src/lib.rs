@@ -1,15 +1,18 @@
 #![forbid(unsafe_code)]
 
+use std::{
+    borrow::Cow,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
+
 use anyhow::Result;
 use compio::runtime::spawn;
 use drop_guard::guard;
 use futures_util::StreamExt;
 use netstatus::*;
-use std::borrow::Cow;
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-};
 use tunet_helper::*;
 use winio_elm::{Component, ComponentSender};
 
@@ -26,9 +29,9 @@ pub struct Model {
 
 impl Component for Model {
     type Error = anyhow::Error;
+    type Event = UpdateMsg;
     type Init<'a> = ();
     type Message = Action;
-    type Event = UpdateMsg;
 
     async fn init(_init: Self::Init<'_>, sender: &ComponentSender<Self>) -> Result<Self> {
         Ok(Self {

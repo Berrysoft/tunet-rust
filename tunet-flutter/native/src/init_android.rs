@@ -1,6 +1,6 @@
 use jni::{
-    objects::{JClass, JObject},
     JNIEnv,
+    objects::{JClass, JObject},
 };
 
 #[no_mangle]

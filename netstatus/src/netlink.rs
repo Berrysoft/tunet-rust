@@ -1,5 +1,6 @@
-use crate::*;
 use netlink_wi::NlSocket;
+
+use crate::*;
 
 pub fn current() -> NetStatus {
     if let Ok(sock) = NlSocket::connect() {

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use compio::signal::ctrl_c;
 use futures_util::{FutureExt, StreamExt};
 

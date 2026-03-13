@@ -1,13 +1,16 @@
 #![forbid(unsafe_code)]
 
+use std::{
+    borrow::Cow,
+    fs::{DirBuilder, File, remove_file},
+    io::{BufReader, BufWriter, Write, stdin, stdout},
+    path::PathBuf,
+};
+
 use dirs::config_dir;
 use keyring::Entry;
 use rpassword::read_password;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
-use std::fs::{remove_file, DirBuilder, File};
-use std::io::{stdin, stdout, BufReader, BufWriter, Write};
-use std::path::PathBuf;
 use thiserror::Error;
 
 #[cfg(target_os = "linux")]

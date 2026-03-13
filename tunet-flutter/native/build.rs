@@ -1,5 +1,5 @@
 use lib_flutter_rust_bridge_codegen::{
-    codegen::{generate, Config, MetaConfig},
+    codegen::{Config, MetaConfig, generate},
     utils::logs::configure_opinionated_logging,
 };
 

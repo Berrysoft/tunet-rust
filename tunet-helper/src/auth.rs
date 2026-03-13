@@ -1,20 +1,21 @@
-use crate::*;
+use std::{borrow::Cow, sync::LazyLock};
+
 use authtea::AuthTea;
 use base64::{
-    alphabet::Alphabet,
-    engine::{general_purpose::PAD, GeneralPurpose},
     Engine,
+    alphabet::Alphabet,
+    engine::{GeneralPurpose, general_purpose::PAD},
 };
 use data_encoding::HEXLOWER;
 use hmac::{Hmac, Mac};
 use md5::Md5;
 use nyquest::Request;
 use regex_lite::Regex;
-use serde_json::{json, Value as JsonValue};
+use serde_json::{Value as JsonValue, json};
 use sha1::{Digest, Sha1};
-use std::borrow::Cow;
-use std::sync::LazyLock;
 use url::Url;
+
+use crate::*;
 
 #[derive(Clone)]
 pub struct TUNetConnect {

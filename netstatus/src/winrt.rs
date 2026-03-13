@@ -1,12 +1,14 @@
-use crate::*;
-use flume::{r#async::RecvStream, unbounded};
-use futures_util::{future::Either, stream::pending};
-use pin_project::pin_project;
 use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-use windows::{core::*, Networking::Connectivity::*};
+
+use flume::{r#async::RecvStream, unbounded};
+use futures_util::{future::Either, stream::pending};
+use pin_project::pin_project;
+use windows::{Networking::Connectivity::*, core::*};
+
+use crate::*;
 
 fn current_impl() -> Result<NetStatus> {
     let profile = NetworkInformation::GetInternetConnectionProfile()?;

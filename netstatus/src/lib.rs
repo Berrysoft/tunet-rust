@@ -1,5 +1,6 @@
-use futures_util::Stream;
 use std::fmt::{Display, Formatter};
+
+use futures_util::Stream;
 
 cfg_if::cfg_if! {
     if #[cfg(target_os = "windows")] {

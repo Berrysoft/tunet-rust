@@ -1,7 +1,8 @@
-use crate::{suggest::ping, *};
+use std::{collections::BTreeMap, sync::LazyLock};
+
 use netstatus::NetStatus;
-use std::collections::BTreeMap;
-use std::sync::LazyLock;
+
+use crate::{suggest::ping, *};
 
 static SUGGEST_SSID_MAP: LazyLock<BTreeMap<&'static str, NetState>> = LazyLock::new(|| {
     BTreeMap::from([

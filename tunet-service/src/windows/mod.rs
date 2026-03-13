@@ -1,10 +1,10 @@
 mod notify;
 
-use crate::SERVICE_NAME;
+use std::{ffi::OsString, sync::Mutex, time::Duration};
+
 use anyhow::Result;
 use compio::signal::ctrl_c;
 use futures_util::{FutureExt, StreamExt};
-use std::{ffi::OsString, sync::Mutex, time::Duration};
 use windows_service::{
     define_windows_service,
     service::{
@@ -15,6 +15,8 @@ use windows_service::{
     service_dispatcher,
     service_manager::{ServiceManager, ServiceManagerAccess},
 };
+
+use crate::SERVICE_NAME;
 
 fn open_manager() -> Result<ServiceManager> {
     Ok(ServiceManager::local_computer(

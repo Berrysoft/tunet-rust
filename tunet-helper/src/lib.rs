@@ -1,14 +1,16 @@
 #![forbid(unsafe_code)]
 
-use std::fmt::{Display, Formatter};
-use std::sync::Once;
-use thiserror::Error;
+use std::{
+    fmt::{Display, Formatter},
+    sync::Once,
+};
 
 pub use chrono::{
     DateTime, Datelike, Duration as NaiveDuration, FixedOffset, Local, NaiveDate, NaiveDateTime,
     Timelike,
 };
 pub use nyquest::AsyncClient as HttpClient;
+use thiserror::Error;
 
 mod auth;
 pub mod suggest;
@@ -74,6 +76,7 @@ impl Display for Flux {
 
 impl std::str::FromStr for Flux {
     type Err = NetHelperError;
+
     fn from_str(s: &str) -> NetHelperResult<Self> {
         let (flux, unit) = s.split_at(s.len() - 1);
         Ok(Flux(
@@ -132,6 +135,7 @@ pub struct NetFlux {
 
 impl std::str::FromStr for NetFlux {
     type Err = NetHelperError;
+
     fn from_str(s: &str) -> NetHelperResult<Self> {
         let vec = s.split(',').collect::<Vec<_>>();
         if vec.len() >= 12 {
@@ -165,6 +169,7 @@ pub enum NetState {
 
 impl std::str::FromStr for NetState {
     type Err = NetHelperError;
+
     fn from_str(s: &str) -> NetHelperResult<Self> {
         if s.eq_ignore_ascii_case("auth4") {
             Ok(NetState::Auth4)
@@ -224,8 +229,9 @@ pub async fn create_http_client() -> NetHelperResult<HttpClient> {
 
 #[cfg(feature = "dart")]
 mod impl_dart {
+    use allo_isolate::{IntoDart, IntoDartExceptPrimitive, ffi::DartCObject};
+
     use super::*;
-    use allo_isolate::{ffi::DartCObject, IntoDart, IntoDartExceptPrimitive};
 
     impl IntoDart for Flux {
         fn into_dart(self) -> DartCObject {
