@@ -156,9 +156,10 @@ jobs:
     displayName: 'Install cargo-ndk'
 
   - script: |
-      wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.35.3-stable.tar.xz
-      mkdir -p ~/development/
-      tar -xvf flutter_linux_3.35.3-stable.tar.xz -C ~/development/
+      curl -fsSL https://fvm.app/install.sh | bash
+      export PATH="$HOME/fvm/bin:$PATH"
+      fvm install stable
+      fvm global stable
     displayName: 'Install flutter'
 
   - task: DownloadSecureFile@1
@@ -176,8 +177,8 @@ jobs:
       storeFile=$(keystore.secureFilePath)
       EOL
       export JAVA_HOME=$(JAVA_HOME_17_X64)
-      export PATH="$HOME/development/flutter/bin:$PATH"
-      make apk
+      export PATH="$HOME/fvm/bin:$PATH"
+      make apk FLUTTER="fvm flutter"
       cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $(Build.ArtifactStagingDirectory)/tunet.armeabi-v7a.apk
       cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $(Build.ArtifactStagingDirectory)/tunet.arm64-v8a.apk
       cp build/app/outputs/flutter-apk/app-x86_64-release.apk $(Build.ArtifactStagingDirectory)/tunet.x86_64.apk
@@ -199,7 +200,7 @@ jobs:
   - script: |
       rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
       cd tunet-flutter
-      flutter build ios --release --no-codesign
+      make ipa
       mkdir -p ipa/Payload
       cp -r build/ios/iphoneos/Runner.app ./ipa/Payload
       cd ipa
