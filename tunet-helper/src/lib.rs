@@ -1,7 +1,6 @@
 #![forbid(unsafe_code)]
 
 use std::fmt::{Display, Formatter};
-use std::future::Future;
 use std::sync::Once;
 use thiserror::Error;
 
@@ -14,7 +13,7 @@ pub use nyquest::AsyncClient as HttpClient;
 mod auth;
 pub mod suggest;
 
-use auth::AuthConnect;
+pub use auth::TUNetConnect;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
@@ -177,34 +176,11 @@ impl std::str::FromStr for NetState {
     }
 }
 
-pub trait TUNetHelper: Send + Sync {
-    fn login(&self, u: &str, p: &str) -> impl Future<Output = NetHelperResult<String>> + Send;
-    fn logout(&self, u: &str) -> impl Future<Output = NetHelperResult<String>> + Send;
-    fn flux(&self) -> impl Future<Output = NetHelperResult<NetFlux>> + Send;
-}
-
-#[derive(Clone)]
-pub struct TUNetConnect(AuthConnect);
-
-impl TUNetHelper for TUNetConnect {
-    async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
-        self.0.login(u, p).await
-    }
-
-    async fn logout(&self, u: &str) -> NetHelperResult<String> {
-        self.0.logout(u).await
-    }
-
-    async fn flux(&self) -> NetHelperResult<NetFlux> {
-        self.0.flux().await
-    }
-}
-
 impl TUNetConnect {
-    pub fn new(s: NetState, client: HttpClient) -> NetHelperResult<TUNetConnect> {
+    pub fn new(s: NetState, client: HttpClient) -> NetHelperResult<Self> {
         match s {
-            NetState::Auth4 => Ok(Self(AuthConnect::new_auth4(client))),
-            NetState::Auth6 => Ok(Self(AuthConnect::new_auth6(client))),
+            NetState::Auth4 => Ok(Self::new_auth4(client)),
+            NetState::Auth6 => Ok(Self::new_auth6(client)),
             _ => Err(NetHelperError::InvalidHost),
         }
     }

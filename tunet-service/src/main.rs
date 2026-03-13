@@ -20,7 +20,7 @@ use anyhow::Result;
 use argh::FromArgs;
 use enum_dispatch::enum_dispatch;
 use futures_util::{future::Either, Stream};
-use tunet_helper::{create_http_client, TUNetConnect, TUNetHelper};
+use tunet_helper::{create_http_client, TUNetConnect};
 use tunet_settings::SettingsReader;
 
 pub const SERVICE_NAME: &str = "tunet-service";

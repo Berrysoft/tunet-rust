@@ -17,7 +17,7 @@ use std::sync::LazyLock;
 use url::Url;
 
 #[derive(Clone)]
-pub struct AuthConnect {
+pub struct TUNetConnect {
     client: HttpClient,
     uri: &'static AuthConnectUri,
 }
@@ -33,12 +33,12 @@ static REDIRECT_URI: &str = "http://www.tsinghua.edu.cn/";
 static AC_ID_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"/index_([0-9]+)\.html").unwrap());
 
-impl AuthConnect {
-    pub fn new_auth4(client: HttpClient) -> Self {
+impl TUNetConnect {
+    pub(crate) fn new_auth4(client: HttpClient) -> Self {
         Self::new_impl(client, &AUTH4_URI)
     }
 
-    pub fn new_auth6(client: HttpClient) -> Self {
+    pub(crate) fn new_auth6(client: HttpClient) -> Self {
         Self::new_impl(client, &AUTH6_URI)
     }
 
@@ -143,15 +143,13 @@ impl AuthConnect {
             Err(NetHelperError::Log(json.to_string()))
         }
     }
-}
 
-impl TUNetHelper for AuthConnect {
-    async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
+    pub async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
         let ac_id = self.get_ac_id().await.unwrap_or(1);
         self.try_login(ac_id, u, p).await
     }
 
-    async fn logout(&self, u: &str) -> NetHelperResult<String> {
+    pub async fn logout(&self, u: &str) -> NetHelperResult<String> {
         let params = [
             ("action", Cow::Borrowed("logout")),
             ("ac_id", Cow::Borrowed("1")),
@@ -171,13 +169,13 @@ impl TUNetHelper for AuthConnect {
         Self::parse_response(&t)
     }
 
-    async fn flux(&self) -> NetHelperResult<NetFlux> {
+    pub async fn flux(&self) -> NetHelperResult<NetFlux> {
         let res = self.client.request(Request::get(self.uri.flux_uri)).await?;
         res.text().await?.parse()
     }
 }
 
-pub struct AuthConnectUri {
+struct AuthConnectUri {
     log_uri: &'static str,
     challenge_uri: &'static str,
     flux_uri: &'static str,
