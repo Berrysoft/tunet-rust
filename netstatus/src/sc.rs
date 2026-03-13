@@ -128,7 +128,7 @@ impl Drop for CFJThread {
     }
 }
 
-extern "C-unwind" {
+unsafe extern "C-unwind" {
     fn _CFRunLoopGet0(thread: RawPthread) -> Option<NonNull<CFRunLoop>>;
 }
 

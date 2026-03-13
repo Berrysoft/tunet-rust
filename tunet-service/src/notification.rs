@@ -4,7 +4,7 @@ use tunet_helper::NetFlux;
 
 #[cfg(target_os = "macos")]
 #[link(name = "AppKit", kind = "framework")]
-extern "C" {}
+unsafe extern "C" {}
 
 pub fn succeeded(flux: NetFlux) -> Result<()> {
     #[cfg(target_os = "macos")]
