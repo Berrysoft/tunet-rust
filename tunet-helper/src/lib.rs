@@ -14,7 +14,7 @@ pub use nyquest::AsyncClient as HttpClient;
 mod auth;
 pub mod suggest;
 
-pub use auth::{Auth4Connect, Auth6Connect};
+use auth::AuthConnect;
 
 #[derive(Debug, Error)]
 pub enum NetHelperError {
@@ -184,39 +184,27 @@ pub trait TUNetHelper: Send + Sync {
 }
 
 #[derive(Clone)]
-pub enum TUNetConnect {
-    Auth4(Auth4Connect),
-    Auth6(Auth6Connect),
-}
+pub struct TUNetConnect(AuthConnect);
 
 impl TUNetHelper for TUNetConnect {
     async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
-        match self {
-            Self::Auth4(inner) => TUNetHelper::login(inner, u, p).await,
-            Self::Auth6(inner) => TUNetHelper::login(inner, u, p).await,
-        }
+        self.0.login(u, p).await
     }
 
     async fn logout(&self, u: &str) -> NetHelperResult<String> {
-        match self {
-            TUNetConnect::Auth4(inner) => TUNetHelper::logout(inner, u).await,
-            TUNetConnect::Auth6(inner) => TUNetHelper::logout(inner, u).await,
-        }
+        self.0.logout(u).await
     }
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
-        match self {
-            TUNetConnect::Auth4(inner) => TUNetHelper::flux(inner).await,
-            TUNetConnect::Auth6(inner) => TUNetHelper::flux(inner).await,
-        }
+        self.0.flux().await
     }
 }
 
 impl TUNetConnect {
     pub fn new(s: NetState, client: HttpClient) -> NetHelperResult<TUNetConnect> {
         match s {
-            NetState::Auth4 => Ok(Self::Auth4(auth::AuthConnect::new(client))),
-            NetState::Auth6 => Ok(Self::Auth6(auth::AuthConnect::new(client))),
+            NetState::Auth4 => Ok(Self(AuthConnect::new_auth4(client))),
+            NetState::Auth6 => Ok(Self(AuthConnect::new_auth6(client))),
             _ => Err(NetHelperError::InvalidHost),
         }
     }

@@ -13,14 +13,13 @@ use regex_lite::Regex;
 use serde_json::{json, Value as JsonValue};
 use sha1::{Digest, Sha1};
 use std::borrow::Cow;
-use std::marker::PhantomData;
 use std::sync::LazyLock;
 use url::Url;
 
 #[derive(Clone)]
-pub struct AuthConnect<U: AuthConnectUri + Send + Sync> {
+pub struct AuthConnect {
     client: HttpClient,
-    _p: PhantomData<U>,
+    uri: &'static AuthConnectUri,
 }
 
 pub static AUTH_BASE64: LazyLock<GeneralPurpose> = LazyLock::new(|| {
@@ -34,17 +33,22 @@ static REDIRECT_URI: &str = "http://www.tsinghua.edu.cn/";
 static AC_ID_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"/index_([0-9]+)\.html").unwrap());
 
-impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
-    pub fn new(client: HttpClient) -> Self {
-        Self {
-            client,
-            _p: PhantomData,
-        }
+impl AuthConnect {
+    pub fn new_auth4(client: HttpClient) -> Self {
+        Self::new_impl(client, &AUTH4_URI)
+    }
+
+    pub fn new_auth6(client: HttpClient) -> Self {
+        Self::new_impl(client, &AUTH6_URI)
+    }
+
+    fn new_impl(client: HttpClient, uri: &'static AuthConnectUri) -> Self {
+        Self { client, uri }
     }
 
     async fn challenge(&self, u: &str) -> NetHelperResult<String> {
         let uri = Url::parse_with_params(
-            U::challenge_uri(),
+            self.uri.challenge_uri,
             &[
                 ("username", u),
                 ("double_stack", "1"),
@@ -110,9 +114,11 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
         ];
         let res = self
             .client
-            .request(Request::post(U::log_uri()).with_body(nyquest::Body::form(
-                params.map(|(k, v)| (Cow::Borrowed(k), v)),
-            )))
+            .request(
+                Request::post(self.uri.log_uri).with_body(nyquest::Body::form(
+                    params.map(|(k, v)| (Cow::Borrowed(k), v)),
+                )),
+            )
             .await?;
         let t = res.text().await?;
         Self::parse_response(&t)
@@ -139,7 +145,7 @@ impl<U: AuthConnectUri + Send + Sync> AuthConnect<U> {
     }
 }
 
-impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
+impl TUNetHelper for AuthConnect {
     async fn login(&self, u: &str, p: &str) -> NetHelperResult<String> {
         let ac_id = self.get_ac_id().await.unwrap_or(1);
         self.try_login(ac_id, u, p).await
@@ -155,65 +161,39 @@ impl<U: AuthConnectUri + Send + Sync> TUNetHelper for AuthConnect<U> {
         ];
         let res = self
             .client
-            .request(Request::post(U::log_uri()).with_body(nyquest::Body::form(
-                params.map(|(k, v)| (Cow::Borrowed(k), v)),
-            )))
+            .request(
+                Request::post(self.uri.log_uri).with_body(nyquest::Body::form(
+                    params.map(|(k, v)| (Cow::Borrowed(k), v)),
+                )),
+            )
             .await?;
         let t = res.text().await?;
         Self::parse_response(&t)
     }
 
     async fn flux(&self) -> NetHelperResult<NetFlux> {
-        let res = self.client.request(Request::get(U::flux_uri())).await?;
+        let res = self.client.request(Request::get(self.uri.flux_uri)).await?;
         res.text().await?.parse()
     }
 }
 
-pub trait AuthConnectUri {
-    fn log_uri() -> &'static str;
-    fn challenge_uri() -> &'static str;
-    fn flux_uri() -> &'static str;
+pub struct AuthConnectUri {
+    log_uri: &'static str,
+    challenge_uri: &'static str,
+    flux_uri: &'static str,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Auth4Uri;
+const AUTH4_URI: AuthConnectUri = AuthConnectUri {
+    log_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal",
+    challenge_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge",
+    flux_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/rad_user_info",
+};
 
-impl AuthConnectUri for Auth4Uri {
-    #[inline]
-    fn log_uri() -> &'static str {
-        "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
-    }
-
-    #[inline]
-    fn challenge_uri() -> &'static str {
-        "https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge"
-    }
-
-    #[inline]
-    fn flux_uri() -> &'static str {
-        "https://auth4.tsinghua.edu.cn/cgi-bin/rad_user_info"
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Auth6Uri;
-
-impl AuthConnectUri for Auth6Uri {
-    #[inline]
-    fn log_uri() -> &'static str {
-        "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal"
-    }
-
-    #[inline]
-    fn challenge_uri() -> &'static str {
-        "https://auth6.tsinghua.edu.cn/cgi-bin/get_challenge"
-    }
-
-    #[inline]
-    fn flux_uri() -> &'static str {
-        "https://auth6.tsinghua.edu.cn/cgi-bin/rad_user_info"
-    }
-}
+const AUTH6_URI: AuthConnectUri = AuthConnectUri {
+    log_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal",
+    challenge_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/get_challenge",
+    flux_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/rad_user_info",
+};
 
 trait ExactString {
     fn remove(&mut self, key: &str) -> Option<Self>
@@ -237,6 +217,3 @@ impl ExactString for JsonValue {
         }
     }
 }
-
-pub type Auth4Connect = AuthConnect<Auth4Uri>;
-pub type Auth6Connect = AuthConnect<Auth6Uri>;
