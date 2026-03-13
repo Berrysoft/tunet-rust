@@ -7,8 +7,8 @@ use futures_util::StreamExt;
 use netstatus::*;
 use std::borrow::Cow;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc,
+    atomic::{AtomicBool, Ordering},
 };
 use tunet_helper::*;
 use winio_elm::{Component, ComponentSender};
@@ -272,7 +272,7 @@ impl BusyBool {
         self.lock.load(Ordering::Acquire)
     }
 
-    pub fn lock(&self) -> Option<impl Drop> {
+    pub fn lock(&self) -> Option<impl Drop + use<>> {
         if self
             .lock
             .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)

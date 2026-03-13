@@ -2,7 +2,7 @@
 
 use crate::*;
 use flume::{r#async::RecvStream, unbounded};
-use objc2_core_foundation::{kCFRunLoopDefaultMode, CFRetained, CFRunLoop, CFString};
+use objc2_core_foundation::{CFRetained, CFRunLoop, CFString, kCFRunLoopDefaultMode};
 use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
 use objc2_core_wlan::CWWiFiClient;
 use objc2_system_configuration::{
@@ -20,20 +20,22 @@ use std::{
     thread::JoinHandle,
 };
 
-unsafe fn get_ssid() -> Option<String> {
-    let manager = CLLocationManager::new();
-    if manager.authorizationStatus() != CLAuthorizationStatus::AuthorizedAlways {
-        manager.requestAlwaysAuthorization();
-    }
+fn get_ssid() -> Option<String> {
+    unsafe {
+        let manager = CLLocationManager::new();
+        if manager.authorizationStatus() != CLAuthorizationStatus::AuthorizedAlways {
+            manager.requestAlwaysAuthorization();
+        }
 
-    CWWiFiClient::sharedWiFiClient()
-        .interface()
-        .and_then(|interface| interface.ssid())
-        .map(|name| {
-            std::ffi::CStr::from_ptr(name.UTF8String())
-                .to_string_lossy()
-                .into_owned()
-        })
+        CWWiFiClient::sharedWiFiClient()
+            .interface()
+            .and_then(|interface| interface.ssid())
+            .map(|name| {
+                std::ffi::CStr::from_ptr(name.UTF8String())
+                    .to_string_lossy()
+                    .into_owned()
+            })
+    }
 }
 
 fn create_reachability() -> CFRetained<SCNetworkReachability> {
@@ -60,7 +62,7 @@ pub fn current() -> NetStatus {
                 || flag.contains(SCNetworkReachabilityFlags::ConnectionOnTraffic))
                 && !flag.contains(SCNetworkReachabilityFlags::InterventionRequired))
         {
-            return match unsafe { get_ssid() } {
+            return match get_ssid() {
                 Some(ssid) => NetStatus::Wlan(ssid),
                 None => NetStatus::Unknown,
             };
