@@ -58,6 +58,7 @@ pub struct _Balance(pub f64);
 #[frb(mirror(NetDateTime))]
 pub struct _NetDateTime(pub NaiveDateTime);
 
+#[derive(Debug)]
 pub struct RuntimeStartConfig {
     pub status: NetStatus,
     pub username: String,
@@ -69,6 +70,7 @@ struct ModelWrapper {
     sink: StreamSink<UpdateMsgWrap>,
 }
 
+#[derive(Debug)]
 enum ModelWrapperMessage {
     Noop,
     Msg(UpdateMsg),
@@ -155,13 +157,6 @@ impl Runtime {
     }
 
     pub async fn start(&self, sink: StreamSink<UpdateMsgWrap>, config: RuntimeStartConfig) {
-        {
-            if (!config.username.is_empty()) && (!config.password.is_empty()) {
-                self.queue(Action::Credential(config.username, config.password));
-            }
-            self.queue(Action::Status(Some(config.status)));
-            self.queue(Action::Timer);
-        }
         let (tx, rx) = futures_channel::oneshot::channel();
         std::thread::spawn(move || {
             let runtime = compio::runtime::Runtime::new().unwrap();
@@ -189,6 +184,13 @@ impl Runtime {
         });
         let sender = rx.await.unwrap();
         self.sender.lock().unwrap().replace(sender);
+        {
+            if (!config.username.is_empty()) && (!config.password.is_empty()) {
+                self.queue(Action::Credential(config.username, config.password));
+            }
+            self.queue(Action::Status(Some(config.status)));
+            self.queue(Action::Timer);
+        }
     }
 
     fn queue(&self, a: Action) {
