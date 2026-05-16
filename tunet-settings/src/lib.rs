@@ -17,6 +17,11 @@ use thiserror::Error;
 #[path = "key_fallback.rs"]
 mod keyring_store;
 
+#[cfg(target_os = "macos")]
+use apple_native_keyring_store::keychain as keyring_store;
+#[cfg(windows)]
+use windows_native_keyring_store as keyring_store;
+
 #[derive(Debug, Error)]
 pub enum SettingsError {
     #[error("找不到配置文件目录")]
