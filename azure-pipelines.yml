@@ -66,8 +66,9 @@ jobs:
     displayName: 'Copy Binaries'
 
   - pwsh: |
-      dotnet tool install --global wix --version 4.0.0
-      wix extension add --global WixToolset.UI.wixext/4.0.0
+      dotnet tool install --global wix --version 7.0.0
+      wix eula accept wix7
+      wix extension add --global WixToolset.UI.wixext/7.0.0
       wix build wix/main.wix -ext WixToolset.UI.wixext -arch $(wixArch) -define target=$(target) -define arch=$(wixArch) -culture zh-cn -o $(Build.ArtifactStagingDirectory)/$(publishName).msi -pdbtype none
     displayName: 'Package MSI'
 

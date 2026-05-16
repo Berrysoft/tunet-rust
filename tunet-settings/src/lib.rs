@@ -8,13 +8,19 @@ use std::{
 };
 
 use dirs::config_dir;
-use keyring::Entry;
+use keyring_core::Entry;
 use rpassword::read_password;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[cfg(target_os = "linux")]
-mod key_fallback;
+#[path = "key_fallback.rs"]
+mod keyring_store;
+
+#[cfg(target_os = "macos")]
+use apple_native_keyring_store::keychain as keyring_store;
+#[cfg(windows)]
+use windows_native_keyring_store as keyring_store;
 
 #[derive(Debug, Error)]
 pub enum SettingsError {
@@ -23,7 +29,7 @@ pub enum SettingsError {
     #[error("系统错误：{0}")]
     IoError(#[from] std::io::Error),
     #[error("密码管理错误：{0}")]
-    Keyring(#[from] keyring::Error),
+    Keyring(#[from] keyring_core::Error),
     #[error("JSON 解析错误：{0}")]
     Json(#[from] serde_json::Error),
 }
@@ -44,6 +50,7 @@ pub struct SettingsReader {
 
 impl SettingsReader {
     pub fn new() -> SettingsResult<Self> {
+        keyring_core::set_default_store(keyring_store::Store::new()?);
         Ok(Self::with_path(Self::file_path()?))
     }
 
@@ -60,15 +67,7 @@ impl SettingsReader {
     }
 
     fn entry(u: &str) -> SettingsResult<Entry> {
-        cfg_if::cfg_if! {
-            if #[cfg(target_os = "linux")] {
-                Ok(Entry::new_with_credential(Box::new(
-                    key_fallback::KeyFallback::new(TUNET_NAME, u)?,
-                )))
-            } else {
-                Ok(Entry::new(TUNET_NAME, u)?)
-            }
-        }
+        Ok(Entry::new(TUNET_NAME, u)?)
     }
 
     pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {
