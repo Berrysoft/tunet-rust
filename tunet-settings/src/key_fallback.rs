@@ -7,7 +7,7 @@ use std::{
 };
 
 use dirs::config_dir;
-use keyring::{Error, Result, credential::CredentialApi};
+use keyring_core::{Error, Result, api::CredentialApi};
 use serde::{Deserialize, Serialize};
 use serde_with::{base64::Base64, serde_as};
 
