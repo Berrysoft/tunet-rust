@@ -18,9 +18,15 @@ data-encoding = "2"
 base64 = { workspace = true }
 serde_json = { workspace = true }
 chrono = { workspace = true }
-regex = "1"
 thiserror = { workspace = true }
 allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
+
+[target.'cfg(any(windows, target_os = "android"))'.dependencies]
+# imported by `windows-native-keyring-store` and `android_logger`
+regex = "1"
+
+[target.'cfg(not(any(windows, target_os = "android")))'.dependencies]
+regex = { package = "regex-lite", version = "0.1" }
 
 [target.'cfg(target_os = "android")'.dependencies]
 cyper = { workspace = true, default-features = false, features = [
