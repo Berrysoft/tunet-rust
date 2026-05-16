@@ -5461,7 +5461,6 @@ version = "0.5.1"
 dependencies = [
  "android-native-keyring-store",
  "apple-native-keyring-store",
- "cfg-if",
  "dirs",
  "keyring-core",
  "rpassword",

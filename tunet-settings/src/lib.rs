@@ -14,7 +14,8 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[cfg(target_os = "linux")]
-mod key_fallback;
+#[path = "key_fallback.rs"]
+mod keyring_store;
 
 #[derive(Debug, Error)]
 pub enum SettingsError {
@@ -44,10 +45,7 @@ pub struct SettingsReader {
 
 impl SettingsReader {
     pub fn new() -> SettingsResult<Self> {
-        #[cfg(not(target_os = "linux"))]
-        {
-            keyring_core::set_default_store(keyring_store::Store::new()?);
-        }
+        keyring_core::set_default_store(keyring_store::Store::new()?);
         Ok(Self::with_path(Self::file_path()?))
     }
 
@@ -64,15 +62,7 @@ impl SettingsReader {
     }
 
     fn entry(u: &str) -> SettingsResult<Entry> {
-        cfg_if::cfg_if! {
-            if #[cfg(target_os = "linux")] {
-                Ok(Entry::new_with_credential(Box::new(
-                    key_fallback::KeyFallback::new(TUNET_NAME, u)?,
-                )))
-            } else {
-                Ok(Entry::new(TUNET_NAME, u)?)
-            }
-        }
+        Ok(Entry::new(TUNET_NAME, u)?)
     }
 
     pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {
