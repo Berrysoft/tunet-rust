@@ -7,10 +7,10 @@ use base64::{
     engine::{GeneralPurpose, general_purpose::PAD},
 };
 use data_encoding::HEXLOWER;
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use md5::Md5;
 use nyquest::Request;
-use regex_lite::Regex;
+use regex::Regex;
 use serde_json::{Value as JsonValue, json};
 use sha1::{Digest, Sha1};
 use url::Url;

@@ -11,7 +11,10 @@ repository.workspace = true
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
 tunet-model = { workspace = true }
-winio = { workspace = true, default-features = false, features = ["qt"] }
+winio = { workspace = true, default-features = false, features = [
+    "qt",
+    "compio-compat",
+] }
 
 anyhow = { workspace = true }
 

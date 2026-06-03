@@ -7,7 +7,10 @@ use tunet_settings::SettingsReader;
 use winio::prelude::*;
 
 fn main() -> Result<()> {
-    App::new("io.github.berrysoft.tunet")?.run::<MainModel>(())
+    App::builder()
+        .name("io.github.berrysoft.tunet")
+        .build()?
+        .block_on(MainModel::run_until_event(()))
 }
 
 fn accent_color() -> Color {
@@ -337,22 +340,58 @@ impl Component for MainModel {
                 self.del_button     => { column: 2, row: 1, margin: margin },
             };
 
-            let mut grid = layout! {
-                Grid::from_str("1*,1*,1*", "auto,auto,1*,auto,auto,auto,auto,auto").unwrap(),
-                self.state_combo => { column: 0, column_span: 3, row: 0, margin: margin },
-                self.hidden => { column: 0, column_span: 3, row: 1, margin: margin },
-                self.canvas => { column: 0, column_span: 3, row: 1, row_span: 3, margin: margin },
-                flux_grid => { column: 0, column_span: 3, row: 2, halign: HAlign::Center, valign: VAlign::Center },
-                self.log => { column: 0, column_span: 3, row: 3, margin: margin },
-                self.login_button => { column: 0, row: 4, margin: margin },
-                self.logout_button => { column: 1, row: 4, margin: margin },
-                self.refresh_button => { column: 2, row: 4, margin: margin },
-                cred_grid => { column: 0, column_span: 3, row: 5 },
-                self.info1 => { column: 0, column_span: 3, row: 6, margin: margin },
-                self.info2 => { column: 0, column_span: 3, row: 7, margin: margin },
+            let mut info_grid = layout! {
+                Grid::from_str("1*", "1*,1*").unwrap(),
+                self.info1 => { column: 0, row: 0, halign: HAlign::Center, margin: margin },
+                self.info2 => { column: 0, row: 1, halign: HAlign::Center, margin: margin },
             };
 
-            grid.set_size(csize)?;
+            let mut button_grid = layout! {
+                Grid::from_str("1*,1*,1*", "1*").unwrap(),
+                self.login_button => { column: 0, row: 0, margin: margin },
+                self.logout_button => { column: 1, row: 0, margin: margin },
+                self.refresh_button => { column: 2, row: 0, margin: margin },
+            };
+
+            if csize.width <= csize.height {
+                let mut grid = layout! {
+                    Grid::from_str("1*", "auto,auto,1*,auto,auto,auto,auto").unwrap(),
+                    self.state_combo => { column: 0, row: 0, margin: margin },
+                    self.hidden => { column: 0, row: 1, margin: margin },
+                    self.canvas => { column: 0, row: 1, row_span: 3, margin: margin },
+                    flux_grid => { column: 0, row: 2, halign: HAlign::Center, valign: VAlign::Center },
+                    self.log => { column: 0, row: 3, margin: margin },
+                    button_grid => { column: 0, row: 4 },
+                    cred_grid => { column: 0, row: 5 },
+                    info_grid => { column: 0, row: 6 },
+                };
+                grid.set_size(csize)?;
+            } else {
+                let mut canvas_flux_grid = layout! {
+                    Grid::from_str("1*", "auto,1*,auto").unwrap(),
+                    self.hidden => { column: 0, row: 0, margin: margin },
+                    self.canvas => { column: 0, row: 0, row_span: 3, margin: margin },
+                    flux_grid => { column: 0, row: 1, halign: HAlign::Center, valign: VAlign::Center },
+                    self.log => { column: 0, row: 2, margin: margin },
+                };
+                let mut control_panel = layout! {
+                    StackPanel::new(Orient::Vertical),
+                    self.state_combo => { margin: margin },
+                    button_grid,
+                    cred_grid,
+                    info_grid,
+                };
+                let mut control_grid = layout! {
+                    Grid::from_str("1*", "1*,auto,1*").unwrap(),
+                    control_panel => { column: 0, row: 1 },
+                };
+                let mut grid = layout! {
+                    Grid::from_str("1*,1*", "1*").unwrap(),
+                    canvas_flux_grid => { column: 0, row: 0 },
+                    control_grid => { column: 1, row: 0 },
+                };
+                grid.set_size(csize)?;
+            }
         }
 
         const ARC_WIDTH: f64 = 30.0;

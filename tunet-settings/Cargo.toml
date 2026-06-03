@@ -7,13 +7,18 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-keyring = { workspace = true }
+keyring-core = "1"
 thiserror = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 dirs = { workspace = true }
 rpassword = "7"
-cfg-if = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 serde_with = { workspace = true, features = ["base64"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-native-keyring-store = "1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+apple-native-keyring-store = { version = "1", features = ["keychain"] }
