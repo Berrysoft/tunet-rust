@@ -363,7 +363,7 @@ impl Component for MainModel {
                     self.log => { column: 0, row: 3, margin: margin },
                     button_grid => { column: 0, row: 4 },
                     cred_grid => { column: 0, row: 5 },
-                    info_grid => { column: 0, row: 6, margin: margin },
+                    info_grid => { column: 0, row: 6 },
                 };
                 grid.set_size(csize)?;
             } else {
@@ -379,11 +379,11 @@ impl Component for MainModel {
                     self.state_combo => { margin: margin },
                     button_grid,
                     cred_grid,
-                    info_grid => { margin: margin },
+                    info_grid,
                 };
                 let mut control_grid = layout! {
                     Grid::from_str("1*", "1*,auto,1*").unwrap(),
-                    control_panel => { column: 0, row: 1, margin: margin },
+                    control_panel => { column: 0, row: 1 },
                 };
                 let mut grid = layout! {
                     Grid::from_str("1*,1*", "1*").unwrap(),
