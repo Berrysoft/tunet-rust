@@ -7,7 +7,10 @@ use tunet_settings::SettingsReader;
 use winio::prelude::*;
 
 fn main() -> Result<()> {
-    App::new("io.github.berrysoft.tunet")?.run::<MainModel>(())
+    App::builder()
+        .name("io.github.berrysoft.tunet")
+        .build()?
+        .block_on(MainModel::run_until_event(()))
 }
 
 fn accent_color() -> Color {
