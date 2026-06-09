@@ -7,6 +7,9 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[lib]
+name = "main"
+
 [dependencies]
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
@@ -17,9 +20,17 @@ winio = { workspace = true, default-features = false, features = [
 ] }
 
 anyhow = { workspace = true }
+log = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winresource = { workspace = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+android-activity = "0.6"
+android_logger = "0.15"
+
+jni = "0.22"
+rustls-platform-verifier = "0.7.0"
 
 [features]
 default = ["win32"]

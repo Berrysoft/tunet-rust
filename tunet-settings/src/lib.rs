@@ -17,6 +17,8 @@ use thiserror::Error;
 #[path = "key_fallback.rs"]
 mod keyring_store;
 
+#[cfg(target_os = "android")]
+use android_native_keyring_store as keyring_store;
 #[cfg(target_os = "macos")]
 use apple_native_keyring_store::keychain as keyring_store;
 #[cfg(target_os = "ios")]

@@ -1,0 +1,83 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'io.github.berrysoft.tunet'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "io.github.berrysoft.tunet"
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildFeatures.prefab true
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material
+
+    implementation libs.games.activity
+
+    implementation libs.rustls.platform.verifier
+
+    implementation libs.winio
+}
+
+def localProperties = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localProperties.load(localPropsFile.newDataInputStream())
+}
+
+def abiList = localProperties.getProperty('ndk.abis', 'arm64-v8a,armeabi-v7a,x86_64').split(',').collect { it.trim() }
+
+[
+        Debug  : null,
+        Profile: '--release',
+        Release: '--release'
+].each {
+    def taskPostfix = it.key
+    def profileMode = it.value
+    tasks.configureEach { task ->
+        if (task.name == "assemble$taskPostfix") {
+            task.dependsOn "cargoBuild$taskPostfix"
+        }
+    }
+    tasks.register("cargoBuild$taskPostfix", Exec) {
+        workingDir "../.."
+        environment 'CARGO_TERM_COLOR', 'always'
+
+        def cmdArgs = [
+                'cargo', 'ndk',
+                '-o', 'android/app/src/main/jniLibs',
+        ]
+        abiList.each { abi ->
+            cmdArgs.addAll(['-t', abi])
+        }
+        cmdArgs.addAll([
+                'rustc',
+                '--crate-type', 'cdylib', '--lib',
+        ])
+        if (profileMode != null) {
+            cmdArgs.add(profileMode)
+        }
+
+        commandLine cmdArgs
+    }
+}
