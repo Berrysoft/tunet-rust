@@ -94,5 +94,9 @@ def abiList = localProperties.getProperty('ndk.abis', 'arm64-v8a,armeabi-v7a,x86
         }
 
         commandLine cmdArgs
+
+        doLast {
+            delete fileTree(dir: 'src/main/jniLibs', include: '*/libandroid_native_keyring_store-*.so')
+        }
     }
 }
