@@ -173,7 +173,7 @@ jobs:
       export JAVA_HOME=$(JAVA_HOME_17_X64)
       cd android
       gradle assembleRelease
-      cp **/app-release.apk $(Build.ArtifactStagingDirectory)/tunet.apk
+      cp app/build/outputs/apk/release/app-release.apk $(Build.ArtifactStagingDirectory)/tunet.apk
     displayName: 'Build APK'
 
   - task: PublishBuildArtifacts@1
