@@ -8,6 +8,8 @@ if (localPropsFile.exists()) {
     localProperties.load(localPropsFile.newDataInputStream())
 }
 
+def abiList = localProperties.getProperty('ndk.abis', 'arm64-v8a,armeabi-v7a,x86_64').split(',').collect { it.trim() }
+
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
@@ -47,6 +49,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+    splits {
+        abi {
+            enable true
+            reset()
+            include abiList as String[]
+            universalApk false
+        }
+    }
 }
 
 dependencies {
@@ -59,8 +69,6 @@ dependencies {
 
     implementation libs.winio
 }
-
-def abiList = localProperties.getProperty('ndk.abis', 'arm64-v8a,armeabi-v7a,x86_64').split(',').collect { it.trim() }
 
 [
         Debug  : null,
