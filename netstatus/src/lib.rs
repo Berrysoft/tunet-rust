@@ -27,8 +27,8 @@ pub enum NetStatus {
 }
 
 impl NetStatus {
-    pub fn current() -> Self {
-        platform::current()
+    pub async fn current() -> Self {
+        platform::current().await
     }
 
     pub fn watch() -> impl Stream<Item = ()> {

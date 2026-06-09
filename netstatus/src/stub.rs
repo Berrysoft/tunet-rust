@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn current() -> NetStatus {
+pub async fn current() -> NetStatus {
     NetStatus::Unknown
 }
 

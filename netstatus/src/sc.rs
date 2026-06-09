@@ -21,7 +21,7 @@ use pin_project::pin_project;
 use crate::*;
 
 #[cfg(target_os = "macos")]
-fn get_ssid() -> Option<String> {
+async fn get_ssid() -> Option<String> {
     use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
     use objc2_core_wlan::CWWiFiClient;
     unsafe {
@@ -38,30 +38,24 @@ fn get_ssid() -> Option<String> {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn get_ssid() -> Option<String> {
+async fn get_ssid() -> Option<String> {
     use block2::StackBlock;
     use objc2::rc::Retained;
     use objc2_network_extension::NEHotspotNetwork;
 
     let (tx, rx) = flume::bounded(1);
-    let thread = std::thread::spawn(move || {
-        let handler = move |network| unsafe {
-            let network: Option<Retained<NEHotspotNetwork>> = Retained::retain(network);
-            let ssid = network
-                .map(|network| network.SSID())
-                .map(|name| name.to_string());
-            tx.send(ssid).ok();
-        };
-        unsafe {
-            NEHotspotNetwork::fetchCurrentWithCompletionHandler(&StackBlock::new(handler));
-        }
-        CFRunLoop::run();
-    });
-
-    let _thread = CFJThread {
-        handle: Some(thread),
+    let handler = move |network| unsafe {
+        let network: Option<Retained<NEHotspotNetwork>> = Retained::retain(network);
+        let ssid = network
+            .map(|network| network.SSID())
+            .map(|name| name.to_string());
+        tx.send(ssid).ok();
     };
-    rx.recv().ok().flatten()
+    unsafe {
+        NEHotspotNetwork::fetchCurrentWithCompletionHandler(&StackBlock::new(handler));
+    }
+
+    rx.recv_async().await.ok().flatten()
 }
 
 fn create_reachability() -> CFRetained<SCNetworkReachability> {
@@ -75,7 +69,7 @@ fn create_reachability() -> CFRetained<SCNetworkReachability> {
     unsafe { SCNetworkReachability::with_address(None, NonNull::from(&mut addr).cast()) }.unwrap()
 }
 
-pub fn current() -> NetStatus {
+pub async fn current() -> NetStatus {
     let sc = create_reachability();
     let mut flag = MaybeUninit::uninit();
     if unsafe { sc.flags(NonNull::new_unchecked(flag.as_mut_ptr())) } {
@@ -88,7 +82,7 @@ pub fn current() -> NetStatus {
                 || flag.contains(SCNetworkReachabilityFlags::ConnectionOnTraffic))
                 && !flag.contains(SCNetworkReachabilityFlags::InterventionRequired))
         {
-            return match get_ssid() {
+            return match get_ssid().await {
                 Some(ssid) => NetStatus::Wlan(ssid),
                 None => NetStatus::Unknown,
             };

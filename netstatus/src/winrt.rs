@@ -25,7 +25,7 @@ fn current_impl() -> Result<NetStatus> {
     }
 }
 
-pub fn current() -> NetStatus {
+pub async fn current() -> NetStatus {
     current_impl().unwrap_or_else(|e| {
         log::warn!("{}", e.message());
         NetStatus::Unknown
