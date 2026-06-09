@@ -13,8 +13,6 @@ use std::{
 
 use flume::{r#async::RecvStream, unbounded};
 use objc2_core_foundation::{CFRetained, CFRunLoop, CFString, kCFRunLoopDefaultMode};
-use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
-use objc2_core_wlan::CWWiFiClient;
 use objc2_system_configuration::{
     SCNetworkReachability, SCNetworkReachabilityContext, SCNetworkReachabilityFlags,
 };
@@ -22,7 +20,10 @@ use pin_project::pin_project;
 
 use crate::*;
 
+#[cfg(target_os = "macos")]
 fn get_ssid() -> Option<String> {
+    use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
+    use objc2_core_wlan::CWWiFiClient;
     unsafe {
         let manager = CLLocationManager::new();
         if manager.authorizationStatus() != CLAuthorizationStatus::AuthorizedAlways {
@@ -32,12 +33,35 @@ fn get_ssid() -> Option<String> {
         CWWiFiClient::sharedWiFiClient()
             .interface()
             .and_then(|interface| interface.ssid())
-            .map(|name| {
-                std::ffi::CStr::from_ptr(name.UTF8String())
-                    .to_string_lossy()
-                    .into_owned()
-            })
+            .map(|name| name.to_string())
     }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn get_ssid() -> Option<String> {
+    use block2::StackBlock;
+    use objc2::rc::Retained;
+    use objc2_network_extension::NEHotspotNetwork;
+
+    let (tx, rx) = flume::bounded(1);
+    let thread = std::thread::spawn(move || {
+        let handler = move |network| unsafe {
+            let network: Option<Retained<NEHotspotNetwork>> = Retained::retain(network);
+            let ssid = network
+                .map(|network| network.SSID())
+                .map(|name| name.to_string());
+            tx.send(ssid).ok();
+        };
+        unsafe {
+            NEHotspotNetwork::fetchCurrentWithCompletionHandler(&StackBlock::new(handler));
+        }
+        CFRunLoop::run();
+    });
+
+    let _thread = CFJThread {
+        handle: Some(thread),
+    };
+    rx.recv().ok().flatten()
 }
 
 fn create_reachability() -> CFRetained<SCNetworkReachability> {

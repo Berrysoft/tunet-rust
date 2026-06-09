@@ -11,17 +11,24 @@ cfg-if = { workspace = true }
 futures-util = { workspace = true }
 log = { workspace = true }
 
-[target.'cfg(target_os = "windows")'.dependencies]
+[target.'cfg(windows)'.dependencies]
 windows = { workspace = true, features = ["Networking_Connectivity"] }
 
-[target.'cfg(target_os = "macos")'.dependencies]
+[target.'cfg(target_vendor = "apple")'.dependencies]
 libc = { workspace = true }
-objc2-core-wlan = "0.3"
-objc2-system-configuration = { version = "0.3", features = ["libc"] }
 objc2-core-foundation = "0.3"
+objc2-system-configuration = { version = "0.3", features = ["libc"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-core-wlan = "0.3"
 objc2-core-location = "0.3"
 
-[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
+[target.'cfg(all(target_vendor = "apple", not(target_os = "macos")))'.dependencies]
+objc2 = "0.6"
+block2 = "0.6"
+objc2-network-extension = "0.3"
+
+[target.'cfg(any(windows, target_vendor = "apple"))'.dependencies]
 flume = { workspace = true }
 pin-project = "1"
 

@@ -30,3 +30,7 @@ objc-static = ["winio/objc-static"]
 [package.metadata.winresource]
 OriginalFilename = "tunet-gui.exe"
 LegalCopyright = "Copyright © 2021-2026 Berrysoft"
+
+[package.metadata.bundle]
+name = "tunet"
+identifier = "io.github.berrysoft.tunet"

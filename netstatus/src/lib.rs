@@ -9,7 +9,7 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_os = "linux")] {
         #[path = "netlink.rs"]
         mod platform;
-    } else if #[cfg(target_os = "macos")] {
+    } else if #[cfg(target_vendor = "apple")] {
         #[path = "sc.rs"]
         mod platform;
     } else {

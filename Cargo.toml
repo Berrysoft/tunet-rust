@@ -8,7 +8,6 @@ members = [
     "tunet",
     "tunet-gui",
     "tunet-service",
-    "tunet-flutter/native",
 ]
 
 resolver = "3"

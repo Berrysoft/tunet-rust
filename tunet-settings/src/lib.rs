@@ -19,6 +19,8 @@ mod keyring_store;
 
 #[cfg(target_os = "macos")]
 use apple_native_keyring_store::keychain as keyring_store;
+#[cfg(target_os = "ios")]
+use apple_native_keyring_store::protected as keyring_store;
 #[cfg(windows)]
 use windows_native_keyring_store as keyring_store;
 
