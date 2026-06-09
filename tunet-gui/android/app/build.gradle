@@ -2,6 +2,18 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+def localProperties = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localProperties.load(localPropsFile.newDataInputStream())
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace 'io.github.berrysoft.tunet'
     compileSdk 36
@@ -16,10 +28,18 @@ android {
 
     buildFeatures.prefab true
 
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            proguardFiles "proguard-rules.pro"
         }
     }
     compileOptions {
@@ -37,12 +57,6 @@ dependencies {
     implementation libs.rustls.platform.verifier
 
     implementation libs.winio
-}
-
-def localProperties = new Properties()
-def localPropsFile = rootProject.file('local.properties')
-if (localPropsFile.exists()) {
-    localProperties.load(localPropsFile.newDataInputStream())
 }
 
 def abiList = localProperties.getProperty('ndk.abis', 'arm64-v8a,armeabi-v7a,x86_64').split(',').collect { it.trim() }
