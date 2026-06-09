@@ -30,7 +30,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Widgets example"
+rootProject.name = "tunet"
 include ':app'
 
 import groovy.json.JsonSlurper
