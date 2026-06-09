@@ -33,7 +33,3 @@ rustls = { workspace = true, default-features = false, features = ["ring"] }
 [target.'cfg(not(target_os = "android"))'.dependencies]
 nyquest-preset = { workspace = true, features = ["async"] }
 regex = { package = "regex-lite", version = "0.1" }
-
-[features]
-default = []
-dart = ["allo-isolate"]

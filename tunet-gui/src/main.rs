@@ -1,5 +1,5 @@
 #[cfg(not(target_os = "android"))]
-fn main() -> main::Result<()> {
+fn main() -> anyhow::Result<()> {
     use main::MainModel;
     use winio::prelude::*;
     App::builder()
