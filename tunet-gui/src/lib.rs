@@ -349,9 +349,20 @@ impl Component for MainModel {
                 self.password_label => { column: 0, row: 1, valign: VAlign::Center, margin: label_margin },
                 self.username_input => { column: 1, row: 0, margin: input_margin },
                 self.password_input => { column: 1, row: 1, margin: input_margin },
-                self.cred_button    => { column: 2, row: 0, margin: margin },
-                self.del_button     => { column: 2, row: 1, margin: margin },
             };
+
+            if cfg!(any(target_os = "ios", target_os = "android")) {
+                cred_grid = layout! {
+                    cred_grid,
+                    self.cred_button => { column: 2, row: 0, row_span: 2, margin: margin },
+                };
+            } else {
+                cred_grid = layout! {
+                    cred_grid,
+                    self.cred_button    => { column: 2, row: 0, margin: margin },
+                    self.del_button     => { column: 2, row: 1, margin: margin },
+                };
+            }
 
             let mut info_grid = layout! {
                 Grid::from_str("1*", "1*,1*").unwrap(),
