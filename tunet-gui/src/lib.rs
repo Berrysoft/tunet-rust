@@ -161,7 +161,7 @@ impl Component for MainModel {
         state_combo.insert(2, "Auth6")?;
 
         #[cfg(target_os = "android")]
-        android::init_rustls(&window)?;
+        android::set_sender(_sender);
 
         window.show()?;
 

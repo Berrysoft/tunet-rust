@@ -1,7 +1,11 @@
+use std::sync::Mutex;
+
 use android_activity::AndroidApp;
+use jni::{Env, objects::JObject};
+use tunet_model::Action;
 use winio::prelude::*;
 
-use crate::MainModel;
+use crate::{MainMessage, MainModel};
 
 #[unsafe(no_mangle)]
 fn android_main(app: AndroidApp) {
@@ -31,12 +35,40 @@ fn android_main(app: AndroidApp) {
     })
 }
 
-pub(crate) fn init_rustls(window: &Window) -> Result<()> {
-    let context = window.as_window().to_android();
-    let vm = jni::JavaVM::singleton()?;
-    vm.attach_current_thread(|env| {
-        let context = env.new_local_ref(context)?;
+static MAIN_MODEL_SENDER: Mutex<Option<ComponentSender<MainModel>>> = Mutex::new(None);
+
+pub(crate) fn set_sender(sender: &ComponentSender<MainModel>) {
+    let mut guard = MAIN_MODEL_SENDER.lock().unwrap();
+    *guard = Some(sender.clone());
+}
+
+jni::bind_java_type! {
+    MainActivity => io.github.berrysoft.tunet.MainActivity,
+    native_methods {
+        extern fn on_create_native(),
+        extern fn on_location_permission_granted(),
+    }
+}
+
+impl MainActivityNativeInterface for MainActivityAPI {
+    type Error = jni::errors::Error;
+
+    fn on_create_native<'local>(
+        env: &mut Env<'local>,
+        this: MainActivity<'local>,
+    ) -> std::result::Result<(), Self::Error> {
+        let context = env.cast_local::<JObject>(this)?;
         rustls_platform_verifier::android::init_with_env(env, context)
-    })?;
-    Ok(())
+    }
+
+    fn on_location_permission_granted<'local>(
+        _env: &mut Env<'local>,
+        _this: MainActivity<'local>,
+    ) -> std::result::Result<(), Self::Error> {
+        let sender = MAIN_MODEL_SENDER.lock().unwrap();
+        if let Some(sender) = sender.as_ref() {
+            sender.post(MainMessage::Action(Action::Status(None)));
+        }
+        Ok(())
+    }
 }

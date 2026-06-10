@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.StrictMode;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -22,12 +23,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitNetwork().build();
         StrictMode.setThreadPolicy(policy);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
         checkAndRequestLocationPermission();
+        onCreateNative();
     }
 
     private void checkAndRequestLocationPermission() {
@@ -38,4 +35,18 @@ public class MainActivity extends Activity {
                     LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                onLocationPermissionGranted();
+            }
+        }
+    }
+
+    native void onCreateNative();
+    native void onLocationPermissionGranted();
 }
