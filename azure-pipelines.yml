@@ -53,7 +53,7 @@ jobs:
 
   - script: |
       rustup target add $(target)
-      cargo build --release --workspace --exclude native --target $(target) $(fargs)
+      cargo build --release --target $(target) $(fargs)
     displayName: "Build"
     env:
       RUSTFLAGS: -L vc-ltl/build/native/TargetPlatform/10.0.19041.0/lib/$(vcArch)
@@ -107,7 +107,7 @@ jobs:
       export RUSTFLAGS="-Clinker-plugin-lto -Clinker=clang -Clink-arg=-flto -Clink-arg=-fuse-ld=$HOME/.cargo/bin/ld.lld"
       export CXX="clang++"
       export CXXFLAGS="-flto"
-      cargo build --release --workspace --exclude native --target $(target)
+      cargo build --release --target $(target)
     displayName: "Build"
 
   - script: |
@@ -125,12 +125,12 @@ jobs:
   steps:
   - script: |
       rustup target add x86_64-apple-darwin
-      cargo build --release --workspace --exclude native --target x86_64-apple-darwin --features objc-static
+      cargo build --release --target x86_64-apple-darwin --features objc-static
     displayName: "Build x64"
 
   - script: |
       rustup target add aarch64-apple-darwin
-      cargo build --release --workspace --exclude native --target aarch64-apple-darwin --features objc-static
+      cargo build --release --target aarch64-apple-darwin --features objc-static
     displayName: "Build arm64"
 
   - script: |
@@ -143,6 +143,17 @@ jobs:
       ArtifactName: 'publish'
 
 - job: Build_Android
+  strategy:
+    matrix:
+      x86_64:
+        rustTarget: 'x86_64-linux-android'
+        androidArch: 'x86_64'
+      armv7:
+        rustTarget: 'armv7-linux-androideabi'
+        androidArch: 'armeabi-v7a'
+      arm64:
+        rustTarget: 'aarch64-linux-android'
+        androidArch: 'arm64-v8a'
   pool:
     vmImage: 'ubuntu-22.04'
   variables:
@@ -150,18 +161,9 @@ jobs:
   
   steps:
   - script: |
-      rustup target add x86_64-linux-android
-      rustup target add armv7-linux-androideabi
-      rustup target add aarch64-linux-android
+      rustup target add $(rustTarget)
       cargo install cargo-ndk
     displayName: 'Install cargo-ndk'
-
-  - script: |
-      curl -fsSL https://fvm.app/install.sh | bash
-      export PATH="$HOME/fvm/bin:$PATH"
-      fvm install stable
-      fvm global stable
-    displayName: 'Install flutter'
 
   - task: DownloadSecureFile@1
     name: keystore
@@ -170,44 +172,20 @@ jobs:
       secureFile: 'keystore.jks'
   
   - script: |
-      cd tunet-flutter
-      cat > android/key.properties << EOL
+      cd tunet-gui/android
+      cat > key.properties << EOL
       storePassword=$(store-password)
       keyPassword=$(key-password)
       keyAlias=$(key-alias)
       storeFile=$(keystore.secureFilePath)
       EOL
+      cat > local.properties << EOL
+      ndk.abis=$(androidArch)
+      EOL
       export JAVA_HOME=$(JAVA_HOME_17_X64)
-      export PATH="$HOME/fvm/bin:$PATH"
-      make apk FLUTTER="fvm flutter"
-      cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $(Build.ArtifactStagingDirectory)/tunet.armeabi-v7a.apk
-      cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $(Build.ArtifactStagingDirectory)/tunet.arm64-v8a.apk
-      cp build/app/outputs/flutter-apk/app-x86_64-release.apk $(Build.ArtifactStagingDirectory)/tunet.x86_64.apk
+      gradle assembleRelease
+      cp app/build/outputs/apk/release/app-$(androidArch)-release.apk $(Build.ArtifactStagingDirectory)/tunet-$(androidArch).apk
     displayName: 'Build APK'
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      ArtifactName: 'publish'
-
-- job: Build_iOS
-  pool:
-    vmImage: 'macOS-14'
-
-  steps:
-  - script: |
-      brew install flutter
-    displayName: 'Install flutter'
-
-  - script: |
-      rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
-      cd tunet-flutter
-      make ipa
-      mkdir -p ipa/Payload
-      cp -r build/ios/iphoneos/Runner.app ./ipa/Payload
-      cd ipa
-      zip -r tunet.ios.ipa *
-      cp tunet.ios.ipa $(Build.ArtifactStagingDirectory)/
-    displayName: 'Build IPA'
 
   - task: PublishBuildArtifacts@1
     inputs:

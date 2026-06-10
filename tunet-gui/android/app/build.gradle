@@ -1,0 +1,111 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+def localProperties = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localProperties.load(localPropsFile.newDataInputStream())
+}
+
+def abiList = localProperties.getProperty('ndk.abis', 'arm64-v8a,armeabi-v7a,x86_64').split(',').collect { it.trim() }
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace 'io.github.berrysoft.tunet'
+    compileSdk 37
+
+    defaultConfig {
+        applicationId "io.github.berrysoft.tunet"
+        minSdk 24
+        targetSdk 37
+        versionCode 1
+        versionName "0.10.8"
+    }
+
+    buildFeatures.prefab true
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles "proguard-rules.pro"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    splits {
+        abi {
+            enable true
+            reset()
+            include abiList as String[]
+            universalApk false
+        }
+    }
+}
+
+dependencies {
+    implementation libs.core
+    implementation libs.appcompat
+    implementation libs.material
+
+    implementation libs.games.activity
+
+    implementation libs.rustls.platform.verifier
+
+    implementation libs.winio
+}
+
+[
+        Debug  : null,
+        Profile: '--release',
+        Release: '--release'
+].each {
+    def taskPostfix = it.key
+    def profileMode = it.value
+    tasks.configureEach { task ->
+        if (task.name == "assemble$taskPostfix") {
+            task.dependsOn "cargoBuild$taskPostfix"
+        }
+    }
+    tasks.register("cargoBuild$taskPostfix", Exec) {
+        workingDir "../.."
+        environment 'CARGO_TERM_COLOR', 'always'
+
+        def cmdArgs = [
+                'cargo', 'ndk',
+                '-o', 'android/app/src/main/jniLibs',
+        ]
+        abiList.each { abi ->
+            cmdArgs.addAll(['-t', abi])
+        }
+        cmdArgs.addAll([
+                'rustc',
+                '--crate-type', 'cdylib', '--lib',
+        ])
+        if (profileMode != null) {
+            cmdArgs.add(profileMode)
+        }
+
+        commandLine cmdArgs
+
+        doLast {
+            delete fileTree(dir: 'src/main/jniLibs', include: '*/libandroid_native_keyring_store-*.so')
+        }
+    }
+}

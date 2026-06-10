@@ -8,7 +8,6 @@ members = [
     "tunet",
     "tunet-gui",
     "tunet-service",
-    "tunet-flutter/native",
 ]
 
 resolver = "3"
@@ -45,13 +44,13 @@ winio = { version = "0.12.0-rc.3", default-features = false }
 winio-elm = "0.6.0-rc.1"
 
 argh = "0.1"
+base64 = "0.22"
 chrono = { version = "0.4", default-features = false, features = [
     "clock",
     "std",
 ] }
 dirs = "6"
 log = "0.4"
-base64 = "0.22"
 
 flume = "0.12"
 futures-channel = "0.3"
@@ -65,6 +64,8 @@ serde_json = "1"
 serde_with = "3"
 
 libc = "0.2"
+
+jni = "0.22"
 
 windows = "0.62"
 winresource = "0.1"

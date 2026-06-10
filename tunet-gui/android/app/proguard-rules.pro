@@ -1,0 +1,5 @@
+-keep, includedescriptorclasses class org.rustls.platformverifier.** { *; }
+-keep, includedescriptorclasses class com.google.androidgamesdk.** { *; }
+-keep, includedescriptorclasses class com.google.android.material.button.** { *; }
+-keep, includedescriptorclasses class rs.compio.winio.Activity { *; }
+-keep, includedescriptorclasses class androidx.activity.result.** { *; }

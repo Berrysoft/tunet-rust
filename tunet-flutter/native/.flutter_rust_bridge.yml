@@ -1,8 +1,0 @@
-rust_input: 'crate::api'
-rust_root: ./
-dart_output: ../lib
-c_output: ../ios/Runner/bridge.h
-dart_enums_style: false
-dart_format_line_length: 80
-web: false
-full_dep: true
