@@ -5,7 +5,7 @@ fn main() -> anyhow::Result<()> {
     App::builder()
         .name("io.github.berrysoft.tunet")
         .build()?
-        .block_on(MainModel::run_until_event(()))
+        .block_on(MainModel::run_until_event(None))
 }
 
 #[cfg(target_os = "android")]

@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::path::PathBuf;
+
 use anyhow::Result;
 use tunet_helper::NetState;
 use tunet_model::{Action, Model, UpdateMsg};
@@ -27,7 +29,7 @@ pub enum MainMessage {
 }
 
 pub struct MainModel {
-    settings: Option<SettingsReader>,
+    settings: SettingsReader,
     model: Child<Model>,
     window: Child<Window>,
     state_combo: Child<ComboBox>,
@@ -55,19 +57,16 @@ pub struct MainModel {
 impl Component for MainModel {
     type Error = anyhow::Error;
     type Event = ();
-    type Init<'a> = ();
+    type Init<'a> = Option<PathBuf>;
     type Message = MainMessage;
 
-    async fn init(_init: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Result<Self> {
-        let settings = SettingsReader::new()
-            .inspect_err(|e| {
-                log::error!("Failed to initialize settings: {e:?}");
-            })
-            .ok();
-        let (username, password) = settings
-            .as_ref()
-            .and_then(|s| s.read_full().ok())
-            .unwrap_or_default();
+    async fn init(config_path: Self::Init<'_>, _sender: &ComponentSender<Self>) -> Result<Self> {
+        let settings = if let Some(path) = config_path {
+            SettingsReader::with_dir(path)?
+        } else {
+            SettingsReader::new()?
+        };
+        let (username, password) = settings.read_full().unwrap_or_default();
 
         let mut model = Child::<Model>::init(()).await?;
 
@@ -254,9 +253,7 @@ impl Component for MainModel {
             MainMessage::Cred => {
                 let u = self.username_input.text()?;
                 let p = self.password_input.text()?;
-                if let Some(settings) = &mut self.settings {
-                    settings.save(&u, &p)?;
-                }
+                self.settings.save(&u, &p)?;
                 self.model.post(Action::Credential(u, p));
                 Ok(false)
             }
@@ -269,9 +266,7 @@ impl Component for MainModel {
                     .show(Some(&self.window))
                     .await?;
                 if let MessageBoxResponse::Ok = res {
-                    if let Some(settings) = &mut self.settings {
-                        settings.delete(&self.username_input.text()?)?;
-                    }
+                    self.settings.delete(&self.username_input.text()?)?;
                     sender.output(());
                 }
                 Ok(false)

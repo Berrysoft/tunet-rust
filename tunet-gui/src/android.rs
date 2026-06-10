@@ -19,12 +19,13 @@ fn android_main(app: AndroidApp) {
             ),
     );
 
+    let config_dir = app.internal_data_path();
     let app = App::builder()
         .android_app(app)
         .build()
         .expect("cannot create app");
     app.spawn(|| async {
-        if let Err(e) = MainModel::run_until_event(()).await {
+        if let Err(e) = MainModel::run_until_event(config_dir).await {
             log::error!("App error: {e:?}");
         }
     })
