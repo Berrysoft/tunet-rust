@@ -143,6 +143,17 @@ jobs:
       ArtifactName: 'publish'
 
 - job: Build_Android
+  strategy:
+    matrix:
+      x86_64:
+        rustTarget: 'x86_64-linux-android'
+        androidArch: 'x86_64'
+      armv7:
+        rustTarget: 'armv7-linux-androideabi'
+        androidArch: 'armeabi-v7a'
+      arm64:
+        rustTarget: 'aarch64-linux-android'
+        androidArch: 'arm64-v8a'
   pool:
     vmImage: 'ubuntu-22.04'
   variables:
@@ -150,9 +161,7 @@ jobs:
   
   steps:
   - script: |
-      rustup target add x86_64-linux-android
-      rustup target add armv7-linux-androideabi
-      rustup target add aarch64-linux-android
+      rustup target add $(rustTarget)
       cargo install cargo-ndk
     displayName: 'Install cargo-ndk'
 
@@ -163,19 +172,19 @@ jobs:
       secureFile: 'keystore.jks'
   
   - script: |
-      cd tunet-gui
-      cat > android/key.properties << EOL
+      cd tunet-gui/android
+      cat > key.properties << EOL
       storePassword=$(store-password)
       keyPassword=$(key-password)
       keyAlias=$(key-alias)
       storeFile=$(keystore.secureFilePath)
       EOL
+      cat > local.properties << EOL
+      ndk.abis=$(androidArch)
+      EOL
       export JAVA_HOME=$(JAVA_HOME_17_X64)
-      cd android
       gradle assembleRelease
-      cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk $(Build.ArtifactStagingDirectory)/tunet-armeabi-v7a.apk
-      cp app/build/outputs/apk/release/app-arm64-v8a-release.apk $(Build.ArtifactStagingDirectory)/tunet-arm64-v8a.apk
-      cp app/build/outputs/apk/release/app-x86_64-release.apk $(Build.ArtifactStagingDirectory)/tunet-x86_64.apk
+      cp app/build/outputs/apk/release/app-$(androidArch)-release.apk $(Build.ArtifactStagingDirectory)/tunet-$(androidArch).apk
     displayName: 'Build APK'
 
   - task: PublishBuildArtifacts@1
