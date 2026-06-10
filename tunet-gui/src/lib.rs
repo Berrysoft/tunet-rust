@@ -407,29 +407,29 @@ impl Component for MainModel {
             }
         }
 
-        const ARC_WIDTH: f64 = 30.0;
+        let arc_width = csize.height.min(csize.width) / 10.0;
         use std::f64::consts::*;
 
         let size = self.canvas.size()?;
-        let (width, height) = (size.width - ARC_WIDTH, size.height - ARC_WIDTH);
+        let (width, height) = (size.width - arc_width, size.height - arc_width);
         if width <= 0.0 || height <= 0.0 {
             return Ok(());
         }
         let color = accent_color();
-        let pen = BrushPen::new(SolidColorBrush::new(color), ARC_WIDTH);
+        let pen = BrushPen::new(SolidColorBrush::new(color), arc_width);
         let color_t1 = color.with_alpha(168);
-        let pen_t1 = BrushPen::new(SolidColorBrush::new(color_t1), ARC_WIDTH);
+        let pen_t1 = BrushPen::new(SolidColorBrush::new(color_t1), arc_width);
         let color_t2 = color.with_alpha(84);
-        let pen_t2 = BrushPen::new(SolidColorBrush::new(color_t2), ARC_WIDTH);
+        let pen_t2 = BrushPen::new(SolidColorBrush::new(color_t2), arc_width);
 
         let arc_rect = if width > height {
             Rect::new(
-                Point::new((width - height + ARC_WIDTH) / 2.0, ARC_WIDTH / 2.0),
+                Point::new((width - height + arc_width) / 2.0, arc_width / 2.0),
                 Size::new(height, height),
             )
         } else {
             Rect::new(
-                Point::new(ARC_WIDTH / 2.0, (height - width + ARC_WIDTH) / 2.0),
+                Point::new(arc_width / 2.0, (height - width + arc_width) / 2.0),
                 Size::new(width, width),
             )
         };
