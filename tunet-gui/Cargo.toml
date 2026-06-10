@@ -45,3 +45,4 @@ LegalCopyright = "Copyright © 2021-2026 Berrysoft"
 [package.metadata.bundle]
 name = "tunet"
 identifier = "io.github.berrysoft.tunet"
+icon = ["../logo.png"]
