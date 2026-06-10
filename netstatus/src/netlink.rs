@@ -2,7 +2,7 @@ use netlink_wi::NlSocket;
 
 use crate::*;
 
-pub async fn current() -> NetStatus {
+pub fn current() -> NetStatus {
     if let Ok(sock) = NlSocket::connect() {
         if let Ok(interfaces) = sock.list_interfaces() {
             for interface in interfaces {

@@ -80,12 +80,7 @@ impl Component for Model {
                 self.spawn_watch_status(sender);
             }
             Action::Status(status) => {
-                let status = if let Some(status) = status {
-                    status
-                } else {
-                    NetStatus::current().await
-                };
-                self.status = status;
+                self.status = status.unwrap_or_else(NetStatus::current);
                 sender.output(UpdateMsg::Status);
             }
             Action::Timer => {

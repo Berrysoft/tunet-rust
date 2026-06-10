@@ -21,7 +21,7 @@ use pin_project::pin_project;
 use crate::*;
 
 #[cfg(target_os = "macos")]
-async fn get_ssid() -> Option<String> {
+fn get_ssid() -> Option<String> {
     use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
     use objc2_core_wlan::CWWiFiClient;
     unsafe {
@@ -38,24 +38,8 @@ async fn get_ssid() -> Option<String> {
 }
 
 #[cfg(not(target_os = "macos"))]
-async fn get_ssid() -> Option<String> {
-    use block2::StackBlock;
-    use objc2::rc::Retained;
-    use objc2_network_extension::NEHotspotNetwork;
-
-    let (tx, rx) = flume::bounded(1);
-    let handler = move |network| unsafe {
-        let network: Option<Retained<NEHotspotNetwork>> = Retained::retain(network);
-        let ssid = network
-            .map(|network| network.SSID())
-            .map(|name| name.to_string());
-        tx.send(ssid).ok();
-    };
-    unsafe {
-        NEHotspotNetwork::fetchCurrentWithCompletionHandler(&StackBlock::new(handler));
-    }
-
-    rx.recv_async().await.ok().flatten()
+fn get_ssid() -> Option<String> {
+    None
 }
 
 fn create_reachability() -> CFRetained<SCNetworkReachability> {
@@ -69,7 +53,7 @@ fn create_reachability() -> CFRetained<SCNetworkReachability> {
     unsafe { SCNetworkReachability::with_address(None, NonNull::from(&mut addr).cast()) }.unwrap()
 }
 
-pub async fn current() -> NetStatus {
+pub fn current() -> NetStatus {
     let sc = create_reachability();
     let mut flag = MaybeUninit::uninit();
     if unsafe { sc.flags(NonNull::new_unchecked(flag.as_mut_ptr())) } {
@@ -82,7 +66,7 @@ pub async fn current() -> NetStatus {
                 || flag.contains(SCNetworkReachabilityFlags::ConnectionOnTraffic))
                 && !flag.contains(SCNetworkReachabilityFlags::InterventionRequired))
         {
-            return match get_ssid().await {
+            return match get_ssid() {
                 Some(ssid) => NetStatus::Wlan(ssid),
                 None => NetStatus::Unknown,
             };

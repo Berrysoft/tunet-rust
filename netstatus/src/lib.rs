@@ -12,6 +12,9 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_vendor = "apple")] {
         #[path = "sc.rs"]
         mod platform;
+    } else if #[cfg(target_os = "android")] {
+        #[path = "android.rs"]
+        mod platform;
     } else {
         #[path = "stub.rs"]
         mod platform;
@@ -27,8 +30,8 @@ pub enum NetStatus {
 }
 
 impl NetStatus {
-    pub async fn current() -> Self {
-        platform::current().await
+    pub fn current() -> Self {
+        platform::current()
     }
 
     pub fn watch() -> impl Stream<Item = ()> {

@@ -15,7 +15,7 @@ static SUGGEST_SSID_MAP: LazyLock<BTreeMap<&'static str, NetState>> = LazyLock::
 });
 
 pub async fn suggest(client: &HttpClient) -> NetState {
-    suggest_with_status(client, &NetStatus::current().await).await
+    suggest_with_status(client, &NetStatus::current()).await
 }
 
 pub async fn suggest_with_status(client: &HttpClient, s: &NetStatus) -> NetState {

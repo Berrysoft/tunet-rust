@@ -23,14 +23,13 @@ objc2-system-configuration = { version = "0.3", features = ["libc"] }
 objc2-core-wlan = "0.3"
 objc2-core-location = "0.3"
 
-[target.'cfg(all(target_vendor = "apple", not(target_os = "macos")))'.dependencies]
-objc2 = "0.6"
-block2 = "0.6"
-objc2-network-extension = "0.3"
-
 [target.'cfg(any(windows, target_vendor = "apple"))'.dependencies]
 flume = { workspace = true }
 pin-project = "1"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 netlink_wi = "0.8"
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.22"
+ndk-context = "0.1"
