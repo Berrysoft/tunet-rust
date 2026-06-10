@@ -44,7 +44,13 @@ impl Display for NetStatus {
         match self {
             Self::Unknown => f.pad("未知"),
             Self::Wwan => f.pad("移动流量"),
-            Self::Wlan(ssid) => f.pad(&format!("无线网络（{ssid}）")),
+            Self::Wlan(ssid) => {
+                if ssid.is_empty() {
+                    f.pad("无线网络")
+                } else {
+                    f.pad(ssid)
+                }
+            }
             Self::Lan => f.pad("有线网络"),
         }
     }
