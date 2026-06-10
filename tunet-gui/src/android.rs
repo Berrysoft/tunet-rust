@@ -14,7 +14,7 @@ fn android_main(app: AndroidApp) {
             .with_max_level(log::LevelFilter::Trace)
             .with_filter(
                 android_logger::FilterBuilder::new()
-                    .parse("warn,tunet=trace,native=trace")
+                    .parse("warn,tunet=trace")
                     .build(),
             ),
     );
