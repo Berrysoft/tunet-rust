@@ -29,8 +29,8 @@ winresource = { workspace = true }
 android-activity = "0.6"
 android_logger = "0.15"
 
-jni = "0.22"
-rustls-platform-verifier = "0.7.0"
+jni = { workspace = true }
+rustls-platform-verifier = { workspace = true }
 
 [features]
 default = ["win32"]

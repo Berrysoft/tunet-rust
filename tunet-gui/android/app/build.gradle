@@ -18,12 +18,12 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace 'io.github.berrysoft.tunet'
-    compileSdk 36
+    compileSdk 37
 
     defaultConfig {
         applicationId "io.github.berrysoft.tunet"
         minSdk 24
-        targetSdk 36
+        targetSdk 37
         versionCode 1
         versionName "0.10.8"
     }
@@ -60,6 +60,7 @@ android {
 }
 
 dependencies {
+    implementation libs.core
     implementation libs.appcompat
     implementation libs.material
 

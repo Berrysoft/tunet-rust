@@ -19,14 +19,13 @@ base64 = { workspace = true }
 serde_json = { workspace = true }
 chrono = { workspace = true }
 thiserror = { workspace = true }
-allo-isolate = { version = "0.1", features = ["chrono"], optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 cyper = { workspace = true, default-features = false, features = [
     "rustls",
     "nyquest-async",
 ] }
-# imported by `android_logger`
+# imported by `android-native-keyring-store` and `android_logger`
 regex = "1"
 rustls = { workspace = true, default-features = false, features = ["ring"] }
 

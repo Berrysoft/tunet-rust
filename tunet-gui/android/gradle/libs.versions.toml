@@ -1,8 +1,8 @@
 [versions]
 agp = "9.2.1"
-core = "1.18.0"
+core = "1.19.0"
 gamesActivity = "4.4.2"
-appcompat = "1.7.0"
+appcompat = "1.7.1"
 material = "1.14.0"
 
 [libraries]
