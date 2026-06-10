@@ -3,7 +3,7 @@
 
 [![Azure DevOps builds](https://strawberry-vs.visualstudio.com/tunet-rust/_apis/build/status/Berrysoft.tunet-rust?branch=master)](https://strawberry-vs.visualstudio.com/tunet-rust/_build)
 
-## GUI（桌面端）
+## GUI
 基于 [winio](https://github.com/compio-rs/winio) 开发。使用如下命令启动：
 
 ``` bash
@@ -14,12 +14,11 @@ $ tunet-gui
 | ----------------------------- | --------------------------- |
 | ![light](assets/pc.light.png) | ![dark](assets/pc.dark.png) |
 
-## GUI（移动端）
-基于 [Flutter](https://flutter.dev/) 开发。会尽量保证 iOS 版本能用，但是没钱发布。
+移动端尽量保证 iOS 版本能用，但是主要关注 Android 端。
 
 | 亮                                   | 暗                                  |
 | ------------------------------------ | ----------------------------------- |
-| ![Android](assets/android.light.png) | ![Android](assets/android.dark.png) |
+| ![Android](assets/android.light.jpg) | ![Android](assets/android.dark.jpg) |
 
 ## 命令行
 ### 登录/注销
@@ -118,16 +117,11 @@ $ tunet deletecred
 ## 编译说明
 使用 `cargo` 直接编译：
 ``` bash
-$ cargo build --release --workspace --exclude native
+$ cargo build --release
 ```
 即可在 `target/release` 下找到编译好的程序。
 
-若要为 Android 编译 APK：
-``` bash
-$ cd tunet-flutter
-$ make apk
-```
-即可在 `tunet-flutter/build/app/outputs/flutter-apk/app-<架构>-release.apk` 找到打包。
+若要为 Android 编译 APK，可用 Android Studio 打开 `tunet-gui/android` 下的项目。
 
 ## 安装说明
 从 Releases 即可找到最新版分发。
