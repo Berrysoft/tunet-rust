@@ -207,12 +207,12 @@ impl TUNetConnect {
 pub async fn create_http_client() -> NetHelperResult<HttpClient> {
     static ONCE: Once = Once::new();
 
-    #[cfg(not(target_os = "android"))]
+    #[cfg(not(any(target_os = "android", target_vendor = "apple")))]
     ONCE.call_once(|| {
         nyquest_preset::register();
     });
 
-    #[cfg(target_os = "android")]
+    #[cfg(any(target_os = "android", target_vendor = "apple"))]
     ONCE.call_once(|| {
         cyper::nyquest::register();
     });
