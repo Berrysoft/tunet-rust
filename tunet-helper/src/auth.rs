@@ -182,16 +182,32 @@ struct AuthConnectUri {
     flux_uri: &'static str,
 }
 
+#[cfg(not(target_os = "android"))]
 const AUTH4_URI: AuthConnectUri = AuthConnectUri {
     log_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal",
     challenge_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge",
     flux_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/rad_user_info",
 };
 
+#[cfg(not(target_os = "android"))]
 const AUTH6_URI: AuthConnectUri = AuthConnectUri {
     log_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal",
     challenge_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/get_challenge",
     flux_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/rad_user_info",
+};
+
+#[cfg(target_os = "android")]
+const AUTH4_URI: AuthConnectUri = AuthConnectUri {
+    log_uri: "http://auth4.tsinghua.edu.cn/cgi-bin/srun_portal",
+    challenge_uri: "http://auth4.tsinghua.edu.cn/cgi-bin/get_challenge",
+    flux_uri: "http://auth4.tsinghua.edu.cn/cgi-bin/rad_user_info",
+};
+
+#[cfg(target_os = "android")]
+const AUTH6_URI: AuthConnectUri = AuthConnectUri {
+    log_uri: "http://auth6.tsinghua.edu.cn/cgi-bin/srun_portal",
+    challenge_uri: "http://auth6.tsinghua.edu.cn/cgi-bin/get_challenge",
+    flux_uri: "http://auth6.tsinghua.edu.cn/cgi-bin/rad_user_info",
 };
 
 trait ExactString {
