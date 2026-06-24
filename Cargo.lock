@@ -4714,7 +4714,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tunet"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "anyhow",
  "argh",
@@ -4728,7 +4728,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-gui"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "android-activity",
  "android_logger",
@@ -4781,7 +4781,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-service"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "anyhow",
  "argh",
