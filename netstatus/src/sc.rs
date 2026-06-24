@@ -22,13 +22,23 @@ use crate::*;
 
 #[cfg(target_os = "macos")]
 fn get_ssid() -> Option<String> {
+    use std::cell::RefCell;
+
+    use objc2::rc::Retained;
     use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
     use objc2_core_wlan::CWWiFiClient;
+
+    thread_local! {
+        static MANAGER: RefCell<Option<Retained<CLLocationManager>>> = const { RefCell::new(None) };
+    }
+
     unsafe {
-        let manager = CLLocationManager::new();
-        if manager.authorizationStatus() != CLAuthorizationStatus::AuthorizedAlways {
-            manager.requestAlwaysAuthorization();
-        }
+        MANAGER.with_borrow_mut(|manager| {
+            let manager = manager.get_or_insert_with(|| CLLocationManager::new());
+            if manager.authorizationStatus() != CLAuthorizationStatus::AuthorizedAlways {
+                manager.requestAlwaysAuthorization();
+            }
+        });
 
         CWWiFiClient::sharedWiFiClient()
             .interface()

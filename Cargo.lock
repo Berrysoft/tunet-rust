@@ -2859,6 +2859,7 @@ dependencies = [
  "log",
  "ndk-context",
  "netlink_wi",
+ "objc2",
  "objc2-core-foundation",
  "objc2-core-location",
  "objc2-core-wlan",
