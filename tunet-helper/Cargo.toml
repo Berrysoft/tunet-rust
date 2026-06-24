@@ -26,11 +26,6 @@ cyper = { workspace = true, features = ["rustls", "nyquest-async"] }
 regex = "1"
 rustls = { workspace = true, default-features = false, features = ["ring"] }
 
-[target.'cfg(target_vendor = "apple")'.dependencies]
-cyper = { workspace = true, features = ["native-tls", "nyquest-async"] }
-
-[target.'cfg(not(any(target_os = "android", target_vendor = "apple")))'.dependencies]
-nyquest-preset = { workspace = true, features = ["async"] }
-
 [target.'cfg(not(target_os = "android"))'.dependencies]
+nyquest-preset = { workspace = true, features = ["async"] }
 regex = { package = "regex-lite", version = "0.1" }
