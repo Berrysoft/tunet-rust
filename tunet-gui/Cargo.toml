@@ -17,6 +17,7 @@ tunet-model = { workspace = true }
 winio = { workspace = true, default-features = false, features = [
     "qt",
     "compio-compat",
+    "windows-dark-mode",
 ] }
 
 anyhow = { workspace = true }
@@ -34,8 +35,8 @@ rustls-platform-verifier = { workspace = true }
 
 [features]
 default = ["win32"]
-win32 = ["winio/win32", "winio/win32-dark-mode"]
-winui = ["winio/winui", "winio/winui-enable-cbs", "winio/win32-dark-mode"]
+win32 = ["winio/win32"]
+winui = ["winio/winui", "winio/winui-enable-cbs", "winio/winui-content-dialog"]
 objc-static = ["winio/objc-static"]
 
 [package.metadata.winresource]
