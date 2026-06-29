@@ -36,7 +36,7 @@ rustls-platform-verifier = { workspace = true }
 [features]
 default = ["win32"]
 win32 = ["winio/win32"]
-winui = ["winio/winui", "winio/winui-enable-cbs", "winio/winui-content-dialog"]
+winui = ["winio/winui", "winio/winui-enable-cbs"]
 objc-static = ["winio/objc-static"]
 
 [package.metadata.winresource]
