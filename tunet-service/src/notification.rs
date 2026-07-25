@@ -5,6 +5,7 @@ use tunet_helper::NetFlux;
 fn notify() -> Notification {
     #[cfg(target_os = "macos")]
     let _ = notify_rust::set_application("io.github.berrysoft.tunet");
+    #[allow(unused_mut)]
     let mut notify = Notification::new();
     #[cfg(target_os = "windows")]
     notify.app_id("io.github.berrysoft.tunet");
