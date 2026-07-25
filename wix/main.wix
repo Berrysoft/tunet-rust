@@ -7,7 +7,7 @@
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" DiskPrompt="CD-ROM #1" />
     <Property Id="DiskPrompt" Value="tunet installation" />
 
-    <Feature Id="feature_tunet_cli" Title="Executable" Description="Installs executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
+    <Feature Id="feature_tunet_cli" Title="Executable" Description="Installs executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" Absent="disallow">
       <ComponentRef Id="tunet_cli_binary" />
     </Feature>
     <Feature Id="feature_env_path" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executables to the PATH system environment variable. This allows the [ProductName] executables to be called from any location." Level="1">
