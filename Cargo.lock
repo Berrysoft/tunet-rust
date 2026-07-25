@@ -4724,6 +4724,7 @@ version = "0.11.1"
 dependencies = [
  "anyhow",
  "argh",
+ "cfg-if",
  "compio",
  "console",
  "enum_dispatch",
@@ -4731,6 +4732,7 @@ dependencies = [
  "tunet-helper",
  "tunet-service",
  "tunet-settings",
+ "windows 0.62.2",
  "winresource",
 ]
 

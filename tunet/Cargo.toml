@@ -37,12 +37,16 @@ tunet-settings = { workspace = true }
 tunet-service = { workspace = true }
 tunet-gui = { workspace = true }
 anyhow = { workspace = true }
-compio = { workspace = true, features = ["macros"] }
 argh = { workspace = true }
+cfg-if = { workspace = true }
+compio = { workspace = true, features = ["macros"] }
 console = "0.16"
 enum_dispatch = { workspace = true }
 
-[target.'cfg(target_os = "windows")'.build-dependencies]
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = ["Win32_System_Console"] }
+
+[target.'cfg(windows)'.build-dependencies]
 winresource = { workspace = true }
 
 [package.metadata.winresource]
