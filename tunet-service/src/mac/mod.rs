@@ -26,6 +26,7 @@ pub fn register(interval: Option<humantime::Duration>) -> Result<()> {
     unregister()?;
     let mut args = vec![
         std::env::current_exe()?.to_string_lossy().into_owned(),
+        "service".to_string(),
         "start".to_string(),
     ];
     if let Some(d) = interval {

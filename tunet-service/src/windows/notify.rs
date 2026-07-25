@@ -163,9 +163,9 @@ pub fn notify(quiet: bool) -> Result<()> {
         let app_name = std::env::current_exe()?.into_os_string();
         // Need to set the first arg as the exe itself.
         let command_line = if quiet {
-            "tunet-service.exe run-once --quiet"
+            "tunet.exe service run-once --quiet"
         } else {
-            "tunet-service.exe run-once"
+            "tunet.exe service run-once"
         };
         let app_dir = std::env::current_dir()?.into_os_string();
         command_as(app_name, command_line, app_dir, &token, &env)?;

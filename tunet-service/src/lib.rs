@@ -25,19 +25,15 @@ use tunet_settings::SettingsReader;
 
 pub const SERVICE_NAME: &str = "tunet-service";
 
-fn main() -> Result<()> {
-    let commands: Commands = argh::from_env();
-    commands.run()
-}
-
 #[enum_dispatch(CommandsImpl)]
-trait Command {
+pub trait Command {
     fn run(&self) -> Result<()>;
 }
 
 #[derive(Debug, FromArgs)]
-#[argh(description = "清华校园网后台服务")]
-struct Commands {
+#[argh(subcommand, name = "service")]
+/// 服务
+pub struct Commands {
     #[argh(subcommand)]
     cmd: CommandsImpl,
 }

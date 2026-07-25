@@ -4727,7 +4727,9 @@ dependencies = [
  "compio",
  "console",
  "enum_dispatch",
+ "tunet-gui",
  "tunet-helper",
+ "tunet-service",
  "tunet-settings",
  "winresource",
 ]

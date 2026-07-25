@@ -13,7 +13,7 @@ import rs.compio.winio.Activity;
 
 public class MainActivity extends Activity {
     static {
-        System.loadLibrary("main");
+        System.loadLibrary("tunet_gui");
     }
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;

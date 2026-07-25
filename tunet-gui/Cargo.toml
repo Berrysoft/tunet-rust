@@ -7,9 +7,6 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
-[lib]
-name = "main"
-
 [dependencies]
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
@@ -38,12 +35,3 @@ default = ["win32"]
 win32 = ["winio/win32"]
 winui = ["winio/winui", "winio/winui-enable-cbs"]
 objc-static = ["winio/objc-static"]
-
-[package.metadata.winresource]
-OriginalFilename = "tunet-gui.exe"
-LegalCopyright = "Copyright © 2021-2026 Berrysoft"
-
-[package.metadata.bundle]
-name = "tunet"
-identifier = "io.github.berrysoft.tunet"
-icon = ["../logo.png"]

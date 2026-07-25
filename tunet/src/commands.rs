@@ -5,6 +5,7 @@ use argh::FromArgs;
 use console::{Color, style};
 use enum_dispatch::enum_dispatch;
 use tunet_helper::*;
+use tunet_service::Commands as Service;
 use tunet_settings::*;
 
 fn get_flux_color(&Flux(flux): &Flux, total: bool) -> Color {
@@ -26,7 +27,7 @@ pub trait TUNetCommand {
 #[argh(description = "清华大学校园网客户端")]
 pub struct TUNet {
     #[argh(subcommand)]
-    cmd: TUNetImpl,
+    pub(crate) cmd: TUNetImpl,
 }
 
 impl TUNetCommand for TUNet {
@@ -38,11 +39,12 @@ impl TUNetCommand for TUNet {
 #[enum_dispatch]
 #[derive(Debug, FromArgs)]
 #[argh(subcommand)]
-enum TUNetImpl {
+pub(crate) enum TUNetImpl {
     Login,
     Logout,
     Status,
     DeleteCred,
+    Service,
 }
 
 #[derive(Debug, FromArgs)]
@@ -144,5 +146,11 @@ impl TUNetCommand for DeleteCred {
             println!("已删除");
         }
         Ok(())
+    }
+}
+
+impl TUNetCommand for Service {
+    async fn run(&self) -> Result<()> {
+        unreachable!()
     }
 }

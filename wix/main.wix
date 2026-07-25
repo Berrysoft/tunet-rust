@@ -7,16 +7,8 @@
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" DiskPrompt="CD-ROM #1" />
     <Property Id="DiskPrompt" Value="tunet installation" />
 
-    <Feature Id="feature_tunet_cli" Title="Command Line Interface (CLI)" Description="Installs CLI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
+    <Feature Id="feature_tunet_cli" Title="Executable" Description="Installs executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
       <ComponentRef Id="tunet_cli_binary" />
-    </Feature>
-    <Feature Id="feature_tunet_gui" Title="Graphical Interface (GUI)" Description="Installs GUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
-      <ComponentRef Id="tunet_gui_binary" />
-      <ComponentRef Id="tunet_gui_shortcut" />
-    </Feature>
-    <Feature Id="feature_tunet_service" Title="Service Daemon" Description="Installs service executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
-      <ComponentRef Id="tunet_service_binary" />
-      <ComponentRef Id="tunet_gui_shortcut" />
     </Feature>
     <Feature Id="feature_env_path" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executables to the PATH system environment variable. This allows the [ProductName] executables to be called from any location." Level="1">
       <ComponentRef Id="path" />
@@ -41,14 +33,6 @@
 
           <Component Id="tunet_cli_binary">
             <File Id="tunet_cli_exe" Name="tunet.exe" DiskId="1" KeyPath="yes" />
-          </Component>
-
-          <Component Id="tunet_gui_binary">
-            <File Id="tunet_gui_exe" Name="tunet-gui.exe" DiskId="1" KeyPath="yes" />
-          </Component>
-
-          <Component Id="tunet_service_binary">
-            <File Id="tunet_service_exe" Name="tunet-service.exe" DiskId="1" KeyPath="yes" />
           </Component>
 
         </Directory>

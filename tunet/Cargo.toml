@@ -15,16 +15,6 @@ assets = [
         "755",
     ],
     [
-        "target/release/tunet-gui",
-        "usr/bin/",
-        "755",
-    ],
-    [
-        "target/release/tunet-service",
-        "usr/bin/",
-        "755",
-    ],
-    [
         "../logo.png",
         "usr/share/icons/hicolor/256x256/apps/tunet.png",
         "644",
@@ -44,6 +34,8 @@ assets = [
 [dependencies]
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
+tunet-service = { workspace = true }
+tunet-gui = { workspace = true }
 anyhow = { workspace = true }
 compio = { workspace = true, features = ["macros"] }
 argh = { workspace = true }

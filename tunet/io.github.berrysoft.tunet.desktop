@@ -2,7 +2,7 @@
 Type=Application
 Name=清华校园网
 GenericName=清华大学校园网客户端
-Exec=tunet-gui
+Exec=tunet
 Icon=tunet
 NoDisplay=false
 Terminal=false
