@@ -70,7 +70,7 @@ impl Command for Register {
         let (u, p) = reader.read_ask_full()?;
         reader.save(&u, &p)?;
         service::register(self.interval)?;
-        println!("服务注册成功");
+        notification::message("服务注册成功")?;
         Ok(())
     }
 }
@@ -84,7 +84,7 @@ impl Command for Unregister {
     fn run(&self) -> Result<()> {
         elevator::elevate()?;
         service::unregister()?;
-        println!("服务注销成功");
+        notification::message("服务注销成功")?;
         Ok(())
     }
 }
