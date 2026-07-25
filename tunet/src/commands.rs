@@ -20,26 +20,34 @@ fn get_flux_color(&Flux(flux): &Flux, total: bool) -> Color {
 
 #[enum_dispatch(TUNetImpl)]
 pub trait TUNetCommand {
-    async fn run(&self) -> Result<()>;
+    fn run(&self) -> Result<()> {
+        compio::runtime::Runtime::new()?.block_on(self.run_async())
+    }
+
+    async fn run_async(&self) -> Result<()>;
 }
 
 #[derive(Debug, FromArgs)]
 #[argh(description = "清华大学校园网客户端")]
 pub struct TUNet {
     #[argh(subcommand)]
-    pub(crate) cmd: TUNetImpl,
+    cmd: TUNetImpl,
 }
 
 impl TUNetCommand for TUNet {
-    async fn run(&self) -> Result<()> {
-        self.cmd.run().await
+    fn run(&self) -> Result<()> {
+        self.cmd.run()
+    }
+
+    async fn run_async(&self) -> Result<()> {
+        unreachable!()
     }
 }
 
 #[enum_dispatch]
 #[derive(Debug, FromArgs)]
 #[argh(subcommand)]
-pub(crate) enum TUNetImpl {
+enum TUNetImpl {
     Login,
     Logout,
     Status,
@@ -50,14 +58,14 @@ pub(crate) enum TUNetImpl {
 #[derive(Debug, FromArgs)]
 #[argh(subcommand, name = "login")]
 /// 登录
-pub struct Login {
+struct Login {
     #[argh(option, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
 
 impl TUNetCommand for Login {
-    async fn run(&self) -> Result<()> {
+    async fn run_async(&self) -> Result<()> {
         let client = create_http_client().await?;
         let mut reader = SettingsReader::new()?;
         let (u, p) = reader.read_ask_full()?;
@@ -72,14 +80,14 @@ impl TUNetCommand for Login {
 #[derive(Debug, FromArgs)]
 #[argh(subcommand, name = "logout")]
 /// 注销
-pub struct Logout {
+struct Logout {
     #[argh(option, short = 's')]
     /// 连接方式
     host: Option<NetState>,
 }
 
 impl TUNetCommand for Logout {
-    async fn run(&self) -> Result<()> {
+    async fn run_async(&self) -> Result<()> {
         let client = create_http_client().await?;
         let reader = SettingsReader::new()?;
         let u = reader.read_ask_username()?;
@@ -92,7 +100,7 @@ impl TUNetCommand for Logout {
 #[derive(Debug, FromArgs)]
 #[argh(subcommand, name = "status")]
 /// 查看在线状态
-pub struct Status {
+struct Status {
     #[argh(option, short = 's')]
     /// 连接方式
     host: Option<NetState>,
@@ -102,7 +110,7 @@ pub struct Status {
 }
 
 impl TUNetCommand for Status {
-    async fn run(&self) -> Result<()> {
+    async fn run_async(&self) -> Result<()> {
         let client = create_http_client().await?;
         let c = TUNetConnect::new_with_suggest(self.host, client).await?;
         let f = c.flux().await?;
@@ -131,10 +139,10 @@ impl TUNetCommand for Status {
 #[derive(Debug, FromArgs)]
 #[argh(subcommand, name = "deletecred")]
 /// 删除用户名和密码
-pub struct DeleteCred {}
+struct DeleteCred {}
 
 impl TUNetCommand for DeleteCred {
-    async fn run(&self) -> Result<()> {
+    async fn run_async(&self) -> Result<()> {
         let mut reader = SettingsReader::new()?;
         let u = reader.read_username()?;
         print!("是否删除设置文件？[y/N]");
@@ -150,7 +158,11 @@ impl TUNetCommand for DeleteCred {
 }
 
 impl TUNetCommand for Service {
-    async fn run(&self) -> Result<()> {
+    fn run(&self) -> Result<()> {
+        tunet_service::Command::run(self)
+    }
+
+    async fn run_async(&self) -> Result<()> {
         unreachable!()
     }
 }
