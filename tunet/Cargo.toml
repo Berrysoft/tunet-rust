@@ -49,6 +49,12 @@ windows = { workspace = true, features = ["Win32_System_Console"] }
 [target.'cfg(windows)'.build-dependencies]
 winresource = { workspace = true }
 
+[features]
+default = ["win32"]
+win32 = ["tunet-gui/win32"]
+winui = ["tunet-gui/winui"]
+objc-static = ["tunet-gui/objc-static"]
+
 [package.metadata.winresource]
 OriginalFilename = "tunet.exe"
 LegalCopyright = "Copyright © 2021-2026 Berrysoft"

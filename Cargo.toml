@@ -30,7 +30,7 @@ tunet-helper = { path = "tunet-helper" }
 tunet-model = { path = "tunet-model" }
 tunet-settings = { path = "tunet-settings" }
 tunet-service = { path = "tunet-service" }
-tunet-gui = { path = "tunet-gui" }
+tunet-gui = { path = "tunet-gui", default-features = false }
 
 anyhow = "1"
 async-stream = "0.3"
