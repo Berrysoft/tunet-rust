@@ -261,7 +261,7 @@ impl Component for MainModel {
                     .message("将删除保存的凭据并退出应用程序")
                     .buttons(MessageBoxButton::Ok | MessageBoxButton::Cancel)
                     .style(MessageBoxStyle::Warning)
-                    .show(Some(&self.window))
+                    .show(Some(&self.window))?
                     .await?;
                 if let MessageBoxResponse::Ok = res {
                     self.settings.delete(&self.username_input.text()?)?;
