@@ -9,6 +9,7 @@
 
     <Feature Id="feature_tunet_cli" Title="Executable" Description="Installs executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
       <ComponentRef Id="tunet_cli_binary" />
+      <ComponentRef Id="tunet_gui_shortcut" />
     </Feature>
     <Feature Id="feature_env_path" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executables to the PATH system environment variable. This allows the [ProductName] executables to be called from any location." Level="1">
       <ComponentRef Id="path" />
