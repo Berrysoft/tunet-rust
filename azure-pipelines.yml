@@ -14,31 +14,31 @@ jobs:
     matrix:
       x64:
         target: 'x86_64-pc-windows-msvc'
-        fargs: ''
+        fargs: '--features ucrtbase'
         publishName: 'tunet.win.x86_64'
         wixArch: x64
         vcArch: x64
       x86:
         target: 'i686-pc-windows-msvc'
-        fargs: ''
+        fargs: '--features ucrtbase'
         publishName: 'tunet.win.i686'
         wixArch: x86
         vcArch: Win32
       arm64:
         target: 'aarch64-pc-windows-msvc'
-        fargs: ''
+        fargs: '--features ucrtbase'
         publishName: 'tunet.win.aarch64'
         wixArch: arm64
         vcArch: ARM64
       x64-winui:
         target: 'x86_64-pc-windows-msvc'
-        fargs: '--no-default-features --features winui'
+        fargs: '--no-default-features --features winui,ucrtbase'
         publishName: 'tunet.winui3.x86_64'
         wixArch: x64
         vcArch: x64
       arm64-winui:
         target: 'aarch64-pc-windows-msvc'
-        fargs: '--no-default-features --features winui'
+        fargs: '--no-default-features --features winui,ucrtbase'
         publishName: 'tunet.winui3.aarch64'
         wixArch: arm64
         vcArch: ARM64
@@ -46,23 +46,14 @@ jobs:
     vmImage: windows-latest
   
   steps:
-  - pwsh: |
-      Invoke-WebRequest -Uri "https://globalcdn.nuget.org/packages/vc-ltl.5.2.1.nupkg?packageVersion=5.2.1" -OutFile "vc-ltl.nupkg"
-      Expand-Archive vc-ltl.nupkg -DestinationPath vc-ltl
-    displayName: "Download VC-LTL"
-
   - script: |
       rustup target add $(target)
       cargo build --release --target $(target) $(fargs)
     displayName: "Build"
-    env:
-      RUSTFLAGS: -L vc-ltl/build/native/TargetPlatform/10.0.19041.0/lib/$(vcArch)
 
   - pwsh: |
       cd target/$(target)/release
       cp tunet.exe $(Build.BinariesDirectory)/
-      cp tunet-gui.exe $(Build.BinariesDirectory)/
-      cp tunet-service.exe $(Build.BinariesDirectory)/
     displayName: 'Copy Binaries'
 
   - pwsh: |

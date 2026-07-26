@@ -1,5 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package Name="tunet" UpgradeCode="352cd480-6986-463f-81c6-085864d05a84" Manufacturer="Berrysoft" Language="2052" Codepage="936" Version="0.11.1" InstallerVersion="450">
+  <Package Name="tunet" UpgradeCode="352cd480-6986-463f-81c6-085864d05a84" Manufacturer="Berrysoft" Language="2052" Codepage="936" Version="0.12.0" InstallerVersion="450">
     <SummaryInformation Keywords="Installer" Manufacturer="Berrysoft" />
 
     <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
@@ -7,15 +7,8 @@
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" DiskPrompt="CD-ROM #1" />
     <Property Id="DiskPrompt" Value="tunet installation" />
 
-    <Feature Id="feature_tunet_cli" Title="Command Line Interface (CLI)" Description="Installs CLI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
+    <Feature Id="feature_tunet_cli" Title="Executable" Description="Installs executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand" AllowAbsent="no">
       <ComponentRef Id="tunet_cli_binary" />
-    </Feature>
-    <Feature Id="feature_tunet_gui" Title="Graphical Interface (GUI)" Description="Installs GUI executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
-      <ComponentRef Id="tunet_gui_binary" />
-      <ComponentRef Id="tunet_gui_shortcut" />
-    </Feature>
-    <Feature Id="feature_tunet_service" Title="Service Daemon" Description="Installs service executable." Level="1" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Display="expand">
-      <ComponentRef Id="tunet_service_binary" />
       <ComponentRef Id="tunet_gui_shortcut" />
     </Feature>
     <Feature Id="feature_env_path" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executables to the PATH system environment variable. This allows the [ProductName] executables to be called from any location." Level="1">
@@ -43,21 +36,13 @@
             <File Id="tunet_cli_exe" Name="tunet.exe" DiskId="1" KeyPath="yes" />
           </Component>
 
-          <Component Id="tunet_gui_binary">
-            <File Id="tunet_gui_exe" Name="tunet-gui.exe" DiskId="1" KeyPath="yes" />
-          </Component>
-
-          <Component Id="tunet_service_binary">
-            <File Id="tunet_service_exe" Name="tunet-service.exe" DiskId="1" KeyPath="yes" />
-          </Component>
-
         </Directory>
       </Directory>
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
       <Component Id="tunet_gui_shortcut" Guid="2f8e941e-7641-40b1-9ba5-74e49d2ad351">
-        <Shortcut Id="tunet_gui_exe_shortcut" Name="清华校园网" Description="清华大学校园网客户端" Target="[!tunet_gui_exe]" WorkingDirectory="Bin">
+        <Shortcut Id="tunet_gui_exe_shortcut" Name="清华校园网" Description="清华大学校园网客户端" Target="[!tunet_cli_exe]" WorkingDirectory="Bin">
           <ShortcutProperty Key="System.AppUserModel.ID" Value="io.github.berrysoft.tunet"></ShortcutProperty>
         </Shortcut>
       </Component>

@@ -25,19 +25,15 @@ use tunet_settings::SettingsReader;
 
 pub const SERVICE_NAME: &str = "tunet-service";
 
-fn main() -> Result<()> {
-    let commands: Commands = argh::from_env();
-    commands.run()
-}
-
 #[enum_dispatch(CommandsImpl)]
-trait Command {
+pub trait Command {
     fn run(&self) -> Result<()>;
 }
 
 #[derive(Debug, FromArgs)]
-#[argh(description = "清华校园网后台服务")]
-struct Commands {
+#[argh(subcommand, name = "service")]
+/// 服务
+pub struct Commands {
     #[argh(subcommand)]
     cmd: CommandsImpl,
 }
@@ -74,7 +70,7 @@ impl Command for Register {
         let (u, p) = reader.read_ask_full()?;
         reader.save(&u, &p)?;
         service::register(self.interval)?;
-        println!("服务注册成功");
+        notification::message("服务注册成功")?;
         Ok(())
     }
 }
@@ -88,7 +84,7 @@ impl Command for Unregister {
     fn run(&self) -> Result<()> {
         elevator::elevate()?;
         service::unregister()?;
-        println!("服务注销成功");
+        notification::message("服务注销成功")?;
         Ok(())
     }
 }

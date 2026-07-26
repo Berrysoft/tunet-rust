@@ -2,19 +2,25 @@ use anyhow::Result;
 use notify_rust::Notification;
 use tunet_helper::NetFlux;
 
-#[cfg(target_os = "macos")]
-#[link(name = "AppKit", kind = "framework")]
-unsafe extern "C" {}
-
-pub fn succeeded(flux: NetFlux) -> Result<()> {
+fn notify() -> Notification {
     #[cfg(target_os = "macos")]
     let _ = notify_rust::set_application("io.github.berrysoft.tunet");
+    #[allow(unused_mut)]
     let mut notify = Notification::new();
     #[cfg(target_os = "windows")]
     notify.app_id("io.github.berrysoft.tunet");
     notify
+}
+
+pub fn succeeded(flux: NetFlux) -> Result<()> {
+    notify()
         .summary(&format!("登录成功：{}", flux.username))
         .body(&format!("流量：{}\n余额：{}", flux.flux, flux.balance))
         .show()?;
+    Ok(())
+}
+
+pub fn message(msg: &str) -> Result<()> {
+    notify().summary(msg).show()?;
     Ok(())
 }

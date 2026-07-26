@@ -9,6 +9,12 @@ use winio::prelude::*;
 #[cfg(target_os = "android")]
 mod android;
 
+#[cfg(not(target_os = "android"))]
+mod entry;
+
+#[cfg(not(target_os = "android"))]
+pub use entry::*;
+
 fn accent_color() -> Color {
     Color::accent()
         .map(|c| c.with_alpha(255))

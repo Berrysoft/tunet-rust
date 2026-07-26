@@ -7,7 +7,7 @@
 基于 [winio](https://github.com/compio-rs/winio) 开发。使用如下命令启动：
 
 ``` bash
-$ tunet-gui
+$ tunet
 ```
 
 | 亮                            | 暗                          |
@@ -49,13 +49,13 @@ $ tunet status -s auth4
 ### Windows 服务/macOS launchd
 ``` bash
 # 注册服务
-$ tunet-service register
+$ tunet service register
 # 注册服务，并定时5分钟连接一次
-$ tunet-service register -i "5min"
+$ tunet service register -i "5min"
 # 注销服务
-$ tunet-service unregister
+$ tunet service unregister
 ```
-注意 `tunet-service.exe` 自身是服务程序，如需删除应先注销服务。
+注意 `tunet.exe` 自身是服务程序，如需删除应先注销服务。
 
 ### Systemd
 由于不同 Linux 发行版的服务机制不同，没有提供 `register` 和 `unregister` 命令。

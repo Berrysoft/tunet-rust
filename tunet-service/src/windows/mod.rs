@@ -44,9 +44,14 @@ fn create_service(
         error_control: ServiceErrorControl::Normal,
         executable_path: std::env::current_exe()?,
         launch_arguments: if let Some(d) = interval {
-            vec!["start".into(), "--interval".into(), d.to_string().into()]
+            vec![
+                "service".into(),
+                "start".into(),
+                "--interval".into(),
+                d.to_string().into(),
+            ]
         } else {
-            vec!["start".into()]
+            vec!["service".into(), "start".into()]
         },
         dependencies: vec![],
         account_name: None,

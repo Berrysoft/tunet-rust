@@ -1,6 +1,6 @@
 [package]
 name = "tunet"
-version = "0.11.1"
+version = "0.12.0"
 description = "Tsinghua University network CLI"
 edition.workspace = true
 authors.workspace = true
@@ -11,16 +11,6 @@ repository.workspace = true
 assets = [
     [
         "target/release/tunet",
-        "usr/bin/",
-        "755",
-    ],
-    [
-        "target/release/tunet-gui",
-        "usr/bin/",
-        "755",
-    ],
-    [
-        "target/release/tunet-service",
         "usr/bin/",
         "755",
     ],
@@ -44,14 +34,28 @@ assets = [
 [dependencies]
 tunet-helper = { workspace = true }
 tunet-settings = { workspace = true }
+tunet-service = { workspace = true }
+tunet-gui = { workspace = true }
 anyhow = { workspace = true }
-compio = { workspace = true, features = ["macros"] }
 argh = { workspace = true }
+cfg-if = { workspace = true }
+compio = { workspace = true, features = ["macros"] }
 console = "0.16"
 enum_dispatch = { workspace = true }
 
-[target.'cfg(target_os = "windows")'.build-dependencies]
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = ["Win32_System_Console"] }
+
+ucrtbase = { version = "0.1.1", optional = true }
+
+[target.'cfg(windows)'.build-dependencies]
 winresource = { workspace = true }
+
+[features]
+default = ["win32"]
+win32 = ["tunet-gui/win32"]
+winui = ["tunet-gui/winui"]
+objc-static = ["tunet-gui/objc-static"]
 
 [package.metadata.winresource]
 OriginalFilename = "tunet.exe"
