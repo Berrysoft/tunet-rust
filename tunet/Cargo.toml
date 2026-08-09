@@ -29,6 +29,11 @@ assets = [
         "lib/systemd/user/tunet.service",
         "644",
     ],
+    [
+        "../tunet-service/tunet-dbus.service",
+        "lib/systemd/user/tunet-dbus.service",
+        "644",
+    ],
 ]
 
 [dependencies]
