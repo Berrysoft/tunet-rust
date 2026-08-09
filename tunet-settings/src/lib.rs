@@ -17,6 +17,8 @@ use std::{
 use dirs::config_dir;
 use keyring_core::Entry;
 use rpassword::read_password;
+#[cfg(target_os = "linux")]
+use secret_service::{EncryptionType, blocking::SecretService};
 #[cfg(not(target_os = "linux"))]
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -107,6 +109,22 @@ impl SettingsReader {
     }
 
     #[cfg(target_os = "linux")]
+    fn ensure_default_collection() -> SettingsResult<()> {
+        let service = SecretService::connect(EncryptionType::Dh)
+            .map_err(keyring_store::errors::decode_error)?;
+        match service.get_default_collection() {
+            Ok(_) => Ok(()),
+            Err(secret_service::Error::NoResult) => {
+                service
+                    .create_collection("Default", "default")
+                    .map_err(keyring_store::errors::decode_error)?;
+                Ok(())
+            }
+            Err(e) => Err(keyring_store::errors::decode_error(e).into()),
+        }
+    }
+
+    #[cfg(target_os = "linux")]
     fn saved_entry() -> SettingsResult<Entry> {
         let mut entries = Entry::search(&HashMap::from([("service", TUNET_NAME)]))?;
         match entries.len() {
@@ -126,6 +144,7 @@ impl SettingsReader {
     pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {
         #[cfg(target_os = "linux")]
         {
+            Self::ensure_default_collection()?;
             match self.read_username() {
                 Ok(old_user) if old_user != u => Self::entry(&old_user)?.delete_credential()?,
                 Ok(_) => {}
