@@ -1,25 +1,17 @@
 #![forbid(unsafe_code)]
 
-#[cfg(target_os = "linux")]
-use std::collections::HashMap;
-#[cfg(not(target_os = "linux"))]
 use std::{
     borrow::Cow,
     fs::{DirBuilder, File, remove_file},
-    io::{BufReader, BufWriter},
-};
-use std::{
-    io::{Write, stdin, stdout},
+    io::{BufReader, BufWriter, Write, stdin, stdout},
     path::PathBuf,
 };
 
-#[cfg(not(target_os = "linux"))]
 use dirs::config_dir;
 use keyring_core::Entry;
 use rpassword::read_password;
 #[cfg(target_os = "linux")]
 use secret_service::{EncryptionType, blocking::SecretService};
-#[cfg(not(target_os = "linux"))]
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -47,15 +39,19 @@ pub enum SettingsError {
     Json(#[from] serde_json::Error),
 }
 
+#[cfg(target_os = "linux")]
 impl SettingsError {
     pub fn is_no_entry(&self) -> bool {
         matches!(self, Self::Keyring(keyring_core::Error::NoEntry))
+    }
+
+    pub fn is_config_not_found(&self) -> bool {
+        matches!(self, Self::IoError(e) if e.kind() == std::io::ErrorKind::NotFound)
     }
 }
 
 pub type SettingsResult<T> = Result<T, SettingsError>;
 
-#[cfg(not(target_os = "linux"))]
 #[derive(Deserialize, Serialize)]
 struct Settings<'a> {
     #[serde(default)]
@@ -65,23 +61,14 @@ struct Settings<'a> {
 static TUNET_NAME: &str = "tunet";
 
 pub struct SettingsReader {
-    #[cfg(not(target_os = "linux"))]
     path: PathBuf,
 }
 
 impl SettingsReader {
     pub fn new() -> SettingsResult<Self> {
-        #[cfg(target_os = "linux")]
-        {
-            Self::with_dir(PathBuf::new())
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            Self::with_dir(Self::file_dir()?)
-        }
+        Self::with_dir(Self::file_dir()?)
     }
 
-    #[cfg(not(target_os = "linux"))]
     fn file_dir() -> SettingsResult<PathBuf> {
         let mut p = config_dir().ok_or(SettingsError::ConfigDirNotFound)?;
         p.push(TUNET_NAME);
@@ -90,18 +77,10 @@ impl SettingsReader {
 
     pub fn with_dir(path: impl Into<PathBuf>) -> SettingsResult<Self> {
         keyring_core::set_default_store(keyring_store::Store::new()?);
-        #[cfg(target_os = "linux")]
-        {
-            let _ = path;
-            Ok(Self {})
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            let mut path = path.into();
-            path.push("settings");
-            path.set_extension("json");
-            Ok(Self { path })
-        }
+        let mut path = path.into();
+        path.push("settings");
+        path.set_extension("json");
+        Ok(Self { path })
     }
 
     fn entry(u: &str) -> SettingsResult<Entry> {
@@ -124,78 +103,37 @@ impl SettingsReader {
         }
     }
 
-    #[cfg(target_os = "linux")]
-    fn saved_entry() -> SettingsResult<Entry> {
-        let mut entries = Entry::search(&HashMap::from([("service", TUNET_NAME)]))?;
-        match entries.len() {
-            0 => Err(keyring_core::Error::NoEntry.into()),
-            1 => Ok(entries.pop().unwrap()),
-            _ => Err(keyring_core::Error::Ambiguous(entries).into()),
-        }
-    }
-
-    #[cfg(target_os = "linux")]
-    fn entry_username(entry: &Entry) -> SettingsResult<String> {
-        entry.get_attributes()?.remove("username").ok_or_else(|| {
-            keyring_core::Error::BadStoreFormat("找不到凭据的用户名".to_string()).into()
-        })
-    }
-
     pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {
         #[cfg(target_os = "linux")]
-        {
-            Self::ensure_default_collection()?;
-            match self.read_username() {
-                Ok(old_user) if old_user != u => Self::entry(&old_user)?.delete_credential()?,
-                Ok(_) => {}
-                Err(e) if e.is_no_entry() => {}
-                Err(e) => return Err(e),
-            }
-            let entry = Self::entry(u)?;
-            entry.set_password(p)?;
-            Ok(())
+        Self::ensure_default_collection()?;
+        if let Some(p) = self.path.parent() {
+            DirBuilder::new().recursive(true).create(p)?;
         }
-        #[cfg(not(target_os = "linux"))]
-        {
-            if let Some(p) = self.path.parent() {
-                DirBuilder::new().recursive(true).create(p)?;
-            }
-            let f = File::create(self.path.as_path())?;
-            let writer = BufWriter::new(f);
-            let entry = Self::entry(u)?;
-            entry.set_password(p)?;
-            let c = Settings {
-                username: Cow::Borrowed(u),
-            };
-            serde_json::to_writer(writer, &c)?;
-            Ok(())
-        }
+        let f = File::create(self.path.as_path())?;
+        let writer = BufWriter::new(f);
+        let entry = Self::entry(u)?;
+        entry.set_password(p)?;
+        let c = Settings {
+            username: Cow::Borrowed(u),
+        };
+        serde_json::to_writer(writer, &c)?;
+        Ok(())
     }
 
     pub fn delete(&mut self, u: &str) -> SettingsResult<()> {
         let entry = Self::entry(u)?;
         entry.delete_credential()?;
-        #[cfg(not(target_os = "linux"))]
-        {
-            if self.path.exists() {
-                remove_file(self.path.as_path())?;
-            }
+        if self.path.exists() {
+            remove_file(self.path.as_path())?;
         }
         Ok(())
     }
 
     pub fn read_username(&self) -> SettingsResult<String> {
-        #[cfg(target_os = "linux")]
-        {
-            Self::entry_username(&Self::saved_entry()?)
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            let f = File::open(self.path.as_path())?;
-            let reader = BufReader::new(f);
-            let c: Settings = serde_json::from_reader(reader)?;
-            Ok(c.username.into_owned())
-        }
+        let f = File::open(self.path.as_path())?;
+        let reader = BufReader::new(f);
+        let c: Settings = serde_json::from_reader(reader)?;
+        Ok(c.username.into_owned())
     }
 
     pub fn read_password(&self, u: &str) -> SettingsResult<String> {
@@ -205,19 +143,9 @@ impl SettingsReader {
     }
 
     pub fn read_full(&self) -> SettingsResult<(String, String)> {
-        #[cfg(target_os = "linux")]
-        {
-            let entry = Self::saved_entry()?;
-            let username = Self::entry_username(&entry)?;
-            let password = entry.get_password()?;
-            Ok((username, password))
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            let u = self.read_username()?;
-            let password = self.read_password(&u)?;
-            Ok((u, password))
-        }
+        let u = self.read_username()?;
+        let password = self.read_password(&u)?;
+        Ok((u, password))
     }
 
     pub fn ask_username(&self) -> SettingsResult<String> {
@@ -235,20 +163,7 @@ impl SettingsReader {
     }
 
     pub fn read_ask_username(&self) -> SettingsResult<String> {
-        #[cfg(target_os = "linux")]
-        {
-            self.read_username().or_else(|e| {
-                if e.is_no_entry() {
-                    self.ask_username()
-                } else {
-                    Err(e)
-                }
-            })
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            self.read_username().or_else(|_| self.ask_username())
-        }
+        self.read_username().or_else(|_| self.ask_username())
     }
 
     pub fn read_ask_password(&self, u: &str) -> SettingsResult<String> {

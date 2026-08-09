@@ -73,7 +73,7 @@ impl Component for MainModel {
         #[cfg(target_os = "linux")]
         let (username, password) = match settings.read_full() {
             Ok(credential) => credential,
-            Err(e) if e.is_no_entry() => Default::default(),
+            Err(e) if e.is_config_not_found() || e.is_no_entry() => Default::default(),
             Err(e) => return Err(e.into()),
         };
         #[cfg(not(target_os = "linux"))]
