@@ -73,7 +73,7 @@ $ systemctl --user start tunet
 ``` bash
 $ tunet deletecred
 ```
-Linux 使用 Secret Service 保存密码，需要在用户会话中运行 GNOME Keyring、KWallet 等兼容的密码存储服务。
+Linux 优先使用 Secret Service 保存密码，需要在用户会话中运行 GNOME Keyring、KWallet 等兼容的密码存储服务；如果 Secret Service 不可用，则回退到仅当前用户可读的明文存储。
 
 ## 网络状态
 针对不同平台使用平台特定的方式尝试获得当前的网络连接方式，如果是无线网连接还会获取 SSID。
