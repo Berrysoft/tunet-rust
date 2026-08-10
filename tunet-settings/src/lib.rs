@@ -50,10 +50,6 @@ impl SettingsError {
     pub fn is_no_entry(&self) -> bool {
         matches!(self, Self::Keyring(keyring_core::Error::NoEntry))
     }
-
-    pub fn is_config_not_found(&self) -> bool {
-        matches!(self, Self::IoError(e) if e.kind() == std::io::ErrorKind::NotFound)
-    }
 }
 
 pub type SettingsResult<T> = Result<T, SettingsError>;
@@ -86,11 +82,11 @@ impl SettingsReader {
     pub fn with_dir(path: impl Into<PathBuf>) -> SettingsResult<Self> {
         #[cfg(target_os = "linux")]
         let use_secret_service = match keyring_store::Store::new() {
-            Ok(store) => {
+            Ok(store) if Self::ensure_default_collection().is_ok() => {
                 keyring_core::set_default_store(store);
                 true
             }
-            Err(_) => {
+            _ => {
                 keyring_core::set_default_store(key_fallback::Store::new()?);
                 false
             }
@@ -152,10 +148,6 @@ impl SettingsReader {
     }
 
     pub fn save(&mut self, u: &str, p: &str) -> SettingsResult<()> {
-        #[cfg(target_os = "linux")]
-        if self.use_secret_service.get() && Self::ensure_default_collection().is_err() {
-            self.use_fallback()?;
-        }
         if let Some(p) = self.path.parent() {
             DirBuilder::new().recursive(true).create(p)?;
         }

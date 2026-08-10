@@ -73,7 +73,7 @@ $ systemctl --user enable tunet-dbus
 # 启动服务
 $ systemctl --user start tunet-dbus
 ```
-两个服务只需要选择其中一个。
+两个服务只需要选择其中一个，Secret Service 可能需要图形界面运行。
 可以通过编辑该文件来调整重复登录的间隔。
 
 ## 密码
