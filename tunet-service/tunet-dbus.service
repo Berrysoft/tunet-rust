@@ -1,0 +1,12 @@
+[Unit]
+Description=Service for Tsinghua University campus network.
+StartLimitIntervalSec=0
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/tunet service start -i 5s
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy = graphical-session.target

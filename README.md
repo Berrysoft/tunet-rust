@@ -59,13 +59,21 @@ $ tunet service unregister
 
 ### Systemd
 由于不同 Linux 发行版的服务机制不同，没有提供 `register` 和 `unregister` 命令。
-Debian 打包提供了 `tunet@.service` 文件。对于用户 `foo`，可以运行
+Debian 打包提供了两个用户服务文件。无图形界面时可以运行
 ``` bash
 # 启用服务
-$ sudo systemctl enable tunet@foo
+$ systemctl --user enable tunet
 # 启动服务
-$ sudo systemctl start tunet@foo
+$ systemctl --user start tunet
 ```
+图形界面下可以运行
+``` bash
+# 启用服务
+$ systemctl --user enable tunet-dbus
+# 启动服务
+$ systemctl --user start tunet-dbus
+```
+两个服务只需要选择其中一个，Secret Service 可能需要图形界面运行。
 可以通过编辑该文件来调整重复登录的间隔。
 
 ## 密码
@@ -73,7 +81,7 @@ $ sudo systemctl start tunet@foo
 ``` bash
 $ tunet deletecred
 ```
-注意：由于 Linux 的限制，目前没有找到合适的持续化密码保存方法，因此会直接明文存储。
+Linux 优先使用 Secret Service 保存密码，需要在用户会话中运行 GNOME Keyring、KWallet 等兼容的密码存储服务；如果 Secret Service 不可用，回退明文存储。
 
 ## 网络状态
 针对不同平台使用平台特定的方式尝试获得当前的网络连接方式，如果是无线网连接还会获取 SSID。
