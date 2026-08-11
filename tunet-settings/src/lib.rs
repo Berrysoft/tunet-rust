@@ -16,7 +16,6 @@ use rpassword::read_password;
 use secret_service::{EncryptionType, blocking::SecretService};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-
 #[cfg(target_os = "linux")]
 use zbus_secret_service_keyring_store as keyring_store;
 
@@ -221,20 +220,7 @@ impl SettingsReader {
     }
 
     pub fn read_ask_password(&self, u: &str) -> SettingsResult<String> {
-        #[cfg(target_os = "linux")]
-        {
-            self.read_password(u).or_else(|e| {
-                if e.is_no_entry() {
-                    self.ask_password()
-                } else {
-                    Err(e)
-                }
-            })
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            self.read_password(u).or_else(|_| self.ask_password())
-        }
+        self.read_password(u).or_else(|_| self.ask_password())
     }
 
     pub fn read_ask_full(&self) -> SettingsResult<(String, String)> {
