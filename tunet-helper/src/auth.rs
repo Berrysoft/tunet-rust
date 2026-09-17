@@ -1,4 +1,4 @@
-use std::{borrow::Cow, sync::LazyLock};
+use std::{borrow::Cow, net::SocketAddr, sync::LazyLock};
 
 use authtea::AuthTea;
 use base64::{
@@ -67,8 +67,28 @@ impl TUNetConnect {
             .unwrap_or_default())
     }
 
+    fn redirect_uri(&self) -> Cow<'static, str> {
+        // Probe over IPv6 for auth6, otherwise an online IPv4 hides the redirect.
+        if self.uri.ipv6 {
+            let mut url = Url::parse(REDIRECT_URI).unwrap();
+            let addr = url
+                .socket_addrs(|| None)
+                .ok()
+                .and_then(|addrs| addrs.into_iter().find(SocketAddr::is_ipv6));
+            if let Some(addr) = addr {
+                url.set_ip_host(addr.ip()).unwrap();
+                return Cow::Owned(url.into());
+            }
+        }
+        Cow::Borrowed(REDIRECT_URI)
+    }
+
     async fn get_ac_id(&self) -> Option<i32> {
-        let res = self.client.request(Request::get(REDIRECT_URI)).await.ok()?;
+        let res = self
+            .client
+            .request(Request::get(self.redirect_uri()))
+            .await
+            .ok()?;
         let t = res.text().await.ok()?;
         let cap = AC_ID_REGEX.captures(&t)?;
         cap[1].parse::<i32>().ok()
@@ -180,6 +200,7 @@ struct AuthConnectUri {
     log_uri: &'static str,
     challenge_uri: &'static str,
     flux_uri: &'static str,
+    ipv6: bool,
 }
 
 #[cfg(not(target_os = "android"))]
@@ -187,6 +208,7 @@ const AUTH4_URI: AuthConnectUri = AuthConnectUri {
     log_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal",
     challenge_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge",
     flux_uri: "https://auth4.tsinghua.edu.cn/cgi-bin/rad_user_info",
+    ipv6: false,
 };
 
 #[cfg(not(target_os = "android"))]
@@ -194,6 +216,7 @@ const AUTH6_URI: AuthConnectUri = AuthConnectUri {
     log_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/srun_portal",
     challenge_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/get_challenge",
     flux_uri: "https://auth6.tsinghua.edu.cn/cgi-bin/rad_user_info",
+    ipv6: true,
 };
 
 #[cfg(target_os = "android")]
@@ -201,6 +224,7 @@ const AUTH4_URI: AuthConnectUri = AuthConnectUri {
     log_uri: "http://auth4.tsinghua.edu.cn/cgi-bin/srun_portal",
     challenge_uri: "http://auth4.tsinghua.edu.cn/cgi-bin/get_challenge",
     flux_uri: "http://auth4.tsinghua.edu.cn/cgi-bin/rad_user_info",
+    ipv6: false,
 };
 
 #[cfg(target_os = "android")]
@@ -208,6 +232,7 @@ const AUTH6_URI: AuthConnectUri = AuthConnectUri {
     log_uri: "http://auth6.tsinghua.edu.cn/cgi-bin/srun_portal",
     challenge_uri: "http://auth6.tsinghua.edu.cn/cgi-bin/get_challenge",
     flux_uri: "http://auth6.tsinghua.edu.cn/cgi-bin/rad_user_info",
+    ipv6: true,
 };
 
 trait ExactString {
