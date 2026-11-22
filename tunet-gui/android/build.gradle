@@ -2,3 +2,38 @@
 plugins {
     alias(libs.plugins.android.application) apply false
 }
+
+abstract class RustlsVersion implements ValueSource<String, RustlsVersion.Params> {
+    interface Params extends ValueSourceParameters {
+        RegularFileProperty getLockFile()
+    }
+
+    static final String CRATE_NAME = "rustls-platform-verifier-android"
+
+    @Override
+    String obtain() {
+        def lockFile = parameters.lockFile.get().asFile
+        def lines = lockFile.readLines()
+        def idx = lines.findIndexOf { it.trim() == "name = \"$CRATE_NAME\"" }
+        def version = idx < 0 ? null : lines.drop(idx + 1)
+            .find { it.stripLeading().startsWith("version = ") }
+            ?.find(/"([^"]*)"/) { match, v -> v }
+        if (!version) throw new GradleException("$CRATE_NAME not found in $lockFile")
+        return version
+    }
+}
+
+def rustlsPlatformVerifierVersion = providers.of(RustlsVersion) { spec ->
+    spec.parameters.lockFile.set(layout.projectDirectory.file("../../Cargo.lock"))
+}
+
+allprojects {
+    configurations.configureEach { configuration ->
+        configuration.resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == "org.rustls" && details.requested.name == "rustls-platform-verifier") {
+                details.useVersion(rustlsPlatformVerifierVersion.get())
+                details.because("native component version must be identical to version of ${RustlsVersion.CRATE_NAME}")
+            }
+        }
+    }
+}

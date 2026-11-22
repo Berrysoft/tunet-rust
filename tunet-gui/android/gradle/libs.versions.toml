@@ -10,7 +10,6 @@ core = { module = "androidx.core:core", version.ref = "core" }
 games-activity = { module = "androidx.games:games-activity", version.ref = "gamesActivity" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-rustls-platform-verifier = { module = "rustls:rustls-platform-verifier", version = "latest.release" }
 winio = { module = "compio:winio", version = "latest.release" }
 
 [plugins]

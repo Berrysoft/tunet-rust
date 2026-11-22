@@ -66,7 +66,7 @@ dependencies {
 
     implementation libs.games.activity
 
-    implementation libs.rustls.platform.verifier
+    implementation "org.rustls:rustls-platform-verifier"
 
     implementation libs.winio
 }
@@ -105,7 +105,7 @@ dependencies {
         commandLine cmdArgs
 
         doLast {
-            delete fileTree(dir: 'src/main/jniLibs', include: '*/libandroid_native_keyring_store-*.so')
+            delete fileTree(dir: 'src/main/jniLibs', include: '*/libandroid_native_keyring_store.so')
         }
     }
 }

@@ -20,8 +20,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            url = findRustlsPlatformVerifierProject()
-            metadataSources.artifact()
+            url = "https://github.com/rustls/rustls-platform-verifier/raw/maven-archive/android-release-support/maven/"
         }
         maven {
             url = findWinioUiAndroidProject()
@@ -34,17 +33,6 @@ rootProject.name = "tunet"
 include ':app'
 
 import groovy.json.JsonSlurper
-
-String findRustlsPlatformVerifierProject() {
-    def dependencyText = providers.exec {
-        it.workingDir = new File("../")
-        commandLine("cargo", "metadata", "--format-version", "1", "--manifest-path", "Cargo.toml")
-    }.standardOutput.asText.get()
-
-    def dependencyJson = new JsonSlurper().parseText(dependencyText)
-    def manifestPath = file(dependencyJson.packages.find { it.name == "rustls-platform-verifier-android" }.manifest_path)
-    return new File(manifestPath.parentFile, "maven").path
-}
 
 String findWinioUiAndroidProject() {
     def dependencyText = providers.exec {
