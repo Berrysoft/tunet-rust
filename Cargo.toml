@@ -51,7 +51,7 @@ chrono = { version = "0.4", default-features = false, features = [
     "clock",
     "std",
 ] }
-dirs = "6"
+dirs = "7"
 log = "0.4"
 
 flume = "0.12"
