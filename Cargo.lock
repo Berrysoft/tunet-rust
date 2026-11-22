@@ -5014,7 +5014,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-gui"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "android-activity",
  "android_logger",
@@ -5067,7 +5067,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-service"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "anyhow",
  "argh",
