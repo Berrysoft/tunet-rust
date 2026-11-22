@@ -4995,7 +4995,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tunet"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "anyhow",
  "argh",
@@ -5031,7 +5031,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-helper"
-version = "0.21.1"
+version = "0.21.2"
 dependencies = [
  "authtea",
  "base64 0.23.1",
@@ -5097,7 +5097,7 @@ dependencies = [
 
 [[package]]
 name = "tunet-settings"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "android-native-keyring-store",
  "apple-native-keyring-store",

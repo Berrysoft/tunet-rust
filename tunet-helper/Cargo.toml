@@ -1,6 +1,6 @@
 [package]
 name = "tunet-helper"
-version = "0.21.1"
+version = "0.21.2"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
